@@ -1,4 +1,7 @@
-import React, { useMemo } from 'react';
+
+// src/components/trip-planning/TripPlanningPage.js
+
+import React, { useMemo, useState } from 'react'; // <-- Добавляем useState
 import { useParams, useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import useTripStore from '../../stores/useTripStore';
@@ -6,21 +9,49 @@ import useProductStore from '../../stores/useProductStore';
 import useParticipantStore from '../../stores/useParticipantStore';
 import { calculateTripSummary, getMealName, formatDate } from '../../utils';
 import Button from '../../ui/Button';
+import Modal from '../../ui/Modal'; // <-- Импортируем модальное окно
+import TripForm from '../trips/TripForm'; // <-- Импортируем нашу обновленную форму
 
 function TripPlanningPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
+
+  // Состояние для управления модальным окном редактирования
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
-  // Получаем данные и методы из всех необходимых сторов
   const trip = useTripStore(state => state.trips.find(t => t.id === Number(tripId)));
   const updateTrip = useTripStore(state => state.updateTrip);
   const { products } = useProductStore();
   const { participants } = useParticipantStore();
 
-  // --- Мемоизированные селекторы для производительности ---
   const summary = useMemo(() => calculateTripSummary(trip, products, participants), [trip, products, participants]);
   const productOptions = useMemo(() => products.map(p => ({ value: p.id, label: p.name })), [products]);
   
+  const availableParticipantsOptions = useMemo(() =>
+    participants
+      .filter(p => !trip?.participants.includes(p.id))
+      .map(p => ({ value: p.id, label: p.name })),
+    [participants, trip]
+  );
+
+  const handleParticipantAdd = (selectedOption) => {
+    if (!trip || !selectedOption) return;
+    const participantId = selectedOption.value;
+    const updatedParticipants = [...trip.participants, participantId];
+    updateTrip(trip.id, { participants: updatedParticipants });
+  };
+
+  const handleParticipantRemove = (participantId) => {
+    if (!trip) return;
+    const updatedParticipants = trip.participants.filter(id => id !== participantId);
+    updateTrip(trip.id, { participants: updatedParticipants });
+  };
+
+  const handleDetailsUpdate = (formData) => {
+    updateTrip(trip.id, formData);
+    setIsEditModalOpen(false); // Закрываем модалку после сохранения
+  };
+
   if (!trip) {
     return (
       <div className="p-6">
@@ -56,8 +87,11 @@ function TripPlanningPage() {
           <h2 className="text-2xl font-bold text-gray-800">{trip.name}</h2>
           <p className="text-sm text-gray-500">{formatDate(trip.startDate)} - {formatDate(trip.endDate)}</p>
         </div>
-        <Button variant="ghost" onClick={() => navigate('/trips')}>← К списку походов</Button>
-      </header>
+        <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+            <Button variant="ghost" onClick={() => setIsEditModalOpen(true)}>Редактировать</Button>
+            <Button variant="ghost" onClick={() => navigate('/trips')}>← К списку походов</Button>
+        </div>      
+    </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Левая колонка - План питания */}
@@ -111,13 +145,40 @@ function TripPlanningPage() {
               <div className="stat-card"><div className="stat-value">{summary.averageCaloriesPerPersonPerDay}</div><div className="stat-label">ккал/чел/день</div></div>
             </div>
           </div>
-          <div className="p-4 border rounded-lg bg-white">
-            <h4 className="font-semibold mb-2">Участники</h4>
-            <ul className="list-disc pl-5 text-sm">
-              {summary.tripParticipants.map(p => <li key={p.id}>{p.name}</li>)}
-            </ul>
+          <div className="space-y-2 mb-4">
+        <h4 className="text-xl font-semibold">Участники ({summary.tripParticipants.length})</h4>
+        <Select
+              options={availableParticipantsOptions}
+              onChange={handleParticipantAdd}
+              placeholder="Добавить участника..."
+              value={null}
+              noOptionsMessage={() => 'Все участники уже в походе'}
+            />
+        <div className="p-4 border rounded-lg bg-white">
+              {summary.tripParticipants.length > 0 ? (
+                summary.tripParticipants.map(p => (
+                  <div key={p.id} className="flex justify-between items-center text-sm p-1.5 bg-gray-50 rounded">
+                    <span>{p.name}</span>
+                    <button onClick={() => handleParticipantRemove(p.id)} className="text-red-500 hover:text-red-700 font-bold px-2">&times;</button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-2">Добавьте участников</p>
+              )}
+            </div>
           </div>
         </div>
+        <Modal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+        title="Редактировать поход"
+      >
+        <TripForm 
+          trip={trip} // Передаем текущий поход в форму
+          onSubmit={handleDetailsUpdate}
+          onCancel={() => setIsEditModalOpen(false)} 
+        />
+      </Modal>
       </div>
       <style jsx>{`
         .stat-card { @apply text-center p-2 bg-gray-50 rounded; }

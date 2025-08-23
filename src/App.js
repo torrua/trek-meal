@@ -6,6 +6,7 @@ import TripsPage from './components/trips/TripsPage';
 import TripPlanningPage from './components/trip-planning/TripPlanningPage';
 import ProductsPage from './components/products/ProductsPage';
 import ParticipantsPage from './components/participants/ParticipantsPage';
+import CategoriesPage from './components/categories/CategoriesPage';
 import { Toaster } from 'react-hot-toast';
 
 const AppContainer = styled.div`
@@ -93,6 +94,7 @@ function App() {
       <Navigation>
         <StyledNavLink to="/">Главная</StyledNavLink>
         <StyledNavLink to="/products">Продукты</StyledNavLink>
+        <StyledNavLink to="/categories">Категории</StyledNavLink>
         <StyledNavLink to="/participants">Участники</StyledNavLink>
         <StyledNavLink to="/trips">Походы</StyledNavLink>
         {planningPathMatch && (
@@ -106,6 +108,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/products" element={<ProductsPage />} />          
+          <Route path="/categories" element={<CategoriesPage />} />
           <Route path="/participants" element={<ParticipantsPage />} />
           <Route path="/trips" element={<TripsPage />} />
           <Route path="/trips/:tripId" element={<TripPlanningPage />} />

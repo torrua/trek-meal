@@ -1,11 +1,22 @@
 import React from 'react';
+import useCategoryStore from '../../stores/useCategoryStore';
 
 function ProductCard({ product, onEdit, onDelete }) {
+  const { categories } = useCategoryStore();
+  const category = categories.find(c => c.id == product.categoryId);
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md">
       <div className="p-4 border-b border-gray-100">
         <h3 className="text-lg font-bold text-gray-800">{product.name}</h3>
         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+        {category && (
+            <span 
+              className="px-2 py-0.5 text-xs font-medium text-white rounded-full"
+              style={{ backgroundColor: category.color }}
+            >
+              {category.name}
+            </span>
+          )}
           {product.packaging && <span className="tag-gray">{product.packaging}</span>}
           {product.isPerishable && <span className="tag-yellow">Скоропортящийся</span>}
         </div>

@@ -1,3 +1,5 @@
+// src/ui/Modal.js
+
 import React from 'react';
 
 function Modal({ isOpen, onClose, title, children }) {
@@ -9,7 +11,8 @@ function Modal({ isOpen, onClose, title, children }) {
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] flex flex-col"
+        // ИЗМЕНЕНИЕ: Делаем модальное окно немного шире для лучшего отображения форм
+        className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="p-4 border-b border-gray-200 flex justify-between items-center">

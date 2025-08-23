@@ -2,10 +2,11 @@ import React from 'react';
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import Dashboard from './components/Dashboard';
-import Products from './components/Products';
-import Trips from './components/Trips';
-import TripPlanning from './components/TripPlanning';
-import Participants from './components/Participants';
+import TripsPage from './components/trips/TripsPage';
+import TripPlanningPage from './components/trip-planning/TripPlanningPage';
+import ProductsPage from './components/products/ProductsPage';
+import ParticipantsPage from './components/participants/ParticipantsPage';
+import { Toaster } from 'react-hot-toast';
 
 const AppContainer = styled.div`
   max-width: 1200px;
@@ -82,7 +83,8 @@ function App() {
   const planningPathMatch = location.pathname.match(/\/trips\/(\d+)/);
 
   return (
-    <AppContainer>
+      <AppContainer>
+      <Toaster position="bottom-right" />
       <Header>
         <Title>Trek Meal</Title>
         <Subtitle>Планирование питания для походов</Subtitle>
@@ -103,10 +105,10 @@ function App() {
       <MainContent>
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/participants" element={<Participants />} />
-          <Route path="/trips" element={<Trips />} />
-          <Route path="/trips/:tripId" element={<TripPlanning />} />
+          <Route path="/products" element={<ProductsPage />} />          
+          <Route path="/participants" element={<ParticipantsPage />} />
+          <Route path="/trips" element={<TripsPage />} />
+          <Route path="/trips/:tripId" element={<TripPlanningPage />} />
         </Routes>
       </MainContent>
     </AppContainer>

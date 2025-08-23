@@ -1,0 +1,471 @@
+{
+    "name": "trek-meal",
+    "version": "1.1.0",
+    "private": true,
+    "dependencies": {
+        "@testing-library/jest-dom": "^5.17.0",
+        "@testing-library/react": "^13.4.0",
+        "@testing-library/user-event": "^13.5.0",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "react-router-dom": "^6.25.1",
+        "react-scripts": "5.0.1",
+        "react-select": "^5.8.0",
+        "styled-components": "^6.1.12",
+        "web-vitals": "^2.1.4"
+    },
+    "scripts": {
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject"
+    },
+    "eslintConfig": {
+        "extends": [
+            "react-app",
+            "react-app/jest"
+        ]
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    }
+}
+```--- END OF FILE package.json ---
+
+--- START OF FILE package-lock.json ---
+```json
+{
+    "name": "trek-meal",
+    "version": "1.1.0",
+    "lockfileVersion": 3,
+    "requires": true,
+    "packages": {
+        "": {
+            "name": "trek-meal",
+            "version": "1.1.0",
+            "dependencies": {
+                "@testing-library/jest-dom": "^5.17.0",
+                "@testing-library/react": "^13.4.0",
+                "@testing-library/user-event": "^13.5.0",
+                "react": "^18.3.1",
+                "react-dom": "^18.3.1",
+                "react-router-dom": "^6.25.1",
+                "react-scripts": "5.0.1",
+                "react-select": "^5.8.0",
+                "styled-components": "^6.1.12",
+                "web-vitals": "^2.1.4"
+            }
+        },
+        "node_modules/@adobe/css-tools": {
+            "version": "4.3.3",
+            "resolved": "https://registry.npmjs.org/@adobe/css-tools/-/css-tools-4.3.3.tgz",
+            "integrity": "sha512-rG2s2dHfGzD2/iee2Z8isbAxj72e7iMRzX5j91v05C8TUis0aA9JcrI1oY21T3039d/vQBtq4a0e9lD4ZJ2eOQ==",
+            "license": "MIT"
+        },
+        "node_modules/@alloc/quick-lru": {
+            "version": "5.2.0",
+            "resolved": "https://registry.npmjs.org/@alloc/quick-lru/-/quick-lru-5.2.0.tgz",
+            "integrity": "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==",
+            "license": "MIT",
+            "engines": {
+                "node": ">=10"
+            },
+            "funding": {
+                "url": "https://github.com/sponsors/sindresorhus"
+            }
+        },
+        "node_modules/@ampproject/remapping": {
+            "version": "2.3.0",
+            "resolved": "https://registry.npmjs.org/@ampproject/remapping/-/remapping-2.3.0.tgz",
+            "integrity": "sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==",
+            "license": "Apache-2.0",
+            "dependencies": {
+                "@jridgewell/gen-mapping": "^0.3.5",
+                "@jridgewell/trace-mapping": "^0.3.24"
+            },
+            "engines": {
+                "node": ">=6.0.0"
+            }
+        },
+        "node_modules/@babel/code-frame": {
+            "version": "7.24.8",
+            "resolved": "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.24.8.tgz",
+            "integrity": "sha512-y5e/2eFRsB3xOb+g4hPckjYgTSoPR3f2e+V4WJgS7XbIDi9E8k2sLqIbf4Myf25g53gCvD9Kq+K420I4o56hQ==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/helper-validator-identifier": "^7.24.8",
+                "js-tokens": "^4.0.0",
+                "picocolors": "^1.0.0"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/compat-data": {
+            "version": "7.25.0",
+            "resolved": "https://registry.npmjs.org/@babel/compat-data/-/compat-data-7.25.0.tgz",
+            "integrity": "sha512-/KyvP93KY+rHDYQeC6c+X02mKZFp2hA/v21bN+5a2pSSUCwrI9Qo2K5zksFC3uS8g8crz8sS728z2yGKW30LzA==",
+            "license": "MIT",
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/core": {
+            "version": "7.25.0",
+            "resolved": "https://registry.npmjs.org/@babel/core/-/core-7.25.0.tgz",
+            "integrity": "sha512-Y1/kDU2W2+n95v3kuf1iS59y0dM+N6gqA3d/0zY+I1V9I25YI8X0+OQeP/I3jXyWv694QcR5vDzm8Q==",
+            "license": "MIT",
+            "dependencies": {
+                "@ampproject/remapping": "^2.2.0",
+                "@babel/code-frame": "^7.24.8",
+                "@babel/generator": "^7.25.0",
+                "@babel/helper-compilation-targets": "^7.24.6",
+                "@babel/helper-module-transforms": "^7.25.0",
+                "@babel/helpers": "^7.25.0",
+                "@babel/parser": "^7.25.0",
+                "@babel/template": "^7.24.7",
+                "@babel/traverse": "^7.25.0",
+                "@babel/types": "^7.25.0",
+                "convert-source-map": "^2.0.0",
+                "debug": "^4.1.0",
+                "gensync": "^1.0.0-beta.2",
+                "json5": "^2.2.3",
+                "semver": "^6.3.1"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            },
+            "funding": {
+                "type": "opencollective",
+                "url": "https://opencollective.com/babel"
+            }
+        },
+        "node_modules/@babel/core/node_modules/semver": {
+            "version": "6.3.1",
+            "resolved": "https://registry.npmjs.org/semver/-/semver-6.3.1.tgz",
+            "integrity": "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==",
+            "license": "ISC",
+            "bin": {
+                "semver": "bin/semver.js"
+            }
+        },
+        "node_modules/@babel/eslint-parser": {
+            "version": "7.25.1",
+            "resolved": "https://registry.npmjs.org/@babel/eslint-parser/-/eslint-parser-7.25.1.tgz",
+            "integrity": "sha512-2nF/I/G/Pq208gacXy0Xrh9Jd0J9FHRX12vN0zXk5T2o5i5R+2o3lK3x3v3Vb80T552WqgH11y22y2r+g==",
+            "license": "MIT",
+            "dependencies": {
+                "@nicolo-ribaudo/eslint-scope-5-internals": "5.1.1-v1",
+                "eslint-visitor-keys": "^2.1.0",
+                "semver": "^6.3.1"
+            },
+            "engines": {
+                "node": "^10.13.0 || ^12.13.0 || >=14.0.0"
+            },
+            "peerDependencies": {
+                "@babel/core": "^7.11.0",
+                "eslint": "^7.5.0 || ^8.0.0 || ^9.0.0"
+            }
+        },
+        "node_modules/@babel/eslint-parser/node_modules/eslint-visitor-keys": {
+            "version": "2.1.0",
+            "resolved": "https://registry.npmjs.org/eslint-visitor-keys/-/eslint-visitor-keys-2.1.0.tgz",
+            "integrity": "sha512-0rSmRBzXgDzIsD6mGdJgevzgezI534Cer5L/vyMX0kHzT/jiB43jRhd9YUlMGYLQy2zprNmoT8qasCGtY+QaKw==",
+            "license": "Apache-2.0",
+            "engines": {
+                "node": ">=10"
+            }
+        },
+        "node_modules/@babel/eslint-parser/node_modules/semver": {
+            "version": "6.3.1",
+            "resolved": "https://registry.npmjs.org/semver/-/semver-6.3.1.tgz",
+            "integrity": "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==",
+            "license": "ISC",
+            "bin": {
+                "semver": "bin/semver.js"
+            }
+        },
+        "node_modules/@babel/generator": {
+            "version": "7.25.0",
+            "resolved": "https://registry.npmjs.org/@babel/generator/-/generator-7.25.0.tgz",
+            "integrity": "sha512-uGdv2z0/F6+8l1J4S9cpg8IeL8yP+xV1n3d4FKY3/dWT/w8kQeGz3+P5YV2k/vye7D4A0n9vH/y0D36bHk1mg==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/parser": "^7.25.0",
+                "@babel/types": "^7.25.0",
+                "@jridgewell/gen-mapping": "^0.3.5",
+                "jsesc": "^2.5.1"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/helper-annotate-as-pure": {
+            "version": "7.24.5",
+            "resolved": "https://registry.npmjs.org/@babel/helper-annotate-as-pure/-/helper-annotate-as-pure-7.24.5.tgz",
+            "integrity": "sha512-TS3SjT273lGGrf652A+QohoU43e2eW5s4HSR4c4f3jYIGN+PZ1W48l4E5zY8b/2EDu5rS3T4k4E0eS30mDRjw==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/types": "^7.24.5"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/helper-compilation-targets": {
+            "version": "7.24.6",
+            "resolved": "https://registry.npmjs.org/@babel/helper-compilation-targets/-/helper-compilation-targets-7.24.6.tgz",
+            "integrity": "sha512-5vRO+D4UvSnoI24CrQe4pLpqo9TBTCSIfgqRkyWjT4bJnYUzI6wNf7ACh5tq2/bNeW9aP4tA2xMRY+v/M6GvTQ==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/compat-data": "^7.24.6",
+                "@babel/helper-validator-option": "^7.24.6",
+                "browserslist": "^4.23.0",
+                "lru-cache": "^5.1.1",
+                "semver": "^6.3.1"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/helper-compilation-targets/node_modules/semver": {
+            "version": "6.3.1",
+            "resolved": "https://registry.npmjs.org/semver/-/semver-6.3.1.tgz",
+            "integrity": "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==",
+            "license": "ISC",
+            "bin": {
+                "semver": "bin/semver.js"
+            }
+        },
+        "node_modules/@babel/helper-create-class-features-plugin": {
+            "version": "7.24.8",
+            "resolved": "https://registry.npmjs.org/@babel/helper-create-class-features-plugin/-/helper-create-class-features-plugin-7.24.8.tgz",
+            "integrity": "sha512-m3q0/uf72oD/VVeLwzVMyg5jMnC2tqO91xXkDE+Yx7g/gT1/3hC/YBJL1gqfDHHkOkgv56gY/0200L4R7fGZAw==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/helper-annotate-as-pure": "^7.24.5",
+                "@babel/helper-environment-visitor": "^7.24.5",
+                "@babel/helper-function-name": "^7.24.5",
+                "@babel/helper-member-expression-to-functions": "^7.24.7",
+                "@babel/helper-optimise-call-expression": "^7.24.5",
+                "@babel/helper-replace-supers": "^7.24.7",
+                "@babel/helper-skip-transparent-expression-wrappers": "^7.24.5",
+                "@babel/helper-split-export-declaration": "^7.24.7",
+                "semver": "^6.3.1"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            },
+            "peerDependencies": {
+                "@babel/core": "^7.0.0"
+            }
+        },
+        "node_modules/@babel/helper-create-class-features-plugin/node_modules/semver": {
+            "version": "6.3.1",
+            "resolved": "https://registry.npmjs.org/semver/-/semver-6.3.1.tgz",
+            "integrity": "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==",
+            "license": "ISC",
+            "bin": {
+                "semver": "bin/semver.js"
+            }
+        },
+        "node_modules/@babel/helper-create-regexp-features-plugin": {
+            "version": "7.24.6",
+            "resolved": "https://registry.npmjs.org/@babel/helper-create-regexp-features-plugin/-/helper-create-regexp-features-plugin-7.24.6.tgz",
+            "integrity": "sha512-gS2z8lApdn3bB5kY0Xq8Y+a2s4T1qH4Z5r2mYw8Iq3TmsxQE0nEVxLz/pWHPhX7wA0f7V93T8jS0Rg==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/helper-annotate-as-pure": "^7.24.5",
+                "regexpu-core": "^5.3.2",
+                "semver": "^6.3.1"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            },
+            "peerDependencies": {
+                "@babel/core": "^7.0.0"
+            }
+        },
+        "node_modules/@babel/helper-create-regexp-features-plugin/node_modules/semver": {
+            "version": "6.3.1",
+            "resolved": "https://registry.npmjs.org/semver/-/semver-6.3.1.tgz",
+            "integrity": "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==",
+            "license": "ISC",
+            "bin": {
+                "semver": "bin/semver.js"
+            }
+        },
+        "node_modules/@babel/helper-define-polyfill-provider": {
+            "version": "0.6.5",
+            "resolved": "https://registry.npmjs.org/@babel/helper-define-polyfill-provider/-/helper-define-polyfill-provider-0.6.5.tgz",
+            "integrity": "sha512-uJnGFcPsWQK8fvjgGP5LZUZZsYGIoPeRjSF5PGwrelYgq7Q15/Ft9NGFp1zglwgIv//W0uG4BevRuSJRyylZPg==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/helper-compilation-targets": "^7.23.6",
+                "@babel/helper-plugin-utils": "^7.24.0",
+                "debug": "^4.3.4",
+                "lodash.debounce": "^4.0.8",
+                "resolve": "^1.22.8"
+            },
+            "peerDependencies": {
+                "@babel/core": "^7.4.0 || ^8.0.0-0 <8.0.0"
+            }
+        },
+        "node_modules/@babel/helper-environment-visitor": {
+            "version": "7.24.5",
+            "resolved": "https://registry.npmjs.org/@babel/helper-environment-visitor/-/helper-environment-visitor-7.24.5.tgz",
+            "integrity": "sha512-m3s2N9yL1Kwgv2W+aX2nF0XnEHGVSaRme5C0p28fMhhTdfMhSPlt6vQ09ZcaU87532vWnGIc2V1XvXQYv03I3w==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/types": "^7.24.5"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/helper-function-name": {
+            "version": "7.24.5",
+            "resolved": "https://registry.npmjs.org/@babel/helper-function-name/-/helper-function-name-7.24.5.tgz",
+            "integrity": "sha512-tFjXJwxNnQjTj5hLnnj+0GkY5e48NQU8+qS6LpKa3VUSgT/tMh2DAUoYmZ2f1wWnKMb7T2sJ+Fh9Sj/5S0Nn8w==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/template": "^7.24.0",
+                "@babel/types": "^7.24.5"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/helper-hoist-variables": {
+            "version": "7.24.5",
+            "resolved": "https://registry.npmjs.org/@babel/helper-hoist-variables/-/helper-hoist-variables-7.24.5.tgz",
+            "integrity": "sha512-VbXN5IljSnK39MvAOSrMpnfa7t5p50aTqzLmmvLg+08hU46eKxxa4gD+aT9mB/mNMQC05+Tz3Q93lU/x2jY60w==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/types": "^7.24.5"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/helper-member-expression-to-functions": {
+            "version": "7.24.7",
+            "resolved": "https://registry.npmjs.org/@babel/helper-member-expression-to-functions/-/helper-member-expression-to-functions-7.24.7.tgz",
+            "integrity": "sha512-58T4B6EjUZUe+5gD+65cM1G5WAd4SNc2F1KCEzdl9U3tPMQmMkOqD1cT5+z2/qF6CEqYAzrJv7Q/Kz4YEk2u8Q==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/types": "^7.24.7"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/helper-module-imports": {
+            "version": "7.24.6",
+            "resolved": "https://registry.npmjs.org/@babel/helper-module-imports/-/helper-module-imports-7.24.6.tgz",
+            "integrity": "sha512-G/4YNDQfXpT6y7yNPXWvHxlTfG2Y0zT1y4eYFq0h8LgZg0SBr/PTeL/S3X8tG0S4Lq9i54LwU8Uv5d0/WA==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/types": "^7.24.6"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/helper-module-transforms": {
+            "version": "7.25.0",
+            "resolved": "https://registry.npmjs.org/@babel/helper-module-transforms/-/helper-module-transforms-7.25.0.tgz",
+            "integrity": "sha512-w3H45aH2u4y6y3P7X5G+qC1hYw8oJ45s1VwtB+G8D/8PzT9m0h12v+a/eUeKz/sJ1fU06hW1J2xV0y0Lg==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/helper-environment-visitor": "^7.24.5",
+                "@babel/helper-hoist-variables": "^7.24.5",
+                "@babel/helper-module-imports": "^7.24.6",
+                "@babel/helper-simple-access": "^7.24.7",
+                "@babel/helper-split-export-declaration": "^7.24.7",
+                "@babel/helper-validator-identifier": "^7.24.8",
+                "@babel/template": "^7.24.7",
+                "@babel/traverse": "^7.25.0",
+                "@babel/types": "^7.25.0"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            },
+            "peerDependencies": {
+                "@babel/core": "^7.0.0"
+            }
+        },
+        "node_modules/@babel/helper-optimise-call-expression": {
+            "version": "7.24.5",
+            "resolved": "https://registry.npmjs.org/@babel/helper-optimise-call-expression/-/helper-optimise-call-expression-7.24.5.tgz",
+            "integrity": "sha512-2B4bOPIs0oGv8YK+PkGNb+dE7nBCB314P22FgxU+I3AVQ2BME2y1cIY45Rgk1MT3IexTKiG2Ogh0D4g2q7n5NQ==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/types": "^7.24.5"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/helper-plugin-utils": {
+            "version": "7.24.7",
+            "resolved": "https://registry.npmjs.org/@babel/helper-plugin-utils/-/helper-plugin-utils-7.24.7.tgz",
+            "integrity": "sha512-h/oB5fGW/4iG+5vV1q7mGv720P9nPuP3u5hJ22q62pP1cGY8H45LAvOQlCq5s8wEAFQk/W21/gDScvT+Jg9qA==",
+            "license": "MIT",
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/helper-replace-supers": {
+            "version": "7.24.7",
+            "resolved": "https://registry.npmjs.org/@babel/helper-replace-supers/-/helper-replace-supers-7.24.7.tgz",
+            "integrity": "sha512-6k95zWw5s2hY7q3dBOhD9yXWn1d9f0K7qK1vHNu3kL8y+6KjD/30+VahD4E+KV3oV5H/71z7oCVrT2/FvQ==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/helper-environment-visitor": "^7.24.5",
+                "@babel/helper-member-expression-to-functions": "^7.24.7",
+                "@babel/helper-optimise-call-expression": "^7.24.5",
+                "@babel/traverse": "^7.24.7",
+                "@babel/types": "^7.24.7"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            },
+            "peerDependencies": {
+                "@babel/core": "^7.0.0"
+            }
+        },
+        "node_modules/@babel/helper-simple-access": {
+            "version": "7.24.7",
+            "resolved": "https://registry.npmjs.org/@babel/helper-simple-access/-/helper-simple-access-7.24.7.tgz",
+            "integrity": "sha512-5/40n208z+XfD6n/p3+xT5hO9wFj4yZ3c38IeypPj3w77f4o972tXwL7f/oYx9or7nQ5zngVo2vW9w==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/types": "^7.24.7"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/@babel/helper-skip-transparent-expression-wrappers": {
+            "version": "7.24.5",
+            "resolved": "https://registry.npmjs.org/@babel/helper-skip-transparent-expression-wrappers/-/helper-skip-transparent-expression-wrappers-7.24.5.tgz",
+            "integrity": "sha512-t04t2aKkK5wD0ksX5i3gIuPDp3s2TzL+HhA//j81eX2HqrM2SYsM/5L18gM2t5fYdG2bYyN7wA8LdJpAxG2VfQ==",
+            "license": "MIT",
+            "dependencies": {
+                "@babel/types": "^7.24.5"
+            },
+            "engines": {
+                "node": ">=6.9.0"
+            }
+        },
+        "node_modules/

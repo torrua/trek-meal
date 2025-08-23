@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import styled from 'styled-components';
-import { calculateTotalWeight } from '../utils';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { AppContext } from '../context/AppContext';
+import { calculateTripSummary } from '../utils';
 
+// ... (Все styled-components остаются без изменений)
 const Container = styled.div`
   padding: 24px;
 `;
@@ -55,7 +58,7 @@ const SectionTitle = styled.h3`
   align-items: center;
 `;
 
-const ActionButton = styled.button`
+const StyledLink = styled(NavLink)`
   padding: 8px 16px;
   background: #007acc;
   color: white;
@@ -63,6 +66,7 @@ const ActionButton = styled.button`
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.8rem;
+  text-decoration: none;
   transition: background-color 0.2s ease;
   
   &:hover {
@@ -205,7 +209,10 @@ const EmptyStateText = styled.p`
   color: #666;
 `;
 
-function Dashboard({ trips, products, participants, onTripSelect, onNavigate }) {
+function Dashboard() {
+  const { trips, products, participants } = useContext(AppContext);
+  const navigate = useNavigate();
+
   const getStatusText = (status) => {
     switch (status) {
       case 'planning': return 'Планируется';
@@ -217,7 +224,7 @@ function Dashboard({ trips, products, participants, onTripSelect, onNavigate }) 
   };
 
   const getRecentTrips = () => {
-    return trips
+    return [...trips]
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5);
   };
@@ -264,56 +271,57 @@ function Dashboard({ trips, products, participants, onTripSelect, onNavigate }) 
       <Section>
         <SectionTitle>
           Последние походы
-          <ActionButton onClick={() => onNavigate('trips')}>
-            Все походы
-          </ActionButton>
+          <StyledLink to="/trips">Создать поход</StyledLink>
         </SectionTitle>
         
         {trips.length === 0 ? (
           <EmptyState>
             <EmptyStateTitle>Нет походов</EmptyStateTitle>
             <EmptyStateText>Создайте первый поход для начала планирования</EmptyStateText>
-            <ActionButton onClick={() => onNavigate('trips')} style={{ marginTop: '12px' }}>
+            <StyledLink to="/trips" style={{ marginTop: '12px' }}>
               Создать поход
-            </ActionButton>
+            </StyledLink>
           </EmptyState>
         ) : (
           <TripsList>
-            {getRecentTrips().map(trip => (
-              <TripCard key={trip.id} onClick={() => onTripSelect(trip)}>
-                <TripHeader>
-                  <TripName>{trip.name}</TripName>
-                  <TripStatus status={trip.status}>
-                    {getStatusText(trip.status)}
-                  </TripStatus>
-                </TripHeader>
-                
-                <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '8px' }}>
-                  {trip.description}
-                </div>
-                
-                <TripInfo>
-                  <TripInfoItem>
-                    <TripInfoValue>{trip.days || 0}</TripInfoValue>
-                    <TripInfoLabel>дней</TripInfoLabel>
-                  </TripInfoItem>
-                  <TripInfoItem>
-                    <TripInfoValue>{trip.participants?.length || 0}</TripInfoValue>
-                    <TripInfoLabel>участников</TripInfoLabel>
-                  </TripInfoItem>
-                  <TripInfoItem>
-                    <TripInfoValue>{(calculateTotalWeight(trip, products) / 1000).toFixed(1)}</TripInfoValue>
-                    <TripInfoLabel>кг</TripInfoLabel>
-                  </TripInfoItem>
-                  <TripInfoItem>
-                    <TripInfoValue>
-                      {new Date(trip.createdAt).toLocaleDateString('ru-RU')}
-                    </TripInfoValue>
-                    <TripInfoLabel>создан</TripInfoLabel>
-                  </TripInfoItem>
-                </TripInfo>
-              </TripCard>
-            ))}
+            {getRecentTrips().map(trip => {
+              const summary = calculateTripSummary(trip, products);
+              return (
+                <TripCard key={trip.id} onClick={() => navigate(`/trips/${trip.id}`)}>
+                  <TripHeader>
+                    <TripName>{trip.name}</TripName>
+                    <TripStatus status={trip.status}>
+                      {getStatusText(trip.status)}
+                    </TripStatus>
+                  </TripHeader>
+                  
+                  <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '8px' }}>
+                    {trip.description}
+                  </div>
+                  
+                  <TripInfo>
+                    <TripInfoItem>
+                      <TripInfoValue>{trip.days || 0}</TripInfoValue>
+                      <TripInfoLabel>дней</TripInfoLabel>
+                    </TripInfoItem>
+                    <TripInfoItem>
+                      <TripInfoValue>{trip.participants?.length || 0}</TripInfoValue>
+                      <TripInfoLabel>участников</TripInfoLabel>
+                    </TripInfoItem>
+                    <TripInfoItem>
+                      <TripInfoValue>{(summary.totalWeight / 1000).toFixed(1)}</TripInfoValue>
+                      <TripInfoLabel>кг</TripInfoLabel>
+                    </TripInfoItem>
+                    <TripInfoItem>
+                      <TripInfoValue>
+                        {new Date(trip.createdAt).toLocaleDateString('ru-RU')}
+                      </TripInfoValue>
+                      <TripInfoLabel>создан</TripInfoLabel>
+                    </TripInfoItem>
+                  </TripInfo>
+                </TripCard>
+              );
+            })}
           </TripsList>
         )}
       </Section>
@@ -321,9 +329,7 @@ function Dashboard({ trips, products, participants, onTripSelect, onNavigate }) 
       <Section>
         <SectionTitle>
           Последние продукты
-          <ActionButton onClick={() => onNavigate('products')}>
-            Управление продуктами
-          </ActionButton>
+          <StyledLink to="/products">Управление продуктами</StyledLink>
         </SectionTitle>
         
         {products.length === 0 ? (
@@ -352,58 +358,6 @@ function Dashboard({ trips, products, participants, onTripSelect, onNavigate }) 
               </ProductCard>
             ))}
           </ProductsList>
-        )}
-      </Section>
-
-      <Section>
-        <SectionTitle>
-          Последние участники
-          <ActionButton onClick={() => onNavigate('participants')}>
-            Управление участниками
-          </ActionButton>
-        </SectionTitle>
-        
-        {participants.length === 0 ? (
-          <EmptyState>
-            <EmptyStateTitle>Нет участников</EmptyStateTitle>
-            <EmptyStateText>Добавьте участников для планирования походов</EmptyStateText>
-          </EmptyState>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '12px' }}>
-            {getRecentParticipants().map(participant => (
-              <div key={participant.id} style={{ 
-                padding: '16px', 
-                background: 'white', 
-                border: '1px solid #e0e0e0', 
-                borderRadius: '6px' 
-              }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  marginBottom: '8px' 
-                }}>
-                  <h4 style={{ margin: 0, color: '#333', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    {participant.gender === 'male' ? '👨' : '👩'} {participant.name}
-                  </h4>
-                  <span style={{ 
-                    padding: '2px 6px', 
-                    background: participant.age === 'adult' ? '#e8f5e8' : '#fff3cd',
-                    color: participant.age === 'adult' ? '#2e7d32' : '#f57f17',
-                    borderRadius: '3px', 
-                    fontSize: '0.7rem' 
-                  }}>
-                    {participant.age === 'adult' ? 'Взрослый' : 'Ребенок'}
-                  </span>
-                </div>
-                {participant.notes && (
-                  <div style={{ fontSize: '0.8rem', color: '#666', fontStyle: 'italic' }}>
-                    {participant.notes}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         )}
       </Section>
     </Container>

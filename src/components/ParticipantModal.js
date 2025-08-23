@@ -1,223 +1,233 @@
-// src/components/ParticipantModal.js
-
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import styled from 'styled-components';
 
-const Modal = styled.div`
+const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
 `;
 
 const ModalContent = styled.div`
   background: white;
-  border-radius: 8px;
   padding: 24px;
+  border-radius: 8px;
+  width: 100%;
   max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
+  max-height: 90vh;
   overflow-y: auto;
 `;
 
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
 const ModalTitle = styled.h3`
-  margin: 0 0 20px 0;
-  color: #333;
-  font-size: 1.3rem;
+  margin: 0;
+  font-size: 1.25rem;
 `;
 
-const Form = styled.form`
-  display: grid;
-  gap: 16px;
-`;
-
-const FormRow = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
 `;
 
 const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  margin-bottom: 16px;
 `;
 
 const Label = styled.label`
+  display: block;
+  margin-bottom: 8px;
   font-weight: 500;
-  color: #333;
-  font-size: 0.9rem;
 `;
 
 const Input = styled.input`
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  
-  &:focus {
-    outline: none;
-    border-color: #007acc;
-  }
-`;
-
-const StyledSelect = styled.select`
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
   width: 100%;
-  
-  &:focus {
-    outline: none;
-    border-color: #007acc;
-  }
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
 `;
 
-const ModalActions = styled.div`
+const Select = styled.select`
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+`;
+
+const ButtonGroup = styled.div`
   display: flex;
-  gap: 12px;
   justify-content: flex-end;
+  gap: 12px;
   margin-top: 24px;
 `;
 
 const Button = styled.button`
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.2s ease;
-  
-  &.primary {
-    background: #007acc;
-    color: white;
-    
-    &:hover {
-      background: #005a9e;
-    }
-  }
-  
-  &.secondary {
-    background: #6c757d;
-    color: white;
-    
-    &:hover {
-      background: #5a6268;
-    }
-  }
 `;
 
-const initialFormData = {
-  name: '',
-  gender: 'male',
-  age: 'adult',
-  notes: ''
-};
+const PrimaryButton = styled(Button)`
+  background: #007bff;
+  color: white;
+`;
 
-function ParticipantModal({ isOpen, onClose, onSubmit, initialData = null, title }) {
-  const [formData, setFormData] = useState(initialFormData);
+const SecondaryButton = styled(Button)`
+  background: #6c757d;
+  color: white;
+`;
+
+const ParticipantModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  participant = null,
+  title = 'Добавить участника',
+}) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    age: 'adult',
+    gender: 'male',
+    notes: '',
+  });
 
   useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
+    if (participant) {
+      setFormData({
+        name: participant.name || '',
+        age: participant.age || 'adult',
+        gender: participant.gender || 'male',
+        notes: participant.notes || '',
+      });
     } else {
-      setFormData(initialFormData);
+      setFormData({
+        name: '',
+        age: 'adult',
+        gender: 'male',
+        notes: '',
+      });
     }
-  }, [initialData, isOpen]);
+  }, [participant]);
 
-  const handleChange = (field, value) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [name]: value
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.name.trim()) {
-      onSubmit(formData);
-      onClose();
-    }
+    onSubmit(formData);
+    onClose();
   };
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   return (
-    <Modal onClick={onClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
-        <ModalTitle>{title}</ModalTitle>
-        <Form onSubmit={handleSubmit}>
+    <ModalOverlay onClick={onClose}>
+      <ModalContent onClick={e => e.stopPropagation()}>
+        <ModalHeader>
+          <ModalTitle>{title}</ModalTitle>
+          <CloseButton onClick={onClose}>&times;</CloseButton>
+        </ModalHeader>
+        
+        <form onSubmit={handleSubmit}>
           <FormGroup>
-            <Label htmlFor="name">Имя участника *</Label>
+            <Label htmlFor="name">Имя *</Label>
             <Input
+              type="text"
               id="name"
-              placeholder="Например: Иван Петров"
+              name="name"
               value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
+              onChange={handleChange}
               required
+              autoFocus
             />
           </FormGroup>
-
-          <FormRow>
-            <FormGroup>
-              <Label htmlFor="gender">Пол</Label>
-              <StyledSelect
-                id="gender"
-                value={formData.gender}
-                onChange={(e) => handleChange('gender', e.target.value)}
-              >
-                <option value="male">👨 Мужской</option>
-                <option value="female">👩 Женский</option>
-              </StyledSelect>
-            </FormGroup>
-            
-            <FormGroup>
-              <Label htmlFor="age">Возрастная категория</Label>
-              <StyledSelect
-                id="age"
-                value={formData.age}
-                onChange={(e) => handleChange('age', e.target.value)}
-              >
-                <option value="adult">🧑 Взрослый</option>
-                <option value="child">👶 Ребенок</option>
-              </StyledSelect>
-            </FormGroup>
-          </FormRow>
-
+          
           <FormGroup>
-            <Label htmlFor="notes">Заметки</Label>
+            <Label htmlFor="age">Возраст</Label>
+            <Select
+              id="age"
+              name="age"
+              value={formData.age}
+              onChange={handleChange}
+            >
+              <option value="adult">Взрослый</option>
+              <option value="child">Ребенок</option>
+            </Select>
+          </FormGroup>
+          
+          <FormGroup>
+            <Label htmlFor="gender">Пол</Label>
+            <Select
+              id="gender"
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+            >
+              <option value="male">Мужской</option>
+              <option value="female">Женский</option>
+            </Select>
+          </FormGroup>
+          
+          <FormGroup>
+            <Label htmlFor="notes">Примечания</Label>
             <Input
+              as="textarea"
               id="notes"
-              placeholder="Особенности питания, аллергии..."
+              name="notes"
+              rows="3"
               value={formData.notes}
-              onChange={(e) => handleChange('notes', e.target.value)}
+              onChange={handleChange}
             />
           </FormGroup>
-
-          <ModalActions>
-            <Button type="button" className="secondary" onClick={onClose}>
+          
+          <ButtonGroup>
+            <SecondaryButton type="button" onClick={onClose}>
               Отмена
-            </Button>
-            <Button type="submit" className="primary">
-              {initialData ? 'Обновить' : 'Добавить'}
-            </Button>
-          </ModalActions>
-        </Form>
+            </SecondaryButton>
+            <PrimaryButton type="submit">
+              {participant ? 'Сохранить' : 'Добавить'}
+            </PrimaryButton>
+          </ButtonGroup>
+        </form>
       </ModalContent>
-    </Modal>
+    </ModalOverlay>
   );
 };
+
+ParticipantModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  participant: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    name: PropTypes.string,
+    age: PropTypes.oneOf(['adult', 'child']),
+    gender: PropTypes.oneOf(['male', 'female']),
+    notes: PropTypes.string,
+  }),
+  title: PropTypes.string,
+};
+
+export default ParticipantModal;

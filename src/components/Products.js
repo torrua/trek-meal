@@ -412,17 +412,7 @@ function Products({ products, onProductAdd, onProductDelete, onProductEdit }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    calories: '',
-    proteins: '',
-    fats: '',
-    carbs: '',
-    isPerishable: false,
-    packaging: '',
-    portions: [{ weight: '', isDivisible: false }]
-  });
+  const [formData, setFormData] = useState({initialFormData});
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -627,190 +617,74 @@ function Products({ products, onProductAdd, onProductDelete, onProductEdit }) {
       {showModal && (
         <Modal onClick={() => setShowModal(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
-            <ModalTitle>
-              {editingProduct ? 'Редактировать продукт' : 'Добавить продукт'}
-            </ModalTitle>
-            
+            <ModalTitle>{editingProduct ? 'Редактировать продукт' : 'Добавить продукт'}</ModalTitle>
             <Form onSubmit={handleSubmit}>
               <FormRow>
                 <FormGroup>
                   <Label htmlFor="name">Название продукта *</Label>
-                  <Input
-                    id="name"
-                    placeholder="Например: Овсянка"
-                    value={formData.name}
-                    onChange={(e) => handleChange('name', e.target.value)}
-                    required
-                  />
+                  <Input id="name" placeholder="Например: Овсянка" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} required />
                 </FormGroup>
-                
                 <FormGroup>
                   <Label htmlFor="packaging">Упаковка</Label>
-                  <Select
-                    id="packaging"
-                    value={formData.packaging}
-                    onChange={(e) => handleChange('packaging', e.target.value)}
-                  >
-                    <option value="">Выберите упаковку</option>
-                    <option value="пакет">Пакет</option>
-                    <option value="банка">Банка</option>
-                    <option value="коробка">Коробка</option>
-                    <option value="бутылка">Бутылка</option>
-                    <option value="другое">Другое</option>
+                  <Select id="packaging" value={formData.packaging} onChange={(e) => handleChange('packaging', e.target.value)}>
+                    <option value="">Без упаковки</option>
+                    <option value="Пакет">Пакет</option>
+                    <option value="Банка">Банка</option>
+                    <option value="Коробка">Коробка</option>
+                    <option value="Бутылка">Бутылка</option>
                   </Select>
                 </FormGroup>
               </FormRow>
-
               <FormGroup>
                 <Label htmlFor="description">Описание</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Краткое описание продукта..."
-                  value={formData.description}
-                  onChange={(e) => handleChange('description', e.target.value)}
-                />
+                <Textarea id="description" placeholder="Краткое описание, особенности" value={formData.description} onChange={(e) => handleChange('description', e.target.value)} />
               </FormGroup>
-
               <FormRow>
                 <FormGroup>
-                  <Label htmlFor="calories">Калории (ккал)</Label>
-                  <Input
-                    id="calories"
-                    type="number"
-                    step="0.1"
-                    placeholder="0"
-                    value={formData.calories}
-                    onChange={(e) => handleChange('calories', e.target.value)}
-                  />
+                  <Label htmlFor="calories">Калории (на 100г)</Label>
+                  <Input id="calories" type="number" step="0.1" placeholder="0" value={formData.calories} onChange={(e) => handleChange('calories', e.target.value)} />
                 </FormGroup>
-                
                 <FormGroup>
-                  <Label htmlFor="proteins">Белки (г)</Label>
-                  <Input
-                    id="proteins"
-                    type="number"
-                    step="0.1"
-                    placeholder="0"
-                    value={formData.proteins}
-                    onChange={(e) => handleChange('proteins', e.target.value)}
-                  />
+                  <Label htmlFor="proteins">Белки (на 100г)</Label>
+                  <Input id="proteins" type="number" step="0.1" placeholder="0" value={formData.proteins} onChange={(e) => handleChange('proteins', e.target.value)} />
                 </FormGroup>
               </FormRow>
-
               <FormRow>
                 <FormGroup>
-                  <Label htmlFor="fats">Жиры (г)</Label>
-                  <Input
-                    id="fats"
-                    type="number"
-                    step="0.1"
-                    placeholder="0"
-                    value={formData.fats}
-                    onChange={(e) => handleChange('fats', e.target.value)}
-                  />
+                  <Label htmlFor="fats">Жиры (на 100г)</Label>
+                  <Input id="fats" type="number" step="0.1" placeholder="0" value={formData.fats} onChange={(e) => handleChange('fats', e.target.value)} />
                 </FormGroup>
-                
                 <FormGroup>
-                  <Label htmlFor="carbs">Углеводы (г)</Label>
-                  <Input
-                    id="carbs"
-                    type="number"
-                    step="0.1"
-                    placeholder="0"
-                    value={formData.carbs}
-                    onChange={(e) => handleChange('carbs', e.target.value)}
-                  />
+                  <Label htmlFor="carbs">Углеводы (на 100г)</Label>
+                  <Input id="carbs" type="number" step="0.1" placeholder="0" value={formData.carbs} onChange={(e) => handleChange('carbs', e.target.value)} />
                 </FormGroup>
               </FormRow>
-
               <FormGroup>
-                <Label>Скоропортящийся продукт</Label>
+                <Label>Свойства</Label>
                 <SwitchContainer>
                   <Switch>
-                    <input
-                      type="checkbox"
-                      checked={formData.isPerishable}
-                      onChange={(e) => handleChange('isPerishable', e.target.checked)}
-                    />
-                    <span></span>
+                    <input type="checkbox" checked={formData.isPerishable} onChange={(e) => handleChange('isPerishable', e.target.checked)} />
+                    <span />
                   </Switch>
-                  <span>{formData.isPerishable ? 'Да' : 'Нет'}</span>
+                  <span>Скоропортящийся продукт</span>
                 </SwitchContainer>
               </FormGroup>
-
               <FormGroup>
                 <Label>Порции продукта *</Label>
                 {formData.portions.map((portion, index) => (
-                  <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      placeholder="Вес (г)"
-                      value={portion.weight}
-                      onChange={(e) => handlePortionChange(index, 'weight', e.target.value)}
-                      style={{ flex: 1 }}
-                    />
-                    <SwitchContainer style={{ flex: 'none' }}>
-                      <Switch>
-                        <input
-                          type="checkbox"
-                          checked={portion.isDivisible}
-                          onChange={(e) => handlePortionChange(index, 'isDivisible', e.target.checked)}
-                        />
-                        <span></span>
-                      </Switch>
-                      <span style={{ fontSize: '0.75rem' }}>
-                        {portion.isDivisible ? 'Делить' : 'Целая'}
-                      </span>
-                    </SwitchContainer>
+                  <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                    <Input type="text" placeholder="Название порции" value={portion.name} onChange={(e) => handlePortionChange(index, 'name', e.target.value)} style={{ flex: 2 }} required />
+                    <Input type="number" step="0.1" placeholder="Вес (г)" value={portion.weight} onChange={(e) => handlePortionChange(index, 'weight', e.target.value)} style={{ flex: 1 }} required />
                     {formData.portions.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removePortion(index)}
-                        style={{
-                          padding: '6px 10px',
-                          background: '#6c757d',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.8rem'
-                        }}
-                      >
-                        Убрать
-                      </button>
+                      <Button type="button" onClick={() => removePortion(index)} style={{ background: '#6c757d' }}>–</Button>
                     )}
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={addPortion}
-                  style={{
-                    padding: '8px 12px',
-                    background: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    marginTop: '8px',
-                    fontSize: '0.8rem'
-                  }}
-                >
-                  + Добавить порцию
-                </button>
+                <Button type="button" onClick={addPortion} style={{ background: '#28a745', alignSelf: 'flex-start' }}>+ Добавить порцию</Button>
               </FormGroup>
-
               <ModalActions>
-                <Button 
-                  type="button" 
-                  className="secondary"
-                  onClick={() => setShowModal(false)}
-                >
-                  Отмена
-                </Button>
-                <Button type="submit" className="primary">
-                  {editingProduct ? 'Сохранить' : 'Добавить'}
-                </Button>
+                <Button type="button" className="secondary" onClick={() => setShowModal(false)}>Отмена</Button>
+                <Button type="submit" className="primary">{editingProduct ? 'Сохранить' : 'Добавить'}</Button>
               </ModalActions>
             </Form>
           </ModalContent>
@@ -821,4 +695,3 @@ function Products({ products, onProductAdd, onProductDelete, onProductEdit }) {
 }
 
 export default Products;
-

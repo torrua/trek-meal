@@ -6,7 +6,7 @@ import { calculateTripSummary } from '../../utils';
 import useProductStore from '../../stores/useProductStore';
 import useParticipantStore from '../../stores/useParticipantStore';
 import Button from '../../ui/Button';
-import type { Trip } from '../../types'; // <-- Импортируем наш основной тип
+import type { Trip } from '../../types'; 
 
 // Типизируем пропсы компонента
 interface TripCardProps {

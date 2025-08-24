@@ -2,7 +2,7 @@
 
 import React from 'react';
 import useCategoryStore from '../../stores/useCategoryStore';
-import type { Product, Category } from '../../types'; // <-- Импортируем типы
+import type { Product, Category } from '../../types';
 
 interface ProductCardProps {
   product: Product;

@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import useCategoryStore from '../../stores/useCategoryStore';
-import type { Category, CategoryData } from '../../types'; // <-- Импорт типов
+import type { Category, CategoryData } from '../../types';
 
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
-import ConfirmModal from '../../ui/ConfirmModal.tsx';
+import ConfirmModal from '../../ui/ConfirmModal';
 
 // Props для формы
 interface CategoryFormProps {

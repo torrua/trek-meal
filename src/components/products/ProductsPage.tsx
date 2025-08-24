@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import useProductStore from '../../stores/useProductStore';
 import useCategoryStore from '../../stores/useCategoryStore';
-import type { Product, Category, ProductData } from '../../types'; // <-- Импорт типов
+import type { Product, Category, ProductData } from '../../types';
 
 import ProductCard from './ProductCard';
 import ProductForm from './ProductForm';

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useTripStore from '../../stores/useTripStore';
-import type { Trip, TripData } from '../../types'; // <-- Импортируем наш тип
+import type { Trip, TripData } from '../../types';
 
 import TripCard from './TripCard';
 import TripForm from './TripForm';

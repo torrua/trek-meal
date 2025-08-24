@@ -1,27 +1,30 @@
 {
-    "compilerOptions": {
-      "target": "es5",
-      "lib": [
-        "dom",
-        "dom.iterable",
-        "esnext"
-      ],
-      "allowJs": true,
-      "skipLibCheck": true,
-      "esModuleInterop": true,
-      "allowSyntheticDefaultImports": true,
-      "strict": true,
-      "forceConsistentCasingInFileNames": true,
-      "noFallthroughCasesInSwitch": true,
-      "module": "esnext",
-      "moduleResolution": "node",
-      "resolveJsonModule": true,
-      "isolatedModules": true,
-      "noEmit": true,
-      "jsx": "react-jsx"
-    },
-    "include": [
-      "src"
-    ]
-  }
-  
+  "compilerOptions": {
+    "target": "es5",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    // --- КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ ---
+    // Указываем, что 'src' является корнем для всех импортов.
+    // Это позволяет Webpack правильно разрешать пути типа 'ui/Button' или '../stores/useTripStore'
+    "baseUrl": "src", 
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "bundler", // Возвращаем 'node', т.к. 'bundler' может требовать более новой версии TS/CRA
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src"
+  ]
+}

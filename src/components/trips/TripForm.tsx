@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import useParticipantStore from '../../stores/useParticipantStore';
 import { handleDateChange } from '../../stores/useTripStore';
 import Button from '../../ui/Button';
-import type { Trip, TripData, Participant } from '../../types'; // <-- Импортируем типы
+import type { Trip, TripData, Participant } from '../../types';
 
 // Определяем пропсы компонента
 interface TripFormProps {

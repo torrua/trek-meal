@@ -5,9 +5,9 @@ import useProductStore from '../stores/useProductStore';
 import useParticipantStore from '../stores/useParticipantStore';
 import { calculateTripSummary } from '../utils';
 import Button from '../ui/Button';
+import type { Trip, Product } from '../types';
 
-// Вспомогательный компонент для карточек статистики
-const StatCard = ({ value, label }) => (
+const StatCard = ({ value, label }: { value: number | string; label: string }) => (
   <div className="p-4 bg-white border border-gray-200 rounded-lg text-center shadow-sm">
     <div className="text-3xl font-bold text-blue-600">{value}</div>
     <div className="text-sm font-medium text-gray-500 mt-1">{label}</div>
@@ -17,26 +17,29 @@ const StatCard = ({ value, label }) => (
 function Dashboard() {
   const navigate = useNavigate();
 
-  // Получаем данные напрямую из атомарных сторов
   const { trips } = useTripStore();
   const { products } = useProductStore();
   const { participants } = useParticipantStore();
 
-  // Используем useMemo для оптимизации, чтобы расчеты не выполнялись при каждом рендере
   const recentTrips = useMemo(() =>
     [...trips]
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .sort((a: Trip, b: Trip) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 3),
     [trips]
   );
   
   const recentProducts = useMemo(() => 
-    products.slice(-5).reverse(), 
+    [...products].reverse().slice(0, 5), 
     [products]
   );
 
   const planningCount = useMemo(() => 
-    trips.filter(t => t.status === 'planning').length,
+    trips.filter((t: Trip) => t.status === 'planning').length,
+    [trips]
+  );
+  
+  const completedCount = useMemo(() => 
+    trips.filter((t: Trip) => t.status === 'completed').length,
     [trips]
   );
 
@@ -49,11 +52,10 @@ function Dashboard() {
         <StatCard value={products.length} label="Продуктов в базе" />
         <StatCard value={participants.length} label="Участников" />
         <StatCard value={planningCount} label="Планируется" />
-        <StatCard value={0} label="Завершено" /> {/* Placeholder */}
+        <StatCard value={completedCount} label="Завершено" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Секция последних походов */}
         <section>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-gray-800">Последние походы</h3>
@@ -73,18 +75,21 @@ function Dashboard() {
                       <div><strong className="block text-blue-600">{trip.days}</strong><span className="text-xs text-gray-500">дней</span></div>
                       <div><strong className="block text-blue-600">{trip.participants.length}</strong><span className="text-xs text-gray-500">чел.</span></div>
                       <div><strong className="block text-blue-600">{(summary.totalWeight/1000).toFixed(1)}</strong><span className="text-xs text-gray-500">кг</span></div>
-                      <div><strong className="block text-blue-600">{summary.averageCaloriesPerPersonPerDay}</strong><span className="text-xs text-gray-500">ккал</span></div>
+                      <div><strong className="block text-blue-600">{summary.averageCaloriesPerPersonPerDay}</strong><span className="text-xs text-gray-500">ккал/день</span></div>
                     </div>
                   </div>
                 )
               })
             ) : (
-              <p className="text-gray-500 text-center p-8 bg-gray-50 rounded-lg">Пока нет ни одного похода.</p>
+              <div className="text-center py-12 px-6 bg-gray-50 rounded-lg">
+                <h3 className="text-lg font-medium text-gray-700">Пока нет ни одного похода</h3>
+                <p className="text-gray-500 mt-2 mb-4">Создайте свой первый поход, чтобы он появился здесь.</p>
+                <Button variant="primary" onClick={() => navigate('/trips')}>К поxoдам</Button>
+              </div>
             )}
           </div>
         </section>
 
-        {/* Секция последних продуктов */}
         <section>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-gray-800">Недавно добавленные продукты</h3>
@@ -92,14 +97,18 @@ function Dashboard() {
           </div>
           <div className="space-y-2">
             {recentProducts.length > 0 ? (
-              recentProducts.map(product => (
+              recentProducts.map((product: Product) => (
                 <div key={product.id} className="p-3 bg-white border rounded-lg shadow-sm">
                   <h4 className="font-bold text-gray-800 text-sm">{product.name}</h4>
                   <p className="text-xs text-gray-500">{product.calories} ккал, {product.proteins}б / {product.fats}ж / {product.carbs}у</p>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center p-8 bg-gray-50 rounded-lg">База продуктов пуста.</p>
+              <div className="text-center py-12 px-6 bg-gray-50 rounded-lg">
+                <h3 className="text-lg font-medium text-gray-700">База продуктов пуста</h3>
+                <p className="text-gray-500 mt-2 mb-4">Добавьте продукты, чтобы они отображались здесь.</p>
+                <Button variant="primary" onClick={() => navigate('/products')}>К продуктам</Button>
+              </div>
             )}
           </div>
         </section>

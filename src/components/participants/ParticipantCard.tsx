@@ -1,20 +1,28 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import useTripStore from '../../stores/useTripStore';
+import type { Participant, Trip } from '../../types';
 
-const GENDER_ICONS = { male: '👨', female: '👩' };
-const AGE_META = { 
+const GENDER_ICONS: { [key in Participant['gender']]: string } = { male: '👨', female: '👩' };
+const AGE_META: { [key in Participant['age']]: { text: string; className: string } } = { 
   adult: { text: 'Взрослый', className: 'bg-green-100 text-green-800' },
   child: { text: 'Ребенок', className: 'bg-yellow-100 text-yellow-800' },
 };
 
-function ParticipantCard({ participant, onEdit, onDelete }) {
+interface ParticipantCardProps {
+  participant: Participant;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+const ParticipantCard: React.FC<ParticipantCardProps> = ({ participant, onEdit, onDelete }) => {
   const { name, gender, age, notes } = participant;
-  const ageMeta = AGE_META[age] || {};
+  const ageMeta = AGE_META[age];
 
   const { trips } = useTripStore();
+  
   const participantTrips = useMemo(() => 
-    trips.filter(trip => trip.participants.includes(participant.id)),
+    trips.filter((trip: Trip) => trip.participants.includes(participant.id)),
     [trips, participant.id]
   );
 
@@ -40,7 +48,7 @@ function ParticipantCard({ participant, onEdit, onDelete }) {
         
         <div>
           <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Участвует в походах:</h4>
-          <div className="space-y-1">
+          <div className="space-y-1 max-h-24 overflow-y-auto">
             {participantTrips.length > 0 ? (
               participantTrips.map(trip => (
                 <Link 

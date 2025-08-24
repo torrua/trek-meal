@@ -1,12 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
-import useProductStore from './useProductStore'; // Импортируем для взаимодействия
+import useProductStore from './useProductStore';
+import type { Category, CategoryData } from '../types';
 
-const useCategoryStore = create(
+interface CategoryState {
+  categories: Category[];
+  addCategory: (data: CategoryData) => void;
+  updateCategory: (id: number, data: CategoryData) => void;
+  deleteCategory: (id: number) => void;
+}
+
+const useCategoryStore = create<CategoryState>()(
   persist(
     (set, get) => ({
-      // Пример категорий по умолчанию
       categories: [
         { id: 1, name: 'Крупы и макароны', color: '#f59e0b' },
         { id: 2, name: 'Мясо и сублиматы', color: '#ef4444' },
@@ -32,7 +39,6 @@ const useCategoryStore = create(
         const categoryToDelete = get().categories.find(c => c.id === id);
         if (!categoryToDelete) return;
         
-        // ВЗАИМОДЕЙСТВИЕ: Перед удалением категории, "отвязываем" ее от всех продуктов
         useProductStore.getState().removeCategoryFromProducts(id);
 
         set((state) => ({
@@ -41,9 +47,7 @@ const useCategoryStore = create(
         toast.error(`Категория "${categoryToDelete.name}" удалена.`);
       },
     }),
-    {
-      name: 'trek-meal-categories',
-    }
+    { name: 'trek-meal-categories' }
   )
 );
 

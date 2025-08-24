@@ -1,25 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../../ui/Button';
+import type { Participant, ParticipantData } from '../../types';
 
-const INITIAL_STATE = { name: '', gender: 'male', age: 'adult', notes: '' };
+interface ParticipantFormProps {
+  participant: Participant | null;
+  onSubmit: (data: ParticipantData) => void;
+  onCancel: () => void;
+}
 
-function ParticipantForm({ participant, onSubmit, onCancel }) {
-  const [formData, setFormData] = useState(INITIAL_STATE);
+const INITIAL_STATE: ParticipantData = { name: '', gender: 'male', age: 'adult', notes: '' };
+
+const ParticipantForm: React.FC<ParticipantFormProps> = ({ participant, onSubmit, onCancel }) => {
+  const [formData, setFormData] = useState<ParticipantData>(INITIAL_STATE);
 
   useEffect(() => {
     if (participant) {
-      setFormData(participant);
+      // Исключаем 'id', чтобы соответствовать типу ParticipantData
+      const { id, ...data } = participant;
+      setFormData(data);
     } else {
       setFormData(INITIAL_STATE);
     }
   }, [participant]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
   };
@@ -61,7 +70,7 @@ function ParticipantForm({ participant, onSubmit, onCancel }) {
           name="notes"
           value={formData.notes}
           onChange={handleChange}
-          rows="3"
+          rows={3}
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
         />
       </div>

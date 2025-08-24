@@ -1,27 +1,31 @@
+// src/components/products/ProductsPage.tsx
+
 import React, { useState, useMemo } from 'react';
 import useProductStore from '../../stores/useProductStore';
 import useCategoryStore from '../../stores/useCategoryStore';
+import type { Product, Category, ProductData } from '../../types'; // <-- Импорт типов
+
 import ProductCard from './ProductCard';
 import ProductForm from './ProductForm';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
+import ConfirmModal from '../../ui/ConfirmModal.tsx';
 
 function ProductsPage() {
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
   const { categories } = useCategoryStore();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
 
   const filteredProducts = useMemo(() => 
-    products.filter(p => {
+    products.filter((p: Product) => {
       const searchMatch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           p.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      
       const categoryMatch = filterCategory === 'all' || p.categoryId == filterCategory;
-      
       return searchMatch && categoryMatch;
     }), 
     [products, searchTerm, filterCategory]
@@ -32,18 +36,23 @@ function ProductsPage() {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (product) => {
+  const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setIsModalOpen(true);
   };
   
-  const handleDelete = (id) => {
-    if (window.confirm('Вы уверены, что хотите удалить этот продукт?')) {
-      deleteProduct(id);
+  const handleRequestDelete = (product: Product) => {
+    setProductToDelete(product);
+  };
+  
+  const handleConfirmDelete = () => {
+    if (productToDelete) {
+      deleteProduct(productToDelete.id);
+      setProductToDelete(null);
     }
   };
 
-  const handleFormSubmit = (formData) => {
+  const handleFormSubmit = (formData: ProductData) => {
     if (editingProduct) {
       updateProduct(editingProduct.id, formData);
     } else {
@@ -63,7 +72,7 @@ function ProductsPage() {
             className="w-full md:w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm"
           >
             <option value="all">Все категории</option>
-            {categories.map(cat => (
+            {categories.map((cat: Category) => (
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
@@ -81,7 +90,7 @@ function ProductsPage() {
 
       {filteredProducts.length === 0 ? (
         <div className="text-center py-16 px-6 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-700">
+           <h3 className="text-lg font-medium text-gray-700">
             {searchTerm || filterCategory !== 'all' ? 'Продукты не найдены' : 'Продуктов пока нет'}
           </h3>
           <p className="text-gray-500 mt-2 mb-4">
@@ -91,12 +100,12 @@ function ProductsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredProducts.map(p => (
+          {filteredProducts.map((p: Product) => (
             <ProductCard 
               key={p.id} 
               product={p}
               onEdit={() => handleEdit(p)}
-              onDelete={() => handleDelete(p.id)}
+              onDelete={() => handleRequestDelete(p)}
             />
           ))}
         </div>
@@ -113,6 +122,17 @@ function ProductsPage() {
           onCancel={() => setIsModalOpen(false)}
         />
       </Modal>
+
+      <ConfirmModal
+        isOpen={!!productToDelete}
+        onClose={() => setProductToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Подтверждение удаления"
+        variant="danger"
+        confirmText="Удалить"
+      >
+        <p>Вы уверены, что хотите удалить продукт <span className="font-bold">"{productToDelete?.name}"</span>?</p>
+      </ConfirmModal>
     </div>
   );
 }

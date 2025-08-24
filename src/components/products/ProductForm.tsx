@@ -1,61 +1,74 @@
+// src/components/products/ProductForm.tsx
+
 import React, { useState, useEffect } from 'react';
 import useCategoryStore from '../../stores/useCategoryStore';
 import Button from '../../ui/Button';
 import { toast } from 'react-hot-toast';
+import type { Product, ProductData, ProductPortion, Category } from '../../types';
 
-const INITIAL_STATE = {
+interface ProductFormProps {
+  product: Product | null;
+  onSubmit: (data: ProductData) => void;
+  onCancel: () => void;
+}
+
+const INITIAL_STATE: ProductData = {
   name: '',
   description: '',
-  calories: '', proteins: '', fats: '', carbs: '',
+  calories: 0, proteins: 0, fats: 0, carbs: 0,
   isPerishable: false,
   packaging: '',
   categoryId: null,
-  portions: [{ name: 'Стандартная', weight: '' }]
+  portions: [{ name: 'Стандартная', weight: 0 }]
 };
 
-function ProductForm({ product, onSubmit, onCancel }) {
+const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }) => {
   const { categories } = useCategoryStore();
-  const [formData, setFormData] = useState(INITIAL_STATE);
+  const [formData, setFormData] = useState<ProductData>(INITIAL_STATE);
 
   useEffect(() => {
     if (product) {
-      setFormData({ ...INITIAL_STATE, ...product, portions: product.portions?.length ? product.portions : [{ name: 'Стандартная', weight: '' }] });
+      const { id, ...data } = product;
+      setFormData({ ...INITIAL_STATE, ...data, portions: data.portions?.length ? data.portions : [{ name: 'Стандартная', weight: 0 }] });
     } else {
       setFormData(INITIAL_STATE);
     }
   }, [product]);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    const isChecked = (e.target as HTMLInputElement).checked;
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? isChecked : value }));
   };
 
-  const handlePortionChange = (index, field, value) => {
+  const handlePortionChange = (index: number, field: keyof ProductPortion, value: string) => {
     const newPortions = [...formData.portions];
-    newPortions[index][field] = value;
+    newPortions[index] = { ...newPortions[index], [field]: value };
     setFormData(prev => ({ ...prev, portions: newPortions }));
   };
 
   const addPortion = () => {
-    setFormData(prev => ({ ...prev, portions: [...prev.portions, { name: '', weight: '' }] }));
+    setFormData(prev => ({ ...prev, portions: [...prev.portions, { name: '', weight: 0 }] }));
   };
 
-  const removePortion = (index) => {
+  const removePortion = (index: number) => {
     if (formData.portions.length > 1) {
       setFormData(prev => ({ ...prev, portions: prev.portions.filter((_, i) => i !== index) }));
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim() || formData.portions.some(p => !String(p.weight).trim() || parseFloat(p.weight) <= 0)) {
-        toast.error('Пожалуйста, заполните название и вес для всех порций.');
+    if (!formData.name.trim() || formData.portions.some(p => !String(p.weight).trim() || Number(p.weight) <= 0)) {
+        toast.error('Пожалуйста, заполните название и вес (больше нуля) для всех порций.');
         return;
     }
     onSubmit(formData);
   };
+  
   const inputClassName = "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500";
   const labelClassName = "block text-sm font-medium text-gray-700 mb-1";
+  
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -67,7 +80,7 @@ function ProductForm({ product, onSubmit, onCancel }) {
           <label htmlFor="categoryId" className={labelClassName}>Категория</label>
           <select id="categoryId" name="categoryId" value={formData.categoryId || ''} onChange={handleChange} className={inputClassName}>
             <option value="">Без категории</option>
-            {categories.map(cat => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
+            {categories.map((cat: Category) => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
           </select>
         </div>
       </div>
@@ -81,7 +94,7 @@ function ProductForm({ product, onSubmit, onCancel }) {
       </div>
       <div>
         <label htmlFor="description" className={labelClassName}>Описание</label>
-        <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="2" className={inputClassName} />
+        <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={2} className={inputClassName} />
       </div>
 
       <div>

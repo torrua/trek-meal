@@ -1,16 +1,29 @@
+// src/components/categories/CategoriesPage.tsx
+
 import React, { useState } from 'react';
 import useCategoryStore from '../../stores/useCategoryStore';
+import type { Category, CategoryData } from '../../types'; // <-- Импорт типов
+
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
+import ConfirmModal from '../../ui/ConfirmModal.tsx';
 
-// Простая форма для модального окна
-const CategoryForm = ({ category, onSubmit, onCancel }) => {
+// Props для формы
+interface CategoryFormProps {
+  category: Category | null;
+  onSubmit: (data: CategoryData) => void;
+  onCancel: () => void;
+}
+
+const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCancel }) => {
   const [name, setName] = useState(category?.name || '');
   const [color, setColor] = useState(category?.color || '#a855f7');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ name, color });
+    if (name.trim()) {
+      onSubmit({ name, color });
+    }
   };
 
   return (
@@ -21,7 +34,7 @@ const CategoryForm = ({ category, onSubmit, onCancel }) => {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Цвет</label>
-        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-full h-10 border border-gray-300 rounded-md" />
+        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="w-full h-10 border border-gray-300 rounded-md p-1" />
       </div>
       <div className="flex justify-end gap-3 pt-4">
         <Button type="button" variant="ghost" onClick={onCancel}>Отмена</Button>
@@ -31,13 +44,13 @@ const CategoryForm = ({ category, onSubmit, onCancel }) => {
   );
 };
 
-
 function CategoriesPage() {
   const { categories, addCategory, updateCategory, deleteCategory } = useCategoryStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
-  const handleOpenModal = (category = null) => {
+  const handleOpenModal = (category: Category | null = null) => {
     setEditingCategory(category);
     setIsModalOpen(true);
   };
@@ -47,7 +60,7 @@ function CategoriesPage() {
     setEditingCategory(null);
   };
   
-  const handleFormSubmit = (data) => {
+  const handleFormSubmit = (data: CategoryData) => {
     if (editingCategory) {
       updateCategory(editingCategory.id, data);
     } else {
@@ -56,10 +69,15 @@ function CategoriesPage() {
     handleCloseModal();
   };
   
-  const handleDelete = (id) => {
-      if (window.confirm('Вы уверены? Продукты этой категории не будут удалены, но потеряют привязку к ней.')) {
-          deleteCategory(id);
-      }
+  const handleRequestDelete = (category: Category) => {
+    setCategoryToDelete(category);
+  };
+
+  const handleConfirmDelete = () => {
+    if (categoryToDelete) {
+      deleteCategory(categoryToDelete.id);
+      setCategoryToDelete(null);
+    }
   };
 
   return (
@@ -70,7 +88,7 @@ function CategoriesPage() {
       </header>
       
       <div className="space-y-2">
-        {categories.map(cat => (
+        {categories.map((cat: Category) => (
           <div key={cat.id} className="p-3 bg-white border rounded-lg flex justify-between items-center">
             <div className="flex items-center gap-3">
               <span className="w-5 h-5 rounded-full" style={{ backgroundColor: cat.color }}></span>
@@ -78,7 +96,7 @@ function CategoriesPage() {
             </div>
             <div className="flex items-center gap-4">
               <button onClick={() => handleOpenModal(cat)} className="text-sm font-medium text-blue-600 hover:text-blue-800">Редактировать</button>
-              <button onClick={() => handleDelete(cat.id)} className="text-sm font-medium text-red-600 hover:text-red-800">Удалить</button>
+              <button onClick={() => handleRequestDelete(cat)} className="text-sm font-medium text-red-600 hover:text-red-800">Удалить</button>
             </div>
           </div>
         ))}
@@ -87,6 +105,18 @@ function CategoriesPage() {
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingCategory ? 'Редактировать категорию' : 'Новая категория'}>
         <CategoryForm category={editingCategory} onSubmit={handleFormSubmit} onCancel={handleCloseModal} />
       </Modal>
+      
+      <ConfirmModal
+        isOpen={!!categoryToDelete}
+        onClose={() => setCategoryToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Подтверждение удаления"
+        variant="danger"
+        confirmText="Удалить"
+      >
+        <p>Вы уверены, что хотите удалить категорию <span className="font-bold">"{categoryToDelete?.name}"</span>?</p>
+        <p className="mt-2 text-sm text-gray-500">Продукты этой категории не будут удалены, но потеряют привязку к ней.</p>
+      </ConfirmModal>
     </div>
   );
 }

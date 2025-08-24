@@ -1,17 +1,23 @@
+// src/components/trips/TripsPage.tsx
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useTripStore from '../../stores/useTripStore';
+import type { Trip, TripData } from '../../types'; // <-- Импортируем наш тип
+
 import TripCard from './TripCard';
 import TripForm from './TripForm';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
+import ConfirmModal from '../../ui/ConfirmModal.tsx';
 
 function TripsPage() {
   const { trips, addTrip, deleteTrip } = useTripStore();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [tripToDelete, setTripToDelete] = useState<Trip | null>(null);
 
-  const handleFormSubmit = (formData) => {
+  const handleFormSubmit = (formData: TripData) => {
     const newTrip = addTrip(formData);
     setIsModalOpen(false);
     if (newTrip) {
@@ -19,10 +25,15 @@ function TripsPage() {
     }
   };
   
-  const handleDelete = (tripId) => {
-      if (window.confirm('Вы уверены, что хотите удалить этот поход?')) {
-          deleteTrip(tripId);
-      }
+  const handleRequestDelete = (trip: Trip) => {
+    setTripToDelete(trip);
+  };
+  
+  const handleConfirmDelete = () => {
+    if (tripToDelete) {
+      deleteTrip(tripToDelete.id);
+      setTripToDelete(null);
+    }
   };
 
   return (
@@ -40,8 +51,8 @@ function TripsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {trips.map(trip => (
-            <TripCard key={trip.id} trip={trip} onDelete={() => handleDelete(trip.id)} />
+          {trips.map((trip: Trip) => (
+            <TripCard key={trip.id} trip={trip} onDelete={() => handleRequestDelete(trip)} />
           ))}
         </div>
       )}
@@ -49,6 +60,18 @@ function TripsPage() {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Создать новый поход">
         <TripForm onSubmit={handleFormSubmit} onCancel={() => setIsModalOpen(false)} />
       </Modal>
+
+      <ConfirmModal
+        isOpen={!!tripToDelete}
+        onClose={() => setTripToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Подтверждение удаления"
+        variant="danger"
+        confirmText="Удалить"
+      >
+        <p>Вы уверены, что хотите удалить поход <span className="font-bold">"{tripToDelete?.name}"</span>?</p>
+        <p className="mt-2 text-sm text-gray-500">Это действие невозможно отменить.</p>
+      </ConfirmModal>
     </div>
   );
 }

@@ -1,41 +1,42 @@
 import React, { useState } from 'react';
 import useParticipantStore from '../../stores/useParticipantStore';
+import type { Participant, ParticipantData } from '../../types';
+
 import ParticipantCard from './ParticipantCard';
 import ParticipantForm from './ParticipantForm';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
+import ConfirmModal from '../../ui/ConfirmModal';
 
 function ParticipantsPage() {
-  // Получаем данные и действия прямо из стора
   const { participants, addParticipant, updateParticipant, deleteParticipant } = useParticipantStore();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingParticipant, setEditingParticipant] = useState(null);
-  
-  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
+  const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
 
   const handleAddNew = () => {
     setEditingParticipant(null);
     setIsModalOpen(true);
   };
 
-  const handleEdit = (participant) => {
+  const handleEdit = (participant: Participant) => {
     setEditingParticipant(participant);
     setIsModalOpen(true);
   };
   
-  const handleDeleteRequest = (participant) => {
-    setConfirmDelete(participant);
+  const handleDeleteRequest = (participant: Participant) => {
+    setParticipantToDelete(participant);
   };
   
-  const handleDeleteConfirm = () => {
-    if (confirmDelete) {
-      deleteParticipant(confirmDelete.id);
-      setConfirmDelete(null);
+  const handleConfirmDelete = () => {
+    if (participantToDelete) {
+      deleteParticipant(participantToDelete.id);
+      setParticipantToDelete(null);
     }
   };
 
-  const handleFormSubmit = (formData) => {
+  const handleFormSubmit = (formData: ParticipantData) => {
     if (editingParticipant) {
       updateParticipant(editingParticipant.id, formData);
     } else {
@@ -70,7 +71,6 @@ function ParticipantsPage() {
         </div>
       )}
       
-      {/* Модальное окно для создания/редактирования */}
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
@@ -83,21 +83,17 @@ function ParticipantsPage() {
         />
       </Modal>
 
-      {/* Модальное окно для подтверждения удаления */}
-      <Modal
-        isOpen={!!confirmDelete}
-        onClose={() => setConfirmDelete(null)}
+      <ConfirmModal
+        isOpen={!!participantToDelete}
+        onClose={() => setParticipantToDelete(null)}
+        onConfirm={handleConfirmDelete}
         title="Подтвердите удаление"
+        variant="danger"
+        confirmText="Удалить"
       >
-        <p className="text-gray-700">
-          Вы уверены, что хотите удалить участника "{confirmDelete?.name}"? 
-          Это действие также удалит его из всех походов.
-        </p>
-        <div className="flex justify-end gap-3 pt-6">
-          <Button variant="ghost" onClick={() => setConfirmDelete(null)}>Отмена</Button>
-          <Button variant="danger" onClick={handleDeleteConfirm}>Удалить</Button>
-        </div>
-      </Modal>
+        <p>Вы уверены, что хотите удалить участника <span className="font-bold">"{participantToDelete?.name}"</span>?</p>
+        <p className="mt-2 text-sm text-gray-500">Это действие также удалит его из всех походов.</p>
+      </ConfirmModal>
     </div>
   );
 }

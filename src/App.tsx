@@ -1,0 +1,29 @@
+// src/App.tsx
+
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+import Layout from './components/layout/Layout';
+import Dashboard from './components/Dashboard';
+import TripsPage from './components/trips/TripsPage';
+import TripPlanningPage from './components/trip-planning/TripPlanningPage';
+import ProductsPage from './components/products/ProductsPage';
+import ParticipantsPage from './components/participants/ParticipantsPage';
+import CategoriesPage from './components/categories/CategoriesPage';
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="products" element={<ProductsPage />} />
+        <Route path="categories" element={<CategoriesPage />} />
+        <Route path="participants" element={<ParticipantsPage />} />
+        <Route path="trips" element={<TripsPage />} />
+        <Route path="trips/:tripId" element={<TripPlanningPage />} />
+      </Route>
+    </Routes>
+  );
+}
+
+export default App;

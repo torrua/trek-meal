@@ -1,25 +1,33 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
-// import { useTripStore } from './useTripStore';
+import type { Product, ProductData } from '../types';
 
-const useProductStore = create(
+interface ProductState {
+  products: Product[];
+  addProduct: (data: ProductData) => void;
+  updateProduct: (id: number, data: ProductData) => void;
+  deleteProduct: (id: number) => void;
+  removeCategoryFromProducts: (categoryId: number) => void;
+}
+
+const useProductStore = create<ProductState>()(
   persist(
     (set, get) => ({
       products: [],
 
       addProduct: (productData) => {
-        const newProduct = {
+        const newProduct: Product = {
           ...productData,
           id: Date.now(),
-          calories: parseFloat(productData.calories) || 0,
-          proteins: parseFloat(productData.proteins) || 0,
-          fats: parseFloat(productData.fats) || 0,
-          carbs: parseFloat(productData.carbs) || 0,
+          calories: Number(productData.calories) || 0,
+          proteins: Number(productData.proteins) || 0,
+          fats: Number(productData.fats) || 0,
+          carbs: Number(productData.carbs) || 0,
           categoryId: productData.categoryId ? Number(productData.categoryId) : null,
           portions: productData.portions.map(p => ({
             ...p,
-            weight: parseFloat(p.weight) || 0,
+            weight: Number(p.weight) || 0,
           })),
         };
         set((state) => ({ products: [...state.products, newProduct] }));
@@ -29,19 +37,7 @@ const useProductStore = create(
       updateProduct: (id, updatedData) => {
         set((state) => ({
           products: state.products.map((p) =>
-            p.id === id ? { 
-              ...p, 
-              ...updatedData,
-              calories: parseFloat(updatedData.calories) || 0,
-              proteins: parseFloat(updatedData.proteins) || 0,
-              fats: parseFloat(updatedData.fats) || 0,
-              carbs: parseFloat(updatedData.carbs) || 0,
-              categoryId: updatedData.categoryId ? Number(updatedData.categoryId) : null,
-              portions: updatedData.portions.map(p => ({
-                ...p,
-                weight: parseFloat(p.weight) || 0,
-              })),
-            } : p
+            p.id === id ? { ...p, ...updatedData } : p
           ),
         }));
         toast.success(`Продукт "${updatedData.name}" обновлен.`);
@@ -51,13 +47,12 @@ const useProductStore = create(
         const productToDelete = get().products.find(p => p.id === id);
         if (!productToDelete) return;
 
-        //useTripStore.getState().removeProductFromAllTrips(id);
-
         set((state) => ({
           products: state.products.filter((p) => p.id !== id),
         }));
         toast.error(`Продукт "${productToDelete.name}" удален.`);
       },
+      
       removeCategoryFromProducts: (categoryId) => {
         set((state) => ({
           products: state.products.map(product => 
@@ -68,9 +63,7 @@ const useProductStore = create(
         }));
       },
     }),
-    {
-      name: 'trek-meal-products',
-    }
+    { name: 'trek-meal-products' }
   )
 );
 

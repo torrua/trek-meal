@@ -9,7 +9,7 @@ import ProductCard from './ProductCard';
 import ProductForm from './ProductForm';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
-import ConfirmModal from '../../ui/ConfirmModal.tsx';
+import ConfirmModal from '../../ui/ConfirmModal';
 
 function ProductsPage() {
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore();

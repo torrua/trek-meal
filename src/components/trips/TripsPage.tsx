@@ -9,7 +9,7 @@ import TripCard from './TripCard';
 import TripForm from './TripForm';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
-import ConfirmModal from '../../ui/ConfirmModal.tsx';
+import ConfirmModal from '../../ui/ConfirmModal';
 
 function TripsPage() {
   const { trips, addTrip, deleteTrip } = useTripStore();

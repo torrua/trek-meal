@@ -17,6 +17,7 @@
         "zustand": "^5.0.8"
     },
     "scripts": {
+        "jsx": "react-scripts jsx –use-babel",
         "start": "react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",

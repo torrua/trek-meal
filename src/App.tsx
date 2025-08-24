@@ -10,6 +10,7 @@ import TripPlanningPage from './components/trip-planning/TripPlanningPage';
 import ProductsPage from './components/products/ProductsPage';
 import ParticipantsPage from './components/participants/ParticipantsPage';
 import CategoriesPage from './components/categories/CategoriesPage';
+import DishesPage from './components/dishes/DishesPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
       <Route path="/" element={<Layout />}>
         <Route index element={<Dashboard />} />
         <Route path="products" element={<ProductsPage />} />
+        <Route path="dishes" element={<DishesPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="participants" element={<ParticipantsPage />} />
         <Route path="trips" element={<TripsPage />} />

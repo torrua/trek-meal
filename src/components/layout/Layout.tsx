@@ -37,6 +37,12 @@ const Layout: React.FC = () => {
         >
           Продукты
         </NavLink>
+        <NavLink // <-- Новая ссылка
+          to="/dishes"
+          className={({ isActive }) => cn(navLinkBaseClasses, { [navLinkActiveClasses]: isActive, [navLinkInactiveClasses]: !isActive })}
+        >
+          Блюда
+        </NavLink>
         <NavLink 
           to="/categories"
           className={({ isActive }) => cn(navLinkBaseClasses, { [navLinkActiveClasses]: isActive, [navLinkInactiveClasses]: !isActive })}

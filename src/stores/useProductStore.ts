@@ -1,7 +1,10 @@
+// src/stores/useProductStore.ts
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import type { Product, ProductData } from '../types';
+import useDishStore from './useDishStore'; // <-- Импортируем стор блюд для проверки
 
 interface ProductState {
   products: Product[];
@@ -43,14 +46,28 @@ const useProductStore = create<ProductState>()(
         toast.success(`Продукт "${updatedData.name}" обновлен.`);
       },
 
+      // --- ШАГ 3: ОБНОВЛЕННАЯ ЛОГИКА УДАЛЕНИЯ ---
       deleteProduct: (id) => {
-        const productToDelete = get().products.find(p => p.id === id);
-        if (!productToDelete) return;
+        // 1. Проверяем, используется ли продукт, через другой стор.
+        const isUsed = useDishStore.getState().isProductInUse(id);
 
-        set((state) => ({
-          products: state.products.filter((p) => p.id !== id),
-        }));
-        toast.error(`Продукт "${productToDelete.name}" удален.`);
+        if (isUsed) {
+          // 2. Если используется - блокируем удаление и информируем пользователя.
+          toast.error(
+            "Невозможно удалить продукт, так как он используется в одном или нескольких блюдах. Сначала удалите его из блюд.",
+            { duration: 5000 } // Увеличиваем длительность, чтобы пользователь успел прочитать
+          );
+          return; // Прерываем выполнение функции
+        }
+        
+        // 3. Если не используется - безопасно удаляем.
+        const productToDelete = get().products.find(p => p.id === id);
+        if (productToDelete) {
+          set((state) => ({
+            products: state.products.filter((p) => p.id !== id),
+          }));
+          toast.success(`Продукт "${productToDelete.name}" удален.`);
+        }
       },
       
       removeCategoryFromProducts: (categoryId) => {

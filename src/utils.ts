@@ -1,6 +1,7 @@
 // src/utils.ts
-import type { Trip, Product, Participant } from './types';
+import type { Trip, Product, Participant, Dish, MealPlanItem } from './types';
 
+// Функции getMealName, formatDate, pluralize, calculateDays, calculateEndDate остаются без изменений.
 export const getMealName = (mealNumber: number, totalMeals: number): string => {
     const names: { [key: number]: string[] } = {
       3: ['Завтрак', 'Обед', 'Ужин'],
@@ -12,7 +13,7 @@ export const getMealName = (mealNumber: number, totalMeals: number): string => {
   
 export const formatDate = (dateString: string): string => {
     if (!dateString) return 'Не указано';
-    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', 'year': 'numeric' };
     return new Date(dateString).toLocaleDateString('ru-RU', options);
 };
 
@@ -43,89 +44,97 @@ export const calculateEndDate = (startDate: string, days: number): string => {
     end.setDate(start.getDate() + days - 1);
     return end.toISOString().split('T')[0];
 };
-  
-// Определяем тип для возвращаемого значения
+
+
 interface TripSummary {
   totalWeight: number;
   totalNutrition: { calories: number, proteins: number, fats: number, carbs: number };
   tripParticipants: Participant[];
-  productBreakdown: { name: string; weight: number, totalWeight: number }[];
   perishableProducts: string[];
   averageWeightPerPersonPerDay: number;
   averageCaloriesPerPersonPerDay: number;
 }
 
+// --- ИСПРАВЛЕННАЯ ВЕРСИЯ ---
 export const calculateTripSummary = (
   trip: Trip | undefined, 
-  allProducts: Product[], 
-  allParticipants: Participant[] = []
+  allProducts: Product[],
+  allParticipants: Participant[] = [],
+  allDishes: Dish[] = []
 ): TripSummary => {
     const defaultSummary: TripSummary = {
       totalWeight: 0,
       totalNutrition: { calories: 0, proteins: 0, fats: 0, carbs: 0 },
       tripParticipants: [],
-      productBreakdown: [],
       perishableProducts: [],
       averageWeightPerPersonPerDay: 0,
       averageCaloriesPerPersonPerDay: 0,
     };
-    if (!trip || !allProducts) {
+    if (!trip || !allProducts || trip.days < 1) {
       return defaultSummary;
     }
   
     const participantsCount = trip.participants?.length || 1;
-    const daysCount = trip.days || 1;
+    const daysCount = trip.days;
     
-    let baseDailyWeight = 0;
-    const baseDailyNutrition = { calories: 0, proteins: 0, fats: 0, carbs: 0 };
+    // Аккумуляторы для СУММАРНЫХ значений на одного человека за ВЕСЬ поход
+    let totalWeightForOnePerson = 0;
+    const totalNutritionForOnePerson = { calories: 0, proteins: 0, fats: 0, carbs: 0 };
     const perishable = new Set<string>();
-    const productUsage: { [id: number]: { name: string, weight: number } } = {};
   
-    Object.values(trip.selectedMeals || {}).forEach(mealProducts => {
-      mealProducts.forEach(item => {
-        const product = allProducts.find(p => p.id === item.productId);
+    // Вспомогательная функция для обработки одного продукта
+    const processProduct = (productId: number, weight: number) => {
+        const product = allProducts.find(p => p.id === productId);
         if (product) {
-          const portionWeight = item.weight || 0;
-          const weightRatio = portionWeight / 100;
-  
-          baseDailyWeight += portionWeight;
-          baseDailyNutrition.calories += (product.calories || 0) * weightRatio;
-          baseDailyNutrition.proteins += (product.proteins || 0) * weightRatio;
-          baseDailyNutrition.fats += (product.fats || 0) * weightRatio;
-          baseDailyNutrition.carbs += (product.carbs || 0) * weightRatio;
-          
-          if (product.isPerishable) {
-            perishable.add(product.name);
-          }
-  
-          productUsage[product.id] = productUsage[product.id] || { name: product.name, weight: 0 };
-          productUsage[product.id].weight += portionWeight;
+            const weightRatio = weight / 100;
+            totalWeightForOnePerson += weight;
+            totalNutritionForOnePerson.calories += (product.calories || 0) * weightRatio;
+            totalNutritionForOnePerson.proteins += (product.proteins || 0) * weightRatio;
+            totalNutritionForOnePerson.fats += (product.fats || 0) * weightRatio;
+            totalNutritionForOnePerson.carbs += (product.carbs || 0) * weightRatio;
+            if (product.isPerishable) {
+                perishable.add(product.name);
+            }
         }
-      });
+    };
+
+    // --- ГЛАВНОЕ ИЗМЕНЕНИЕ ---
+    // Итерируем по ВСЕМ запланированным приемам пищи, а не только первого дня.
+    Object.values(trip.selectedMeals).forEach(mealItems => {
+        (mealItems as MealPlanItem[]).forEach(item => {
+            if (item.type === 'product') {
+                processProduct(item.itemId, item.weight);
+            } else if (item.type === 'dish') {
+                const dish = allDishes.find(d => d.id === item.itemId);
+                dish?.products.forEach(dishProduct => {
+                    processProduct(dishProduct.productId, dishProduct.weight);
+                });
+            }
+        });
     });
   
-    const totalWeight = baseDailyWeight * participantsCount * daysCount;
+    // Теперь, когда у нас есть СУММАРНЫЕ значения на одного человека,
+    // мы можем рассчитать итоговые и средние показатели.
+    const totalWeight = totalWeightForOnePerson * participantsCount;
     const totalNutrition = {
-      calories: Math.round(baseDailyNutrition.calories * participantsCount * daysCount),
-      proteins: Math.round(baseDailyNutrition.proteins * participantsCount * daysCount),
-      fats: Math.round(baseDailyNutrition.fats * participantsCount * daysCount),
-      carbs: Math.round(baseDailyNutrition.carbs * participantsCount * daysCount),
+      calories: Math.round(totalNutritionForOnePerson.calories * participantsCount),
+      proteins: Math.round(totalNutritionForOnePerson.proteins * participantsCount),
+      fats: Math.round(totalNutritionForOnePerson.fats * participantsCount),
+      carbs: Math.round(totalNutritionForOnePerson.carbs * participantsCount),
     };
-  
-    const productBreakdown = Object.values(productUsage).map(p => ({
-      ...p,
-      totalWeight: p.weight * participantsCount * daysCount
-    }));
-  
+    
+    // Рассчитываем ЧЕСТНЫЕ средние значения, деля суммарные показатели на количество дней
+    const averageWeightPerPersonPerDay = Math.round(totalWeightForOnePerson / daysCount);
+    const averageCaloriesPerPersonPerDay = Math.round(totalNutritionForOnePerson.calories / daysCount);
+
     const tripParticipants = allParticipants.filter(p => trip.participants?.includes(p.id));
   
     return {
       totalWeight,
       totalNutrition,
       tripParticipants,
-      productBreakdown,
       perishableProducts: Array.from(perishable),
-      averageWeightPerPersonPerDay: Math.round(baseDailyWeight),
-      averageCaloriesPerPersonPerDay: Math.round(baseDailyNutrition.calories),
+      averageWeightPerPersonPerDay,
+      averageCaloriesPerPersonPerDay,
     };
 };

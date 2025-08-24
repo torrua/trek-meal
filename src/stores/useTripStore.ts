@@ -1,15 +1,19 @@
+// src/stores/useTripStore.ts
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import { calculateDays, calculateEndDate } from '../utils';
-import type { Trip, TripData } from '../types';
+import type { Trip, TripData, MealPlanItem } from '../types';
 
 interface TripState {
   trips: Trip[];
   addTrip: (data: TripData) => Trip;
   deleteTrip: (id: number) => void;
-  updateTrip: (id: number, data: Partial<TripData>) => void;
+  updateTrip: (id: number, data: Partial<Trip>) => void; // Partial<Trip> для гибкости
   removeParticipantFromAllTrips: (participantId: number) => void;
+  // --- НОВАЯ ФУНКЦИЯ-ПРОВЕРЩИК ---
+  isDishInUse: (dishId: number) => boolean;
 }
 
 const useTripStore = create<TripState>()(
@@ -55,6 +59,21 @@ const useTripStore = create<TripState>()(
             participants: trip.participants.filter(id => id !== participantId),
           })),
         }));
+      },
+
+      // --- РЕАЛИЗАЦИЯ ФУНКЦИИ-ПРОВЕРЩИКА ---
+      isDishInUse: (dishId: number) => {
+        const { trips } = get();
+        // Проверяем, есть ли хотя бы один поход, в котором...
+        return trips.some(trip =>
+          // ...в каком-либо из приемов пищи...
+          Object.values(trip.selectedMeals).some(mealPlan =>
+            // ...есть хотя бы один элемент, который является блюдом с искомым ID.
+            (mealPlan as MealPlanItem[]).some(item =>
+              item.type === 'dish' && item.itemId === dishId
+            )
+          )
+        );
       },
     }),
     { name: 'trek-meal-trips' }

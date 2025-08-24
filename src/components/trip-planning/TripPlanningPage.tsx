@@ -1,6 +1,6 @@
 // src/components/trip-planning/TripPlanningPage.tsx
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Select, { SingleValue } from 'react-select';
 import useTripStore from '../../stores/useTripStore';
@@ -73,6 +73,7 @@ function TripPlanningPage() {
   const [isDishFormOpen, setIsDishFormOpen] = useState(false);
   const [cloningState, setCloningState] = useState<CloningState>(null);
   const [expandedDishes, setExpandedDishes] = useState<Record<string, boolean>>({});
+  const [expandedDays, setExpandedDays] = useState<Record<number, boolean>>({});
 
   const trip = useTripStore((state) => state.trips.find((t) => t.id === numericTripId));
   const updateTrip = useTripStore((state) => state.updateTrip);
@@ -203,6 +204,11 @@ function TripPlanningPage() {
     setExpandedDishes((prev) => ({ ...prev, [instanceId]: !prev[instanceId] }));
   };
 
+  // При первом рендере разворачиваем первый день
+  useEffect(() => {
+    setExpandedDays({ 0: true });
+  }, []);
+
   const handleParticipantAdd = (selectedOption: SingleValue<SelectParticipantOption>) => {
     if (!trip || !selectedOption) return;
     updateTrip(trip.id, { participants: [...trip.participants, selectedOption.value] });
@@ -257,109 +263,136 @@ function TripPlanningPage() {
           <h3 className="text-xl font-semibold">План питания</h3>
           {Array.from({ length: trip.days }).map((_, dayIndex) => (
             <div key={dayIndex} className="border rounded-lg">
-              <h4 className="p-3 bg-gray-50 font-bold border-b">День {dayIndex + 1}</h4>
-              <div className="divide-y">
-                {Array.from({ length: trip.mealsPerDay }).map((_, mealIndex) => {
-                  const mealId = `${dayIndex + 1}-${mealIndex + 1}`;
-                  const selectedItems = (trip.selectedMeals?.[mealId] || []) as MealPlanItem[];
+              <button
+                className="w-full p-3 bg-gray-50 font-bold border-b flex justify-between items-center hover:bg-gray-100 transition-all group"
+                onClick={() =>
+                  setExpandedDays((prev) => ({ ...prev, [dayIndex]: !prev[dayIndex] }))
+                }
+              >
+                <span>День {dayIndex + 1}</span>
+                <svg
+                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 transform ${
+                    expandedDays[dayIndex] ? 'rotate-180' : ''
+                  } group-hover:text-gray-600`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {expandedDays[dayIndex] && (
+                <div className="divide-y">
+                  {Array.from({ length: trip.mealsPerDay }).map((_, mealIndex) => {
+                    const mealId = `${dayIndex + 1}-${mealIndex + 1}`;
+                    const selectedItems = (trip.selectedMeals?.[mealId] || []) as MealPlanItem[];
 
-                  return (
-                    <div key={mealIndex} className="p-3">
-                      <h5 className="font-semibold mb-2">
-                        {getMealName(mealIndex + 1, trip.mealsPerDay)}
-                      </h5>
-                      <div className="space-y-1 mb-2">
-                        {selectedItems.map((item) => {
-                          let content = null;
-                          if (item.type === 'dish') {
-                            const dish = dishes.find((d) => d.id === item.itemId);
-                            if (dish) {
-                              const totalWeight = dish.products.reduce(
-                                (sum, p) => sum + p.weight,
-                                0
-                              );
-                              const isExpanded = expandedDishes[item.instanceId];
-                              content = (
-                                <div>
-                                  <div
-                                    className="flex items-center justify-between cursor-pointer"
-                                    onClick={() => toggleDishExpansion(item.instanceId)}
-                                  >
-                                    <span>
-                                      ⭐ {dish.name} ({totalWeight} г)
-                                    </span>
+                    return (
+                      <div key={mealIndex} className="p-3">
+                        <h5 className="font-semibold mb-2">
+                          {getMealName(mealIndex + 1, trip.mealsPerDay)}
+                        </h5>
+                        <div className="space-y-1 mb-2">
+                          {selectedItems.map((item) => {
+                            let content = null;
+                            if (item.type === 'dish') {
+                              const dish = dishes.find((d) => d.id === item.itemId);
+                              if (dish) {
+                                const totalWeight = dish.products.reduce(
+                                  (sum, p) => sum + p.weight,
+                                  0
+                                );
+                                const isExpanded = expandedDishes[item.instanceId];
+                                content = (
+                                  <div>
                                     <div
-                                      className="flex items-center gap-1"
-                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex items-center justify-between cursor-pointer"
+                                      onClick={() => toggleDishExpansion(item.instanceId)}
                                     >
-                                      <button
-                                        onClick={() =>
-                                          handleCloneRequest(item.instanceId, dish, mealId)
-                                        }
-                                        className="text-blue-600 hover:text-blue-800 text-xs"
+                                      <span>
+                                        ⭐ {dish.name} ({totalWeight} г)
+                                      </span>
+                                      <div
+                                        className="flex items-center gap-1"
+                                        onClick={(e) => e.stopPropagation()}
                                       >
-                                        [Ред.]
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleMealItemRemove(mealId, item.instanceId)
-                                        }
-                                        className="text-red-500 hover:text-red-700 font-bold px-2"
-                                      >
-                                        &times;
-                                      </button>
+                                        <button
+                                          onClick={() =>
+                                            handleCloneRequest(item.instanceId, dish, mealId)
+                                          }
+                                          className="text-blue-600 hover:text-blue-800 text-xs"
+                                        >
+                                          [Ред.]
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            handleMealItemRemove(mealId, item.instanceId)
+                                          }
+                                          className="text-red-500 hover:text-red-700 font-bold px-2"
+                                        >
+                                          &times;
+                                        </button>
+                                      </div>
                                     </div>
+                                    {isExpanded && <DishContents dish={dish} />}
                                   </div>
-                                  {isExpanded && <DishContents dish={dish} />}
+                                );
+                              } else {
+                                content = (
+                                  <div className="italic text-gray-500">Блюдо не найдено</div>
+                                );
+                              }
+                            } else {
+                              // item.type === 'product'
+                              const product = products.find((p) => p.id === item.itemId);
+                              content = (
+                                <div className="flex items-center justify-between">
+                                  <span>
+                                    {product?.name || 'Продукт не найден'} ({item.weight} г)
+                                  </span>
+                                  <button
+                                    onClick={() => handleMealItemRemove(mealId, item.instanceId)}
+                                    className="text-red-500 hover:text-red-700 font-bold px-2"
+                                  >
+                                    &times;
+                                  </button>
                                 </div>
                               );
-                            } else {
-                              content = (
-                                <div className="italic text-gray-500">Блюдо не найдено</div>
-                              );
                             }
-                          } else {
-                            // item.type === 'product'
-                            const product = products.find((p) => p.id === item.itemId);
-                            content = (
-                              <div className="flex items-center justify-between">
-                                <span>
-                                  {product?.name || 'Продукт не найден'} ({item.weight} г)
-                                </span>
-                                <button
-                                  onClick={() => handleMealItemRemove(mealId, item.instanceId)}
-                                  className="text-red-500 hover:text-red-700 font-bold px-2"
-                                >
-                                  &times;
-                                </button>
+                            return (
+                              <div
+                                key={item.instanceId}
+                                className="text-sm p-1.5 bg-blue-50 rounded"
+                              >
+                                {content}
                               </div>
                             );
-                          }
-                          return (
-                            <div key={item.instanceId} className="text-sm p-1.5 bg-blue-50 rounded">
-                              {content}
+                          })}
+                        </div>
+                        <Select<SelectMealOption, false, GroupedMealOption>
+                          options={groupedMealOptions}
+                          onChange={(option) => handleMealItemAdd(mealId, option)}
+                          placeholder="Добавить продукт или блюдо..."
+                          value={null}
+                          formatGroupLabel={(data) => (
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-gray-600">{data.label}</span>
+                              <span className="text-xs bg-gray-200 text-gray-600 rounded-full px-1.5">
+                                {data.options.length}
+                              </span>
                             </div>
-                          );
-                        })}
+                          )}
+                        />
                       </div>
-                      <Select<SelectMealOption, false, GroupedMealOption>
-                        options={groupedMealOptions}
-                        onChange={(option) => handleMealItemAdd(mealId, option)}
-                        placeholder="Добавить продукт или блюдо..."
-                        value={null}
-                        formatGroupLabel={(data) => (
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-gray-600">{data.label}</span>
-                            <span className="text-xs bg-gray-200 text-gray-600 rounded-full px-1.5">
-                              {data.options.length}
-                            </span>
-                          </div>
-                        )}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ))}
         </div>

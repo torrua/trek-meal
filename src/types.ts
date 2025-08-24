@@ -50,22 +50,24 @@ export interface DishProduct {
 
 export interface Dish {
   id: number;
-  name:string;
+  name: string;
   products: DishProduct[];
 }
 export type DishData = Omit<Dish, 'id'>;
 
 // --- НОВАЯ СТРУКТУРА ДЛЯ ПЛАНА ПИТАНИЯ ---
-export type MealPlanItem = {
-  instanceId: string; // Уникальный ID для КАЖДОЙ строки в раскладке
-  type: 'dish';
-  itemId: number; // Тут будет dishId
-} | {
-  instanceId: string;
-  type: 'product';
-  itemId: number; // Тут будет productId
-  weight: number;
-};
+export type MealPlanItem =
+  | {
+      instanceId: string; // Уникальный ID для КАЖДОЙ строки в раскладке
+      type: 'dish';
+      itemId: number; // Тут будет dishId
+    }
+  | {
+      instanceId: string;
+      type: 'product';
+      itemId: number; // Тут будет productId
+      weight: number;
+    };
 
 export interface SelectedMeals {
   [mealId: string]: MealPlanItem[];

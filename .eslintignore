@@ -1,0 +1,6 @@
+node_modules/
+build/
+public/
+output.css
+*.config.js
+.vscode/

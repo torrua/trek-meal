@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import useDishStore from '../../stores/useDishStore';
 import useTripStore from '../../stores/useTripStore'; // Импортируем для проверки
-import type { Dish, DishData } from '../../types';
+import type { Dish, DishData, SubmitDishAction } from '../../types';
 import DishCard from './DishCard';
-import DishForm, { SubmitDishAction } from './DishForm';
+import DishForm from './DishForm';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/ConfirmModal';
@@ -28,14 +28,14 @@ function DishesPage() {
     setEditingDish(dish);
     setIsModalOpen(true);
   };
-  
+
   // --- ИЗМЕНЕНИЕ: Умный обработчик запроса на удаление ---
   const handleRequestDelete = (dish: Dish) => {
     // 1. Проверяем сразу при клике
     if (isDishInUse(dish.id)) {
       // 2. Если используется - показываем информационное сообщение
       toast.error(
-        "Это блюдо используется в одном или нескольких походах. Сначала удалите его из раскладок.",
+        'Это блюдо используется в одном или нескольких походах. Сначала удалите его из раскладок.',
         { duration: 5000 }
       );
     } else {
@@ -43,7 +43,7 @@ function DishesPage() {
       setDishToDelete(dish);
     }
   };
-  
+
   const handleConfirmDelete = () => {
     if (dishToDelete) {
       deleteDish(dishToDelete.id);
@@ -71,18 +71,20 @@ function DishesPage() {
         <h2 className="text-2xl font-bold text-gray-800">Мои блюда и шаблоны</h2>
         <Button onClick={handleAddNew}>+ Создать блюдо</Button>
       </header>
-      
+
       {dishes.length === 0 ? (
         <div className="text-center py-16 px-6 bg-gray-50 rounded-lg">
           <h3 className="text-lg font-medium text-gray-700">У вас пока нет сохраненных блюд</h3>
-          <p className="text-gray-500 mt-2 mb-4">Создайте свое первое блюдо, чтобы ускорить планирование походов.</p>
+          <p className="text-gray-500 mt-2 mb-4">
+            Создайте свое первое блюдо, чтобы ускорить планирование походов.
+          </p>
           <Button onClick={handleAddNew}>Создать первое блюдо</Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {dishes.map((dish) => (
-            <DishCard 
-              key={dish.id} 
+            <DishCard
+              key={dish.id}
               dish={dish}
               onEdit={() => handleEdit(dish)}
               onDelete={() => handleRequestDelete(dish)}
@@ -91,12 +93,12 @@ function DishesPage() {
         </div>
       )}
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         title={editingDish ? 'Редактировать блюдо' : 'Новое блюдо'}
       >
-        <DishForm 
+        <DishForm
           dish={editingDish}
           onSubmit={handleFormSubmit}
           onCancel={() => setIsModalOpen(false)}
@@ -111,7 +113,10 @@ function DishesPage() {
         variant="danger"
         confirmText="Удалить"
       >
-        <p>Вы уверены, что хотите удалить блюдо <span className="font-bold">"{dishToDelete?.name}"</span>?</p>
+        <p>
+          Вы уверены, что хотите удалить блюдо{' '}
+          <span className="font-bold">{dishToDelete?.name}</span>?
+        </p>
       </ConfirmModal>
     </div>
   );

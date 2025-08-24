@@ -4,7 +4,7 @@ import useTripStore from '../../stores/useTripStore';
 import type { Participant, Trip } from '../../types';
 
 const GENDER_ICONS: { [key in Participant['gender']]: string } = { male: '👨', female: '👩' };
-const AGE_META: { [key in Participant['age']]: { text: string; className: string } } = { 
+const AGE_META: { [key in Participant['age']]: { text: string; className: string } } = {
   adult: { text: 'Взрослый', className: 'bg-green-100 text-green-800' },
   child: { text: 'Ребенок', className: 'bg-yellow-100 text-yellow-800' },
 };
@@ -20,9 +20,9 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({ participant, onEdit, 
   const ageMeta = AGE_META[age];
 
   const { trips } = useTripStore();
-  
-  const participantTrips = useMemo(() => 
-    trips.filter((trip: Trip) => trip.participants.includes(participant.id)),
+
+  const participantTrips = useMemo(
+    () => trips.filter((trip: Trip) => trip.participants.includes(participant.id)),
     [trips, participant.id]
   );
 
@@ -41,19 +41,19 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({ participant, onEdit, 
       </div>
       <div className="p-4 flex-grow space-y-4">
         {notes ? (
-          <p className="text-sm text-gray-600 italic">"{notes}"</p>
+          <p className="text-sm text-gray-600 italic">{notes}</p>
         ) : (
           <p className="text-sm text-gray-400">Нет заметок</p>
         )}
-        
+
         <div>
           <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Участвует в походах:</h4>
           <div className="space-y-1 max-h-24 overflow-y-auto">
             {participantTrips.length > 0 ? (
-              participantTrips.map(trip => (
-                <Link 
-                  key={trip.id} 
-                  to={`/trips/${trip.id}`} 
+              participantTrips.map((trip) => (
+                <Link
+                  key={trip.id}
+                  to={`/trips/${trip.id}`}
                   className="block text-sm bg-blue-50 p-1.5 rounded text-blue-800 hover:bg-blue-100 hover:font-medium transition-all"
                 >
                   {trip.name}
@@ -66,11 +66,15 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({ participant, onEdit, 
         </div>
       </div>
       <div className="p-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2">
-        <button onClick={onEdit} className="text-sm font-medium text-blue-600 hover:text-blue-800">Редактировать</button>
-        <button onClick={onDelete} className="text-sm font-medium text-red-600 hover:text-red-800">Удалить</button>
+        <button onClick={onEdit} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+          Редактировать
+        </button>
+        <button onClick={onDelete} className="text-sm font-medium text-red-600 hover:text-red-800">
+          Удалить
+        </button>
       </div>
     </div>
   );
-}
+};
 
 export default ParticipantCard;

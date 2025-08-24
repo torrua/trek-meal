@@ -25,20 +25,18 @@ const useCategoryStore = create<CategoryState>()(
         set((state) => ({ categories: [...state.categories, newCategory] }));
         toast.success(`Категория "${newCategory.name}" добавлена.`);
       },
-      
+
       updateCategory: (id, updatedData) => {
         set((state) => ({
-          categories: state.categories.map((c) =>
-            c.id === id ? { ...c, ...updatedData } : c
-          ),
+          categories: state.categories.map((c) => (c.id === id ? { ...c, ...updatedData } : c)),
         }));
         toast.success(`Категория "${updatedData.name}" обновлена.`);
       },
 
       deleteCategory: (id) => {
-        const categoryToDelete = get().categories.find(c => c.id === id);
+        const categoryToDelete = get().categories.find((c) => c.id === id);
         if (!categoryToDelete) return;
-        
+
         useProductStore.getState().removeCategoryFromProducts(id);
 
         set((state) => ({

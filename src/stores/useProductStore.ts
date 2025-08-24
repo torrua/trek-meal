@@ -28,7 +28,7 @@ const useProductStore = create<ProductState>()(
           fats: Number(productData.fats) || 0,
           carbs: Number(productData.carbs) || 0,
           categoryId: productData.categoryId ? Number(productData.categoryId) : null,
-          portions: productData.portions.map(p => ({
+          portions: productData.portions.map((p) => ({
             ...p,
             weight: Number(p.weight) || 0,
           })),
@@ -39,9 +39,7 @@ const useProductStore = create<ProductState>()(
 
       updateProduct: (id, updatedData) => {
         set((state) => ({
-          products: state.products.map((p) =>
-            p.id === id ? { ...p, ...updatedData } : p
-          ),
+          products: state.products.map((p) => (p.id === id ? { ...p, ...updatedData } : p)),
         }));
         toast.success(`Продукт "${updatedData.name}" обновлен.`);
       },
@@ -54,14 +52,14 @@ const useProductStore = create<ProductState>()(
         if (isUsed) {
           // 2. Если используется - блокируем удаление и информируем пользователя.
           toast.error(
-            "Невозможно удалить продукт, так как он используется в одном или нескольких блюдах. Сначала удалите его из блюд.",
+            'Невозможно удалить продукт, так как он используется в одном или нескольких блюдах. Сначала удалите его из блюд.',
             { duration: 5000 } // Увеличиваем длительность, чтобы пользователь успел прочитать
           );
           return; // Прерываем выполнение функции
         }
-        
+
         // 3. Если не используется - безопасно удаляем.
-        const productToDelete = get().products.find(p => p.id === id);
+        const productToDelete = get().products.find((p) => p.id === id);
         if (productToDelete) {
           set((state) => ({
             products: state.products.filter((p) => p.id !== id),
@@ -69,14 +67,12 @@ const useProductStore = create<ProductState>()(
           toast.success(`Продукт "${productToDelete.name}" удален.`);
         }
       },
-      
+
       removeCategoryFromProducts: (categoryId) => {
         set((state) => ({
-          products: state.products.map(product => 
-            product.categoryId === categoryId 
-              ? { ...product, categoryId: null }
-              : product
-          )
+          products: state.products.map((product) =>
+            product.categoryId === categoryId ? { ...product, categoryId: null } : product
+          ),
         }));
       },
     }),

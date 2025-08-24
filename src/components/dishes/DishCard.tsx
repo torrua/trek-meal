@@ -14,7 +14,7 @@ const DishCard: React.FC<DishCardProps> = ({ dish, onEdit, onDelete }) => {
   const { products } = useProductStore();
 
   // Находим полные данные о продуктах в блюде
-  const dishProducts = dish.products.map(dp => {
+  const dishProducts = dish.products.map((dp) => {
     const product = products.find((p: Product) => p.id === dp.productId);
     return { ...dp, name: product?.name || 'Неизвестный продукт' };
   });
@@ -25,7 +25,9 @@ const DishCard: React.FC<DishCardProps> = ({ dish, onEdit, onDelete }) => {
     <div className="bg-white border rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md">
       <div className="p-4 border-b">
         <h3 className="text-lg font-bold text-gray-800">{dish.name}</h3>
-        <p className="text-sm text-gray-500">{dish.products.length} комп. / {totalWeight} г</p>
+        <p className="text-sm text-gray-500">
+          {dish.products.length} комп. / {totalWeight} г
+        </p>
       </div>
       <div className="p-4 flex-grow">
         <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Состав:</h4>
@@ -39,8 +41,12 @@ const DishCard: React.FC<DishCardProps> = ({ dish, onEdit, onDelete }) => {
         </ul>
       </div>
       <div className="p-3 bg-gray-50 border-t flex justify-end gap-2">
-        <button onClick={onEdit} className="text-sm font-medium text-blue-600 hover:text-blue-800">Редактировать</button>
-        <button onClick={onDelete} className="text-sm font-medium text-red-600 hover:text-red-800">Удалить</button>
+        <button onClick={onEdit} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+          Редактировать
+        </button>
+        <button onClick={onDelete} className="text-sm font-medium text-red-600 hover:text-red-800">
+          Удалить
+        </button>
       </div>
     </div>
   );

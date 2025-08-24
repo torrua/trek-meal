@@ -10,9 +10,8 @@ interface TripState {
   trips: Trip[];
   addTrip: (data: TripData) => Trip;
   deleteTrip: (id: number) => void;
-  updateTrip: (id: number, data: Partial<Trip>) => void; // Partial<Trip> для гибкости
+  updateTrip: (id: number, data: Partial<Trip>) => void;
   removeParticipantFromAllTrips: (participantId: number) => void;
-  // --- НОВАЯ ФУНКЦИЯ-ПРОВЕРЩИК ---
   isDishInUse: (dishId: number) => boolean;
 }
 
@@ -35,7 +34,7 @@ const useTripStore = create<TripState>()(
       },
 
       deleteTrip: (tripId) => {
-        const tripToDelete = get().trips.find(t => t.id === tripId);
+        const tripToDelete = get().trips.find((t) => t.id === tripId);
         if (tripToDelete) {
           set((state) => ({
             trips: state.trips.filter((trip) => trip.id !== tripId),
@@ -51,12 +50,12 @@ const useTripStore = create<TripState>()(
           ),
         }));
       },
-      
+
       removeParticipantFromAllTrips: (participantId) => {
         set((state) => ({
-          trips: state.trips.map(trip => ({
+          trips: state.trips.map((trip) => ({
             ...trip,
-            participants: trip.participants.filter(id => id !== participantId),
+            participants: trip.participants.filter((id) => id !== participantId),
           })),
         }));
       },
@@ -65,12 +64,12 @@ const useTripStore = create<TripState>()(
       isDishInUse: (dishId: number) => {
         const { trips } = get();
         // Проверяем, есть ли хотя бы один поход, в котором...
-        return trips.some(trip =>
+        return trips.some((trip) =>
           // ...в каком-либо из приемов пищи...
-          Object.values(trip.selectedMeals).some(mealPlan =>
+          Object.values(trip.selectedMeals).some((mealPlan) =>
             // ...есть хотя бы один элемент, который является блюдом с искомым ID.
-            (mealPlan as MealPlanItem[]).some(item =>
-              item.type === 'dish' && item.itemId === dishId
+            (mealPlan as MealPlanItem[]).some(
+              (item) => item.type === 'dish' && item.itemId === dishId
             )
           )
         );
@@ -81,15 +80,37 @@ const useTripStore = create<TripState>()(
 );
 
 // Вспомогательную функцию можно оставить здесь или вынести, если она используется где-то еще
-export const handleDateChange = (formData: TripData, field: string, value: any): TripData => {
-  const newFormData = { ...formData, [field]: value };
-  if (field === 'startDate' && newFormData.days > 0) {
-    newFormData.endDate = calculateEndDate(value, newFormData.days);
-  } else if (field === 'days' && newFormData.startDate) {
-    newFormData.endDate = calculateEndDate(newFormData.startDate, Number(value));
-  } else if ((field === 'startDate' || field === 'endDate') && newFormData.startDate && newFormData.endDate) {
+export const handleDateChange = (
+  formData: TripData,
+  field: keyof TripData,
+  value: unknown
+): TripData => {
+  // Создаём мутируемую копию для удобства. Будем аккуратно приводить типы ниже.
+  const newFormData = { ...formData } as TripData & Record<string, unknown>;
+  // Присваиваем новое значение полю (с приведением) через промежуточный Record,
+  // чтобы избежать использования `any` и соблюсти проверку типов.
+  const _cast = newFormData as unknown as Record<string, TripData[keyof TripData]>;
+  _cast[String(field)] = value as TripData[keyof TripData];
+
+  if (field === 'startDate' && typeof newFormData.days === 'number' && newFormData.days > 0) {
+    // Ожидаем, что startDate приходит как строка, приводим безопасно
+    const start = String(value);
+    newFormData.endDate = calculateEndDate(start, newFormData.days);
+  } else if (field === 'days' && typeof newFormData.startDate === 'string') {
+    // days может прийти как строка из инпута — приводим в number
+    const days = Number(value);
+    if (!Number.isNaN(days)) {
+      newFormData.endDate = calculateEndDate(newFormData.startDate, days);
+      newFormData.days = days;
+    }
+  } else if (
+    (field === 'startDate' || field === 'endDate') &&
+    typeof newFormData.startDate === 'string' &&
+    typeof newFormData.endDate === 'string'
+  ) {
     newFormData.days = calculateDays(newFormData.startDate, newFormData.endDate);
   }
+
   return newFormData;
 };
 

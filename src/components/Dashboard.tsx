@@ -21,25 +21,25 @@ function Dashboard() {
   const { products } = useProductStore();
   const { participants } = useParticipantStore();
 
-  const recentTrips = useMemo(() =>
-    [...trips]
-      .sort((a: Trip, b: Trip) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 3),
+  const recentTrips = useMemo(
+    () =>
+      [...trips]
+        .sort(
+          (a: Trip, b: Trip) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+        .slice(0, 3),
     [trips]
-  );
-  
-  const recentProducts = useMemo(() => 
-    [...products].reverse().slice(0, 5), 
-    [products]
   );
 
-  const planningCount = useMemo(() => 
-    trips.filter((t: Trip) => t.status === 'planning').length,
+  const recentProducts = useMemo(() => [...products].reverse().slice(0, 5), [products]);
+
+  const planningCount = useMemo(
+    () => trips.filter((t: Trip) => t.status === 'planning').length,
     [trips]
   );
-  
-  const completedCount = useMemo(() => 
-    trips.filter((t: Trip) => t.status === 'completed').length,
+
+  const completedCount = useMemo(
+    () => trips.filter((t: Trip) => t.status === 'completed').length,
     [trips]
   );
 
@@ -59,32 +59,60 @@ function Dashboard() {
         <section>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-gray-800">Последние походы</h3>
-            <Button variant="ghost" onClick={() => navigate('/trips')}>Все походы</Button>
+            <Button variant="ghost" onClick={() => navigate('/trips')}>
+              Все походы
+            </Button>
           </div>
           <div className="space-y-3">
             {recentTrips.length > 0 ? (
-              recentTrips.map(trip => {
+              recentTrips.map((trip) => {
                 const summary = calculateTripSummary(trip, products, participants);
                 return (
-                  <div key={trip.id} onClick={() => navigate(`/trips/${trip.id}`)} className="p-4 bg-white border rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                  <div
+                    key={trip.id}
+                    onClick={() => navigate(`/trips/${trip.id}`)}
+                    className="p-4 bg-white border rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                  >
                     <div className="flex justify-between">
                       <h4 className="font-bold text-gray-800">{trip.name}</h4>
-                      <span className="text-xs font-medium text-gray-500">{new Date(trip.createdAt).toLocaleDateString()}</span>
+                      <span className="text-xs font-medium text-gray-500">
+                        {new Date(trip.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
                     <div className="grid grid-cols-4 gap-2 mt-3 text-center text-sm">
-                      <div><strong className="block text-blue-600">{trip.days}</strong><span className="text-xs text-gray-500">дней</span></div>
-                      <div><strong className="block text-blue-600">{trip.participants.length}</strong><span className="text-xs text-gray-500">чел.</span></div>
-                      <div><strong className="block text-blue-600">{(summary.totalWeight/1000).toFixed(1)}</strong><span className="text-xs text-gray-500">кг</span></div>
-                      <div><strong className="block text-blue-600">{summary.averageCaloriesPerPersonPerDay}</strong><span className="text-xs text-gray-500">ккал/день</span></div>
+                      <div>
+                        <strong className="block text-blue-600">{trip.days}</strong>
+                        <span className="text-xs text-gray-500">дней</span>
+                      </div>
+                      <div>
+                        <strong className="block text-blue-600">{trip.participants.length}</strong>
+                        <span className="text-xs text-gray-500">чел.</span>
+                      </div>
+                      <div>
+                        <strong className="block text-blue-600">
+                          {(summary.totalWeight / 1000).toFixed(1)}
+                        </strong>
+                        <span className="text-xs text-gray-500">кг</span>
+                      </div>
+                      <div>
+                        <strong className="block text-blue-600">
+                          {summary.averageCaloriesPerPersonPerDay}
+                        </strong>
+                        <span className="text-xs text-gray-500">ккал/день</span>
+                      </div>
                     </div>
                   </div>
-                )
+                );
               })
             ) : (
               <div className="text-center py-12 px-6 bg-gray-50 rounded-lg">
                 <h3 className="text-lg font-medium text-gray-700">Пока нет ни одного похода</h3>
-                <p className="text-gray-500 mt-2 mb-4">Создайте свой первый поход, чтобы он появился здесь.</p>
-                <Button variant="primary" onClick={() => navigate('/trips')}>К поxoдам</Button>
+                <p className="text-gray-500 mt-2 mb-4">
+                  Создайте свой первый поход, чтобы он появился здесь.
+                </p>
+                <Button variant="primary" onClick={() => navigate('/trips')}>
+                  К поxoдам
+                </Button>
               </div>
             )}
           </div>
@@ -93,21 +121,30 @@ function Dashboard() {
         <section>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-gray-800">Недавно добавленные продукты</h3>
-            <Button variant="ghost" onClick={() => navigate('/products')}>Все продукты</Button>
+            <Button variant="ghost" onClick={() => navigate('/products')}>
+              Все продукты
+            </Button>
           </div>
           <div className="space-y-2">
             {recentProducts.length > 0 ? (
               recentProducts.map((product: Product) => (
                 <div key={product.id} className="p-3 bg-white border rounded-lg shadow-sm">
                   <h4 className="font-bold text-gray-800 text-sm">{product.name}</h4>
-                  <p className="text-xs text-gray-500">{product.calories} ккал, {product.proteins}б / {product.fats}ж / {product.carbs}у</p>
+                  <p className="text-xs text-gray-500">
+                    {product.calories} ккал, {product.proteins}б / {product.fats}ж / {product.carbs}
+                    у
+                  </p>
                 </div>
               ))
             ) : (
               <div className="text-center py-12 px-6 bg-gray-50 rounded-lg">
                 <h3 className="text-lg font-medium text-gray-700">База продуктов пуста</h3>
-                <p className="text-gray-500 mt-2 mb-4">Добавьте продукты, чтобы они отображались здесь.</p>
-                <Button variant="primary" onClick={() => navigate('/products')}>К продуктам</Button>
+                <p className="text-gray-500 mt-2 mb-4">
+                  Добавьте продукты, чтобы они отображались здесь.
+                </p>
+                <Button variant="primary" onClick={() => navigate('/products')}>
+                  К продуктам
+                </Button>
               </div>
             )}
           </div>

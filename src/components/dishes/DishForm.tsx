@@ -42,12 +42,15 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
       initializeState(dishToClone, true);
       return;
     }
-    
+
     setName('');
     setProducts([]);
   }, [dish, dishToClone]);
 
-  const productOptions: ProductOption[] = allProducts.map((p: Product) => ({ value: p.id, label: p.name }));
+  const productOptions: ProductOption[] = allProducts.map((p: Product) => ({
+    value: p.id,
+    label: p.name,
+  }));
 
   const handleProductChange = (index: number, selectedOption: SingleValue<ProductOption>) => {
     const newProducts = [...products];
@@ -61,18 +64,18 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
   const handlePortionChange = (index: number, selectedOption: SingleValue<PortionOption>) => {
     const weight = selectedOption?.value;
     if (weight !== undefined && weight !== CUSTOM_WEIGHT_VALUE) {
-        const newProducts = [...products];
-        newProducts[index].weight = weight;
-        setProducts(newProducts);
+      const newProducts = [...products];
+      newProducts[index].weight = weight;
+      setProducts(newProducts);
     }
   };
-  
+
   const handleWeightChange = (index: number, weightStr: string) => {
     const newProducts = [...products];
     newProducts[index].weight = parseInt(weightStr, 10) || 0;
     setProducts(newProducts);
   };
-  
+
   const addProductField = () => setProducts([...products, { productId: 0, weight: 0 }]);
   const removeProductField = (index: number) => setProducts(products.filter((_, i) => i !== index));
 
@@ -89,7 +92,7 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
       toast.error(`Блюдо с названием "${trimmedName}" уже существует.`);
       return null;
     }
-    const validProducts = products.filter(p => p.productId > 0 && p.weight > 0);
+    const validProducts = products.filter((p) => p.productId > 0 && p.weight > 0);
     if (validProducts.length === 0) {
       toast.error('Блюдо должно содержать хотя бы один продукт с весом больше нуля.');
       return null;
@@ -108,54 +111,72 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Название блюда *</label>
-        <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+        />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Состав *</label>
         <div className="space-y-3">
           {products.map((p, index) => {
             const selectedProduct = allProducts.find((prod: Product) => prod.id === p.productId);
-            const portionOptions: PortionOption[] = selectedProduct?.portions.map(portion => ({
-              value: portion.weight,
-              label: `${portion.name} (${portion.weight} г)`
-            })) || [];
+            const portionOptions: PortionOption[] =
+              selectedProduct?.portions.map((portion) => ({
+                value: portion.weight,
+                label: `${portion.name} (${portion.weight} г)`,
+              })) || [];
             portionOptions.push({ value: CUSTOM_WEIGHT_VALUE, label: 'Свой вес...' });
-            const currentPortion = portionOptions.find(opt => opt.value === p.weight) || portionOptions.find(opt => opt.value === CUSTOM_WEIGHT_VALUE);
+            const currentPortion =
+              portionOptions.find((opt) => opt.value === p.weight) ||
+              portionOptions.find((opt) => opt.value === CUSTOM_WEIGHT_VALUE);
             return (
               <div key={index} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
                 <Select<ProductOption>
                   options={productOptions}
-                  value={productOptions.find(opt => opt.value === p.productId)}
-                  onChange={opt => handleProductChange(index, opt)}
+                  value={productOptions.find((opt) => opt.value === p.productId)}
+                  onChange={(opt) => handleProductChange(index, opt)}
                   placeholder="Выберите продукт..."
                 />
                 <Select<PortionOption>
                   options={portionOptions}
                   value={currentPortion}
-                  onChange={opt => handlePortionChange(index, opt)}
+                  onChange={(opt) => handlePortionChange(index, opt)}
                   isDisabled={!selectedProduct}
                   className="w-48"
                 />
-                <input 
-                  type="number" 
-                  value={p.weight || ''} 
-                  onChange={e => handleWeightChange(index, e.target.value)} 
-                  required 
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-md" 
-                  placeholder="Вес (г)" 
+                <input
+                  type="number"
+                  value={p.weight || ''}
+                  onChange={(e) => handleWeightChange(index, e.target.value)}
+                  required
+                  className="w-24 px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder="Вес (г)"
                 />
-                <Button type="button" variant="danger" onClick={() => removeProductField(index)} className="!px-3 !py-2">
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={() => removeProductField(index)}
+                  className="!px-3 !py-2"
+                >
                   –
                 </Button>
               </div>
             );
           })}
         </div>
-        <Button type="button" variant="ghost" onClick={addProductField} className="mt-3">+ Добавить продукт</Button>
+        <Button type="button" variant="ghost" onClick={addProductField} className="mt-3">
+          + Добавить продукт
+        </Button>
       </div>
-      
+
       <div className="flex justify-end gap-3 pt-4 border-t">
-        <Button type="button" variant="ghost" onClick={onCancel}>Отмена</Button>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Отмена
+        </Button>
         {dishToClone ? (
           <>
             <Button type="button" variant="secondary" onClick={() => handleAction('add_as_new')}>

@@ -24,11 +24,11 @@ function TripsPage() {
       navigate(`/trips/${newTrip.id}`);
     }
   };
-  
+
   const handleRequestDelete = (trip: Trip) => {
     setTripToDelete(trip);
   };
-  
+
   const handleConfirmDelete = () => {
     if (tripToDelete) {
       deleteTrip(tripToDelete.id);
@@ -69,8 +69,10 @@ function TripsPage() {
         variant="danger"
         confirmText="Удалить"
       >
-        <p>Вы уверены, что хотите удалить поход <span className="font-bold">"{tripToDelete?.name}"</span>?</p>
-        <p className="mt-2 text-sm text-gray-500">Это действие невозможно отменить.</p>
+        <p>
+          Вы уверены, что хотите удалить поездку{' '}
+          <span className="font-bold">{tripToDelete?.name}</span>?
+        </p>
       </ConfirmModal>
     </div>
   );

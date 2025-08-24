@@ -6,7 +6,7 @@ import { calculateTripSummary } from '../../utils';
 import useProductStore from '../../stores/useProductStore';
 import useParticipantStore from '../../stores/useParticipantStore';
 import Button from '../../ui/Button';
-import type { Trip } from '../../types'; 
+import type { Trip } from '../../types';
 
 // Типизируем пропсы компонента
 interface TripCardProps {
@@ -35,8 +35,8 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onDelete }) => {
   const difficultyInfo = DIFFICULTY_META[trip.difficulty];
 
   // Вспомогательные классы для статистики, чтобы не повторять код
-  const statValueClass = "text-xl font-bold text-blue-600";
-  const statLabelClass = "text-xs text-gray-500 uppercase";
+  const statValueClass = 'text-xl font-bold text-blue-600';
+  const statLabelClass = 'text-xs text-gray-500 uppercase';
 
   return (
     <div className="bg-white border rounded-lg shadow-sm transition-shadow hover:shadow-md flex flex-col">
@@ -44,11 +44,23 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onDelete }) => {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h3 className="text-lg font-bold text-gray-800">{trip.name}</h3>
-            {trip.destination && <p className="text-sm text-gray-500 mt-1">📍 {trip.destination}</p>}
+            {trip.destination && (
+              <p className="text-sm text-gray-500 mt-1">📍 {trip.destination}</p>
+            )}
           </div>
           <div className="flex flex-col items-end gap-2 flex-shrink-0">
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusInfo.className}`}>{statusInfo.text}</span>
-            {difficultyInfo && <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${difficultyInfo.className}`}>{difficultyInfo.text}</span>}
+            <span
+              className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusInfo.className}`}
+            >
+              {statusInfo.text}
+            </span>
+            {difficultyInfo && (
+              <span
+                className={`px-2 py-0.5 text-xs font-medium rounded-full ${difficultyInfo.className}`}
+              >
+                {difficultyInfo.text}
+              </span>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
@@ -71,11 +83,15 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onDelete }) => {
         </div>
       </div>
       <div className="p-3 bg-gray-50 border-t flex justify-end gap-2">
-        <Button variant="primary" onClick={() => navigate(`/trips/${trip.id}`)}>Планировать</Button>
-        <Button variant="danger" onClick={onDelete}>Удалить</Button>
+        <Button variant="primary" onClick={() => navigate(`/trips/${trip.id}`)}>
+          Планировать
+        </Button>
+        <Button variant="danger" onClick={onDelete}>
+          Удалить
+        </Button>
       </div>
     </div>
   );
-}
+};
 
 export default TripCard;

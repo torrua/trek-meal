@@ -6,9 +6,7 @@
       "dom.iterable",
       "esnext"
     ],
-    // --- КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ ---
-    // Указываем, что 'src' является корнем для всех импортов.
-    // Это позволяет Webpack правильно разрешать пути типа 'ui/Button' или '../stores/useTripStore'
+
     "baseUrl": "src", 
     "allowJs": true,
     "skipLibCheck": true,
@@ -18,7 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
-    "moduleResolution": "bundler", // Возвращаем 'node', т.к. 'bundler' может требовать более новой версии TS/CRA
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,

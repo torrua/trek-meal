@@ -38,34 +38,34 @@ const DishCard: React.FC<DishCardProps> = ({ dish, onEdit, onDelete }) => {
 
   return (
     <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
+      className="bg-secondary border border-primary rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
       onClick={handleCardClick}
     >
       {/* === HEADER === */}
-      <div className="p-4 border-b border-gray-100">
-        <h3 className="text-lg font-bold text-gray-800 truncate" title={dish.name}>
+      <div className="p-4 border-b border-secondary">
+        <h3 className="text-lg font-bold text-primary truncate" title={dish.name}>
           {dish.name}
         </h3>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-muted mt-1">
           {dish.products.length} комп. / {totalWeight} г
         </p>
       </div>
 
       {/* === BODY --- */}
       <div className="p-4 flex-grow">
-        <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Состав:</h4>
+        <h4 className="text-xs font-bold uppercase text-muted mb-2">Состав:</h4>
         <ul className="space-y-1 list-disc pl-5 text-sm">
           {dishContents.map((item, index) => (
             <li key={index} className="flex justify-between">
               <span>{item.name}</span>
-              <span className="font-medium text-gray-600">{item.weight} г</span>
+              <span className="font-medium text-secondary">{item.weight} г</span>
             </li>
           ))}
         </ul>
       </div>
 
       {/* === FOOTER === */}
-      <div className="p-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2">
+      <div className="p-3 bg-muted border-t border-secondary flex justify-end gap-2">
         <button
           onClick={(e) => handleButtonClick(e, onEdit)}
           className="text-sm font-medium text-blue-600 hover:text-blue-800"

@@ -1,7 +1,8 @@
 // src/components/dishes/DishForm.tsx
 
 import React, { useState, useEffect } from 'react';
-import Select, { SingleValue } from 'react-select';
+import { SingleValue } from 'react-select'; // <-- ИСПРАВЛЕНИЕ: Добавляем импорт
+import ThemedSelect from '../../ui/ThemedSelect';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
 import Button from '../../ui/Button';
@@ -110,17 +111,17 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Название блюда *</label>
+        <label className="block text-sm font-medium text-secondary mb-1">Название блюда *</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          className="w-full px-3 py-2 border border-primary rounded-md"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Состав *</label>
+        <label className="block text-sm font-medium text-secondary mb-2">Состав *</label>
         <div className="space-y-3">
           {products.map((p, index) => {
             const selectedProduct = allProducts.find((prod: Product) => prod.id === p.productId);
@@ -135,13 +136,13 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
               portionOptions.find((opt) => opt.value === CUSTOM_WEIGHT_VALUE);
             return (
               <div key={index} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
-                <Select<ProductOption>
+                <ThemedSelect<ProductOption>
                   options={productOptions}
                   value={productOptions.find((opt) => opt.value === p.productId)}
                   onChange={(opt) => handleProductChange(index, opt)}
                   placeholder="Выберите продукт..."
                 />
-                <Select<PortionOption>
+                <ThemedSelect<PortionOption>
                   options={portionOptions}
                   value={currentPortion}
                   onChange={(opt) => handlePortionChange(index, opt)}
@@ -153,7 +154,7 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
                   value={p.weight || ''}
                   onChange={(e) => handleWeightChange(index, e.target.value)}
                   required
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-24 px-3 py-2 border border-primary rounded-md"
                   placeholder="Вес (г)"
                 />
                 <Button

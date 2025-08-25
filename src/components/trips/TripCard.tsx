@@ -53,16 +53,16 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onEdit, onDelete }) => {
   const difficultyInfo = DIFFICULTY_META[trip.difficulty];
 
   const statValueClass = 'text-2xl font-bold text-blue-600';
-  const statLabelClass = 'text-xs text-gray-500 uppercase';
+  const statLabelClass = 'text-xs text-muted uppercase';
 
   const handleCardClick = () => navigate(`/trips/${trip.id}`);
 
   return (
-    <div className="bg-white border rounded-lg shadow-sm transition-shadow hover:shadow-md flex flex-col">
-      <div className="p-4 border-b border-gray-100 flex justify-between items-start">
+    <div className="bg-secondary border rounded-lg shadow-sm transition-shadow hover:shadow-md flex flex-col">
+      <div className="p-4 border-b border-secondary flex justify-between items-start">
         <div>
-          <h3 className="text-lg font-bold text-gray-800">{trip.name}</h3>
-          {trip.destination && <p className="text-sm text-gray-500 mt-1">📍 {trip.destination}</p>}
+          <h3 className="text-lg font-bold text-primary">{trip.name}</h3>
+          {trip.destination && <p className="text-sm text-muted mt-1">📍 {trip.destination}</p>}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
@@ -70,7 +70,7 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onEdit, onDelete }) => {
               e.stopPropagation();
               onEdit(e);
             }}
-            className="p-1.5 text-gray-400 hover:text-blue-600 rounded-full hover:bg-gray-100 transition-colors"
+            className="p-1.5 text-muted hover:text-blue-600 rounded-full hover:bg-muted transition-colors"
             title="Редактировать поход"
           >
             <EditIcon />
@@ -109,7 +109,7 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onEdit, onDelete }) => {
         </div>
       </div>
 
-      <div className="p-3 bg-gray-50 border-t flex justify-end gap-2">
+      <div className="p-3 bg-muted border-t flex justify-end gap-2">
         <Button variant="primary" onClick={handleCardClick}>
           Планировать
         </Button>

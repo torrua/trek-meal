@@ -18,14 +18,14 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-xl sm:max-w-2xl max-h-[90vh] flex flex-col"
+        className="bg-secondary rounded-lg shadow-xl w-full max-w-xl sm:max-w-2xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="p-4 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
-          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+        <header className="p-4 border-b border-primary flex justify-between items-center flex-shrink-0">
+          <h3 className="text-lg font-semibold text-primary">{title}</h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+            className="text-muted hover:text-secondary text-2xl leading-none"
           >
             &times;
           </button>

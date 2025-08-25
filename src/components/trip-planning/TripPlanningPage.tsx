@@ -2,7 +2,8 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Select, { SingleValue } from 'react-select';
+import { SingleValue } from 'react-select';
+import ThemedSelect from '../../ui/ThemedSelect';
 import useTripStore from '../../stores/useTripStore';
 import useProductStore from '../../stores/useProductStore';
 import useParticipantStore from '../../stores/useParticipantStore';
@@ -38,7 +39,7 @@ const DishContents = ({ dish }: { dish: Dish }) => {
   const { products: allProducts } = useProductStore();
   const { categories } = useCategoryStore();
   return (
-    <ul className="text-xs text-gray-600 pl-5 mt-1 space-y-0.5">
+    <ul className="text-xs text-secondary pl-5 mt-1 space-y-0.5">
       {dish.products.map((p) => {
         const product = allProducts.find((ap) => ap.id === p.productId);
         const category = product
@@ -229,7 +230,7 @@ function TripPlanningPage() {
     return (
       <div className="p-6 text-center">
         <h2 className="text-xl font-bold">Поход не найден</h2>
-        <p className="text-gray-500 my-4">
+        <p className="text-muted my-4">
           Возможно, он был удален или вы перешли по неверной ссылке.
         </p>
         <Button onClick={() => navigate('/trips')} className="mt-4">
@@ -243,8 +244,8 @@ function TripPlanningPage() {
     <div className="p-6 space-y-6">
       <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">{trip.name}</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-2xl font-bold text-primary">{trip.name}</h2>
+          <p className="text-sm text-muted">
             {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
           </p>
         </div>
@@ -264,16 +265,16 @@ function TripPlanningPage() {
           {Array.from({ length: trip.days }).map((_, dayIndex) => (
             <div key={dayIndex} className="border rounded-lg">
               <button
-                className="w-full p-3 bg-gray-50 font-bold border-b flex justify-between items-center hover:bg-gray-100 transition-all group"
+                className="w-full p-3 bg-muted font-bold border-b flex justify-between items-center hover:bg-muted transition-all group"
                 onClick={() =>
                   setExpandedDays((prev) => ({ ...prev, [dayIndex]: !prev[dayIndex] }))
                 }
               >
                 <span>День {dayIndex + 1}</span>
                 <svg
-                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 transform ${
+                  className={`w-5 h-5 text-muted transition-transform duration-200 transform ${
                     expandedDays[dayIndex] ? 'rotate-180' : ''
-                  } group-hover:text-gray-600`}
+                  } group-hover:text-secondary`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -343,9 +344,7 @@ function TripPlanningPage() {
                                   </div>
                                 );
                               } else {
-                                content = (
-                                  <div className="italic text-gray-500">Блюдо не найдено</div>
-                                );
+                                content = <div className="italic text-muted">Блюдо не найдено</div>;
                               }
                             } else {
                               // item.type === 'product'
@@ -374,15 +373,15 @@ function TripPlanningPage() {
                             );
                           })}
                         </div>
-                        <Select<SelectMealOption, false, GroupedMealOption>
+                        <ThemedSelect<SelectMealOption, false, GroupedMealOption>
                           options={groupedMealOptions}
                           onChange={(option) => handleMealItemAdd(mealId, option)}
                           placeholder="Добавить продукт или блюдо..."
                           value={null}
                           formatGroupLabel={(data) => (
                             <div className="flex items-center justify-between">
-                              <span className="font-bold text-gray-600">{data.label}</span>
-                              <span className="text-xs bg-gray-200 text-gray-600 rounded-full px-1.5">
+                              <span className="font-bold text-secondary">{data.label}</span>
+                              <span className="text-xs bg-gray-200 text-secondary rounded-full px-1.5">
                                 {data.options.length}
                               </span>
                             </div>
@@ -400,31 +399,31 @@ function TripPlanningPage() {
         <div className="space-y-6">
           <section>
             <h3 className="text-xl font-semibold">Сводка</h3>
-            <div className="p-4 mt-2 border rounded-lg bg-white">
+            <div className="p-4 mt-2 border rounded-lg bg-secondary">
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
                   <div className="text-xl font-bold text-blue-600">
                     {summary.tripParticipants.length}
                   </div>
-                  <div className="text-xs text-gray-500 uppercase">Участников</div>
+                  <div className="text-xs text-muted uppercase">Участников</div>
                 </div>
                 <div>
                   <div className="text-xl font-bold text-blue-600">
                     {(summary.totalWeight / 1000).toFixed(2)}
                   </div>
-                  <div className="text-xs text-gray-500 uppercase">Кг еды</div>
+                  <div className="text-xs text-muted uppercase">Кг еды</div>
                 </div>
                 <div>
                   <div className="text-xl font-bold text-blue-600">
                     {summary.averageWeightPerPersonPerDay}
                   </div>
-                  <div className="text-xs text-gray-500 uppercase">г/чел/день</div>
+                  <div className="text-xs text-muted uppercase">г/чел/день</div>
                 </div>
                 <div>
                   <div className="text-xl font-bold text-blue-600">
                     {summary.averageCaloriesPerPersonPerDay}
                   </div>
-                  <div className="text-xs text-gray-500 uppercase">ккал/чел/день</div>
+                  <div className="text-xs text-muted uppercase">ккал/чел/день</div>
                 </div>
               </div>
             </div>
@@ -433,19 +432,19 @@ function TripPlanningPage() {
           <section>
             <h3 className="text-xl font-semibold">Участники ({summary.tripParticipants.length})</h3>
             <div className="space-y-2 mt-2">
-              <Select
+              <ThemedSelect
                 options={availableParticipantsOptions}
                 onChange={handleParticipantAdd}
                 placeholder="Добавить участника..."
                 value={null}
                 noOptionsMessage={() => 'Все участники уже в походе'}
               />
-              <div className="p-4 border rounded-lg bg-white space-y-1">
+              <div className="p-4 border rounded-lg bg-secondary space-y-1">
                 {summary.tripParticipants.length > 0 ? (
                   summary.tripParticipants.map((p) => (
                     <div
                       key={p.id}
-                      className="flex justify-between items-center text-sm p-1.5 bg-gray-50 rounded"
+                      className="flex justify-between items-center text-sm p-1.5 bg-muted rounded"
                     >
                       <span>{p.name}</span>
                       <button
@@ -457,7 +456,7 @@ function TripPlanningPage() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-500 text-center py-2">Добавьте участников</p>
+                  <p className="text-sm text-muted text-center py-2">Добавьте участников</p>
                 )}
               </div>
             </div>

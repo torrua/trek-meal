@@ -80,8 +80,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
   };
 
   const inputClassName =
-    'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500';
-  const labelClassName = 'block text-sm font-medium text-gray-700 mb-1';
+    'w-full px-3 py-2 border border-primary rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500';
+  const labelClassName = 'block text-sm font-medium text-secondary mb-1';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -156,7 +156,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
         <label className={`${labelClassName} mb-2`}>Пищевая ценность (на 100г)</label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Калории</label>
+            <label className="block text-xs font-medium text-secondary mb-1">Калории</label>
             <input
               type="number"
               name="calories"
@@ -166,7 +166,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Белки</label>
+            <label className="block text-xs font-medium text-secondary mb-1">Белки</label>
             <input
               type="number"
               name="proteins"
@@ -176,7 +176,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Жиры</label>
+            <label className="block text-xs font-medium text-secondary mb-1">Жиры</label>
             <input
               type="number"
               name="fats"
@@ -186,7 +186,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Углеводы</label>
+            <label className="block text-xs font-medium text-secondary mb-1">Углеводы</label>
             <input
               type="number"
               name="carbs"
@@ -198,16 +198,16 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
         </div>
       </div>
 
-      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md border">
+      <div className="flex items-center gap-3 p-3 bg-muted rounded-md border">
         <input
           id="isPerishable"
           name="isPerishable"
           type="checkbox"
           checked={formData.isPerishable}
           onChange={handleChange}
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          className="h-4 w-4 rounded border-primary text-blue-600 focus:ring-blue-500"
         />
-        <label htmlFor="isPerishable" className="text-sm font-medium text-gray-700">
+        <label htmlFor="isPerishable" className="text-sm font-medium text-secondary">
           Скоропортящийся продукт
         </label>
       </div>
@@ -247,7 +247,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           + Добавить порцию
         </Button>
       </div>
-      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+      <div className="flex justify-end gap-3 pt-4 border-t border-primary">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Отмена
         </Button>

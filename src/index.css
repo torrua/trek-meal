@@ -2,41 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 
-  Определяем наши темы с помощью CSS переменных. 
-  Смена темы - это просто смена класса на <html>.
-*/
+@layer base {
+  html,
+  body,
+  #root {
+    @apply h-full;
+  }
+  body {
+    @apply bg-primary transition-colors duration-300;
+  }
+}
+
 :root.light {
-  --color-bg-primary: #f3f4f6; /* gray-100 */
-  --color-bg-secondary: #ffffff; /* white */
-  --color-bg-muted: #f9fafb; /* gray-50 */
+  --color-bg-primary: #f9fafb; /* gray-50 (чуть темнее белого) */
+  --color-bg-secondary: #ffffff; /* white (карточки остаются белыми) */
+  --color-bg-muted: #f3f4f6; /* gray-100 */
   --color-border-primary: #e5e7eb; /* gray-200 */
   --color-border-secondary: #f3f4f6; /* gray-100 */
-  --color-text-primary: #1f2937; /* gray-800 */
-  --color-text-secondary: #4b5563; /* gray-600 */
+  --color-text-primary: #111827; /* gray-900 */
+  --color-text-secondary: #374151; /* gray-700 */
   --color-text-muted: #6b7280; /* gray-500 */
 }
 
 :root.dark {
-  --color-bg-primary: #111827; /* gray-900 */
-  --color-bg-secondary: #1f2937; /* gray-800 */
-  --color-bg-muted: #374151; /* gray-700 */
+  --color-bg-primary: #030712; /* gray-950 (глубже, чем раньше) */
+  --color-bg-secondary: #111827; /* gray-900 */
+  --color-bg-muted: #1f2937; /* gray-800 */
   --color-border-primary: #374151; /* gray-700 */
   --color-border-secondary: #4b5563; /* gray-600 */
   --color-text-primary: #f9fafb; /* gray-50 */
   --color-text-secondary: #d1d5db; /* gray-300 */
   --color-text-muted: #9ca3af; /* gray-400 */
-}
-
-:root.sepia {
-  --color-bg-primary: #f1e7d0;
-  --color-bg-secondary: #fbf5e6;
-  --color-bg-muted: #f8f0dd;
-  --color-border-primary: #e4d8bf;
-  --color-border-secondary: #ede1c8;
-  --color-text-primary: #433422;
-  --color-text-secondary: #5e4a32;
-  --color-text-muted: #7a6346;
 }
 
 /* react-datepicker overrides to better match Tailwind UI */

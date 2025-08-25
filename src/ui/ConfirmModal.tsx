@@ -31,8 +31,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
-      <div className="text-gray-700">{children}</div>
-      <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-gray-200">
+      <div className="text-secondary">{children}</div>
+      <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-primary">
         <Button variant="ghost" onClick={onClose}>
           {cancelText}
         </Button>

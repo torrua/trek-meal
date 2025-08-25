@@ -26,12 +26,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
 
   return (
     <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
+      className="bg-secondary border border-primary rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
       onClick={handleCardClick}
     >
       {/* === HEADER === */}
-      <div className="p-4 border-b border-gray-100">
-        <h3 className="text-lg font-bold text-gray-800 truncate" title={product.name}>
+      <div className="p-4 border-b border-secondary">
+        <h3 className="text-lg font-bold text-primary truncate" title={product.name}>
           {product.name}
         </h3>
         <div className="flex items-center gap-2 mt-1.5 flex-wrap h-5">
@@ -56,25 +56,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
         <div className="grid grid-cols-4 gap-2 text-center">
           <div>
             <div className="text-xl font-bold text-blue-600">{product.calories}</div>
-            <div className="text-xs text-gray-500">ккал</div>
+            <div className="text-xs text-muted">ккал</div>
           </div>
           <div>
             <div className="text-xl font-bold text-blue-600">{product.proteins}</div>
-            <div className="text-xs text-gray-500">белки</div>
+            <div className="text-xs text-muted">белки</div>
           </div>
           <div>
             <div className="text-xl font-bold text-blue-600">{product.fats}</div>
-            <div className="text-xs text-gray-500">жиры</div>
+            <div className="text-xs text-muted">жиры</div>
           </div>
           <div>
             <div className="text-xl font-bold text-blue-600">{product.carbs}</div>
-            <div className="text-xs text-gray-500">у/воды</div>
+            <div className="text-xs text-muted">у/воды</div>
           </div>
         </div>
       </div>
 
       {/* === FOOTER === */}
-      <div className="p-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2">
+      <div className="p-3 bg-muted border-t border-secondary flex justify-end gap-2">
         <button
           onClick={(e) => handleButtonClick(e, onEdit)}
           className="text-sm font-medium text-blue-600 hover:text-blue-800"

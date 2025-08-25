@@ -74,16 +74,16 @@ function DishesPage() {
   return (
     <div className="p-6">
       <header className="flex justify-between items-center mb-6 pb-4 border-b">
-        <h2 className="text-2xl font-bold text-gray-800">Мои блюда и шаблоны</h2>
+        <h2 className="text-2xl font-bold text-primary">Мои блюда и шаблоны</h2>
         <Button onClick={handleAddNew}>+ Создать блюдо</Button>
       </header>
 
       {filteredDishes.length === 0 ? (
-        <div className="text-center py-16 px-6 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-700">
+        <div className="text-center py-16 px-6 bg-muted rounded-lg">
+          <h3 className="text-lg font-medium text-secondary">
             {searchTerm ? 'Блюда не найдены' : 'У вас пока нет сохраненных блюд'}
           </h3>
-          <p className="text-gray-500 mt-2 mb-4">
+          <p className="text-muted mt-2 mb-4">
             {searchTerm
               ? 'Попробуйте изменить поисковый запрос.'
               : 'Создайте свое первое блюдо, чтобы ускорить планирование походов.'}

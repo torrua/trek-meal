@@ -39,7 +39,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({ participant, onSubmit
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="name" className="block text-sm font-medium text-secondary mb-1">
           Имя участника *
         </label>
         <input
@@ -49,12 +49,12 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({ participant, onSubmit
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-primary rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="gender" className="block text-sm font-medium text-secondary mb-1">
             Пол
           </label>
           <select
@@ -62,14 +62,14 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({ participant, onSubmit
             name="gender"
             value={formData.gender}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-primary rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="male">👨 Мужской</option>
             <option value="female">👩 Женский</option>
           </select>
         </div>
         <div>
-          <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="age" className="block text-sm font-medium text-secondary mb-1">
             Возраст
           </label>
           <select
@@ -77,7 +77,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({ participant, onSubmit
             name="age"
             value={formData.age}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-primary rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="adult">🧑 Взрослый</option>
             <option value="child">👶 Ребенок</option>
@@ -85,7 +85,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({ participant, onSubmit
         </div>
       </div>
       <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="notes" className="block text-sm font-medium text-secondary mb-1">
           Заметки (аллергии, предпочтения)
         </label>
         <textarea
@@ -94,7 +94,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({ participant, onSubmit
           value={formData.notes}
           onChange={handleChange}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          className="w-full px-3 py-2 border border-primary rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
       <div className="flex justify-end gap-3 pt-4">

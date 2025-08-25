@@ -20,7 +20,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
   secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 disabled:bg-gray-400',
   danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-red-400',
   ghost:
-    'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-200 border border-gray-300 disabled:bg-gray-50 disabled:text-gray-400',
+    'bg-transparent text-secondary hover:bg-muted focus:ring-gray-200 border border-primary disabled:bg-muted disabled:text-muted',
 };
 
 const Button: React.FC<ButtonProps> = ({

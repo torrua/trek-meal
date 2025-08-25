@@ -31,13 +31,13 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({ participant, onEdit, 
 
   return (
     <div
-      className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
+      className="bg-secondary border border-primary rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
       onClick={handleCardClick}
     >
       {/* === HEADER === */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="p-4 border-b border-secondary">
         <h3
-          className="text-lg font-bold text-gray-800 truncate flex items-center gap-2"
+          className="text-lg font-bold text-primary truncate flex items-center gap-2"
           title={name}
         >
           <span>{GENDER_ICONS[gender]}</span>
@@ -53,14 +53,14 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({ participant, onEdit, 
       {/* === BODY === */}
       <div className="p-4 flex-grow">
         {notes ? (
-          <p className="text-sm text-gray-600 italic">&quot;{notes}&ldquo;</p>
+          <p className="text-sm text-secondary italic">&quot;{notes}&ldquo;</p>
         ) : (
-          <p className="text-sm text-gray-400 text-center py-4">Нет заметок</p>
+          <p className="text-sm text-muted text-center py-4">Нет заметок</p>
         )}
       </div>
 
       {/* === FOOTER === */}
-      <div className="p-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2">
+      <div className="p-3 bg-muted border-t border-secondary flex justify-end gap-2">
         <button
           onClick={(e) => handleButtonClick(e, onEdit)}
           className="text-sm font-medium text-blue-600 hover:text-blue-800"

@@ -5,13 +5,13 @@ import { NavLink, useLocation, Outlet } from 'react-router-dom';
 import cn from 'classnames';
 import { Toaster } from 'react-hot-toast';
 import useSearchStore from '../../stores/useSearchStore'; // <-- Импортируем новый стор
+import ThemeSwitcher from './ThemeSwitcher'; // <-- Импорт переключателя
 
 const navLinkBaseClasses =
   'px-4 py-2 rounded-md cursor-pointer transition-colors duration-200 text-sm font-medium border';
 const navLinkInactiveClasses =
   'bg-white text-gray-700 border-gray-200 hover:bg-gray-100 hover:border-blue-500';
 const navLinkActiveClasses = 'bg-blue-600 text-white border-blue-600 shadow-sm';
-
 const Layout: React.FC = () => {
   const location = useLocation();
   const isPlanningPage = /^\/trips\/\d+$/.test(location.pathname);
@@ -145,6 +145,7 @@ const Layout: React.FC = () => {
             disabled={isSearchDisabled}
             className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
+          <ThemeSwitcher />
         </div>
       </div>
 

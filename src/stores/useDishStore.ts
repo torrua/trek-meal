@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import type { Dish, DishData } from '../types';
+import useTripStore from './useTripStore';
 
 interface DishState {
   dishes: Dish[];
@@ -19,10 +20,30 @@ const useDishStore = create<DishState>()(
       dishes: [],
 
       addDish: (data) => {
-        // ... (логика addDish без изменений)
-        const newDish: Dish = { ...data, id: Date.now() };
+        const trimmedName = data.name.trim();
+        if (!trimmedName) {
+          toast.error('Название блюда не может быть пустым.');
+          return;
+        }
+
+        // Проверяем, существует ли другое блюдо с таким же именем (игнорируя регистр)
+        const isDuplicate = get().dishes.some(
+          (d) => d.name.trim().toLowerCase() === trimmedName.toLowerCase()
+        );
+
+        if (isDuplicate) {
+          toast.error(`Блюдо с названием "${trimmedName}" уже существует.`);
+          return; // <-- КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Прерываем выполнение
+        }
+
+        if (data.products.length === 0) {
+          toast.error('Блюдо должно содержать хотя бы один продукт.');
+          return;
+        }
+
+        const newDish: Dish = { ...data, name: trimmedName, id: Date.now() };
         set((state) => ({ dishes: [...state.dishes, newDish] }));
-        toast.success(`Блюдо "${data.name}" сохранено!`);
+        toast.success(`Блюдо "${newDish.name}" сохранено!`);
         return newDish;
       },
 
@@ -33,8 +54,17 @@ const useDishStore = create<DishState>()(
         toast.success(`Блюдо "${data.name}" обновлено.`);
       },
 
-      // --- ИЗМЕНЕНИЕ: Возвращаем простую логику удаления ---
       deleteDish: (id) => {
+        const isUsed = useTripStore.getState().isDishInUse(id);
+
+        if (isUsed) {
+          toast.error(
+            'Невозможно удалить блюдо, так как оно используется в одном или нескольких походах. Сначала удалите его из раскладок.',
+            { duration: 6000 }
+          );
+          return;
+        }
+
         const dishToDelete = get().dishes.find((d) => d.id === id);
         if (dishToDelete) {
           set((state) => ({

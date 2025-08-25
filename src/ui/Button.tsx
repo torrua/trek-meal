@@ -1,3 +1,5 @@
+// src/ui/Button.tsx
+
 import React from 'react';
 import cn from 'classnames';
 
@@ -5,7 +7,8 @@ type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
 interface ButtonProps {
   children: React.ReactNode;
-  onClick?: () => void;
+  // --- ИЗМЕНЕНИЕ: Тип onClick теперь может принимать MouseEvent ---
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   type?: 'button' | 'submit' | 'reset';
   variant?: ButtonVariant;
   className?: string;

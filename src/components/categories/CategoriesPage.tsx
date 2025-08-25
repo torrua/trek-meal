@@ -1,14 +1,15 @@
 // src/components/categories/CategoriesPage.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import useCategoryStore from '../../stores/useCategoryStore';
+import useSearchStore from '../../stores/useSearchStore';
 import type { Category, CategoryData } from '../../types';
 
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/ConfirmModal';
+import CategoryCard from './CategoryCard';
 
-// Props для формы
 interface CategoryFormProps {
   category: Category | null;
   onSubmit: (data: CategoryData) => void;
@@ -18,25 +19,38 @@ interface CategoryFormProps {
 const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCancel }) => {
   const [name, setName] = useState(category?.name || '');
   const [color, setColor] = useState(category?.color || '#a855f7');
+  const [emoji, setEmoji] = useState(category?.emoji || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onSubmit({ name, color });
+      onSubmit({ name, color, emoji });
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Название категории</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-        />
+      <div className="grid grid-cols-[auto_1fr] gap-4 items-end">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Эмодзи</label>
+          <input
+            type="text"
+            value={emoji}
+            onChange={(e) => setEmoji(e.target.value)}
+            className="w-20 h-10 text-2xl text-center px-3 py-2 border border-gray-300 rounded-md"
+            maxLength={2}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Название категории</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md"
+          />
+        </div>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Цвет</label>
@@ -59,9 +73,19 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
 
 function CategoriesPage() {
   const { categories, addCategory, updateCategory, deleteCategory } = useCategoryStore();
+  const { searchTerm } = useSearchStore();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return categories;
+    }
+    const lowercasedFilter = searchTerm.toLowerCase();
+    return categories.filter((cat) => cat.name.toLowerCase().includes(lowercasedFilter));
+  }, [categories, searchTerm]);
 
   const handleOpenModal = (category: Category | null = null) => {
     setEditingCategory(category);
@@ -82,7 +106,9 @@ function CategoriesPage() {
     handleCloseModal();
   };
 
-  const handleRequestDelete = (category: Category) => {
+  // --- ИЗМЕНЕНИЕ ---
+  const handleRequestDelete = (e: React.MouseEvent, category: Category) => {
+    e.stopPropagation(); // Останавливаем всплытие, чтобы не открылась модалка редактирования
     setCategoryToDelete(category);
   };
 
@@ -100,33 +126,25 @@ function CategoriesPage() {
         <Button onClick={() => handleOpenModal()}>+ Добавить категорию</Button>
       </header>
 
-      <div className="space-y-2">
-        {categories.map((cat: Category) => (
-          <div
-            key={cat.id}
-            className="p-3 bg-white border rounded-lg flex justify-between items-center"
-          >
-            <div className="flex items-center gap-3">
-              <span className="w-5 h-5 rounded-full" style={{ backgroundColor: cat.color }}></span>
-              <span className="font-medium">{cat.name}</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => handleOpenModal(cat)}
-                className="text-sm font-medium text-blue-600 hover:text-blue-800"
-              >
-                Редактировать
-              </button>
-              <button
-                onClick={() => handleRequestDelete(cat)}
-                className="text-sm font-medium text-red-600 hover:text-red-800"
-              >
-                Удалить
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {filteredCategories.length === 0 ? (
+        <div className="text-center py-16 px-6 bg-gray-50 rounded-lg">
+          <h3 className="text-lg font-medium text-gray-700">
+            {searchTerm ? 'Категории не найдены' : 'Категорий пока нет'}
+          </h3>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredCategories.map((cat: Category) => (
+            <CategoryCard
+              key={cat.id}
+              category={cat}
+              onEdit={() => handleOpenModal(cat)}
+              // --- ИЗМЕНЕНИЕ ---
+              onDelete={(e) => handleRequestDelete(e, cat)}
+            />
+          ))}
+        </div>
+      )}
 
       <Modal
         isOpen={isModalOpen}

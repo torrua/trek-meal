@@ -1,12 +1,19 @@
-import React, { useMemo } from 'react';
+// src/components/Dashboard.tsx
+
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
 import useParticipantStore from '../stores/useParticipantStore';
+import useDishStore from '../stores/useDishStore';
+import useCategoryStore from '../stores/useCategoryStore';
 import { calculateTripSummary } from '../utils';
 import Button from '../ui/Button';
-import type { Trip, Product } from '../types';
+import Modal from '../ui/Modal';
+import ProductForm from './products/ProductForm';
+import type { Trip, Product, ProductData, Category } from '../types';
 
+// Карточка для статистики
 const StatCard = ({ value, label }: { value: number | string; label: string }) => (
   <div className="p-4 bg-white border border-gray-200 rounded-lg text-center shadow-sm">
     <div className="text-3xl font-bold text-blue-600">{value}</div>
@@ -14,12 +21,50 @@ const StatCard = ({ value, label }: { value: number | string; label: string }) =
   </div>
 );
 
+// --- НОВЫЙ КОМПОНЕНТ: Компактная карточка продукта для дашборда ---
+const ProductMiniCard = ({
+  product,
+  onEdit,
+}: {
+  product: Product;
+  onEdit: (product: Product) => void;
+}) => {
+  const { categories } = useCategoryStore();
+  const category = categories.find((c: Category) => c.id === product.categoryId);
+
+  return (
+    <div
+      className="p-3 bg-white border rounded-lg shadow-sm flex justify-between items-center cursor-pointer transition-shadow hover:shadow-md"
+      onClick={() => onEdit(product)}
+    >
+      <div>
+        <h4 className="font-bold text-gray-800 text-sm">{product.name}</h4>
+        <p className="text-xs text-gray-500">
+          {product.calories} ккал, {product.proteins}б / {product.fats}ж / {product.carbs}у
+        </p>
+      </div>
+      {category && (
+        <span
+          className="px-2 py-0.5 text-xs font-medium text-white rounded-full flex-shrink-0"
+          style={{ backgroundColor: category.color }}
+        >
+          {category.emoji} {category.name}
+        </span>
+      )}
+    </div>
+  );
+};
+
 function Dashboard() {
   const navigate = useNavigate();
-
   const { trips } = useTripStore();
-  const { products } = useProductStore();
+  const { products, updateProduct, addProduct } = useProductStore();
   const { participants } = useParticipantStore();
+  const { dishes } = useDishStore();
+
+  // --- НОВЫЙ КОД: Состояние для модального окна редактирования продукта ---
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const recentTrips = useMemo(
     () =>
@@ -32,21 +77,33 @@ function Dashboard() {
   );
 
   const recentProducts = useMemo(() => [...products].reverse().slice(0, 5), [products]);
-
   const planningCount = useMemo(
     () => trips.filter((t: Trip) => t.status === 'planning').length,
     [trips]
   );
-
   const completedCount = useMemo(
     () => trips.filter((t: Trip) => t.status === 'completed').length,
     [trips]
   );
 
+  // --- НОВЫЙ КОД: Обработчики для модального окна ---
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setIsProductModalOpen(true);
+  };
+
+  const handleProductFormSubmit = (formData: ProductData) => {
+    if (editingProduct) {
+      updateProduct(editingProduct.id, formData);
+    } else {
+      addProduct(formData); // На случай, если решим добавить кнопку "Создать" на дашборд
+    }
+    setIsProductModalOpen(false);
+  };
+
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-4 border-b">Обзор</h2>
-
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         <StatCard value={trips.length} label="Всего походов" />
         <StatCard value={products.length} label="Продуктов в базе" />
@@ -66,7 +123,7 @@ function Dashboard() {
           <div className="space-y-3">
             {recentTrips.length > 0 ? (
               recentTrips.map((trip) => {
-                const summary = calculateTripSummary(trip, products, participants);
+                const summary = calculateTripSummary(trip, products, participants, dishes);
                 return (
                   <div
                     key={trip.id}
@@ -125,16 +182,11 @@ function Dashboard() {
               Все продукты
             </Button>
           </div>
+          {/* --- ИЗМЕНЕНИЕ: Используем ProductMiniCard --- */}
           <div className="space-y-2">
             {recentProducts.length > 0 ? (
               recentProducts.map((product: Product) => (
-                <div key={product.id} className="p-3 bg-white border rounded-lg shadow-sm">
-                  <h4 className="font-bold text-gray-800 text-sm">{product.name}</h4>
-                  <p className="text-xs text-gray-500">
-                    {product.calories} ккал, {product.proteins}б / {product.fats}ж / {product.carbs}
-                    у
-                  </p>
-                </div>
+                <ProductMiniCard key={product.id} product={product} onEdit={handleEditProduct} />
               ))
             ) : (
               <div className="text-center py-12 px-6 bg-gray-50 rounded-lg">
@@ -150,6 +202,19 @@ function Dashboard() {
           </div>
         </section>
       </div>
+
+      {/* --- НОВЫЙ КОД: Модальное окно для быстрого редактирования --- */}
+      <Modal
+        isOpen={isProductModalOpen}
+        onClose={() => setIsProductModalOpen(false)}
+        title="Редактировать продукт"
+      >
+        <ProductForm
+          product={editingProduct}
+          onSubmit={handleProductFormSubmit}
+          onCancel={() => setIsProductModalOpen(false)}
+        />
+      </Modal>
     </div>
   );
 }

@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+// src/components/participants/ParticipantsPage.tsx
+
+import React, { useState, useMemo } from 'react';
 import useParticipantStore from '../../stores/useParticipantStore';
+import useSearchStore from '../../stores/useSearchStore';
 import type { Participant, ParticipantData } from '../../types';
 
 import ParticipantCard from './ParticipantCard';
@@ -11,10 +14,23 @@ import ConfirmModal from '../../ui/ConfirmModal';
 function ParticipantsPage() {
   const { participants, addParticipant, updateParticipant, deleteParticipant } =
     useParticipantStore();
+  const { searchTerm } = useSearchStore();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
   const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
+
+  const filteredParticipants = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return participants;
+    }
+    const lowercasedFilter = searchTerm.toLowerCase();
+    return participants.filter(
+      (participant: Participant) =>
+        participant.name.toLowerCase().includes(lowercasedFilter) ||
+        participant.notes?.toLowerCase().includes(lowercasedFilter)
+    );
+  }, [participants, searchTerm]);
 
   const handleAddNew = () => {
     setEditingParticipant(null);
@@ -26,7 +42,9 @@ function ParticipantsPage() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteRequest = (participant: Participant) => {
+  // --- ИЗМЕНЕНИЕ ---
+  const handleDeleteRequest = (e: React.MouseEvent, participant: Participant) => {
+    e.stopPropagation(); // Останавливаем всплытие
     setParticipantToDelete(participant);
   };
 
@@ -55,24 +73,31 @@ function ParticipantsPage() {
         </Button>
       </header>
 
-      {participants.length === 0 ? (
+      {filteredParticipants.length === 0 ? (
         <div className="text-center py-16 px-6 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-700">Участники не найдены</h3>
+          <h3 className="text-lg font-medium text-gray-700">
+            {searchTerm ? 'Участники не найдены' : 'Участников пока нет'}
+          </h3>
           <p className="text-gray-500 mt-2 mb-4">
-            Добавьте первого участника, чтобы начать планирование походов.
+            {searchTerm
+              ? 'Попробуйте изменить поисковый запрос.'
+              : 'Добавьте первого участника, чтобы начать планирование походов.'}
           </p>
-          <Button onClick={handleAddNew} variant="primary">
-            Добавить первого участника
-          </Button>
+          {!searchTerm && (
+            <Button onClick={handleAddNew} variant="primary">
+              Добавить первого участника
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {participants.map((p) => (
+          {filteredParticipants.map((p) => (
             <ParticipantCard
               key={p.id}
               participant={p}
               onEdit={() => handleEdit(p)}
-              onDelete={() => handleDeleteRequest(p)}
+              // --- ИЗМЕНЕНИЕ ---
+              onDelete={(e) => handleDeleteRequest(e, p)}
             />
           ))}
         </div>
@@ -100,7 +125,7 @@ function ParticipantsPage() {
       >
         <p>
           Вы уверены, что хотите удалить участника{' '}
-          <span className="font-bold">{participantToDelete?.name}</span>?
+          <span className="font-bold">&quot;{participantToDelete?.name}&ldquo;</span>?
         </p>
         <p className="mt-2 text-sm text-gray-500">Это действие также удалит его из всех походов.</p>
       </ConfirmModal>

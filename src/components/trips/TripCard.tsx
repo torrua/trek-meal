@@ -2,17 +2,34 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { calculateTripSummary } from '../../utils';
 import useProductStore from '../../stores/useProductStore';
 import useParticipantStore from '../../stores/useParticipantStore';
+import useDishStore from '../../stores/useDishStore';
+import { calculateTripSummary } from '../../utils';
 import Button from '../../ui/Button';
 import type { Trip } from '../../types';
 
-// Типизируем пропсы компонента
 interface TripCardProps {
   trip: Trip;
-  onDelete: () => void;
+  onEdit: (e: React.MouseEvent) => void;
+  onDelete: (e: React.MouseEvent) => void;
 }
+
+const EditIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+  >
+    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+    <path
+      fillRule="evenodd"
+      d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
 
 const STATUSES: { [key in Trip['status']]: { text: string; className: string } } = {
   planning: { text: 'Планируется', className: 'bg-yellow-100 text-yellow-800' },
@@ -25,44 +42,53 @@ const DIFFICULTY_META: { [key in Trip['difficulty']]: { text: string; className:
   hard: { text: 'Сложный', className: 'bg-red-100 text-red-800' },
 };
 
-const TripCard: React.FC<TripCardProps> = ({ trip, onDelete }) => {
+const TripCard: React.FC<TripCardProps> = ({ trip, onEdit, onDelete }) => {
   const navigate = useNavigate();
   const { products } = useProductStore();
   const { participants } = useParticipantStore();
+  const { dishes } = useDishStore();
 
-  const summary = calculateTripSummary(trip, products, participants);
+  const summary = calculateTripSummary(trip, products, participants, dishes);
   const statusInfo = STATUSES[trip.status];
   const difficultyInfo = DIFFICULTY_META[trip.difficulty];
 
-  // Вспомогательные классы для статистики, чтобы не повторять код
-  const statValueClass = 'text-xl font-bold text-blue-600';
+  const statValueClass = 'text-2xl font-bold text-blue-600';
   const statLabelClass = 'text-xs text-gray-500 uppercase';
+
+  const handleCardClick = () => navigate(`/trips/${trip.id}`);
 
   return (
     <div className="bg-white border rounded-lg shadow-sm transition-shadow hover:shadow-md flex flex-col">
-      <div className="p-4 cursor-pointer flex-grow" onClick={() => navigate(`/trips/${trip.id}`)}>
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-lg font-bold text-gray-800">{trip.name}</h3>
-            {trip.destination && (
-              <p className="text-sm text-gray-500 mt-1">📍 {trip.destination}</p>
-            )}
-          </div>
-          <div className="flex flex-col items-end gap-2 flex-shrink-0">
-            <span
-              className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusInfo.className}`}
-            >
-              {statusInfo.text}
-            </span>
-            {difficultyInfo && (
-              <span
-                className={`px-2 py-0.5 text-xs font-medium rounded-full ${difficultyInfo.className}`}
-              >
-                {difficultyInfo.text}
-              </span>
-            )}
-          </div>
+      <div className="p-4 border-b border-gray-100 flex justify-between items-start">
+        <div>
+          <h3 className="text-lg font-bold text-gray-800">{trip.name}</h3>
+          {trip.destination && <p className="text-sm text-gray-500 mt-1">📍 {trip.destination}</p>}
         </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(e);
+            }}
+            className="p-1.5 text-gray-400 hover:text-blue-600 rounded-full hover:bg-gray-100 transition-colors"
+            title="Редактировать поход"
+          >
+            <EditIcon />
+          </button>
+          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusInfo.className}`}>
+            {statusInfo.text}
+          </span>
+          {difficultyInfo && (
+            <span
+              className={`px-2 py-0.5 text-xs font-medium rounded-full ${difficultyInfo.className}`}
+            >
+              {difficultyInfo.text}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="p-4 cursor-pointer flex-grow" onClick={handleCardClick}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
             <div className={statValueClass}>{trip.days || 0}</div>
@@ -82,11 +108,18 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onDelete }) => {
           </div>
         </div>
       </div>
+
       <div className="p-3 bg-gray-50 border-t flex justify-end gap-2">
-        <Button variant="primary" onClick={() => navigate(`/trips/${trip.id}`)}>
+        <Button variant="primary" onClick={handleCardClick}>
           Планировать
         </Button>
-        <Button variant="danger" onClick={onDelete}>
+        <Button
+          variant="danger"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(e);
+          }}
+        >
           Удалить
         </Button>
       </div>

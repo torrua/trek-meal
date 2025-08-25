@@ -7,29 +7,40 @@ import type { Product, Category } from '../../types';
 interface ProductCardProps {
   product: Product;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete: (e: React.MouseEvent) => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) => {
   const { categories } = useCategoryStore();
   const category = categories.find((c: Category) => c.id === product.categoryId);
 
+  const handleCardClick = () => onEdit();
+  const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    action();
+  };
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(e);
+  };
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md">
+    <div
+      className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
+      onClick={handleCardClick}
+    >
+      {/* === HEADER === */}
       <div className="p-4 border-b border-gray-100">
-        <h3 className="text-lg font-bold text-gray-800">{product.name}</h3>
-        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+        <h3 className="text-lg font-bold text-gray-800 truncate" title={product.name}>
+          {product.name}
+        </h3>
+        <div className="flex items-center gap-2 mt-1.5 flex-wrap h-5">
           {category && (
             <span
               className="px-2 py-0.5 text-xs font-medium text-white rounded-full"
               style={{ backgroundColor: category.color }}
             >
-              {category.name}
-            </span>
-          )}
-          {product.packaging && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
-              {product.packaging}
+              {category.emoji} {category.name}
             </span>
           )}
           {product.isPerishable && (
@@ -40,46 +51,40 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
         </div>
       </div>
 
+      {/* === BODY === */}
       <div className="p-4 flex-grow">
-        {product.description && <p className="text-sm text-gray-600 mb-4">{product.description}</p>}
-
-        <div className="grid grid-cols-4 gap-2 text-center mb-4">
+        <div className="grid grid-cols-4 gap-2 text-center">
           <div>
-            <div className="font-bold text-blue-600">{product.calories}</div>
+            <div className="text-xl font-bold text-blue-600">{product.calories}</div>
             <div className="text-xs text-gray-500">ккал</div>
           </div>
           <div>
-            <div className="font-bold text-blue-600">{product.proteins}</div>
+            <div className="text-xl font-bold text-blue-600">{product.proteins}</div>
             <div className="text-xs text-gray-500">белки</div>
           </div>
           <div>
-            <div className="font-bold text-blue-600">{product.fats}</div>
+            <div className="text-xl font-bold text-blue-600">{product.fats}</div>
             <div className="text-xs text-gray-500">жиры</div>
           </div>
           <div>
-            <div className="font-bold text-blue-600">{product.carbs}</div>
+            <div className="text-xl font-bold text-blue-600">{product.carbs}</div>
             <div className="text-xs text-gray-500">у/воды</div>
-          </div>
-        </div>
-
-        <div>
-          <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Порции</h4>
-          <div className="space-y-1">
-            {product.portions?.map((portion, index) => (
-              <div key={index} className="flex justify-between text-sm bg-gray-50 p-1.5 rounded">
-                <span className="text-gray-700">{portion.name || `Порция ${index + 1}`}</span>
-                <span className="font-medium text-gray-800">{portion.weight} г</span>
-              </div>
-            ))}
           </div>
         </div>
       </div>
 
+      {/* === FOOTER === */}
       <div className="p-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2">
-        <button onClick={onEdit} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+        <button
+          onClick={(e) => handleButtonClick(e, onEdit)}
+          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+        >
           Редактировать
         </button>
-        <button onClick={onDelete} className="text-sm font-medium text-red-600 hover:text-red-800">
+        <button
+          onClick={handleDeleteClick}
+          className="text-sm font-medium text-red-600 hover:text-red-800"
+        >
           Удалить
         </button>
       </div>

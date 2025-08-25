@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import useProductStore from '../../stores/useProductStore';
 import useCategoryStore from '../../stores/useCategoryStore';
+import useSearchStore from '../../stores/useSearchStore';
 import type { Product, Category, ProductData } from '../../types';
 
 import ProductCard from './ProductCard';
@@ -14,24 +15,32 @@ import ConfirmModal from '../../ui/ConfirmModal';
 function ProductsPage() {
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
   const { categories } = useCategoryStore();
+  const { searchTerm } = useSearchStore();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
 
-  const filteredProducts = useMemo(
-    () =>
-      products.filter((p: Product) => {
+  const filteredProducts = useMemo(() => {
+    const lowercasedFilter = searchTerm.trim().toLowerCase();
+
+    return products.filter((p: Product) => {
+      const categoryMatch = filterCategory === 'all' || String(p.categoryId) === filterCategory;
+      if (!categoryMatch) {
+        return false;
+      }
+
+      if (lowercasedFilter) {
         const searchMatch =
-          p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.description?.toLowerCase().includes(searchTerm.toLowerCase());
-        const categoryMatch = filterCategory === 'all' || String(p.categoryId) === filterCategory;
-        return searchMatch && categoryMatch;
-      }),
-    [products, searchTerm, filterCategory]
-  );
+          p.name.toLowerCase().includes(lowercasedFilter) ||
+          p.description?.toLowerCase().includes(lowercasedFilter);
+        return searchMatch;
+      }
+
+      return true;
+    });
+  }, [products, searchTerm, filterCategory]);
 
   const handleAddNew = () => {
     setEditingProduct(null);
@@ -43,7 +52,9 @@ function ProductsPage() {
     setIsModalOpen(true);
   };
 
-  const handleRequestDelete = (product: Product) => {
+  // --- ИЗМЕНЕНИЕ ---
+  const handleRequestDelete = (e: React.MouseEvent, product: Product) => {
+    e.stopPropagation(); // Останавливаем всплытие, чтобы не сработал клик по карточке
     setProductToDelete(product);
   };
 
@@ -81,13 +92,6 @@ function ProductsPage() {
             ))}
           </select>
 
-          <input
-            type="text"
-            placeholder="Поиск продуктов..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-          />
           <Button onClick={handleAddNew} variant="primary" className="whitespace-nowrap">
             + Добавить продукт
           </Button>
@@ -117,7 +121,8 @@ function ProductsPage() {
               key={p.id}
               product={p}
               onEdit={() => handleEdit(p)}
-              onDelete={() => handleRequestDelete(p)}
+              // --- ИЗМЕНЕНИЕ ---
+              onDelete={(e) => handleRequestDelete(e, p)}
             />
           ))}
         </div>

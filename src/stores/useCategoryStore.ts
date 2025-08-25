@@ -15,9 +15,9 @@ const useCategoryStore = create<CategoryState>()(
   persist(
     (set, get) => ({
       categories: [
-        { id: 1, name: 'Крупы и макароны', color: '#f59e0b' },
-        { id: 2, name: 'Мясо и сублиматы', color: '#ef4444' },
-        { id: 3, name: 'Сладкое и снеки', color: '#a855f7' },
+        { id: 1, name: 'Крупы и макароны', color: '#f59e0b', emoji: '🌾' },
+        { id: 2, name: 'Мясо и сублиматы', color: '#ef4444', emoji: '🥩' },
+        { id: 3, name: 'Сладкое и снеки', color: '#a855f7', emoji: '🍫' },
       ],
 
       addCategory: (categoryData) => {

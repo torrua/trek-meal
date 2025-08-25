@@ -5,6 +5,7 @@ export interface Category {
   id: number;
   name: string;
   color: string;
+  emoji?: string;
 }
 export type CategoryData = Omit<Category, 'id'>;
 

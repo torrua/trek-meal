@@ -1,8 +1,9 @@
 // src/components/dishes/DishesPage.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import useDishStore from '../../stores/useDishStore';
-import useTripStore from '../../stores/useTripStore'; // Импортируем для проверки
+import useTripStore from '../../stores/useTripStore';
+import useSearchStore from '../../stores/useSearchStore';
 import type { Dish, DishData, SubmitDishAction } from '../../types';
 import DishCard from './DishCard';
 import DishForm from './DishForm';
@@ -13,11 +14,20 @@ import { toast } from 'react-hot-toast';
 
 function DishesPage() {
   const { dishes, addDish, updateDish, deleteDish } = useDishStore();
-  const { isDishInUse } = useTripStore(); // Получаем функцию-проверщик
+  const { isDishInUse } = useTripStore();
+  const { searchTerm } = useSearchStore();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [dishToDelete, setDishToDelete] = useState<Dish | null>(null);
+
+  const filteredDishes = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return dishes;
+    }
+    const lowercasedFilter = searchTerm.toLowerCase();
+    return dishes.filter((dish: Dish) => dish.name.toLowerCase().includes(lowercasedFilter));
+  }, [dishes, searchTerm]);
 
   const handleAddNew = () => {
     setEditingDish(null);
@@ -29,17 +39,15 @@ function DishesPage() {
     setIsModalOpen(true);
   };
 
-  // --- ИЗМЕНЕНИЕ: Умный обработчик запроса на удаление ---
-  const handleRequestDelete = (dish: Dish) => {
-    // 1. Проверяем сразу при клике
+  // --- ИЗМЕНЕНИЕ ---
+  const handleRequestDelete = (e: React.MouseEvent, dish: Dish) => {
+    e.stopPropagation(); // Останавливаем всплытие
     if (isDishInUse(dish.id)) {
-      // 2. Если используется - показываем информационное сообщение
       toast.error(
         'Это блюдо используется в одном или нескольких походах. Сначала удалите его из раскладок.',
         { duration: 5000 }
       );
     } else {
-      // 3. Если не используется - открываем стандартное модальное окно подтверждения
       setDishToDelete(dish);
     }
   };
@@ -59,8 +67,6 @@ function DishesPage() {
         addDish(formData);
       }
     }
-    // Логика для 'add_as_new' и 'replace' обрабатывается в TripPlanningPage,
-    // здесь нам просто нужно закрыть модалку
     setIsModalOpen(false);
     setEditingDish(null);
   };
@@ -72,22 +78,27 @@ function DishesPage() {
         <Button onClick={handleAddNew}>+ Создать блюдо</Button>
       </header>
 
-      {dishes.length === 0 ? (
+      {filteredDishes.length === 0 ? (
         <div className="text-center py-16 px-6 bg-gray-50 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-700">У вас пока нет сохраненных блюд</h3>
+          <h3 className="text-lg font-medium text-gray-700">
+            {searchTerm ? 'Блюда не найдены' : 'У вас пока нет сохраненных блюд'}
+          </h3>
           <p className="text-gray-500 mt-2 mb-4">
-            Создайте свое первое блюдо, чтобы ускорить планирование походов.
+            {searchTerm
+              ? 'Попробуйте изменить поисковый запрос.'
+              : 'Создайте свое первое блюдо, чтобы ускорить планирование походов.'}
           </p>
-          <Button onClick={handleAddNew}>Создать первое блюдо</Button>
+          {!searchTerm && <Button onClick={handleAddNew}>Создать первое блюдо</Button>}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {dishes.map((dish) => (
+          {filteredDishes.map((dish) => (
             <DishCard
               key={dish.id}
               dish={dish}
               onEdit={() => handleEdit(dish)}
-              onDelete={() => handleRequestDelete(dish)}
+              // --- ИЗМЕНЕНИЕ ---
+              onDelete={(e) => handleRequestDelete(e, dish)}
             />
           ))}
         </div>

@@ -1,7 +1,13 @@
-import React, { useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import useTripStore from '../../stores/useTripStore';
-import type { Participant, Trip } from '../../types';
+// src/components/participants/ParticipantCard.tsx
+
+import React from 'react';
+import type { Participant } from '../../types';
+
+interface ParticipantCardProps {
+  participant: Participant;
+  onEdit: () => void;
+  onDelete: (e: React.MouseEvent) => void;
+}
 
 const GENDER_ICONS: { [key in Participant['gender']]: string } = { male: '👨', female: '👩' };
 const AGE_META: { [key in Participant['age']]: { text: string; className: string } } = {
@@ -9,67 +15,62 @@ const AGE_META: { [key in Participant['age']]: { text: string; className: string
   child: { text: 'Ребенок', className: 'bg-yellow-100 text-yellow-800' },
 };
 
-interface ParticipantCardProps {
-  participant: Participant;
-  onEdit: () => void;
-  onDelete: () => void;
-}
-
 const ParticipantCard: React.FC<ParticipantCardProps> = ({ participant, onEdit, onDelete }) => {
-  const { name, gender, age, notes } = participant;
+  const { gender, age, name, notes } = participant;
   const ageMeta = AGE_META[age];
 
-  const { trips } = useTripStore();
-
-  const participantTrips = useMemo(
-    () => trips.filter((trip: Trip) => trip.participants.includes(participant.id)),
-    [trips, participant.id]
-  );
+  const handleCardClick = () => onEdit();
+  const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    action();
+  };
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(e);
+  };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md">
+    <div
+      className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
+      onClick={handleCardClick}
+    >
+      {/* === HEADER === */}
       <div className="p-4 border-b border-gray-100">
-        <div className="flex justify-between items-start">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <span>{GENDER_ICONS[gender]}</span>
-            {name}
-          </h3>
+        <h3
+          className="text-lg font-bold text-gray-800 truncate flex items-center gap-2"
+          title={name}
+        >
+          <span>{GENDER_ICONS[gender]}</span>
+          {name}
+        </h3>
+        <div className="flex items-center gap-2 mt-1.5 flex-wrap h-5">
           <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${ageMeta.className}`}>
             {ageMeta.text}
           </span>
         </div>
       </div>
-      <div className="p-4 flex-grow space-y-4">
-        {notes ? (
-          <p className="text-sm text-gray-600 italic">{notes}</p>
-        ) : (
-          <p className="text-sm text-gray-400">Нет заметок</p>
-        )}
 
-        <div>
-          <h4 className="text-xs font-bold uppercase text-gray-500 mb-2">Участвует в походах:</h4>
-          <div className="space-y-1 max-h-24 overflow-y-auto">
-            {participantTrips.length > 0 ? (
-              participantTrips.map((trip) => (
-                <Link
-                  key={trip.id}
-                  to={`/trips/${trip.id}`}
-                  className="block text-sm bg-blue-50 p-1.5 rounded text-blue-800 hover:bg-blue-100 hover:font-medium transition-all"
-                >
-                  {trip.name}
-                </Link>
-              ))
-            ) : (
-              <p className="text-sm text-gray-400">Не участвует в походах</p>
-            )}
-          </div>
-        </div>
+      {/* === BODY === */}
+      <div className="p-4 flex-grow">
+        {notes ? (
+          <p className="text-sm text-gray-600 italic">&quot;{notes}&ldquo;</p>
+        ) : (
+          <p className="text-sm text-gray-400 text-center py-4">Нет заметок</p>
+        )}
       </div>
+
+      {/* === FOOTER === */}
       <div className="p-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2">
-        <button onClick={onEdit} className="text-sm font-medium text-blue-600 hover:text-blue-800">
+        <button
+          onClick={(e) => handleButtonClick(e, onEdit)}
+          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+        >
           Редактировать
         </button>
-        <button onClick={onDelete} className="text-sm font-medium text-red-600 hover:text-red-800">
+        <button
+          onClick={handleDeleteClick}
+          className="text-sm font-medium text-red-600 hover:text-red-800"
+        >
           Удалить
         </button>
       </div>

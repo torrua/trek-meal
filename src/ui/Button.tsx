@@ -7,7 +7,6 @@ type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
 interface ButtonProps {
   children: React.ReactNode;
-  // --- ИЗМЕНЕНИЕ: Тип onClick теперь может принимать MouseEvent ---
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   type?: 'button' | 'submit' | 'reset';
   variant?: ButtonVariant;

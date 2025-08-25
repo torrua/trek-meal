@@ -8,6 +8,8 @@ import { useTripDates } from '../../hooks/useTripDates';
 import useParticipantStore from '../../stores/useParticipantStore';
 import Button from '../../ui/Button';
 import ThemedDatePicker from '../../ui/ThemedDatePicker';
+import Input from '../../ui/Input';
+import Textarea from '../../ui/Textarea';
 import type { Trip, TripData, Participant } from '../../types';
 
 interface TripFormProps {
@@ -31,14 +33,11 @@ const INITIAL_STATE: TripData = {
 const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) => {
   const { participants } = useParticipantStore();
   const [formData, setFormData] = useState<TripData>(INITIAL_STATE);
-
   const { dateRange, days, handleDateRangeChange, handleDaysChange } = useTripDates(trip);
-
   const [errors, setErrors] = useState<{ name?: string }>({});
 
   useEffect(() => {
     if (trip) {
-      // --- ИСПРАВЛЕНИЕ: Убираем неиспользуемые переменные из деструктуризации ---
       const { ...rest } = trip;
       setFormData({ ...INITIAL_STATE, ...rest });
     } else {
@@ -46,6 +45,7 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
     }
   }, [trip]);
 
+  // --- ИСПРАВЛЕНИЕ: Типизируем `value` как `string | number` ---
   const handleChange = (field: keyof TripData, value: string | number) => {
     if (field === 'name' && String(value).trim().length > 0) {
       setErrors((prev) => ({ ...prev, name: undefined }));
@@ -64,63 +64,57 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!formData.name.trim()) {
       setErrors({ name: 'Пожалуйста, укажите название похода.' });
       return;
     }
-
     const finalFormData: TripData = {
       ...formData,
       days,
       startDate: dateRange[0] ? formatISO(dateRange[0], { representation: 'date' }) : '',
       endDate: dateRange[1] ? formatISO(dateRange[1], { representation: 'date' }) : '',
     };
-
     onSubmit(finalFormData);
   };
-
-  const labelClassName = 'block text-sm font-medium text-secondary mb-1';
 
   return (
     <div className="bg-secondary p-6 w-full">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          <div>
-            <label className={labelClassName}>Название похода *</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              className={`w-full h-10 px-3 ${errors.name ? 'border-red-500' : ''}`}
-            />
-            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-          </div>
-          <div>
-            <label className={labelClassName}>Место (регион)</label>
-            <input
-              type="text"
-              value={formData.destination}
-              onChange={(e) => handleChange('destination', e.target.value)}
-              placeholder="Например, Кавказ"
-              className="w-full h-10 px-3"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className={labelClassName}>Описание</label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => handleChange('description', e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 resize-vertical"
+          <Input
+            label="Название похода *"
+            type="text"
+            value={formData.name}
+            // --- ИСПРАВЛЕНИЕ: Добавляем тип для 'e' ---
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              handleChange('name', e.target.value)
+            }
+            error={errors.name}
+          />
+          <Input
+            label="Место (регион)"
+            type="text"
+            value={formData.destination}
+            // --- ИСПРАВЛЕНИЕ: Добавляем тип для 'e' ---
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              handleChange('destination', e.target.value)
+            }
+            placeholder="Например, Кавказ"
           />
         </div>
 
+        <Textarea
+          label="Описание"
+          value={formData.description}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+            handleChange('description', e.target.value)
+          }
+          rows={3}
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
           <div className="md:col-span-6">
-            <label className={labelClassName}>Даты похода</label>
+            <label className="block text-sm font-medium text-secondary mb-1">Даты похода</label>
             <ThemedDatePicker
               wrapperClassName="w-full"
               selectsRange
@@ -131,22 +125,24 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
               isClearable={true}
             />
           </div>
-          <div className="md:col-span-2">
-            <label className={labelClassName}>Дней</label>
-            <input
-              type="number"
-              min="1"
-              value={days}
-              onChange={(e) => handleDaysChange(Number(e.target.value))}
-              className="w-full h-10 px-3"
-            />
-          </div>
+          <Input
+            className="md:col-span-2"
+            label="Дней"
+            type="number"
+            min="1"
+            value={days}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              handleDaysChange(Number(e.target.value))
+            }
+          />
           <div className="md:col-span-4">
-            <label className={labelClassName}>Сложность</label>
+            <label className="block text-sm font-medium text-secondary mb-1">Сложность</label>
             <select
               value={formData.difficulty}
-              onChange={(e) => handleChange('difficulty', e.target.value)}
-              className="w-full h-10 px-3"
+              // --- ИСПРАВЛЕНИЕ: Добавляем тип для 'e' ---
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                handleChange('difficulty', e.target.value)
+              }
             >
               <option value="easy">Легкий</option>
               <option value="medium">Средний</option>
@@ -156,7 +152,7 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
         </div>
 
         <div>
-          <label className={labelClassName}>Участники</label>
+          <label className="block text-sm font-medium text-secondary mb-1">Участники</label>
           <div className="max-h-32 overflow-y-auto p-3 border rounded-md space-y-2 bg-muted border-primary">
             {participants.length > 0 ? (
               participants.map((p: Participant) => (

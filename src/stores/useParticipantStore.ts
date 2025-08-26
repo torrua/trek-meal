@@ -3,12 +3,14 @@ import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import useTripStore from './useTripStore';
 import type { Participant, ParticipantData } from '../types';
+
 interface ParticipantState {
   participants: Participant[];
   addParticipant: (data: ParticipantData) => void;
   updateParticipant: (id: number, data: ParticipantData) => void;
   deleteParticipant: (id: number) => void;
 }
+
 const useParticipantStore = create<ParticipantState>()(
   persist(
     (set, get) => ({
@@ -20,7 +22,16 @@ const useParticipantStore = create<ParticipantState>()(
           return;
         }
 
-        const newParticipant: Participant = { ...participantData, id: Date.now() };
+        // Устанавливаем значения по умолчанию для новых полей
+        const newParticipant: Participant = {
+          ...participantData,
+          id: Date.now(),
+          experienceLevel: participantData.experienceLevel || 'beginner',
+          phone: participantData.phone || '',
+          email: participantData.email || '',
+          birthDate: participantData.birthDate || '',
+        };
+
         set((state) => ({
           participants: [...state.participants, newParticipant],
         }));
@@ -34,7 +45,18 @@ const useParticipantStore = create<ParticipantState>()(
         }
 
         set((state) => ({
-          participants: state.participants.map((p) => (p.id === id ? { ...p, ...updatedData } : p)),
+          participants: state.participants.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  ...updatedData,
+                  experienceLevel: updatedData.experienceLevel || 'beginner',
+                  phone: updatedData.phone || '',
+                  email: updatedData.email || '',
+                  birthDate: updatedData.birthDate || '',
+                }
+              : p
+          ),
         }));
         toast.success(`Данные участника "${updatedData.name}" обновлены.`);
       },
@@ -51,7 +73,27 @@ const useParticipantStore = create<ParticipantState>()(
         toast.error(`Участник "${participantToDelete.name}" удален.`);
       },
     }),
-    { name: 'trek-meal-participants' }
+    {
+      name: 'trek-meal-participants',
+      // Миграция для существующих данных
+      migrate: (persistedState: any, version) => {
+        if (version === 0) {
+          // Добавляем новые поля к существующим участникам
+          if (persistedState.participants) {
+            persistedState.participants = persistedState.participants.map((p: any) => ({
+              ...p,
+              experienceLevel: p.experienceLevel || 'beginner',
+              phone: p.phone || '',
+              email: p.email || '',
+              birthDate: p.birthDate || '',
+            }));
+          }
+        }
+        return persistedState;
+      },
+      version: 1,
+    }
   )
 );
+
 export default useParticipantStore;

@@ -1,9 +1,10 @@
 // src/components/participants/ParticipantsPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { Users, UserPlus } from 'lucide-react';
+import { Users, UserPlus, Download, Upload, Grid3X3, List, Filter } from 'lucide-react';
 import useParticipantStore from '../../stores/useParticipantStore';
 import useSearchStore from '../../stores/useSearchStore';
+// import useTripsStore from '../../stores/useTripsStore'; // Предполагаем, что есть store для походов
 import type { Participant, ParticipantData } from '../../types';
 
 import ParticipantCard from './ParticipantCard';
@@ -12,28 +13,74 @@ import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/ConfirmModal';
 
+type ViewMode = 'compact' | 'expanded';
+type FilterType = 'all' | 'adults' | 'children' | 'beginner' | 'experienced' | 'professional';
+
 function ParticipantsPage() {
   const { participants, addParticipant, updateParticipant, deleteParticipant } =
     useParticipantStore();
   const { searchTerm } = useSearchStore();
+  // const { trips } = useTripsStore(); // Получаем походы
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
   const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('expanded');
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   const filteredParticipants = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return participants;
+    let filtered = participants;
+
+    // Фильтрация по поиску
+    if (searchTerm.trim()) {
+      const lowercasedFilter = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter((participant: Participant) => {
+        const nameMatch = participant.name.toLowerCase().includes(lowercasedFilter);
+        const notesMatch = participant.notes?.toLowerCase().includes(lowercasedFilter);
+        const phoneMatch = participant.phone?.toLowerCase().includes(lowercasedFilter);
+        const emailMatch = participant.email?.toLowerCase().includes(lowercasedFilter);
+        return nameMatch || notesMatch || phoneMatch || emailMatch;
+      });
     }
 
-    const lowercasedFilter = searchTerm.toLowerCase().trim();
-    return participants.filter((participant: Participant) => {
-      const nameMatch = participant.name.toLowerCase().includes(lowercasedFilter);
-      const notesMatch = participant.notes?.toLowerCase().includes(lowercasedFilter);
-      return nameMatch || notesMatch;
-    });
-  }, [participants, searchTerm]);
+    // Фильтрация по категориям
+    if (activeFilter !== 'all') {
+      filtered = filtered.filter((participant) => {
+        switch (activeFilter) {
+          case 'adults':
+            return participant.age === 'adult';
+          case 'children':
+            return participant.age === 'child';
+          case 'beginner':
+          case 'experienced':
+          case 'professional':
+            return participant.experienceLevel === activeFilter;
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  }, [participants, searchTerm, activeFilter]);
+
+  // Функция для получения походов участника
+  const getParticipantTrips = useCallback((participantId: number) => {
+    // Здесь должна быть логика получения походов для конкретного участника
+    // Пример:
+    // return trips.filter(trip => trip.participants.includes(participantId));
+
+    // Временная заглушка для демонстрации
+    const mockTrips = [
+      { id: '1', name: 'Поход в горы Алтая', date: '15.06.2024' },
+      { id: '2', name: 'Байкал - зимнее путешествие' },
+      { id: '3', name: 'Кавказские вершины', date: '20.08.2024' },
+    ];
+
+    // Возвращаем случайное количество походов для демонстрации
+    return mockTrips.slice(0, Math.floor(Math.random() * 4));
+  }, []);
 
   const handleAddNew = useCallback(() => {
     setEditingParticipant(null);
@@ -58,7 +105,6 @@ function ParticipantsPage() {
         setParticipantToDelete(null);
       } catch (error) {
         console.error('Ошибка при удалении участника:', error);
-        // Здесь можно добавить toast уведомление об ошибке
       } finally {
         setIsLoading(false);
       }
@@ -77,8 +123,7 @@ function ParticipantsPage() {
         setIsModalOpen(false);
       } catch (error) {
         console.error('Ошибка при сохранении участника:', error);
-        // Здесь можно добавить toast уведомление об ошибке
-        throw error; // Пробрасываем ошибку в форму
+        throw error;
       } finally {
         setIsLoading(false);
       }
@@ -98,24 +143,171 @@ function ParticipantsPage() {
     }
   }, [isLoading]);
 
+  // Функции для экспорта/импорта
+  const handleExportData = useCallback(() => {
+    const dataStr = JSON.stringify(participants, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+    const exportFileDefaultName = `participants_${new Date().toISOString().split('T')[0]}.json`;
+
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  }, [participants]);
+
+  const handleImportData = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const importedData = JSON.parse(e.target?.result as string);
+            console.log('Импорт данных:', importedData);
+            // TODO: Реализовать импорт через store
+          } catch (error) {
+            console.error('Ошибка при импорте:', error);
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
+  }, []);
+
+  const childrenCount = participants.filter((p) => p.age === 'child').length;
+  const adultsCount = participants.filter((p) => p.age === 'adult').length;
+
+  const filterOptions = [
+    { value: 'all', label: 'Все', count: participants.length },
+    { value: 'adults', label: 'Взрослые', count: adultsCount },
+    { value: 'children', label: 'Дети', count: childrenCount },
+    {
+      value: 'beginner',
+      label: 'Новички',
+      count: participants.filter((p) => p.experienceLevel === 'beginner').length,
+    },
+    {
+      value: 'experienced',
+      label: 'Опытные',
+      count: participants.filter((p) => p.experienceLevel === 'experienced').length,
+    },
+    {
+      value: 'professional',
+      label: 'Профессионалы',
+      count: participants.filter((p) => p.experienceLevel === 'professional').length,
+    },
+  ];
+
+  const gridClasses =
+    viewMode === 'compact'
+      ? 'grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4'
+      : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-border">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Управление участниками</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Всего участников: {participants.length}
-            {searchTerm && ` • Найдено: ${filteredParticipants.length}`}
-          </p>
+      <header className="flex flex-col gap-4 mb-6 pb-4 border-b border-border">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Управление участниками</h2>
+            <div className="text-sm text-muted-foreground mt-1">
+              <p>
+                Всего участников: {participants.length}
+                {participants.length > 0 && (
+                  <span>
+                    {' '}
+                    • Взрослых: {adultsCount} • Детей: {childrenCount}
+                  </span>
+                )}
+                {searchTerm && ` • Найдено: ${filteredParticipants.length}`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 flex-wrap items-center">
+            {/* Переключатель видов */}
+            <div className="flex rounded-md border border-input bg-background p-1">
+              <button
+                onClick={() => setViewMode('expanded')}
+                className={`p-2 rounded transition-colors ${
+                  viewMode === 'expanded'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-muted text-muted-foreground'
+                }`}
+                title="Развернутый вид"
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('compact')}
+                className={`p-2 rounded transition-colors ${
+                  viewMode === 'compact'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-muted text-muted-foreground'
+                }`}
+                title="Компактный вид"
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+
+            {participants.length > 0 && (
+              <>
+                <Button
+                  onClick={handleExportData}
+                  variant="ghost"
+                  size="sm"
+                  className="whitespace-nowrap flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Экспорт
+                </Button>
+                <Button
+                  onClick={handleImportData}
+                  variant="ghost"
+                  size="sm"
+                  className="whitespace-nowrap flex items-center gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  Импорт
+                </Button>
+              </>
+            )}
+            <Button
+              onClick={handleAddNew}
+              variant="primary"
+              className="whitespace-nowrap flex items-center gap-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              Добавить участника
+            </Button>
+          </div>
         </div>
-        <Button
-          onClick={handleAddNew}
-          variant="primary"
-          className="whitespace-nowrap flex items-center gap-2"
-        >
-          <UserPlus className="h-4 w-4" />
-          Добавить участника
-        </Button>
+
+        {/* Фильтры */}
+        {participants.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Фильтр:</span>
+            {filterOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setActiveFilter(option.value as FilterType)}
+                className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                  activeFilter === option.value
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-foreground border-input hover:bg-muted'
+                }`}
+              >
+                {option.label} ({option.count})
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       {filteredParticipants.length === 0 ? (
@@ -125,14 +317,16 @@ function ParticipantsPage() {
               <Users className="h-16 w-16 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">
-              {searchTerm ? 'Участники не найдены' : 'Участников пока нет'}
+              {searchTerm || activeFilter !== 'all'
+                ? 'Участники не найдены'
+                : 'Участников пока нет'}
             </h3>
             <p className="text-muted-foreground mb-6">
-              {searchTerm
+              {searchTerm || activeFilter !== 'all'
                 ? 'Попробуйте изменить поисковый запрос или очистить фильтры.'
                 : 'Добавьте первого участника, чтобы начать планирование походов.'}
             </p>
-            {!searchTerm && (
+            {!searchTerm && activeFilter === 'all' && (
               <Button
                 onClick={handleAddNew}
                 variant="primary"
@@ -146,13 +340,15 @@ function ParticipantsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className={gridClasses}>
           {filteredParticipants.map((participant) => (
             <ParticipantCard
               key={participant.id}
               participant={participant}
               onEdit={() => handleEdit(participant)}
               onDelete={(e) => handleDeleteRequest(e, participant)}
+              participantTrips={getParticipantTrips(participant.id)}
+              viewMode={viewMode}
             />
           ))}
         </div>
@@ -162,7 +358,7 @@ function ParticipantsPage() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         title={editingParticipant ? 'Редактировать участника' : 'Новый участник'}
-        size="md"
+        size="lg"
       >
         <ParticipantForm
           participant={editingParticipant}
@@ -185,7 +381,7 @@ function ParticipantsPage() {
           <p className="text-foreground">
             Вы уверены, что хотите удалить участника{' '}
             <span className="font-semibold text-foreground">
-              &quot;{participantToDelete?.name}&quot;
+              &quot;{participantToDelete?.name}&ldquo;
             </span>
             ?
           </p>

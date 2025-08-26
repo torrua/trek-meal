@@ -12,6 +12,7 @@ export type CategoryData = Omit<Category, 'id'>;
 // --- Участники ---
 export type Gender = 'male' | 'female';
 export type AgeGroup = 'adult' | 'child';
+export type ExperienceLevel = 'beginner' | 'experienced' | 'professional';
 
 export interface Participant {
   id: number;
@@ -19,6 +20,11 @@ export interface Participant {
   gender: Gender;
   age: AgeGroup;
   notes: string;
+  // Новые поля
+  experienceLevel: ExperienceLevel;
+  phone?: string;
+  email?: string;
+  birthDate?: string; // ISO date string
 }
 export type ParticipantData = Omit<Participant, 'id'>;
 

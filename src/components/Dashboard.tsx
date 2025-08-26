@@ -17,7 +17,7 @@ import type { Trip, Product, ProductData, Category } from '../types';
 const StatCard = ({ value, label }: { value: number | string; label: string }) => (
   <div className="p-4 bg-secondary border border-primary rounded-lg text-center shadow-sm">
     <div className="text-3xl font-bold text-blue-600">{value}</div>
-    <div className="text-sm font-medium text-muted mt-1">{label}</div>
+    <div className="text-sm font-medium text-muted-foreground mt-1">{label}</div>
   </div>
 );
 
@@ -39,7 +39,7 @@ const ProductMiniCard = ({
     >
       <div>
         <h4 className="font-bold text-primary text-sm">{product.name}</h4>
-        <p className="text-xs text-muted">
+        <p className="text-xs text-muted-foreground">
           {product.calories} ккал, {product.proteins}б / {product.fats}ж / {product.carbs}у
         </p>
       </div>
@@ -132,30 +132,30 @@ function Dashboard() {
                   >
                     <div className="flex justify-between">
                       <h4 className="font-bold text-primary">{trip.name}</h4>
-                      <span className="text-xs font-medium text-muted">
+                      <span className="text-xs font-medium text-muted-foreground">
                         {new Date(trip.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="grid grid-cols-4 gap-2 mt-3 text-center text-sm">
                       <div>
                         <strong className="block text-blue-600">{trip.days}</strong>
-                        <span className="text-xs text-muted">дней</span>
+                        <span className="text-xs text-muted-foreground">дней</span>
                       </div>
                       <div>
                         <strong className="block text-blue-600">{trip.participants.length}</strong>
-                        <span className="text-xs text-muted">чел.</span>
+                        <span className="text-xs text-muted-foreground">чел.</span>
                       </div>
                       <div>
                         <strong className="block text-blue-600">
                           {(summary.totalWeight / 1000).toFixed(1)}
                         </strong>
-                        <span className="text-xs text-muted">кг</span>
+                        <span className="text-xs text-muted-foreground">кг</span>
                       </div>
                       <div>
                         <strong className="block text-blue-600">
                           {summary.averageCaloriesPerPersonPerDay}
                         </strong>
-                        <span className="text-xs text-muted">ккал/день</span>
+                        <span className="text-xs text-muted-foreground">ккал/день</span>
                       </div>
                     </div>
                   </div>
@@ -163,8 +163,10 @@ function Dashboard() {
               })
             ) : (
               <div className="text-center py-12 px-6 bg-muted rounded-lg">
-                <h3 className="text-lg font-medium text-secondary">Пока нет ни одного похода</h3>
-                <p className="text-muted mt-2 mb-4">
+                <h3 className="text-lg font-medium-foreground text-secondary">
+                  Пока нет ни одного похода
+                </h3>
+                <p className="text-muted-foreground mt-2 mb-4">
                   Создайте свой первый поход, чтобы он появился здесь.
                 </p>
                 <Button variant="primary" onClick={() => navigate('/trips')}>
@@ -191,7 +193,7 @@ function Dashboard() {
             ) : (
               <div className="text-center py-12 px-6 bg-muted rounded-lg">
                 <h3 className="text-lg font-medium text-secondary">База продуктов пуста</h3>
-                <p className="text-muted mt-2 mb-4">
+                <p className="text-muted-foreground mt-2 mb-4">
                   Добавьте продукты, чтобы они отображались здесь.
                 </p>
                 <Button variant="primary" onClick={() => navigate('/products')}>

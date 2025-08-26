@@ -32,7 +32,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-[auto_1fr] gap-4 items-end">
         <div>
-          <label className="block text-sm font-medium text-secondary mb-1">Эмодзи</label>
+          <label className="block text-sm font-medium mb-1">Эмодзи</label>
           <input
             type="text"
             value={emoji}
@@ -42,9 +42,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-secondary mb-1">
-            Название категории
-          </label>
+          <label className="block text-sm font-medium mb-1">Название категории</label>
           <input
             type="text"
             value={name}
@@ -55,7 +53,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-secondary mb-1">Цвет</label>
+        <label className="block text-sm font-medium mb-1">Цвет</label>
         <input
           type="color"
           value={color}
@@ -172,7 +170,7 @@ function CategoriesPage() {
           Вы уверены, что хотите удалить категорию{' '}
           <span className="font-bold">{categoryToDelete?.name}</span>?
         </p>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 text-sm text-muted-foreground">
           Продукты этой категории не будут удалены, но потеряют привязку к ней.
         </p>
       </ConfirmModal>

@@ -1,33 +1,33 @@
-// src/ui/ThemedDatePicker.tsx
-
 import React from 'react';
-import DatePicker, { DatePickerProps, registerLocale } from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { ru } from 'date-fns/locale';
-// --- ИСПРАВЛЕНИЕ: Убираем неиспользуемый импорт ---
-// import useThemeStore from '../stores/useThemeStore';
+import cn from 'classnames';
 
-registerLocale('ru', ru);
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: string;
+  error?: string;
+  containerClassName?: string;
+}
 
-const DateInput = React.forwardRef<HTMLInputElement, { value?: string; onClick?: () => void }>(
-  ({ value, onClick }, ref) => (
-    <input
-      value={value}
-      onClick={onClick}
-      ref={ref}
-      readOnly
-      className="w-full h-10 px-3 cursor-pointer bg-secondary border border-primary text-primary rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-      placeholder="Выберите период"
-    />
-  )
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className, label, name, error, containerClassName, ...props }, ref) => {
+    const textareaClasses = cn(
+      'min-h-[80px]', // Задаем минимальную высоту
+      className,
+      { 'border-danger focus-visible:ring-danger': !!error }
+    );
+
+    return (
+      <div className={containerClassName}>
+        {label && (
+          <label htmlFor={name} className="block text-sm font-medium text-foreground mb-1.5">
+            {label}
+          </label>
+        )}
+        <textarea className={textareaClasses} ref={ref} name={name} {...props} />
+        {error && <p className="mt-1.5 text-sm text-danger">{error}</p>}
+      </div>
+    );
+  }
 );
-DateInput.displayName = 'DateInput';
+Textarea.displayName = 'Textarea';
 
-const ThemedDatePicker: React.FC<DatePickerProps> = (props) => {
-  // --- ИСПРАВЛЕНИЕ: Убираем неиспользуемую переменную ---
-  // const { theme } = useThemeStore();
-
-  return <DatePicker locale="ru" dateFormat="dd.MM.yyyy" customInput={<DateInput />} {...props} />;
-};
-
-export default ThemedDatePicker;
+export default Textarea;

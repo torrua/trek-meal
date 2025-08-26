@@ -4,29 +4,26 @@ import React, { useEffect } from 'react';
 import { NavLink, useLocation, Outlet } from 'react-router-dom';
 import cn from 'classnames';
 import { Toaster } from 'react-hot-toast';
-import useSearchStore from '../../stores/useSearchStore'; // <-- Импортируем новый стор
-import ThemeSwitcher from './ThemeSwitcher'; // <-- Импорт переключателя
+import useSearchStore from '../../stores/useSearchStore';
+import ThemeSwitcher from './ThemeSwitcher';
 
 const navLinkBaseClasses =
   'px-4 py-2 rounded-md cursor-pointer transition-colors duration-200 text-sm font-medium border';
-const navLinkInactiveClasses =
-  'bg-secondary text-secondary border-primary hover:bg-muted hover:border-blue-500';
-const navLinkActiveClasses = 'bg-blue-600 text-white border-blue-600 shadow-sm';
+// ИСПРАВЛЕНИЕ: Добавляем цвет 'border-border' для неактивных кнопок
+const navLinkInactiveClasses = 'bg-card text-card-foreground border-border hover:bg-muted';
+const navLinkActiveClasses = 'bg-primary text-primary-foreground border-primary';
+
 const Layout: React.FC = () => {
   const location = useLocation();
   const isPlanningPage = /^\/trips\/\d+$/.test(location.pathname);
-
-  // --- НОВЫЙ КОД: Подключаемся к search стору ---
   const { searchTerm, setSearchTerm, clearSearchTerm } = useSearchStore();
 
-  // --- НОВЫЙ КОД: Сбрасываем поиск при смене страницы ---
   useEffect(() => {
     clearSearchTerm();
   }, [location.pathname, clearSearchTerm]);
 
-  // --- НОВЫЙ КОД: Логика для динамического плейсхолдера ---
   const getPlaceholder = () => {
-    if (isPlanningPage || location.pathname === '/') return 'Поиск недоступен здесь';
+    if (isPlanningPage || location.pathname === '/') return 'Поиск недоступен';
     switch (location.pathname) {
       case '/products':
         return 'Поиск по продуктам...';
@@ -43,18 +40,17 @@ const Layout: React.FC = () => {
     }
   };
 
-  // --- НОВЫЙ КОД: Определяем, активен ли поиск на текущей странице ---
   const isSearchDisabled =
     isPlanningPage || location.pathname === '/' || location.pathname === '/categories';
 
   return (
-    // --- ИЗМЕНЕНИЕ: Убираем фон отсюда, так как он теперь на <body> ---
-    <div className="max-w-7xl mx-auto p-4 font-sans text-primary">
+    <div className="max-w-7xl mx-auto p-4 font-sans">
       <Toaster position="bottom-right" />
 
-      <header className="text-center mb-6 p-4 bg-secondary border border-primary rounded-lg shadow-sm">
-        <h1 className="text-3xl font-bold text-primary">Trek Meal</h1>
-        <p className="mt-1 text-sm text-muted">Планирование питания для походов</p>
+      {/* ИСПРАВЛЕНИЕ: Добавляем цвет 'border-border' */}
+      <header className="text-center mb-6 p-4 bg-card border border-border rounded-lg shadow-sm">
+        <h1 className="text-3xl font-bold text-foreground">Trek Meal</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Планирование питания для походов</p>
       </header>
 
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
@@ -62,10 +58,7 @@ const Layout: React.FC = () => {
           <NavLink
             to="/"
             className={({ isActive }) =>
-              cn(navLinkBaseClasses, {
-                [navLinkActiveClasses]: isActive,
-                [navLinkInactiveClasses]: !isActive,
-              })
+              cn(navLinkBaseClasses, isActive ? navLinkActiveClasses : navLinkInactiveClasses)
             }
           >
             Главная
@@ -73,10 +66,7 @@ const Layout: React.FC = () => {
           <NavLink
             to="/products"
             className={({ isActive }) =>
-              cn(navLinkBaseClasses, {
-                [navLinkActiveClasses]: isActive,
-                [navLinkInactiveClasses]: !isActive,
-              })
+              cn(navLinkBaseClasses, isActive ? navLinkActiveClasses : navLinkInactiveClasses)
             }
           >
             Продукты
@@ -84,10 +74,7 @@ const Layout: React.FC = () => {
           <NavLink
             to="/dishes"
             className={({ isActive }) =>
-              cn(navLinkBaseClasses, {
-                [navLinkActiveClasses]: isActive,
-                [navLinkInactiveClasses]: !isActive,
-              })
+              cn(navLinkBaseClasses, isActive ? navLinkActiveClasses : navLinkInactiveClasses)
             }
           >
             Блюда
@@ -95,10 +82,7 @@ const Layout: React.FC = () => {
           <NavLink
             to="/categories"
             className={({ isActive }) =>
-              cn(navLinkBaseClasses, {
-                [navLinkActiveClasses]: isActive,
-                [navLinkInactiveClasses]: !isActive,
-              })
+              cn(navLinkBaseClasses, isActive ? navLinkActiveClasses : navLinkInactiveClasses)
             }
           >
             Категории
@@ -106,10 +90,7 @@ const Layout: React.FC = () => {
           <NavLink
             to="/participants"
             className={({ isActive }) =>
-              cn(navLinkBaseClasses, {
-                [navLinkActiveClasses]: isActive,
-                [navLinkInactiveClasses]: !isActive,
-              })
+              cn(navLinkBaseClasses, isActive ? navLinkActiveClasses : navLinkInactiveClasses)
             }
           >
             Участники
@@ -117,10 +98,10 @@ const Layout: React.FC = () => {
           <NavLink
             to="/trips"
             className={({ isActive }) =>
-              cn(navLinkBaseClasses, {
-                [navLinkActiveClasses]: isActive && !isPlanningPage,
-                [navLinkInactiveClasses]: !isActive || isPlanningPage,
-              })
+              cn(
+                navLinkBaseClasses,
+                isActive && !isPlanningPage ? navLinkActiveClasses : navLinkInactiveClasses
+              )
             }
           >
             Походы
@@ -135,7 +116,6 @@ const Layout: React.FC = () => {
           )}
         </nav>
 
-        {/* --- ИЗМЕНЕНИЕ: Поиск и переключатель на одной строке --- */}
         <div className="flex items-center gap-2 w-full md:w-auto">
           <input
             type="text"
@@ -143,13 +123,13 @@ const Layout: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             disabled={isSearchDisabled}
-            className="w-full md:w-64 px-3 py-2 border border-primary bg-secondary rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 disabled:bg-muted disabled:cursor-not-allowed"
           />
           <ThemeSwitcher />
         </div>
       </div>
 
-      <main className="bg-secondary border border-primary rounded-lg shadow-sm min-h-[600px]">
+      {/* ИСПРАВЛЕНИЕ: Добавляем цвет 'border-border' */}
+      <main className="bg-card border border-border rounded-lg shadow-sm min-h-[600px]">
         <Outlet />
       </main>
     </div>

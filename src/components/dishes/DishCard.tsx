@@ -46,14 +46,14 @@ const DishCard: React.FC<DishCardProps> = ({ dish, onEdit, onDelete }) => {
         <h3 className="text-lg font-bold text-primary truncate" title={dish.name}>
           {dish.name}
         </h3>
-        <p className="text-sm text-muted mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           {dish.products.length} комп. / {totalWeight} г
         </p>
       </div>
 
       {/* === BODY --- */}
       <div className="p-4 flex-grow">
-        <h4 className="text-xs font-bold uppercase text-muted mb-2">Состав:</h4>
+        <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Состав:</h4>
         <ul className="space-y-1 list-disc pl-5 text-sm">
           {dishContents.map((item, index) => (
             <li key={index} className="flex justify-between">

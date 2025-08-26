@@ -80,7 +80,7 @@ function TripsPage() {
           <h3 className="text-lg font-medium text-secondary">
             {searchTerm ? 'Походы не найдены' : 'Походов пока нет'}
           </h3>
-          <p className="text-muted mt-2 mb-4">
+          <p className="text-muted-foreground mt-2 mb-4">
             {searchTerm
               ? 'Попробуйте изменить поисковый запрос.'
               : 'Начните планирование, создав свой первый поход.'}

@@ -111,7 +111,7 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-secondary mb-1">Название блюда *</label>
+        <label className="block text-sm font-medium mb-1">Название блюда *</label>
         <input
           type="text"
           value={name}
@@ -121,7 +121,7 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-secondary mb-2">Состав *</label>
+        <label className="block text-sm font-medium text-secondary-foreground mb-2">Состав *</label>
         <div className="space-y-3">
           {products.map((p, index) => {
             const selectedProduct = allProducts.find((prod: Product) => prod.id === p.productId);

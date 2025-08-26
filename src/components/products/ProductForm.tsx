@@ -5,6 +5,8 @@ import useCategoryStore from '../../stores/useCategoryStore';
 import Button from '../../ui/Button';
 import { toast } from 'react-hot-toast';
 import type { Product, ProductData, ProductPortion, Category } from '../../types';
+import Input from '../../ui/Input';
+import Textarea from '../../ui/Textarea';
 
 interface ProductFormProps {
   product: Product | null;
@@ -31,7 +33,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
 
   useEffect(() => {
     if (product) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id: _id, ...data } = product;
       setFormData({
         ...INITIAL_STATE,
@@ -79,29 +80,19 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     onSubmit(formData);
   };
 
-  const inputClassName =
-    'w-full px-3 py-2 border border-primary rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500';
-  const labelClassName = 'block text-sm font-medium text-secondary mb-1';
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="Название *"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+          autoFocus
+        />
         <div>
-          <label htmlFor="name" className={labelClassName}>
-            Название *
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className={inputClassName}
-          />
-        </div>
-        <div>
-          <label htmlFor="categoryId" className={labelClassName}>
+          <label htmlFor="categoryId" className="block text-sm font-medium text-foreground mb-1.5">
             Категория
           </label>
           <select
@@ -109,7 +100,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             name="categoryId"
             value={formData.categoryId || ''}
             onChange={handleChange}
-            className={inputClassName}
           >
             <option value="">Без категории</option>
             {categories.map((cat: Category) => (
@@ -121,16 +111,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
         </div>
       </div>
       <div>
-        <label htmlFor="packaging" className={labelClassName}>
+        <label htmlFor="packaging" className="block text-sm font-medium text-foreground mb-1.5">
           Упаковка
         </label>
-        <select
-          id="packaging"
-          name="packaging"
-          value={formData.packaging}
-          onChange={handleChange}
-          className={inputClassName}
-        >
+        <select id="packaging" name="packaging" value={formData.packaging} onChange={handleChange}>
           <option value="">Без упаковки</option>
           <option value="Пакет">Пакет</option>
           <option value="Банка">Банка</option>
@@ -138,104 +122,87 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           <option value="Бутылка">Бутылка</option>
         </select>
       </div>
-      <div>
-        <label htmlFor="description" className={labelClassName}>
-          Описание
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          rows={2}
-          className={inputClassName}
-        />
-      </div>
+      <Textarea
+        label="Описание"
+        name="description"
+        value={formData.description}
+        onChange={handleChange}
+        rows={2}
+      />
 
       <div>
-        <label className={`${labelClassName} mb-2`}>Пищевая ценность (на 100г)</label>
+        <label className="block text-sm font-medium text-foreground mb-2">
+          Пищевая ценность (на 100г)
+        </label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <div>
-            <label className="block text-xs font-medium text-secondary mb-1">Калории</label>
-            <input
-              type="number"
-              name="calories"
-              value={formData.calories}
-              onChange={handleChange}
-              className={inputClassName}
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-secondary mb-1">Белки</label>
-            <input
-              type="number"
-              name="proteins"
-              value={formData.proteins}
-              onChange={handleChange}
-              className={inputClassName}
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-secondary mb-1">Жиры</label>
-            <input
-              type="number"
-              name="fats"
-              value={formData.fats}
-              onChange={handleChange}
-              className={inputClassName}
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-secondary mb-1">Углеводы</label>
-            <input
-              type="number"
-              name="carbs"
-              value={formData.carbs}
-              onChange={handleChange}
-              className={inputClassName}
-            />
-          </div>
+          <Input
+            label="Калории"
+            name="calories"
+            type="number"
+            value={formData.calories}
+            onChange={handleChange}
+          />
+          <Input
+            label="Белки"
+            name="proteins"
+            type="number"
+            value={formData.proteins}
+            onChange={handleChange}
+          />
+          <Input
+            label="Жиры"
+            name="fats"
+            type="number"
+            value={formData.fats}
+            onChange={handleChange}
+          />
+          <Input
+            label="Углеводы"
+            name="carbs"
+            type="number"
+            value={formData.carbs}
+            onChange={handleChange}
+          />
         </div>
       </div>
 
-      <div className="flex items-center gap-3 p-3 bg-muted rounded-md border">
+      <div className="flex items-center gap-3 p-3 bg-background rounded-md border border-input">
         <input
           id="isPerishable"
           name="isPerishable"
           type="checkbox"
           checked={formData.isPerishable}
           onChange={handleChange}
-          className="h-4 w-4 rounded border-primary text-blue-600 focus:ring-blue-500"
+          className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
         />
-        <label htmlFor="isPerishable" className="text-sm font-medium text-secondary">
+        <label htmlFor="isPerishable" className="text-sm font-medium text-foreground">
           Скоропортящийся продукт
         </label>
       </div>
       <div>
-        <label className={`${labelClassName} mb-2`}>Порции *</label>
+        <label className="block text-sm font-medium text-foreground mb-2">Порции *</label>
         <div className="space-y-3">
           {formData.portions.map((portion, index) => (
             <div key={index} className="flex items-center gap-2">
-              <input
+              <Input
                 type="text"
                 placeholder="Название (напр. 'Малая')"
                 value={portion.name}
                 onChange={(e) => handlePortionChange(index, 'name', e.target.value)}
-                className={inputClassName}
               />
-              <input
+              <Input
                 type="number"
                 placeholder="Вес (г)"
                 value={portion.weight}
                 onChange={(e) => handlePortionChange(index, 'weight', e.target.value)}
                 required
-                className={`${inputClassName} w-32`}
+                className="w-32 flex-shrink-0"
               />
               <Button
                 type="button"
                 variant="danger"
+                size="icon"
                 onClick={() => removePortion(index)}
-                className="!px-3 !py-2"
                 disabled={formData.portions.length <= 1}
               >
                 –
@@ -247,7 +214,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           + Добавить порцию
         </Button>
       </div>
-      <div className="flex justify-end gap-3 pt-4 border-t border-primary">
+      <div className="flex justify-end gap-3 pt-4 border-t border-border">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Отмена
         </Button>

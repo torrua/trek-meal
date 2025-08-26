@@ -1,49 +1,45 @@
 // src/ui/Button.tsx
 
 import React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
 import cn from 'classnames';
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
+const buttonVariants = cva(
+  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  {
+    variants: {
+      variant: {
+        primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        danger: 'bg-danger text-danger-foreground hover:bg-danger/90',
+        // ИСПРАВЛЕНИЕ: Добавляем границу и улучшаем hover-эффект
+        secondary: 'bg-secondary text-secondary-foreground border border-input hover:bg-muted',
+        ghost: 'hover:bg-muted hover:text-muted-foreground',
+      },
+      size: {
+        default: 'h-10 px-4 py-2',
+        sm: 'h-9 rounded-md px-3',
+        lg: 'h-11 rounded-md px-8',
+        icon: 'h-10 w-10',
+      },
+    },
+    defaultVariants: {
+      variant: 'primary',
+      size: 'default',
+    },
+  }
+);
 
-interface ButtonProps {
-  children: React.ReactNode;
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  type?: 'button' | 'submit' | 'reset';
-  variant?: ButtonVariant;
-  className?: string;
-  disabled?: boolean;
-}
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {}
 
-const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-blue-400',
-  secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500 disabled:bg-gray-400',
-  danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 disabled:bg-red-400',
-  ghost:
-    'bg-transparent text-secondary hover:bg-muted focus:ring-gray-200 border border-primary disabled:bg-muted disabled:text-muted',
-};
-
-const Button: React.FC<ButtonProps> = ({
-  children,
-  onClick,
-  type = 'button',
-  variant = 'primary',
-  className = '',
-  disabled = false,
-}) => {
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        'px-4 py-2 text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200',
-        VARIANTS[variant],
-        className
-      )}
-    >
-      {children}
-    </button>
-  );
-};
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, ...props }, ref) => {
+    return (
+      <button className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+    );
+  }
+);
+Button.displayName = 'Button';
 
 export default Button;

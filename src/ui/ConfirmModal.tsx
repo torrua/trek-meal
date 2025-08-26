@@ -12,7 +12,7 @@ interface ConfirmModalProps {
   children: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'primary' | 'danger' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'danger' | 'secondary';
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -25,14 +25,13 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   cancelText = 'Отмена',
   variant = 'primary',
 }) => {
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
-      <div className="text-secondary">{children}</div>
-      <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-primary">
+      <div className="text-sm text-muted-foreground">{children}</div>
+      {/* ИСПРАВЛЕНИЕ: Добавляем цвет 'border-border' */}
+      <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-border">
         <Button variant="ghost" onClick={onClose}>
           {cancelText}
         </Button>

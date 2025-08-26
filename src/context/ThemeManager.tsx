@@ -1,24 +1,20 @@
 // src/context/ThemeManager.tsx
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import useThemeStore from '../stores/useThemeStore';
 
-// Этот компонент не рендерит ничего видимого.
-// Его единственная задача - следить за стором и менять класс на <html>.
-const ThemeManager: React.FC = () => {
+const ThemeManager = () => {
   const { theme } = useThemeStore();
 
   useEffect(() => {
     const root = window.document.documentElement;
-
-    // Удаляем старые классы тем
-    root.classList.remove('light', 'dark', 'sepia');
-
-    // Добавляем текущий класс темы
-    root.classList.add(theme);
+    // Удаляем старый класс (если был)
+    root.classList.remove('light', 'dark');
+    // Устанавливаем data-атрибут
+    root.setAttribute('data-theme', theme);
   }, [theme]);
 
-  return null; // Этот компонент невидим
+  return null;
 };
 
 export default ThemeManager;

@@ -47,7 +47,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, onEdit, onDelete 
       {/* === BODY === */}
       <div className="p-4 flex-grow flex flex-col items-center justify-center text-center">
         <div className="text-5xl font-bold text-primary">{productCount}</div>
-        <div className="text-sm text-muted uppercase">
+        <div className="text-sm text-muted-foreground uppercase">
           {productCount === 1
             ? 'продукт'
             : productCount > 1 && productCount < 5

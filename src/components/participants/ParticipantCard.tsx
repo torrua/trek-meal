@@ -1,6 +1,8 @@
 // src/components/participants/ParticipantCard.tsx
 
 import React from 'react';
+import { Baby } from 'lucide-react';
+import { PARTICIPANT_CONSTANTS } from '../../constants/participants';
 import type { Participant } from '../../types';
 
 interface ParticipantCardProps {
@@ -9,21 +11,18 @@ interface ParticipantCardProps {
   onDelete: (e: React.MouseEvent) => void;
 }
 
-const GENDER_ICONS: { [key in Participant['gender']]: string } = { male: '👨', female: '👩' };
-const AGE_META: { [key in Participant['age']]: { text: string; className: string } } = {
-  adult: { text: 'Взрослый', className: 'bg-green-100 text-green-800' },
-  child: { text: 'Ребенок', className: 'bg-yellow-100 text-yellow-800' },
-};
-
 const ParticipantCard: React.FC<ParticipantCardProps> = ({ participant, onEdit, onDelete }) => {
   const { gender, age, name, notes } = participant;
-  const ageMeta = AGE_META[age];
+  const cardStyles = PARTICIPANT_CONSTANTS.CARD_STYLES[gender];
+  const isChild = age === 'child';
 
   const handleCardClick = () => onEdit();
-  const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
+
+  const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    action();
+    onEdit();
   };
+
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete(e);
@@ -31,45 +30,60 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({ participant, onEdit, 
 
   return (
     <div
-      className="bg-secondary border border-primary rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
+      className={`${cardStyles.background} border ${cardStyles.border} rounded-lg shadow-sm flex flex-col transition-all duration-200 hover:shadow-md hover:scale-[1.02] cursor-pointer group relative`}
       onClick={handleCardClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
+      aria-label={`Участник ${name}${isChild ? ' (ребенок)' : ''}, нажмите для редактирования`}
     >
+      {/* === Ð"Ð•Ð¢Ð¡ÐšÐ˜Ð™ Ð—ÐÐÐ§ÐžÐš === */}
+      {isChild && (
+        <div className="absolute -top-2 -right-2 z-10">
+          <div className="bg-orange-400 text-white rounded-full p-2 shadow-lg border-2 border-white dark:border-gray-800">
+            <Baby className="h-4 w-4" aria-label="Ребенок" />
+          </div>
+        </div>
+      )}
+
       {/* === HEADER === */}
-      <div className="p-4 border-b border-secondary">
-        <h3
-          className="text-lg font-bold text-primary truncate flex items-center gap-2"
-          title={name}
-        >
-          <span>{GENDER_ICONS[gender]}</span>
+      <div className={`p-4 border-b ${cardStyles.border} ${cardStyles.header}`}>
+        <h3 className="text-lg font-bold text-foreground truncate" title={name}>
           {name}
         </h3>
-        <div className="flex items-center gap-2 mt-1.5 flex-wrap h-5">
-          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${ageMeta.className}`}>
-            {ageMeta.text}
-          </span>
-        </div>
       </div>
 
       {/* === BODY === */}
       <div className="p-4 flex-grow">
         {notes ? (
-          <p className="text-sm text-secondary italic">&quot;{notes}&ldquo;</p>
+          <p className="text-sm text-foreground/80 italic break-words" title={notes}>
+            &quot;{notes}&quot;
+          </p>
         ) : (
-          <p className="text-sm text-muted text-center py-4">Нет заметок</p>
+          <p className="text-sm text-foreground/50 text-center py-4">Нет заметок</p>
         )}
       </div>
 
       {/* === FOOTER === */}
-      <div className="p-3 bg-muted border-t border-secondary flex justify-end gap-2">
+      <div
+        className={`p-3 ${cardStyles.footer} border-t ${cardStyles.border} flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200`}
+      >
         <button
-          onClick={(e) => handleButtonClick(e, onEdit)}
-          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+          onClick={handleEditClick}
+          className="text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label={`Редактировать ${name}`}
         >
           Редактировать
         </button>
         <button
           onClick={handleDeleteClick}
-          className="text-sm font-medium text-red-600 hover:text-red-800"
+          className="text-sm font-medium text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+          aria-label={`Удалить ${name}`}
         >
           Удалить
         </button>
@@ -78,4 +92,4 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({ participant, onEdit, 
   );
 };
 
-export default ParticipantCard;
+export default React.memo(ParticipantCard);

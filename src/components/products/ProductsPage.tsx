@@ -112,7 +112,7 @@ function ProductsPage() {
               ? 'Продукты не найдены'
               : 'Продуктов пока нет'}
           </h3>
-          <p className="text-muted mt-2 mb-4">
+          <p className="text-muted-foreground mt-2 mb-4">
             {searchTerm || filterCategory.value !== 'all'
               ? 'Попробуйте изменить поисковый запрос или фильтр.'
               : 'Добавьте первый продукт для начала работы.'}

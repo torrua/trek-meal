@@ -83,7 +83,7 @@ function DishesPage() {
           <h3 className="text-lg font-medium text-secondary">
             {searchTerm ? 'Блюда не найдены' : 'У вас пока нет сохраненных блюд'}
           </h3>
-          <p className="text-muted mt-2 mb-4">
+          <p className="text-muted-foreground mt-2 mb-4">
             {searchTerm
               ? 'Попробуйте изменить поисковый запрос.'
               : 'Создайте свое первое блюдо, чтобы ускорить планирование походов.'}

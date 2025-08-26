@@ -56,19 +56,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
         <div className="grid grid-cols-4 gap-2 text-center">
           <div>
             <div className="text-xl font-bold text-blue-600">{product.calories}</div>
-            <div className="text-xs text-muted">ккал</div>
+            <div className="text-xs text-muted-foreground">ккал</div>
           </div>
           <div>
             <div className="text-xl font-bold text-blue-600">{product.proteins}</div>
-            <div className="text-xs text-muted">белки</div>
+            <div className="text-xs text-muted-foreground">белки</div>
           </div>
           <div>
             <div className="text-xl font-bold text-blue-600">{product.fats}</div>
-            <div className="text-xs text-muted">жиры</div>
+            <div className="text-xs text-muted-foreground">жиры</div>
           </div>
           <div>
             <div className="text-xl font-bold text-blue-600">{product.carbs}</div>
-            <div className="text-xs text-muted">у/воды</div>
+            <div className="text-xs text-muted-foreground">у/воды</div>
           </div>
         </div>
       </div>

@@ -35,7 +35,7 @@ const ThemeSwitcher: React.FC = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-full text-secondary hover:bg-muted transition-colors duration-200"
+      className="p-2 rounded-full text-secondary-foreground hover:bg-muted transition-colors duration-200"
       title={theme === 'light' ? 'Переключить на темную тему' : 'Переключить на светлую тему'}
     >
       {theme === 'light' ? <MoonIcon /> : <SunIcon />}

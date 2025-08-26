@@ -39,7 +39,7 @@ const DishContents = ({ dish }: { dish: Dish }) => {
   const { products: allProducts } = useProductStore();
   const { categories } = useCategoryStore();
   return (
-    <ul className="text-xs text-secondary pl-5 mt-1 space-y-0.5">
+    <ul className="text-xs text-secondary-foreground pl-5 mt-1 space-y-0.5">
       {dish.products.map((p) => {
         const product = allProducts.find((ap) => ap.id === p.productId);
         const category = product
@@ -230,7 +230,7 @@ function TripPlanningPage() {
     return (
       <div className="p-6 text-center">
         <h2 className="text-xl font-bold">Поход не найден</h2>
-        <p className="text-muted my-4">
+        <p className="text-muted-foreground my-4">
           Возможно, он был удален или вы перешли по неверной ссылке.
         </p>
         <Button onClick={() => navigate('/trips')} className="mt-4">
@@ -245,7 +245,7 @@ function TripPlanningPage() {
       <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b">
         <div>
           <h2 className="text-2xl font-bold text-primary">{trip.name}</h2>
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted-foreground">
             {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
           </p>
         </div>
@@ -272,7 +272,7 @@ function TripPlanningPage() {
               >
                 <span>День {dayIndex + 1}</span>
                 <svg
-                  className={`w-5 h-5 text-muted transition-transform duration-200 transform ${
+                  className={`w-5 h-5 text-muted-foreground transition-transform duration-200 transform ${
                     expandedDays[dayIndex] ? 'rotate-180' : ''
                   } group-hover:text-secondary`}
                   fill="none"
@@ -344,7 +344,11 @@ function TripPlanningPage() {
                                   </div>
                                 );
                               } else {
-                                content = <div className="italic text-muted">Блюдо не найдено</div>;
+                                content = (
+                                  <div className="italic text-muted-foreground">
+                                    Блюдо не найдено
+                                  </div>
+                                );
                               }
                             } else {
                               // item.type === 'product'
@@ -381,7 +385,7 @@ function TripPlanningPage() {
                           formatGroupLabel={(data) => (
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-secondary">{data.label}</span>
-                              <span className="text-xs bg-gray-200 text-secondary rounded-full px-1.5">
+                              <span className="text-xs bg-gray-200 text-secondary-foreground rounded-full px-1.5">
                                 {data.options.length}
                               </span>
                             </div>
@@ -405,25 +409,25 @@ function TripPlanningPage() {
                   <div className="text-xl font-bold text-blue-600">
                     {summary.tripParticipants.length}
                   </div>
-                  <div className="text-xs text-muted uppercase">Участников</div>
+                  <div className="text-xs text-muted-foreground uppercase">Участников</div>
                 </div>
                 <div>
                   <div className="text-xl font-bold text-blue-600">
                     {(summary.totalWeight / 1000).toFixed(2)}
                   </div>
-                  <div className="text-xs text-muted uppercase">Кг еды</div>
+                  <div className="text-xs text-muted-foreground uppercase">Кг еды</div>
                 </div>
                 <div>
                   <div className="text-xl font-bold text-blue-600">
                     {summary.averageWeightPerPersonPerDay}
                   </div>
-                  <div className="text-xs text-muted uppercase">г/чел/день</div>
+                  <div className="text-xs text-muted-foreground uppercase">г/чел/день</div>
                 </div>
                 <div>
                   <div className="text-xl font-bold text-blue-600">
                     {summary.averageCaloriesPerPersonPerDay}
                   </div>
-                  <div className="text-xs text-muted uppercase">ккал/чел/день</div>
+                  <div className="text-xs text-muted-foreground uppercase">ккал/чел/день</div>
                 </div>
               </div>
             </div>
@@ -456,7 +460,9 @@ function TripPlanningPage() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted text-center py-2">Добавьте участников</p>
+                  <p className="text-sm text-muted-foreground text-center py-2">
+                    Добавьте участников
+                  </p>
                 )}
               </div>
             </div>

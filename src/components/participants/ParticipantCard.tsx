@@ -2,10 +2,22 @@
 
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Baby, User, Calendar, Backpack, Edit, Trash2, Phone, Mail, Award } from 'lucide-react';
+import {
+  Baby,
+  User,
+  MapPin,
+  Backpack,
+  Edit,
+  Trash2,
+  Phone,
+  Mail,
+  Award,
+  Calendar,
+} from 'lucide-react';
+import { isFuture, isPast, parseISO, compareAsc, compareDesc } from 'date-fns';
 import { PARTICIPANT_CONSTANTS } from '../../constants/participants';
 import useTripStore from '../../stores/useTripStore';
-import type { Participant } from '../../types';
+import type { Participant, Trip } from '../../types';
 import cn from 'classnames';
 
 interface ParticipantCardProps {
@@ -36,10 +48,31 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
     [trips, participant.id]
   );
 
-  const tabs: { id: TabType; label: string; icon: React.ElementType }[] = [
-    { id: 'data', label: 'Данные', icon: User },
-    { id: 'trips', label: 'Походы', icon: Calendar },
-    { id: 'equipment', label: 'Снаряжение', icon: Backpack },
+  const participantEquipment: unknown[] = useMemo(() => [], []);
+
+  const displayedTrips = useMemo(() => {
+    // 1. Разделяем походы на те, у которых есть дата, и те, у которых нет
+    const tripsWithDate = participantTrips.filter((trip) => trip.startDate);
+    const tripsWithoutDate = participantTrips
+      .filter((trip) => !trip.startDate)
+      .sort((a, b) => compareDesc(new Date(a.createdAt), new Date(b.createdAt))); // Сортируем по дате создания
+
+    // 2. Сортируем походы с датой
+    const upcoming = tripsWithDate
+      .filter((trip) => isFuture(parseISO(trip.startDate)))
+      .sort((a, b) => compareAsc(parseISO(a.startDate), parseISO(b.startDate)));
+    const past = tripsWithDate
+      .filter((trip) => isPast(parseISO(trip.startDate)))
+      .sort((a, b) => compareDesc(parseISO(a.startDate), parseISO(b.startDate)));
+
+    // 3. Объединяем все группы и берем первые 3
+    return [...upcoming, ...past, ...tripsWithoutDate].slice(0, 3);
+  }, [participantTrips]);
+
+  const tabs: { id: TabType; label: string; icon: React.ElementType; count: number }[] = [
+    { id: 'data', label: 'Данные', icon: User, count: 0 },
+    { id: 'trips', label: 'Походы', icon: MapPin, count: participantTrips.length },
+    { id: 'equipment', label: 'Снаряжение', icon: Backpack, count: participantEquipment.length },
   ];
 
   const handleActionClick = (e: React.MouseEvent, action: (e: React.MouseEvent) => void) => {
@@ -117,7 +150,6 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
           </div>
         </div>
       )}
-
       <header className={cn('p-4 border-b', cardStyles.border, cardStyles.header)}>
         <div className="flex justify-between items-start">
           <h3 className="text-lg font-bold text-foreground truncate pr-2" title={name}>
@@ -139,31 +171,26 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
           </div>
         </div>
       </header>
-
       <div className="border-t border-border/50">
         <div className="flex overflow-x-auto">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveTab(tab.id);
-                }}
-                className={cn(
-                  'flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 flex-shrink-0',
-                  activeTab === tab.id ? cardStyles.tabActive : cardStyles.tabInactive
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            );
-          })}
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveTab(tab.id);
+              }}
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 flex-shrink-0',
+                activeTab === tab.id ? cardStyles.tabActive : cardStyles.tabInactive
+              )}
+            >
+              <tab.icon className="h-4 w-4" />
+              {tab.label} {tab.count > 0 && `(${tab.count})`}
+            </button>
+          ))}
         </div>
       </div>
-
       <div className="p-4 min-h-[180px] flex-grow">
         {activeTab === 'data' && (
           <div className="space-y-3">
@@ -200,12 +227,12 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
         )}
         {activeTab === 'trips' && (
           <div className="space-y-3">
-            {participantTrips.length > 0 ? (
-              participantTrips.map((trip) => (
+            {displayedTrips.length > 0 ? (
+              displayedTrips.map((trip: Trip) => (
                 <Link
                   to={`/trips/${trip.id}`}
                   key={trip.id}
-                  className="block p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+                  className="block p-3 bg-muted rounded-lg hover:bg-secondary transition-colors"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex justify-between items-start">
@@ -217,7 +244,14 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
                           : 'Дата не определена'}
                       </p>
                     </div>
-                    <span className="text-xs bg-primary/10 text-primary-foreground px-2 py-1 rounded-full">
+                    <span
+                      className={cn(
+                        'text-xs px-2 py-1 rounded-full',
+                        trip.status === 'completed'
+                          ? 'bg-green-500/10 text-green-500'
+                          : 'bg-yellow-500/10 text-yellow-400'
+                      )}
+                    >
                       {trip.status === 'completed' ? 'Завершен' : 'Планируется'}
                     </span>
                   </div>
@@ -225,7 +259,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
               ))
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p>Пока не участвовал в походах</p>
               </div>
             )}

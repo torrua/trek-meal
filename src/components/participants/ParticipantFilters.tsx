@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { X, Filter, ChevronDown } from 'lucide-react';
 import type { Gender, AgeGroup, ExperienceLevel } from '../../types';
 import cn from 'classnames';
+import ThemedSelect from '../../ui/ThemedSelect';
+import { SingleValue } from 'react-select';
 
 export interface ParticipantFilters {
   gender: Gender | 'all';
@@ -18,6 +20,30 @@ interface ParticipantFiltersProps {
   onReset: () => void;
 }
 
+type FilterOption<T> = { value: T; label: string };
+
+const GENDER_OPTIONS: FilterOption<Gender | 'all'>[] = [
+  { value: 'all', label: 'Пол: Все' },
+  { value: 'male', label: 'Мужской' },
+  { value: 'female', label: 'Женский' },
+];
+const AGE_OPTIONS: FilterOption<AgeGroup | 'all'>[] = [
+  { value: 'all', label: 'Возраст: Все' },
+  { value: 'adult', label: 'Взрослые' },
+  { value: 'child', label: 'Дети' },
+];
+const EXP_OPTIONS: FilterOption<ExperienceLevel | 'all'>[] = [
+  { value: 'all', label: 'Опыт: Любой' },
+  { value: 'beginner', label: 'Новички' },
+  { value: 'experienced', label: 'Опытные' },
+  { value: 'professional', label: 'Профессионалы' },
+];
+const TRIPS_OPTIONS: FilterOption<'all' | 'with_trips' | 'without_trips'>[] = [
+  { value: 'all', label: 'Походы: Все' },
+  { value: 'with_trips', label: 'С походами' },
+  { value: 'without_trips', label: 'Без походов' },
+];
+
 const ParticipantFiltersComponent: React.FC<ParticipantFiltersProps> = ({
   filters,
   onFiltersChange,
@@ -25,10 +51,13 @@ const ParticipantFiltersComponent: React.FC<ParticipantFiltersProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const handleFilterChange = (key: keyof ParticipantFilters, value: string) => {
+  const handleFilterChange = (
+    key: keyof ParticipantFilters,
+    option: SingleValue<FilterOption<string>>
+  ) => {
     onFiltersChange({
       ...filters,
-      [key]: value,
+      [key]: option?.value || 'all',
     });
   };
 
@@ -68,55 +97,26 @@ const ParticipantFiltersComponent: React.FC<ParticipantFiltersProps> = ({
 
       {isExpanded && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border-t">
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Пол</label>
-            <select
-              value={filters.gender}
-              onChange={(e) => handleFilterChange('gender', e.target.value)}
-              className="w-full"
-            >
-              <option value="all">Все</option>
-              <option value="male">Мужской</option>
-              <option value="female">Женский</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Возраст</label>
-            <select
-              value={filters.age}
-              onChange={(e) => handleFilterChange('age', e.target.value)}
-              className="w-full"
-            >
-              <option value="all">Все</option>
-              <option value="adult">Взрослые</option>
-              <option value="child">Дети</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Опыт</label>
-            <select
-              value={filters.experience}
-              onChange={(e) => handleFilterChange('experience', e.target.value)}
-              className="w-full"
-            >
-              <option value="all">Любой</option>
-              <option value="beginner">Новички</option>
-              <option value="experienced">Опытные</option>
-              <option value="professional">Профессионалы</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Походы</label>
-            <select
-              value={filters.hasTrips}
-              onChange={(e) => handleFilterChange('hasTrips', e.target.value)}
-              className="w-full"
-            >
-              <option value="all">Все</option>
-              <option value="with_trips">С походами</option>
-              <option value="without_trips">Без походов</option>
-            </select>
-          </div>
+          <ThemedSelect
+            value={GENDER_OPTIONS.find((o) => o.value === filters.gender)}
+            onChange={(opt) => handleFilterChange('gender', opt)}
+            options={GENDER_OPTIONS}
+          />
+          <ThemedSelect
+            value={AGE_OPTIONS.find((o) => o.value === filters.age)}
+            onChange={(opt) => handleFilterChange('age', opt)}
+            options={AGE_OPTIONS}
+          />
+          <ThemedSelect
+            value={EXP_OPTIONS.find((o) => o.value === filters.experience)}
+            onChange={(opt) => handleFilterChange('experience', opt)}
+            options={EXP_OPTIONS}
+          />
+          <ThemedSelect
+            value={TRIPS_OPTIONS.find((o) => o.value === filters.hasTrips)}
+            onChange={(opt) => handleFilterChange('hasTrips', opt)}
+            options={TRIPS_OPTIONS}
+          />
         </div>
       )}
     </div>

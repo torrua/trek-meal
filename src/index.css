@@ -15,7 +15,7 @@
     --muted-foreground: 215.4 16.3% 46.9%;
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%; /* Добавляем secondary */
+    --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --danger: 0 84.2% 60.2%;
     --danger-foreground: 210 40% 98%;
@@ -25,22 +25,22 @@
   }
 
   [data-theme='dark'] {
-    /* Темная тема - БЕЗ hsl() обертки, только значения */
-    --background: 222.2 84% 4.9%;
+    /* Темная тема - ИЗМЕНЕННЫЕ ЗНАЧЕНИЯ */
+    --background: 224 71% 4%; /* Очень темный синий фон */
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 6.9%;
+    --card: 224 71% 9%; /* Карточка чуть светлее фона */
     --card-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%; /* Добавляем secondary */
+    --primary: 217.2 91.2% 59.8%; /* Яркий синий для акцентов */
+    --primary-foreground: 222.2 47.4% 11.2%; /* Темный текст на ярком синем */
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --danger: 0 72% 51%;
     --danger-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 217.2 32.6% 17.5%;
+    --ring: 217.2 91.2% 59.8%;
   }
 
   body {
@@ -50,5 +50,10 @@
   /* По умолчанию все границы используют наш тематический цвет */
   * {
     @apply border-border;
+  }
+
+  /* Глобальные стили для нативных select, чтобы они выглядели лучше там, где еще используются */
+  select {
+    @apply w-full px-2 py-1.5 text-sm border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors;
   }
 }

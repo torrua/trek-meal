@@ -1,11 +1,12 @@
 // src/components/participants/ParticipantsPage.tsx
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { Users, UserPlus, Grid, List } from 'lucide-react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { Users, UserPlus, Grid, List, Upload, Download } from 'lucide-react';
 import useParticipantStore from '../../stores/useParticipantStore';
 import useSearchStore from '../../stores/useSearchStore';
 import useTripStore from '../../stores/useTripStore';
 import type { Participant, ParticipantData } from '../../types';
+import { exportDataToJson, importDataFromJson } from '../../utils/backup';
 
 import ParticipantCard from './ParticipantCard';
 import ParticipantForm from './ParticipantForm';
@@ -29,6 +30,8 @@ function ParticipantsPage() {
   const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [filters, setFilters] = useState<ParticipantFilters>({
     gender: 'all',
     age: 'all',
@@ -38,54 +41,65 @@ function ParticipantsPage() {
 
   const filteredParticipants = useMemo(() => {
     let result = participants;
-
     if (searchTerm.trim()) {
       const lowercasedFilter = searchTerm.toLowerCase().trim();
-      result = result.filter((participant: Participant) => {
-        const nameMatch = participant.name.toLowerCase().includes(lowercasedFilter);
-        const notesMatch = participant.notes?.toLowerCase().includes(lowercasedFilter);
-        return nameMatch || notesMatch;
-      });
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(lowercasedFilter) ||
+          p.notes?.toLowerCase().includes(lowercasedFilter)
+      );
     }
-
-    result = result.filter((participant: Participant) => {
-      if (filters.gender !== 'all' && participant.gender !== filters.gender) return false;
-      if (filters.age !== 'all' && participant.age !== filters.age) return false;
-      if (filters.experience !== 'all' && participant.experienceLevel !== filters.experience)
-        return false;
+    result = result.filter((p) => {
+      if (filters.gender !== 'all' && p.gender !== filters.gender) return false;
+      if (filters.age !== 'all' && p.age !== filters.age) return false;
+      if (filters.experience !== 'all' && p.experienceLevel !== filters.experience) return false;
       if (filters.hasTrips !== 'all') {
-        const hasTrips = trips.some((trip) => trip.participants.includes(participant.id));
+        const hasTrips = trips.some((trip) => trip.participants.includes(p.id));
         if (filters.hasTrips === 'with_trips' && !hasTrips) return false;
         if (filters.hasTrips === 'without_trips' && hasTrips) return false;
       }
       return true;
     });
-
-    return result;
+    // Сортировка по алфавиту по умолчанию
+    return result.sort((a, b) => a.name.localeCompare(b.name));
   }, [participants, searchTerm, filters, trips]);
 
-  const handleFiltersChange = useCallback((newFilters: ParticipantFilters) => {
-    setFilters(newFilters);
-  }, []);
+  const handleImportClick = () => fileInputRef.current?.click();
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importDataFromJson(file);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
-  const handleFiltersReset = useCallback(() => {
-    setFilters({ gender: 'all', age: 'all', experience: 'all', hasTrips: 'all' });
-  }, []);
-
+  const handleFiltersChange = useCallback(
+    (newFilters: ParticipantFilters) => setFilters(newFilters),
+    []
+  );
+  const handleFiltersReset = useCallback(
+    () => setFilters({ gender: 'all', age: 'all', experience: 'all', hasTrips: 'all' }),
+    []
+  );
   const handleAddNew = useCallback(() => {
     setEditingParticipant(null);
     setIsModalOpen(true);
   }, []);
-
-  const handleEdit = useCallback((participant: Participant) => {
-    setEditingParticipant(participant);
+  const handleEdit = useCallback((p: Participant) => {
+    setEditingParticipant(p);
     setIsModalOpen(true);
   }, []);
-
-  const handleDeleteRequest = useCallback((e: React.MouseEvent, participant: Participant) => {
+  const handleDeleteRequest = useCallback((e: React.MouseEvent, p: Participant) => {
     e.stopPropagation();
-    setParticipantToDelete(participant);
+    setParticipantToDelete(p);
   }, []);
+  const handleCloseModal = useCallback(() => !isLoading && setIsModalOpen(false), [isLoading]);
+  const handleCloseDeleteModal = useCallback(
+    () => !isLoading && setParticipantToDelete(null),
+    [isLoading]
+  );
 
   const handleConfirmDelete = useCallback(async () => {
     if (participantToDelete) {
@@ -94,7 +108,7 @@ function ParticipantsPage() {
         await deleteParticipant(participantToDelete.id);
         setParticipantToDelete(null);
       } catch (error) {
-        console.error('Ошибка при удалении участника:', error);
+        console.error('Ошибка при удалении:', error);
       } finally {
         setIsLoading(false);
       }
@@ -112,19 +126,13 @@ function ParticipantsPage() {
         }
         setIsModalOpen(false);
       } catch (error) {
-        console.error('Ошибка при сохранении участника:', error);
+        console.error('Ошибка при сохранении:', error);
         throw error;
       } finally {
         setIsLoading(false);
       }
     },
     [editingParticipant, updateParticipant, addParticipant]
-  );
-
-  const handleCloseModal = useCallback(() => !isLoading && setIsModalOpen(false), [isLoading]);
-  const handleCloseDeleteModal = useCallback(
-    () => !isLoading && setParticipantToDelete(null),
-    [isLoading]
   );
 
   return (
@@ -138,7 +146,22 @@ function ParticipantsPage() {
               ` • Найдено: ${filteredParticipants.length}`}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Button variant="secondary" onClick={handleImportClick}>
+            <Upload className="h-4 w-4 mr-2" />
+            Импорт
+          </Button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".json"
+            className="hidden"
+          />
+          <Button variant="secondary" onClick={exportDataToJson}>
+            <Download className="h-4 w-4 mr-2" />
+            Экспорт
+          </Button>
           <div className="inline-flex rounded-md border bg-card overflow-hidden">
             <button
               onClick={() => setViewMode('grid')}
@@ -212,12 +235,12 @@ function ParticipantsPage() {
               : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6'
           }
         >
-          {filteredParticipants.map((participant) => (
+          {filteredParticipants.map((p) => (
             <ParticipantCard
-              key={participant.id}
-              participant={participant}
-              onEdit={() => handleEdit(participant)}
-              onDelete={(e) => handleDeleteRequest(e, participant)}
+              key={p.id}
+              participant={p}
+              onEdit={() => handleEdit(p)}
+              onDelete={(e) => handleDeleteRequest(e, p)}
               isCompact={viewMode === 'list'}
             />
           ))}
@@ -236,7 +259,6 @@ function ParticipantsPage() {
           isLoading={isLoading}
         />
       </Modal>
-
       <ConfirmModal
         isOpen={!!participantToDelete}
         onClose={handleCloseDeleteModal}

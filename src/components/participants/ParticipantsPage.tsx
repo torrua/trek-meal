@@ -19,19 +19,18 @@ import cn from 'classnames';
 type ViewMode = 'grid' | 'list';
 
 function ParticipantsPage() {
-  const { participants, addParticipant, updateParticipant, deleteParticipant } =
+  // --- Хранилища ---
+  const { participants, addParticipant, updateParticipant, deleteParticipant, cloneParticipant } =
     useParticipantStore();
   const { searchTerm } = useSearchStore();
   const { trips } = useTripStore();
 
+  // --- Состояния компонента ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
   const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [filters, setFilters] = useState<ParticipantFilters>({
     gender: 'all',
     age: 'all',
@@ -39,8 +38,12 @@ function ParticipantsPage() {
     hasTrips: 'all',
   });
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // --- Мемоизированные вычисления ---
   const filteredParticipants = useMemo(() => {
     let result = participants;
+
     if (searchTerm.trim()) {
       const lowercasedFilter = searchTerm.toLowerCase().trim();
       result = result.filter(
@@ -49,6 +52,7 @@ function ParticipantsPage() {
           p.notes?.toLowerCase().includes(lowercasedFilter)
       );
     }
+
     result = result.filter((p) => {
       if (filters.gender !== 'all' && p.gender !== filters.gender) return false;
       if (filters.age !== 'all' && p.age !== filters.age) return false;
@@ -60,11 +64,13 @@ function ParticipantsPage() {
       }
       return true;
     });
-    // Сортировка по алфавиту по умолчанию
+
     return result.sort((a, b) => a.name.localeCompare(b.name));
   }, [participants, searchTerm, filters, trips]);
 
+  // --- Обработчики событий ---
   const handleImportClick = () => fileInputRef.current?.click();
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -79,23 +85,35 @@ function ParticipantsPage() {
     (newFilters: ParticipantFilters) => setFilters(newFilters),
     []
   );
-  const handleFiltersReset = useCallback(
-    () => setFilters({ gender: 'all', age: 'all', experience: 'all', hasTrips: 'all' }),
-    []
-  );
+
+  const handleFiltersReset = useCallback(() => {
+    setFilters({ gender: 'all', age: 'all', experience: 'all', hasTrips: 'all' });
+  }, []);
+
   const handleAddNew = useCallback(() => {
     setEditingParticipant(null);
     setIsModalOpen(true);
   }, []);
-  const handleEdit = useCallback((p: Participant) => {
-    setEditingParticipant(p);
+
+  const handleEdit = useCallback((participant: Participant) => {
+    setEditingParticipant(participant);
     setIsModalOpen(true);
   }, []);
-  const handleDeleteRequest = useCallback((e: React.MouseEvent, p: Participant) => {
+
+  const handleClone = useCallback(
+    (id: number) => {
+      cloneParticipant(id);
+    },
+    [cloneParticipant]
+  );
+
+  const handleDeleteRequest = useCallback((e: React.MouseEvent, participant: Participant) => {
     e.stopPropagation();
-    setParticipantToDelete(p);
+    setParticipantToDelete(participant);
   }, []);
+
   const handleCloseModal = useCallback(() => !isLoading && setIsModalOpen(false), [isLoading]);
+
   const handleCloseDeleteModal = useCallback(
     () => !isLoading && setParticipantToDelete(null),
     [isLoading]
@@ -108,7 +126,7 @@ function ParticipantsPage() {
         await deleteParticipant(participantToDelete.id);
         setParticipantToDelete(null);
       } catch (error) {
-        console.error('Ошибка при удалении:', error);
+        console.error('Ошибка при удалении участника:', error);
       } finally {
         setIsLoading(false);
       }
@@ -126,7 +144,7 @@ function ParticipantsPage() {
         }
         setIsModalOpen(false);
       } catch (error) {
-        console.error('Ошибка при сохранении:', error);
+        console.error('Ошибка при сохранении участника:', error);
         throw error;
       } finally {
         setIsLoading(false);
@@ -162,6 +180,7 @@ function ParticipantsPage() {
             <Download className="h-4 w-4 mr-2" />
             Экспорт
           </Button>
+
           <div className="inline-flex rounded-md border bg-card overflow-hidden">
             <button
               onClick={() => setViewMode('grid')}
@@ -235,12 +254,13 @@ function ParticipantsPage() {
               : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6'
           }
         >
-          {filteredParticipants.map((p) => (
+          {filteredParticipants.map((participant) => (
             <ParticipantCard
-              key={p.id}
-              participant={p}
-              onEdit={() => handleEdit(p)}
-              onDelete={(e) => handleDeleteRequest(e, p)}
+              key={participant.id}
+              participant={participant}
+              onEdit={() => handleEdit(participant)}
+              onDelete={(e) => handleDeleteRequest(e, participant)}
+              onClone={() => handleClone(participant.id)}
               isCompact={viewMode === 'list'}
             />
           ))}
@@ -259,6 +279,7 @@ function ParticipantsPage() {
           isLoading={isLoading}
         />
       </Modal>
+
       <ConfirmModal
         isOpen={!!participantToDelete}
         onClose={handleCloseDeleteModal}

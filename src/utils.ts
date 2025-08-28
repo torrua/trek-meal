@@ -2,6 +2,20 @@
 import type { Trip, Product, Participant, Dish, MealPlanItem } from './types';
 
 // Функции getMealName, formatDate, pluralize, calculateDays, calculateEndDate остаются без изменений.
+import { parseISO, differenceInYears } from 'date-fns';
+
+// Новая функция для расчета возраста
+export const calculateAge = (birthDateString?: string): number | null => {
+  if (!birthDateString) return null;
+  try {
+    const birthDate = parseISO(birthDateString);
+    return differenceInYears(new Date(), birthDate);
+  } catch (error) {
+    console.error('Invalid date format for age calculation:', birthDateString);
+    return null;
+  }
+};
+
 export const getMealName = (mealNumber: number, totalMeals: number): string => {
   const names: { [key: number]: string[] } = {
     3: ['Завтрак', 'Обед', 'Ужин'],

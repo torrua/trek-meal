@@ -13,6 +13,7 @@ interface ConfirmModalProps {
   confirmText?: string;
   cancelText?: string;
   variant?: 'primary' | 'danger' | 'secondary';
+  isLoading?: boolean; // Добавлено свойство
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -24,18 +25,18 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   confirmText = 'Подтвердить',
   cancelText = 'Отмена',
   variant = 'primary',
+  isLoading = false, // Значение по умолчанию
 }) => {
   if (!isOpen) return null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
       <div className="text-sm text-muted-foreground">{children}</div>
-      {/* ИСПРАВЛЕНИЕ: Добавляем цвет 'border-border' */}
       <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-border">
-        <Button variant="ghost" onClick={onClose}>
+        <Button variant="ghost" onClick={onClose} disabled={isLoading}>
           {cancelText}
         </Button>
-        <Button variant={variant} onClick={onConfirm}>
+        <Button variant={variant} onClick={onConfirm} disabled={isLoading}>
           {confirmText}
         </Button>
       </div>

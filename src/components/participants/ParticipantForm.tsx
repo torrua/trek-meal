@@ -5,7 +5,7 @@ import { SingleValue } from 'react-select';
 import Button from '../../ui/Button';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
-import ThemedSelect from '../../ui/ThemedSelect'; // Импортируем ThemedSelect
+import ThemedSelect from '../../ui/ThemedSelect';
 import { PARTICIPANT_CONSTANTS } from '../../constants/participants';
 import type { Participant, ParticipantData } from '../../types';
 
@@ -16,7 +16,6 @@ interface ParticipantFormProps {
   isLoading?: boolean;
 }
 
-// Тип для опций селектора
 type SelectOption<T> = { value: T; label: string };
 
 const INITIAL_STATE: ParticipantData = {
@@ -41,7 +40,8 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
 
   useEffect(() => {
     if (participant) {
-      const { id: _id, ...data } = participant;
+      // Убрано неиспользуемое присваивание _id
+      const { id, ...data } = participant;
       setFormData({ ...INITIAL_STATE, ...data });
     } else {
       setFormData(INITIAL_STATE);

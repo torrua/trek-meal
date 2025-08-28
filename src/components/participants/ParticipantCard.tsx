@@ -11,19 +11,23 @@ import {
   Trash2,
   Phone,
   Mail,
-  Award,
   Calendar,
+  MoreVertical,
+  Copy,
 } from 'lucide-react';
 import { isFuture, isPast, parseISO, compareAsc, compareDesc } from 'date-fns';
 import { PARTICIPANT_CONSTANTS } from '../../constants/participants';
 import useTripStore from '../../stores/useTripStore';
+import { calculateAge } from '../../utils';
 import type { Participant, Trip } from '../../types';
 import cn from 'classnames';
+import DropdownMenu from '../../ui/DropdownMenu';
 
 interface ParticipantCardProps {
   participant: Participant;
   onEdit: () => void;
   onDelete: (e: React.MouseEvent) => void;
+  onClone: () => void;
   isCompact?: boolean;
 }
 
@@ -33,39 +37,45 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   participant,
   onEdit,
   onDelete,
+  onClone,
   isCompact = false,
 }) => {
-  const { gender, age, name, notes, experienceLevel, phone, email, birthDate } = participant;
+  const {
+    gender,
+    age: ageGroup,
+    name,
+    notes,
+    experienceLevel,
+    phone,
+    email,
+    birthDate,
+  } = participant;
   const { trips } = useTripStore();
   const [activeTab, setActiveTab] = useState<TabType>('data');
 
   const cardStyles = PARTICIPANT_CONSTANTS.CARD_STYLES[gender];
   const experienceInfo = PARTICIPANT_CONSTANTS.EXPERIENCE_CONFIG[experienceLevel];
-  const isChild = age === 'child';
+  const isChild = ageGroup === 'child';
+
+  const age = useMemo(() => calculateAge(birthDate), [birthDate]);
 
   const participantTrips = useMemo(
     () => trips.filter((trip) => trip.participants.includes(participant.id)),
     [trips, participant.id]
   );
-
   const participantEquipment: unknown[] = useMemo(() => [], []);
 
   const displayedTrips = useMemo(() => {
-    // 1. Разделяем походы на те, у которых есть дата, и те, у которых нет
     const tripsWithDate = participantTrips.filter((trip) => trip.startDate);
     const tripsWithoutDate = participantTrips
       .filter((trip) => !trip.startDate)
-      .sort((a, b) => compareDesc(new Date(a.createdAt), new Date(b.createdAt))); // Сортируем по дате создания
-
-    // 2. Сортируем походы с датой
+      .sort((a, b) => compareDesc(new Date(a.createdAt), new Date(b.createdAt)));
     const upcoming = tripsWithDate
       .filter((trip) => isFuture(parseISO(trip.startDate)))
       .sort((a, b) => compareAsc(parseISO(a.startDate), parseISO(b.startDate)));
     const past = tripsWithDate
       .filter((trip) => isPast(parseISO(trip.startDate)))
       .sort((a, b) => compareDesc(parseISO(a.startDate), parseISO(b.startDate)));
-
-    // 3. Объединяем все группы и берем первые 3
     return [...upcoming, ...past, ...tripsWithoutDate].slice(0, 3);
   }, [participantTrips]);
 
@@ -75,10 +85,42 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
     { id: 'equipment', label: 'Снаряжение', icon: Backpack, count: participantEquipment.length },
   ];
 
-  const handleActionClick = (e: React.MouseEvent, action: (e: React.MouseEvent) => void) => {
+  const handleActionClick = (e: React.MouseEvent, action: () => void) => {
     e.stopPropagation();
-    action(e);
+    action();
   };
+
+  const KebabMenu = () => (
+    <DropdownMenu
+      trigger={
+        <button className="p-1.5 text-muted-foreground hover:text-primary rounded-full hover:bg-muted transition-colors">
+          <MoreVertical className="h-4 w-4" />
+        </button>
+      }
+    >
+      <button
+        onClick={(e) => handleActionClick(e, onClone)}
+        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+        role="menuitem"
+      >
+        <Copy className="h-4 w-4" /> Клонировать
+      </button>
+      <button
+        onClick={(e) => handleActionClick(e, onEdit)}
+        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+        role="menuitem"
+      >
+        <Edit className="h-4 w-4" /> Редактировать
+      </button>
+      <button
+        onClick={(e) => onDelete(e)}
+        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-danger hover:bg-danger/10 transition-colors"
+        role="menuitem"
+      >
+        <Trash2 className="h-4 w-4" /> Удалить
+      </button>
+    </DropdownMenu>
+  );
 
   if (isCompact) {
     return (
@@ -98,38 +140,23 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
               cardStyles.border
             )}
           >
-            {isChild ? <Baby className="h-6 w-6" /> : <User className="h-6 w-6" />}
+            {isChild ? (
+              <Baby className="h-6 w-6" title="Возрастная группа: Ребенок" />
+            ) : (
+              <User className="h-6 w-6" />
+            )}
           </div>
         </div>
         <div className="flex-grow min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-foreground truncate">{name}</h3>
-            <span
-              className={cn(
-                'px-1.5 py-0.5 text-xs font-medium rounded border',
-                experienceInfo.className
-              )}
-            >
-              {experienceInfo.label}
-            </span>
+          <h3 className="font-semibold text-foreground truncate">{name}</h3>
+          <div className="text-xs text-muted-foreground flex items-center gap-2">
+            <span>{age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}</span>
+            <span>•</span>
+            <span title={`Уровень опыта: ${experienceInfo.label}`}>{experienceInfo.label}</span>
           </div>
-          {participantTrips.length > 0 && (
-            <p className="text-xs text-muted-foreground">{participantTrips.length} походов</p>
-          )}
         </div>
-        <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-          <button
-            onClick={(e) => handleActionClick(e, () => onEdit())}
-            className="p-1.5 text-muted-foreground hover:text-primary rounded transition-colors"
-          >
-            <Edit className="h-4 w-4" />
-          </button>
-          <button
-            onClick={(e) => handleActionClick(e, onDelete)}
-            className="p-1.5 text-muted-foreground hover:text-danger rounded transition-colors"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+        <div className="flex-shrink-0">
+          <KebabMenu />
         </div>
       </div>
     );
@@ -143,36 +170,37 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
         cardStyles.border
       )}
     >
-      {isChild && (
-        <div className="absolute -top-2 -right-2 z-10">
-          <div className="bg-orange-400 text-white rounded-full p-2 shadow-lg border-2 border-card">
-            <Baby className="h-4 w-4" />
-          </div>
-        </div>
-      )}
       <header className={cn('p-4 border-b', cardStyles.border, cardStyles.header)}>
-        <div className="flex justify-between items-start">
-          <h3 className="text-lg font-bold text-foreground truncate pr-2" title={name}>
-            {name}
-          </h3>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => handleActionClick(e, () => onEdit())}
-              className="p-1.5 text-muted-foreground hover:text-primary rounded"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
-            <button
-              onClick={(e) => handleActionClick(e, onDelete)}
-              className="p-1.5 text-muted-foreground hover:text-danger rounded"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+        <div className="flex justify-between items-start gap-2">
+          <div>
+            <h3 className="text-lg font-bold text-foreground truncate" title={name}>
+              {name}
+            </h3>
+            <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+              {isChild ? (
+                <Baby className="h-4 w-4 flex-shrink-0" />
+              ) : (
+                <User className="h-4 w-4 flex-shrink-0" />
+              )}
+              <span>{age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}</span>
+              <span className="text-muted-foreground/50">•</span>
+              <span
+                title={`Уровень опыта: ${experienceInfo.label}`}
+                className={cn(
+                  'px-1.5 py-0.5 text-xs font-medium rounded border',
+                  experienceInfo.className
+                )}
+              >
+                {experienceInfo.label}
+              </span>
+            </div>
           </div>
+          <KebabMenu />
         </div>
       </header>
-      <div className="border-t border-border/50">
-        <div className="flex overflow-x-auto">
+
+      <div className="p-2">
+        <div className="bg-muted p-1 rounded-lg flex items-center gap-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -181,34 +209,47 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
                 setActiveTab(tab.id);
               }}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200 border-b-2 flex-shrink-0',
-                activeTab === tab.id ? cardStyles.tabActive : cardStyles.tabInactive
+                'flex-1 flex justify-center items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md transition-all duration-200',
+                activeTab === tab.id
+                  ? 'bg-card shadow text-foreground'
+                  : 'text-muted-foreground hover:bg-card/50'
               )}
             >
               <tab.icon className="h-4 w-4" />
-              {tab.label} {tab.count > 0 && `(${tab.count})`}
+              <span>
+                {tab.label} {tab.count > 0 && `(${tab.count})`}
+              </span>
             </button>
           ))}
         </div>
       </div>
-      <div className="p-4 min-h-[180px] flex-grow">
+
+      <div key={activeTab} className="p-4 pt-2 min-h-[160px] flex-grow animate-fade-in">
         {activeTab === 'data' && (
           <div className="space-y-3">
             <div className="grid grid-cols-1 gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Award className="h-4 w-4 text-muted-foreground" />
-                <span className="text-foreground">{experienceInfo.label}</span>
-              </div>
               {phone && (
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">{phone}</span>
+                  <a
+                    href={`tel:${phone}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-foreground hover:underline"
+                  >
+                    {phone}
+                  </a>
                 </div>
               )}
               {email && (
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">{email}</span>
+                  <a
+                    href={`mailto:${email}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-foreground hover:underline"
+                  >
+                    {email}
+                  </a>
                 </div>
               )}
               {birthDate && (
@@ -220,7 +261,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
             </div>
             {notes && (
               <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground italic">&ldquo;{notes}&rdquo;</p>
+                <p className="text-sm text-muted-foreground italic">&quot;{notes}&quot;</p>
               </div>
             )}
           </div>
@@ -258,17 +299,19 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
                 </Link>
               ))
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>Пока не участвовал в походах</p>
+              <div className="text-center py-8 text-muted-foreground flex flex-col items-center justify-center">
+                <MapPin className="h-8 w-8 mb-2 opacity-50" />
+                <p>Нет данных о походах.</p>
+                <p className="text-xs mt-2">Добавьте участника в поход, и он отобразится здесь.</p>
               </div>
             )}
           </div>
         )}
         {activeTab === 'equipment' && (
-          <div className="text-center py-8 text-muted-foreground">
-            <Backpack className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>Управление снаряжением будет добавлено позже</p>
+          <div className="text-center py-8 text-muted-foreground flex flex-col items-center justify-center">
+            <Backpack className="h-8 w-8 mb-2 opacity-50" />
+            <p>Снаряжение не добавлено.</p>
+            <p className="text-xs mt-2">Эта функция находится в разработке.</p>
           </div>
         )}
       </div>

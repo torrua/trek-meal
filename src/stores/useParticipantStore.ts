@@ -11,20 +11,41 @@ interface ParticipantState {
   addParticipant: (data: ParticipantData) => void;
   updateParticipant: (id: number, data: ParticipantData) => void;
   deleteParticipant: (id: number) => void;
+  cloneParticipant: (id: number) => void;
 }
+
+// Улучшенная типизация для миграции
+type PersistedState = {
+  participants: Partial<Participant>[];
+};
 
 const useParticipantStore = create<ParticipantState>()(
   persist(
     (set, get) => ({
       participants: [],
 
+      cloneParticipant: (id) => {
+        const original = get().participants.find((p) => p.id === id);
+        if (!original) {
+          toast.error('Не удалось найти участника для клонирования.');
+          return;
+        }
+        const clonedParticipant: Participant = {
+          ...original,
+          id: Date.now(),
+          name: `${original.name} (копия)`,
+        };
+        set((state) => ({
+          participants: [...state.participants, clonedParticipant],
+        }));
+        toast.success(`Участник "${original.name}" клонирован.`);
+      },
+
       addParticipant: (participantData) => {
         if (!participantData.name.trim()) {
           toast.error('Имя участника не может быть пустым.');
           return;
         }
-
-        // Устанавливаем значения по умолчанию для новых полей
         const newParticipant: Participant = {
           ...participantData,
           id: Date.now(),
@@ -33,7 +54,6 @@ const useParticipantStore = create<ParticipantState>()(
           email: participantData.email || '',
           birthDate: participantData.birthDate || '',
         };
-
         set((state) => ({
           participants: [...state.participants, newParticipant],
         }));
@@ -45,20 +65,8 @@ const useParticipantStore = create<ParticipantState>()(
           toast.error('Имя участника не может быть пустым.');
           return;
         }
-
         set((state) => ({
-          participants: state.participants.map((p) =>
-            p.id === id
-              ? {
-                  ...p,
-                  ...updatedData,
-                  experienceLevel: updatedData.experienceLevel || 'beginner',
-                  phone: updatedData.phone || '',
-                  email: updatedData.email || '',
-                  birthDate: updatedData.birthDate || '',
-                }
-              : p
-          ),
+          participants: state.participants.map((p) => (p.id === id ? { ...p, ...updatedData } : p)),
         }));
         toast.success(`Данные участника "${updatedData.name}" обновлены.`);
       },
@@ -66,9 +74,7 @@ const useParticipantStore = create<ParticipantState>()(
       deleteParticipant: (id) => {
         const participantToDelete = get().participants.find((p) => p.id === id);
         if (!participantToDelete) return;
-
         useTripStore.getState().removeParticipantFromAllTrips(id);
-
         set((state) => ({
           participants: state.participants.filter((p) => p.id !== id),
         }));
@@ -77,12 +83,11 @@ const useParticipantStore = create<ParticipantState>()(
     }),
     {
       name: 'trek-meal-participants',
-      // Миграция для существующих данных
-      migrate: (persistedState: any, version) => {
+      migrate: (persistedState, version) => {
+        const state = persistedState as PersistedState;
         if (version === 0) {
-          // Добавляем новые поля к существующим участникам
-          if (persistedState.participants) {
-            persistedState.participants = persistedState.participants.map((p: any) => ({
+          if (state.participants) {
+            state.participants = state.participants.map((p) => ({
               ...p,
               experienceLevel: p.experienceLevel || 'beginner',
               phone: p.phone || '',
@@ -91,7 +96,7 @@ const useParticipantStore = create<ParticipantState>()(
             }));
           }
         }
-        return persistedState;
+        return state as ParticipantState;
       },
       version: 1,
     }

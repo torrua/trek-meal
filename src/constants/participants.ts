@@ -16,23 +16,17 @@ export const PARTICIPANT_CONSTANTS = {
     { value: 'experienced' as const, label: 'Опытный' },
     { value: 'professional' as const, label: 'Профессионал' },
   ],
+  // Стили карточек без стилей для вкладок (они теперь в компоненте)
   CARD_STYLES: {
     male: {
       background: 'bg-card',
       border: 'border-blue-500/30',
       header: 'bg-blue-500/5',
-      // --- ИЗМЕНЕНИЯ ---
-      // Заменяем темный primary на более светлый и яркий синий
-      tabActive: 'bg-blue-600 text-white border-blue-600',
-      // Приводим неактивную вкладку к той же цветовой схеме
-      tabInactive: 'text-blue-600 border-transparent hover:bg-blue-500/10',
     },
     female: {
       background: 'bg-card',
       border: 'border-rose-500/30',
       header: 'bg-rose-500/5',
-      tabActive: 'bg-rose-500 text-white border-rose-500',
-      tabInactive: 'text-rose-600 border-transparent hover:bg-rose-500/10',
     },
   },
   EXPERIENCE_CONFIG: {

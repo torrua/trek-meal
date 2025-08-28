@@ -34,6 +34,8 @@ interface ParticipantCardProps {
   onDelete: (e: React.MouseEvent) => void;
   onClone: () => void;
   isCompact?: boolean;
+  isSelected: boolean;
+  onSelect: (id: number) => void;
 }
 
 type TabType = 'data' | 'trips' | 'equipment';
@@ -67,6 +69,8 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   onDelete,
   onClone,
   isCompact = false,
+  isSelected,
+  onSelect,
 }) => {
   const {
     gender,
@@ -116,6 +120,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
     e.stopPropagation();
     action();
   };
+  const handleCardClick = () => onSelect(participant.id);
 
   const KebabMenu = () => (
     <DropdownMenu
@@ -159,13 +164,22 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
     return (
       <div
         className={cn(
-          'border rounded-lg p-3 transition-all duration-200 hover:shadow-md cursor-pointer group flex items-center gap-3',
+          'border rounded-lg p-3 transition-all duration-200 group flex items-center gap-3 cursor-pointer',
           cardStyles.background,
           cardStyles.border,
-          cardStyles.header
+          cardStyles.header,
+          { 'ring-2 ring-primary ring-offset-background': isSelected }
         )}
-        onClick={onEdit}
+        onClick={handleCardClick}
       >
+        <div className="flex-shrink-0">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            readOnly
+            className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+          />
+        </div>
         <div className="flex-shrink-0">
           {isChild ? (
             <Baby className="h-6 w-6 text-muted-foreground" title="Возрастная группа: Ребенок" />
@@ -201,14 +215,24 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   return (
     <div
       className={cn(
-        'border rounded-lg shadow-sm flex flex-col transition-all duration-200 hover:shadow-md group relative',
+        'border rounded-lg shadow-sm flex flex-col transition-all duration-200 group relative',
         cardStyles.background,
-        cardStyles.border
+        cardStyles.border,
+        { 'ring-2 ring-primary ring-offset-background': isSelected }
       )}
     >
       <header className={cn('p-4 border-b', cardStyles.border, cardStyles.header)}>
         <div className="flex justify-between items-center gap-2">
-          <div className="flex items-center gap-3 min-w-0">
+          <div
+            className="flex items-center gap-3 min-w-0 flex-grow cursor-pointer"
+            onClick={handleCardClick}
+          >
+            <input
+              type="checkbox"
+              checked={isSelected}
+              readOnly
+              className="h-5 w-5 rounded border-input text-primary focus:ring-ring flex-shrink-0"
+            />
             <div className="flex-shrink-0">
               {isChild ? (
                 <Baby className="h-6 w-6 text-muted-foreground" />

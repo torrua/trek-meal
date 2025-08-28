@@ -12,6 +12,7 @@ interface TripState {
   updateTrip: (id: number, data: Partial<Trip>) => void;
   removeParticipantFromAllTrips: (participantId: number) => void;
   isDishInUse: (dishId: number) => boolean;
+  addParticipantsToTrip: (tripId: number, participantIds: number[]) => void; // Новая функция
 }
 
 const useTripStore = create<TripState>()(
@@ -19,61 +20,52 @@ const useTripStore = create<TripState>()(
     (set, get) => ({
       trips: [],
 
+      addParticipantsToTrip: (tripId, participantIds) => {
+        const trip = get().trips.find((t) => t.id === tripId);
+        if (!trip) {
+          toast.error('Поход не найден.');
+          return;
+        }
+
+        set((state) => ({
+          trips: state.trips.map((t) => {
+            if (t.id === tripId) {
+              const newParticipants = [...t.participants];
+              participantIds.forEach((pId) => {
+                if (!newParticipants.includes(pId)) {
+                  newParticipants.push(pId);
+                }
+              });
+              return { ...t, participants: newParticipants };
+            }
+            return t;
+          }),
+        }));
+        toast.success(`Участники добавлены в поход "${trip.name}"`);
+      },
+
       addTrip: (tripData) => {
-        const newTrip: Trip = {
-          ...tripData,
-          id: Date.now(),
-          createdAt: new Date().toISOString(),
-          status: 'planning',
-          selectedMeals: {},
-        };
-        set((state) => ({ trips: [...state.trips, newTrip] }));
-        toast.success(`Поход "${newTrip.name}" создан!`);
-        return newTrip;
+        // ... без изменений
       },
 
       deleteTrip: (tripId) => {
-        const tripToDelete = get().trips.find((t) => t.id === tripId);
-        if (tripToDelete) {
-          set((state) => ({
-            trips: state.trips.filter((trip) => trip.id !== tripId),
-          }));
-          toast.error(`Поход "${tripToDelete.name}" удален.`);
-        }
+        // ... без изменений
       },
 
       updateTrip: (tripId, updatedData) => {
-        set((state) => ({
-          trips: state.trips.map((trip) =>
-            trip.id === tripId ? { ...trip, ...updatedData } : trip
-          ),
-        }));
+        // ... без изменений
       },
 
       removeParticipantFromAllTrips: (participantId) => {
-        set((state) => ({
-          trips: state.trips.map((trip) => ({
-            ...trip,
-            participants: trip.participants.filter((id) => id !== participantId),
-          })),
-        }));
+        // ... без изменений
       },
 
       isDishInUse: (dishId: number) => {
-        const { trips } = get();
-        return trips.some((trip) =>
-          Object.values(trip.selectedMeals).some((mealPlan) =>
-            (mealPlan as MealPlanItem[]).some(
-              (item) => item.type === 'dish' && item.itemId === dishId
-            )
-          )
-        );
+        // ... без изменений
       },
     }),
     { name: 'trek-meal-trips' }
   )
 );
-
-// Устаревшая функция handleDateChange больше не нужна и удалена
 
 export default useTripStore;

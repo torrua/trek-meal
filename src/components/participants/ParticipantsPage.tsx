@@ -1,20 +1,22 @@
 // src/components/participants/ParticipantsPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { Users, UserPlus, Grid, List, Filter, X } from 'lucide-react';
+import { Users, UserPlus, Grid, List, Filter, X, Check, FilePlus } from 'lucide-react';
 import useParticipantStore from '../../stores/useParticipantStore';
 import useSearchStore from '../../stores/useSearchStore';
 import useTripStore from '../../stores/useTripStore';
-import type { Participant, ParticipantData } from '../../types';
+import type { Participant, ParticipantData, TripData } from '../../types';
 
 import ParticipantCard from './ParticipantCard';
 import ParticipantForm from './ParticipantForm';
 import ParticipantFiltersComponent, { ParticipantFilters } from './ParticipantFilters';
+import SelectTripModal from './SelectTripModal';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/ConfirmModal';
 import Popover from '../../ui/Popover';
 import cn from 'classnames';
+import TripForm from '../trips/TripForm';
 
 type ViewMode = 'grid' | 'list';
 
@@ -22,7 +24,7 @@ function ParticipantsPage() {
   const { participants, addParticipant, updateParticipant, deleteParticipant, cloneParticipant } =
     useParticipantStore();
   const { searchTerm } = useSearchStore();
-  const { trips } = useTripStore();
+  const { trips, addTrip, addParticipantsToTrip } = useTripStore();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +37,10 @@ function ParticipantsPage() {
     experience: 'all',
     hasTrips: 'all',
   });
+
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isSelectTripModalOpen, setIsSelectTripModalOpen] = useState(false);
+  const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
 
   const hasActiveFilters = useMemo(
     () => Object.values(filters).some((v) => v !== 'all'),
@@ -65,6 +71,29 @@ function ParticipantsPage() {
     return result.sort((a, b) => a.name.localeCompare(b.name));
   }, [participants, searchTerm, filters, trips]);
 
+  const handleSelectParticipant = useCallback((id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((pId) => pId !== id) : [...prev, id]
+    );
+  }, []);
+  const handleAddParticipantsToTrip = useCallback(
+    (tripId: number) => {
+      addParticipantsToTrip(tripId, selectedIds);
+      setSelectedIds([]);
+    },
+    [addParticipantsToTrip, selectedIds]
+  );
+  const handleCreateTripWithParticipants = useCallback(
+    (tripData: TripData) => {
+      const newTrip = addTrip(tripData);
+      if (newTrip) {
+        addParticipantsToTrip(newTrip.id, selectedIds);
+      }
+      setSelectedIds([]);
+      setIsNewTripModalOpen(false);
+    },
+    [addTrip, addParticipantsToTrip, selectedIds]
+  );
   const handleFiltersChange = useCallback(
     (newFilters: ParticipantFilters) => setFilters(newFilters),
     []
@@ -129,7 +158,7 @@ function ParticipantsPage() {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto pb-24">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Управление участниками</h2>
@@ -235,8 +264,36 @@ function ParticipantsPage() {
               onDelete={(e) => handleDeleteRequest(e, p)}
               onClone={() => handleClone(p.id)}
               isCompact={viewMode === 'list'}
+              isSelected={selectedIds.includes(p.id)}
+              onSelect={handleSelectParticipant}
             />
           ))}
+        </div>
+      )}
+
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-card border shadow-lg rounded-lg p-2 flex items-center gap-4 z-10 animate-fade-in w-full max-w-md sm:max-w-lg">
+          <div className="flex-shrink-0 flex items-center gap-2 text-sm font-medium pl-2">
+            <Check className="h-4 w-4 text-primary" />
+            <span>Выбрано: {selectedIds.length}</span>
+          </div>
+          <div className="flex-grow flex items-center gap-2 justify-end">
+            <Button variant="secondary" size="sm" onClick={() => setIsSelectTripModalOpen(true)}>
+              Добавить в поход
+            </Button>
+            <Button variant="primary" size="sm" onClick={() => setIsNewTripModalOpen(true)}>
+              <FilePlus className="h-4 w-4 mr-1" />
+              Создать поход
+            </Button>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSelectedIds([])}
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       )}
 
@@ -269,7 +326,7 @@ function ParticipantsPage() {
             </span>
             ?
           </p>
-          <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md flex items-start gap-2">
+          <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md flex items-center gap-2">
             <svg
               className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5"
               fill="currentColor"
@@ -287,6 +344,24 @@ function ParticipantsPage() {
           </div>
         </div>
       </ConfirmModal>
+
+      <SelectTripModal
+        isOpen={isSelectTripModalOpen}
+        onClose={() => setIsSelectTripModalOpen(false)}
+        onConfirm={handleAddParticipantsToTrip}
+        selectedCount={selectedIds.length}
+      />
+
+      <Modal
+        isOpen={isNewTripModalOpen}
+        onClose={() => setIsNewTripModalOpen(false)}
+        title="Создать новый поход с участниками"
+      >
+        <TripForm
+          onSubmit={handleCreateTripWithParticipants}
+          onCancel={() => setIsNewTripModalOpen(false)}
+        />
+      </Modal>
     </div>
   );
 }

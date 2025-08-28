@@ -14,6 +14,11 @@ import {
   Calendar,
   MoreVertical,
   Copy,
+  Clock,
+  Mountain,
+  TrendingUp,
+  Zap,
+  Info,
 } from 'lucide-react';
 import { isFuture, isPast, parseISO, compareAsc, compareDesc } from 'date-fns';
 import { PARTICIPANT_CONSTANTS } from '../../constants/participants';
@@ -32,6 +37,29 @@ interface ParticipantCardProps {
 }
 
 type TabType = 'data' | 'trips' | 'equipment';
+
+const DIFFICULTY_MAP: {
+  [key in Trip['difficulty']]: { text: string; icon: React.ElementType; className: string };
+} = {
+  easy: {
+    text: 'Легкий',
+    icon: Mountain,
+    className:
+      'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400 border-green-500/20',
+  },
+  medium: {
+    text: 'Средний',
+    icon: TrendingUp,
+    className:
+      'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border-blue-500/20',
+  },
+  hard: {
+    text: 'Сложный',
+    icon: Zap,
+    className:
+      'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400 border-purple-500/20',
+  },
+};
 
 const ParticipantCard: React.FC<ParticipantCardProps> = ({
   participant,
@@ -56,7 +84,6 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   const cardStyles = PARTICIPANT_CONSTANTS.CARD_STYLES[gender];
   const experienceInfo = PARTICIPANT_CONSTANTS.EXPERIENCE_CONFIG[experienceLevel];
   const isChild = ageGroup === 'child';
-
   const age = useMemo(() => calculateAge(birthDate), [birthDate]);
 
   const participantTrips = useMemo(
@@ -122,6 +149,12 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
     </DropdownMenu>
   );
 
+  const {
+    label: experienceLabel,
+    className: experienceClassName,
+    icon: ExperienceIcon,
+  } = experienceInfo;
+
   if (isCompact) {
     return (
       <div
@@ -133,29 +166,32 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
         )}
         onClick={onEdit}
       >
-        <div className="flex-shrink-0 relative">
-          <div
-            className={cn(
-              'w-12 h-12 border rounded-full flex items-center justify-center',
-              cardStyles.border
-            )}
-          >
-            {isChild ? (
-              <Baby className="h-6 w-6" title="Возрастная группа: Ребенок" />
-            ) : (
-              <User className="h-6 w-6" />
-            )}
-          </div>
+        <div className="flex-shrink-0">
+          {isChild ? (
+            <Baby className="h-6 w-6 text-muted-foreground" title="Возрастная группа: Ребенок" />
+          ) : (
+            <User className="h-6 w-6 text-muted-foreground" />
+          )}
         </div>
         <div className="flex-grow min-w-0">
-          <h3 className="font-semibold text-foreground truncate">{name}</h3>
-          <div className="text-xs text-muted-foreground flex items-center gap-2">
-            <span>{age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}</span>
-            <span>•</span>
-            <span title={`Уровень опыта: ${experienceInfo.label}`}>{experienceInfo.label}</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-semibold text-foreground truncate">{name}</h3>
+            <p className="text-sm text-muted-foreground">
+              {age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}
+            </p>
           </div>
         </div>
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 ml-auto flex items-center gap-2">
+          <span
+            title={`Уровень опыта: ${experienceLabel}`}
+            className={cn(
+              'px-1.5 py-0.5 text-xs font-medium rounded border flex items-center gap-1',
+              experienceClassName
+            )}
+          >
+            <ExperienceIcon className="h-3 w-3" />
+            {experienceLabel}
+          </span>
           <KebabMenu />
         </div>
       </div>
@@ -171,31 +207,37 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
       )}
     >
       <header className={cn('p-4 border-b', cardStyles.border, cardStyles.header)}>
-        <div className="flex justify-between items-start gap-2">
-          <div>
-            <h3 className="text-lg font-bold text-foreground truncate" title={name}>
-              {name}
-            </h3>
-            <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+        <div className="flex justify-between items-center gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex-shrink-0">
               {isChild ? (
-                <Baby className="h-4 w-4 flex-shrink-0" />
+                <Baby className="h-6 w-6 text-muted-foreground" />
               ) : (
-                <User className="h-4 w-4 flex-shrink-0" />
+                <User className="h-6 w-6 text-muted-foreground" />
               )}
-              <span>{age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}</span>
-              <span className="text-muted-foreground/50">•</span>
-              <span
-                title={`Уровень опыта: ${experienceInfo.label}`}
-                className={cn(
-                  'px-1.5 py-0.5 text-xs font-medium rounded border',
-                  experienceInfo.className
-                )}
-              >
-                {experienceInfo.label}
-              </span>
+            </div>
+            <div className="flex-grow min-w-0 flex items-center gap-2 flex-wrap">
+              <h3 className="text-lg font-bold text-foreground truncate" title={name}>
+                {name}
+              </h3>
+              <p className="text-sm text-muted-foreground whitespace-nowrap">
+                {age ? `• ${age} лет` : `• ${isChild ? 'Ребенок' : 'Взрослый'}`}
+              </p>
             </div>
           </div>
-          <KebabMenu />
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <span
+              title={`Уровень опыта: ${experienceLabel}`}
+              className={cn(
+                'px-1.5 py-0.5 text-xs font-medium rounded border flex items-center gap-1',
+                experienceClassName
+              )}
+            >
+              <ExperienceIcon className="h-3 w-3" />
+              {experienceLabel}
+            </span>
+            <KebabMenu />
+          </div>
         </div>
       </header>
 
@@ -216,8 +258,8 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
               )}
             >
               <tab.icon className="h-4 w-4" />
-              <span>
-                {tab.label} {tab.count > 0 && `(${tab.count})`}
+              <span className="whitespace-nowrap">
+                {tab.label} {tab.count > 0 && `• ${tab.count}`}
               </span>
             </button>
           ))}
@@ -225,79 +267,114 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
       </div>
 
       <div key={activeTab} className="p-4 pt-2 min-h-[160px] flex-grow animate-fade-in">
-        {activeTab === 'data' && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 gap-3 text-sm">
-              {phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <a
-                    href={`tel:${phone}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-foreground hover:underline"
-                  >
-                    {phone}
-                  </a>
-                </div>
-              )}
-              {email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <a
-                    href={`mailto:${email}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-foreground hover:underline"
-                  >
-                    {email}
-                  </a>
-                </div>
-              )}
-              {birthDate && (
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>{new Date(birthDate).toLocaleDateString('ru-RU')}</span>
+        {activeTab === 'data' &&
+          (!phone && !email && !birthDate && !notes ? (
+            <div className="text-center py-8 text-muted-foreground flex flex-col items-center justify-center">
+              <Info className="h-8 w-8 mb-2 opacity-50" />
+              <p>Нет дополнительных данных.</p>
+              <p className="text-xs mt-2">
+                Вы можете добавить их, нажав на меню и выбрав &quot;Редактировать&quot;.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3 text-sm">
+                {phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <a
+                      href={`tel:${phone}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-foreground hover:underline"
+                    >
+                      {phone}
+                    </a>
+                  </div>
+                )}
+                {email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <a
+                      href={`mailto:${email}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-foreground hover:underline"
+                    >
+                      {email}
+                    </a>
+                  </div>
+                )}
+                {birthDate && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>{new Date(birthDate).toLocaleDateString('ru-RU')}</span>
+                  </div>
+                )}
+              </div>
+              {notes && (
+                <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground italic">&quot;{notes}&quot;</p>
                 </div>
               )}
             </div>
-            {notes && (
-              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground italic">&quot;{notes}&quot;</p>
-              </div>
-            )}
-          </div>
-        )}
+          ))}
         {activeTab === 'trips' && (
           <div className="space-y-3">
             {displayedTrips.length > 0 ? (
-              displayedTrips.map((trip: Trip) => (
-                <Link
-                  to={`/trips/${trip.id}`}
-                  key={trip.id}
-                  className="block p-3 bg-muted rounded-lg hover:bg-secondary transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-medium text-foreground">{trip.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {trip.startDate
-                          ? new Date(trip.startDate).toLocaleDateString('ru-RU')
-                          : 'Дата не определена'}
-                      </p>
+              displayedTrips.map((trip: Trip) => {
+                const difficulty = trip.difficulty ? DIFFICULTY_MAP[trip.difficulty] : null;
+                return (
+                  <Link
+                    to={`/trips/${trip.id}`}
+                    key={trip.id}
+                    className="block p-3 bg-muted rounded-lg hover:bg-secondary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="min-w-0">
+                        <h4 className="font-medium text-foreground truncate">{trip.name}</h4>
+                        <div className="text-xs text-muted-foreground flex items-center flex-wrap gap-x-2 gap-y-1 mt-1">
+                          <span>
+                            {trip.startDate
+                              ? new Date(trip.startDate).toLocaleDateString('ru-RU')
+                              : 'Дата не определена'}
+                          </span>
+                          {trip.destination && (
+                            <>
+                              {' '}
+                              <span className="text-muted-foreground/50">•</span>{' '}
+                              <span>{trip.destination}</span>{' '}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 flex items-center gap-1.5">
+                        {difficulty && (
+                          <span
+                            className={cn(
+                              'text-[11px] px-1.5 py-0.5 rounded-full border flex items-center gap-1',
+                              difficulty.className
+                            )}
+                          >
+                            <difficulty.icon className="h-3 w-3" />
+                            {difficulty.text}
+                          </span>
+                        )}
+                        <span
+                          className={cn(
+                            'text-[11px] px-1.5 py-0.5 rounded-full border flex items-center gap-1',
+                            trip.status === 'completed'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400 border-green-500/20'
+                              : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400 border-yellow-500/20'
+                          )}
+                        >
+                          <Clock className="h-3 w-3" />
+                          {trip.status === 'completed' ? 'Завершен' : 'Планируется'}
+                        </span>
+                      </div>
                     </div>
-                    <span
-                      className={cn(
-                        'text-xs px-2 py-1 rounded-full',
-                        trip.status === 'completed'
-                          ? 'bg-green-500/10 text-green-500'
-                          : 'bg-yellow-500/10 text-yellow-400'
-                      )}
-                    >
-                      {trip.status === 'completed' ? 'Завершен' : 'Планируется'}
-                    </span>
-                  </div>
-                </Link>
-              ))
+                  </Link>
+                );
+              })
             ) : (
               <div className="text-center py-8 text-muted-foreground flex flex-col items-center justify-center">
                 <MapPin className="h-8 w-8 mb-2 opacity-50" />

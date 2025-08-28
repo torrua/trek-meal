@@ -11,6 +11,7 @@ import ProductsPage from './components/products/ProductsPage';
 import ParticipantsPage from './components/participants/ParticipantsPage';
 import CategoriesPage from './components/categories/CategoriesPage';
 import DishesPage from './components/dishes/DishesPage';
+import SettingsPage from './components/settings/SettingsPage'; // Новый импорт
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="participants" element={<ParticipantsPage />} />
         <Route path="trips" element={<TripsPage />} />
         <Route path="trips/:tripId" element={<TripPlanningPage />} />
+        <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>
   );

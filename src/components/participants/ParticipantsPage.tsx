@@ -1,12 +1,11 @@
 // src/components/participants/ParticipantsPage.tsx
 
-import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { Users, UserPlus, Grid, List, Upload, Download } from 'lucide-react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Users, UserPlus, Grid, List, Filter, X } from 'lucide-react';
 import useParticipantStore from '../../stores/useParticipantStore';
 import useSearchStore from '../../stores/useSearchStore';
 import useTripStore from '../../stores/useTripStore';
 import type { Participant, ParticipantData } from '../../types';
-import { exportDataToJson, importDataFromJson } from '../../utils/backup';
 
 import ParticipantCard from './ParticipantCard';
 import ParticipantForm from './ParticipantForm';
@@ -14,18 +13,17 @@ import ParticipantFiltersComponent, { ParticipantFilters } from './ParticipantFi
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/ConfirmModal';
+import Popover from '../../ui/Popover';
 import cn from 'classnames';
 
 type ViewMode = 'grid' | 'list';
 
 function ParticipantsPage() {
-  // --- Хранилища ---
   const { participants, addParticipant, updateParticipant, deleteParticipant, cloneParticipant } =
     useParticipantStore();
   const { searchTerm } = useSearchStore();
   const { trips } = useTripStore();
 
-  // --- Состояния компонента ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
@@ -38,12 +36,13 @@ function ParticipantsPage() {
     hasTrips: 'all',
   });
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const hasActiveFilters = useMemo(
+    () => Object.values(filters).some((v) => v !== 'all'),
+    [filters]
+  );
 
-  // --- Мемоизированные вычисления ---
   const filteredParticipants = useMemo(() => {
     let result = participants;
-
     if (searchTerm.trim()) {
       const lowercasedFilter = searchTerm.toLowerCase().trim();
       result = result.filter(
@@ -52,7 +51,6 @@ function ParticipantsPage() {
           p.notes?.toLowerCase().includes(lowercasedFilter)
       );
     }
-
     result = result.filter((p) => {
       if (filters.gender !== 'all' && p.gender !== filters.gender) return false;
       if (filters.age !== 'all' && p.age !== filters.age) return false;
@@ -64,61 +62,39 @@ function ParticipantsPage() {
       }
       return true;
     });
-
     return result.sort((a, b) => a.name.localeCompare(b.name));
   }, [participants, searchTerm, filters, trips]);
-
-  // --- Обработчики событий ---
-  const handleImportClick = () => fileInputRef.current?.click();
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      importDataFromJson(file);
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
 
   const handleFiltersChange = useCallback(
     (newFilters: ParticipantFilters) => setFilters(newFilters),
     []
   );
-
   const handleFiltersReset = useCallback(() => {
     setFilters({ gender: 'all', age: 'all', experience: 'all', hasTrips: 'all' });
   }, []);
-
   const handleAddNew = useCallback(() => {
     setEditingParticipant(null);
     setIsModalOpen(true);
   }, []);
-
-  const handleEdit = useCallback((participant: Participant) => {
-    setEditingParticipant(participant);
+  const handleEdit = useCallback((p: Participant) => {
+    setEditingParticipant(p);
     setIsModalOpen(true);
   }, []);
-
   const handleClone = useCallback(
     (id: number) => {
       cloneParticipant(id);
     },
     [cloneParticipant]
   );
-
-  const handleDeleteRequest = useCallback((e: React.MouseEvent, participant: Participant) => {
+  const handleDeleteRequest = useCallback((e: React.MouseEvent, p: Participant) => {
     e.stopPropagation();
-    setParticipantToDelete(participant);
+    setParticipantToDelete(p);
   }, []);
-
   const handleCloseModal = useCallback(() => !isLoading && setIsModalOpen(false), [isLoading]);
-
   const handleCloseDeleteModal = useCallback(
     () => !isLoading && setParticipantToDelete(null),
     [isLoading]
   );
-
   const handleConfirmDelete = useCallback(async () => {
     if (participantToDelete) {
       setIsLoading(true);
@@ -126,13 +102,12 @@ function ParticipantsPage() {
         await deleteParticipant(participantToDelete.id);
         setParticipantToDelete(null);
       } catch (error) {
-        console.error('Ошибка при удалении участника:', error);
+        console.error(error);
       } finally {
         setIsLoading(false);
       }
     }
   }, [participantToDelete, deleteParticipant]);
-
   const handleFormSubmit = useCallback(
     async (formData: ParticipantData) => {
       setIsLoading(true);
@@ -144,7 +119,7 @@ function ParticipantsPage() {
         }
         setIsModalOpen(false);
       } catch (error) {
-        console.error('Ошибка при сохранении участника:', error);
+        console.error(error);
         throw error;
       } finally {
         setIsLoading(false);
@@ -160,28 +135,34 @@ function ParticipantsPage() {
           <h2 className="text-2xl font-bold text-foreground">Управление участниками</h2>
           <p className="text-sm text-muted-foreground mt-1">
             Всего участников: {participants.length}
-            {(searchTerm || Object.values(filters).some((v) => v !== 'all')) &&
-              ` • Найдено: ${filteredParticipants.length}`}
+            {(searchTerm || hasActiveFilters) && ` • Найдено: ${filteredParticipants.length}`}
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <Button variant="secondary" onClick={handleImportClick}>
-            <Upload className="h-4 w-4 mr-2" />
-            Импорт
-          </Button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept=".json"
-            className="hidden"
-          />
-          <Button variant="secondary" onClick={exportDataToJson}>
-            <Download className="h-4 w-4 mr-2" />
-            Экспорт
-          </Button>
-
-          <div className="inline-flex rounded-md border bg-card overflow-hidden">
+          <Popover
+            trigger={
+              <Button variant="secondary" className="relative">
+                <Filter className="h-4 w-4 mr-2" /> Фильтр
+                {hasActiveFilters && (
+                  <span className="absolute -top-1 -right-1 block h-2 w-2 rounded-full bg-primary" />
+                )}
+              </Button>
+            }
+          >
+            <ParticipantFiltersComponent filters={filters} onFiltersChange={handleFiltersChange} />
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleFiltersReset}
+                className="w-full mt-4 flex items-center gap-2"
+              >
+                <X className="h-3 w-3" />
+                Сбросить фильтры
+              </Button>
+            )}
+          </Popover>
+          <div className="inline-flex rounded-md border bg-card overflow-hidden h-10">
             <button
               onClick={() => setViewMode('grid')}
               className={cn(
@@ -218,27 +199,19 @@ function ParticipantsPage() {
         </div>
       </header>
 
-      <ParticipantFiltersComponent
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        onReset={handleFiltersReset}
-      />
-
       {filteredParticipants.length === 0 ? (
         <div className="text-center py-16 px-6 bg-muted/50 rounded-lg border">
           <div className="max-w-md mx-auto">
             <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              {searchTerm || Object.values(filters).some((v) => v !== 'all')
-                ? 'Участники не найдены'
-                : 'Участников пока нет'}
+              {searchTerm || hasActiveFilters ? 'Участники не найдены' : 'Участников пока нет'}
             </h3>
             <p className="text-muted-foreground mb-6">
-              {searchTerm || Object.values(filters).some((v) => v !== 'all')
+              {searchTerm || hasActiveFilters
                 ? 'Попробуйте изменить поисковый запрос или сбросить фильтры.'
                 : 'Добавьте первого участника, чтобы начать.'}
             </p>
-            {!searchTerm && !Object.values(filters).some((v) => v !== 'all') && (
+            {!(searchTerm || hasActiveFilters) && (
               <Button onClick={handleAddNew} variant="primary" size="lg">
                 <UserPlus className="h-4 w-4 mr-2" />
                 Добавить первого участника
@@ -254,13 +227,13 @@ function ParticipantsPage() {
               : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6'
           }
         >
-          {filteredParticipants.map((participant) => (
+          {filteredParticipants.map((p) => (
             <ParticipantCard
-              key={participant.id}
-              participant={participant}
-              onEdit={() => handleEdit(participant)}
-              onDelete={(e) => handleDeleteRequest(e, participant)}
-              onClone={() => handleClone(participant.id)}
+              key={p.id}
+              participant={p}
+              onEdit={() => handleEdit(p)}
+              onDelete={(e) => handleDeleteRequest(e, p)}
+              onClone={() => handleClone(p.id)}
               isCompact={viewMode === 'list'}
             />
           ))}
@@ -279,7 +252,6 @@ function ParticipantsPage() {
           isLoading={isLoading}
         />
       </Modal>
-
       <ConfirmModal
         isOpen={!!participantToDelete}
         onClose={handleCloseDeleteModal}

@@ -1,6 +1,6 @@
 // src/constants/participants.ts
 
-import { User, Baby } from 'lucide-react';
+import { Award } from 'lucide-react';
 
 export const PARTICIPANT_CONSTANTS = {
   GENDER_OPTIONS: [
@@ -16,39 +16,44 @@ export const PARTICIPANT_CONSTANTS = {
     { value: 'experienced' as const, label: 'Опытный' },
     { value: 'professional' as const, label: 'Профессионал' },
   ],
-  // Цветовые схемы для карточек (только пол)
+  // Цветовые схемы для карточек (на основе семантических цветов темы)
   CARD_STYLES: {
     male: {
-      background: 'bg-blue-50 dark:bg-blue-950/30',
-      border: 'border-blue-200 dark:border-blue-800',
-      header: 'bg-blue-100 dark:bg-blue-900/50',
-      footer: 'bg-blue-200/50 dark:bg-blue-900/30',
+      background: 'bg-card',
+      border: 'border-blue-500/30',
+      header: 'bg-blue-500/5',
+      tabActive: 'bg-primary text-primary-foreground border-primary',
+      tabInactive: 'text-primary border-transparent hover:bg-primary/5',
     },
     female: {
-      background: 'bg-rose-50 dark:bg-rose-950/30',
-      border: 'border-rose-200 dark:border-rose-800',
-      header: 'bg-rose-100 dark:bg-rose-900/50',
-      footer: 'bg-rose-200/50 dark:bg-rose-900/30',
+      background: 'bg-card',
+      border: 'border-rose-500/30',
+      header: 'bg-rose-500/5',
+      tabActive: 'bg-danger text-danger-foreground border-danger',
+      tabInactive: 'text-danger border-transparent hover:bg-danger/5',
     },
-  } as const,
-  // Стили для уровней опыта
-  EXPERIENCE_STYLES: {
+  },
+  // Конфигурация для отображения уровня опыта
+  EXPERIENCE_CONFIG: {
     beginner: {
-      color: 'text-green-600 dark:text-green-400',
-      bg: 'bg-green-100 dark:bg-green-900/30',
-      border: 'border-green-200 dark:border-green-800',
+      label: 'Новичок',
+      icon: Award,
+      className:
+        'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 border-green-300 dark:border-green-700',
     },
     experienced: {
-      color: 'text-yellow-600 dark:text-yellow-400',
-      bg: 'bg-yellow-100 dark:bg-yellow-900/30',
-      border: 'border-yellow-200 dark:border-yellow-800',
+      label: 'Опытный',
+      icon: Award,
+      className:
+        'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border-blue-300 dark:border-blue-700',
     },
     professional: {
-      color: 'text-purple-600 dark:text-purple-400',
-      bg: 'bg-purple-100 dark:bg-purple-900/30',
-      border: 'border-purple-200 dark:border-purple-800',
+      label: 'Профессионал',
+      icon: Award,
+      className:
+        'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-200 border-purple-300 dark:border-purple-700',
     },
-  } as const,
+  },
 } as const;
 
 export type GenderOption = (typeof PARTICIPANT_CONSTANTS.GENDER_OPTIONS)[number]['value'];

@@ -1,3 +1,5 @@
+// src/stores/useParticipantStore.ts
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';

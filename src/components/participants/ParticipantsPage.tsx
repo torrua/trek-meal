@@ -13,6 +13,9 @@ import ParticipantFiltersComponent, { ParticipantFilters } from './ParticipantFi
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/ConfirmModal';
+import cn from 'classnames';
+
+type ViewMode = 'grid' | 'list';
 
 function ParticipantsPage() {
   const { participants, addParticipant, updateParticipant, deleteParticipant } =
@@ -24,9 +27,8 @@ function ParticipantsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
   const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
-  const [isCompactView, setIsCompactView] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
-  // Состояние фильтров
   const [filters, setFilters] = useState<ParticipantFilters>({
     gender: 'all',
     age: 'all',
@@ -37,7 +39,6 @@ function ParticipantsPage() {
   const filteredParticipants = useMemo(() => {
     let result = participants;
 
-    // Поиск по имени и заметкам
     if (searchTerm.trim()) {
       const lowercasedFilter = searchTerm.toLowerCase().trim();
       result = result.filter((participant: Participant) => {
@@ -47,34 +48,16 @@ function ParticipantsPage() {
       });
     }
 
-    // Применяем фильтры
     result = result.filter((participant: Participant) => {
-      // Фильтр по полу
-      if (filters.gender !== 'all' && participant.gender !== filters.gender) {
+      if (filters.gender !== 'all' && participant.gender !== filters.gender) return false;
+      if (filters.age !== 'all' && participant.age !== filters.age) return false;
+      if (filters.experience !== 'all' && participant.experienceLevel !== filters.experience)
         return false;
-      }
-
-      // Фильтр по возрасту
-      if (filters.age !== 'all' && participant.age !== filters.age) {
-        return false;
-      }
-
-      // Фильтр по опыту
-      if (filters.experience !== 'all' && participant.experienceLevel !== filters.experience) {
-        return false;
-      }
-
-      // Фильтр по участию в походах
       if (filters.hasTrips !== 'all') {
         const hasTrips = trips.some((trip) => trip.participants.includes(participant.id));
-        if (filters.hasTrips === 'with_trips' && !hasTrips) {
-          return false;
-        }
-        if (filters.hasTrips === 'without_trips' && hasTrips) {
-          return false;
-        }
+        if (filters.hasTrips === 'with_trips' && !hasTrips) return false;
+        if (filters.hasTrips === 'without_trips' && hasTrips) return false;
       }
-
       return true;
     });
 
@@ -86,12 +69,7 @@ function ParticipantsPage() {
   }, []);
 
   const handleFiltersReset = useCallback(() => {
-    setFilters({
-      gender: 'all',
-      age: 'all',
-      experience: 'all',
-      hasTrips: 'all',
-    });
+    setFilters({ gender: 'all', age: 'all', experience: 'all', hasTrips: 'all' });
   }, []);
 
   const handleAddNew = useCallback(() => {
@@ -117,7 +95,6 @@ function ParticipantsPage() {
         setParticipantToDelete(null);
       } catch (error) {
         console.error('Ошибка при удалении участника:', error);
-        // Здесь можно добавить toast уведомление об ошибке
       } finally {
         setIsLoading(false);
       }
@@ -136,8 +113,7 @@ function ParticipantsPage() {
         setIsModalOpen(false);
       } catch (error) {
         console.error('Ошибка при сохранении участника:', error);
-        // Здесь можно добавить toast уведомление об ошибке
-        throw error; // Пробрасываем ошибку в форму
+        throw error;
       } finally {
         setIsLoading(false);
       }
@@ -145,21 +121,15 @@ function ParticipantsPage() {
     [editingParticipant, updateParticipant, addParticipant]
   );
 
-  const handleCloseModal = useCallback(() => {
-    if (!isLoading) {
-      setIsModalOpen(false);
-    }
-  }, [isLoading]);
-
-  const handleCloseDeleteModal = useCallback(() => {
-    if (!isLoading) {
-      setParticipantToDelete(null);
-    }
-  }, [isLoading]);
+  const handleCloseModal = useCallback(() => !isLoading && setIsModalOpen(false), [isLoading]);
+  const handleCloseDeleteModal = useCallback(
+    () => !isLoading && setParticipantToDelete(null),
+    [isLoading]
+  );
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-border">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Управление участниками</h2>
           <p className="text-sm text-muted-foreground mt-1">
@@ -169,32 +139,32 @@ function ParticipantsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Переключатель вида */}
-          <div className="flex items-center border border-border rounded-md">
+          <div className="inline-flex rounded-md border bg-card overflow-hidden">
             <button
-              onClick={() => setIsCompactView(false)}
-              className={`p-2 transition-colors ${
-                !isCompactView
+              onClick={() => setViewMode('grid')}
+              className={cn(
+                'flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors border-r',
+                viewMode === 'grid'
                   ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-              title="Карточный вид"
+                  : 'text-muted-foreground hover:bg-muted'
+              )}
             >
               <Grid className="h-4 w-4" />
+              Сетка
             </button>
             <button
-              onClick={() => setIsCompactView(true)}
-              className={`p-2 transition-colors ${
-                isCompactView
+              onClick={() => setViewMode('list')}
+              className={cn(
+                'flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors',
+                viewMode === 'list'
                   ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-              title="Компактный вид"
+                  : 'text-muted-foreground hover:bg-muted'
+              )}
             >
               <List className="h-4 w-4" />
+              Список
             </button>
           </div>
-
           <Button
             onClick={handleAddNew}
             variant="primary"
@@ -206,7 +176,6 @@ function ParticipantsPage() {
         </div>
       </header>
 
-      {/* Фильтры */}
       <ParticipantFiltersComponent
         filters={filters}
         onFiltersChange={handleFiltersChange}
@@ -214,11 +183,9 @@ function ParticipantsPage() {
       />
 
       {filteredParticipants.length === 0 ? (
-        <div className="text-center py-16 px-6 bg-muted/50 rounded-lg border border-border">
+        <div className="text-center py-16 px-6 bg-muted/50 rounded-lg border">
           <div className="max-w-md mx-auto">
-            <div className="flex justify-center mb-4">
-              <Users className="h-16 w-16 text-muted-foreground" />
-            </div>
+            <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
               {searchTerm || Object.values(filters).some((v) => v !== 'all')
                 ? 'Участники не найдены'
@@ -227,16 +194,11 @@ function ParticipantsPage() {
             <p className="text-muted-foreground mb-6">
               {searchTerm || Object.values(filters).some((v) => v !== 'all')
                 ? 'Попробуйте изменить поисковый запрос или сбросить фильтры.'
-                : 'Добавьте первого участника, чтобы начать планирование походов.'}
+                : 'Добавьте первого участника, чтобы начать.'}
             </p>
             {!searchTerm && !Object.values(filters).some((v) => v !== 'all') && (
-              <Button
-                onClick={handleAddNew}
-                variant="primary"
-                size="lg"
-                className="flex items-center gap-2 mx-auto"
-              >
-                <UserPlus className="h-4 w-4" />
+              <Button onClick={handleAddNew} variant="primary" size="lg">
+                <UserPlus className="h-4 w-4 mr-2" />
                 Добавить первого участника
               </Button>
             )}
@@ -245,9 +207,9 @@ function ParticipantsPage() {
       ) : (
         <div
           className={
-            isCompactView
+            viewMode === 'list'
               ? 'space-y-3'
-              : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+              : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6'
           }
         >
           {filteredParticipants.map((participant) => (
@@ -256,7 +218,7 @@ function ParticipantsPage() {
               participant={participant}
               onEdit={() => handleEdit(participant)}
               onDelete={(e) => handleDeleteRequest(e, participant)}
-              isCompact={isCompactView}
+              isCompact={viewMode === 'list'}
             />
           ))}
         </div>
@@ -266,7 +228,6 @@ function ParticipantsPage() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         title={editingParticipant ? 'Редактировать участника' : 'Новый участник'}
-        size="md"
       >
         <ParticipantForm
           participant={editingParticipant}
@@ -286,7 +247,7 @@ function ParticipantsPage() {
         isLoading={isLoading}
       >
         <div className="space-y-3">
-          <p className="text-foreground">
+          <p>
             Вы уверены, что хотите удалить участника{' '}
             <span className="font-semibold text-foreground">
               &quot;{participantToDelete?.name}&quot;
@@ -294,19 +255,17 @@ function ParticipantsPage() {
             ?
           </p>
           <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md flex items-start gap-2">
-            <div className="flex-shrink-0 mt-0.5">
-              <svg
-                className="h-4 w-4 text-orange-600 dark:text-orange-400"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
+            <svg
+              className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
             <p className="text-sm text-orange-800 dark:text-orange-200">
               Это действие также удалит его из всех походов и не может быть отменено.
             </p>

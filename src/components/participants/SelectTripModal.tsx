@@ -14,6 +14,7 @@ interface SelectTripModalProps {
   onClose: () => void;
   onConfirm: (tripId: number) => void;
   selectedCount: number;
+  selectedIds: number[];
 }
 
 type TripOption = { value: number; label: string };
@@ -23,17 +24,21 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
   onClose,
   onConfirm,
   selectedCount,
+  selectedIds,
 }) => {
   const { trips } = useTripStore();
   const [selectedTrip, setSelectedTrip] = useState<SingleValue<TripOption>>(null);
 
-  const tripOptions: TripOption[] = useMemo(
-    () =>
-      trips
-        .filter((t) => t.status === 'planning')
-        .map((t: Trip) => ({ value: t.id, label: t.name })),
-    [trips]
-  );
+  const tripOptions: TripOption[] = useMemo(() => {
+    let availableTrips = trips.filter((t) => t.status === 'planning');
+
+    if (selectedIds.length === 1) {
+      const singleParticipantId = selectedIds[0];
+      availableTrips = availableTrips.filter((t) => !t.participants.includes(singleParticipantId));
+    }
+
+    return availableTrips.map((t: Trip) => ({ value: t.id, label: t.name }));
+  }, [trips, selectedIds]);
 
   const handleSubmit = () => {
     if (!selectedTrip) {
@@ -66,7 +71,7 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
           value={selectedTrip}
           onChange={setSelectedTrip}
           placeholder="Выберите поход..."
-          noOptionsMessage={() => 'Нет запланированных походов'}
+          noOptionsMessage={() => 'Нет подходящих походов'}
         />
       </div>
       <div className="flex justify-end gap-3 pt-6 mt-4 border-t">

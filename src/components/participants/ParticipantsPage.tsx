@@ -1,7 +1,17 @@
 // src/components/participants/ParticipantsPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { Users, UserPlus, Grid, List, Filter, X, Check, FilePlus } from 'lucide-react';
+import {
+  MapPinPlusInside,
+  MapPinPlus,
+  Users,
+  UserPlus,
+  Grid,
+  List,
+  Filter,
+  X,
+  Check,
+} from 'lucide-react';
 import useParticipantStore from '../../stores/useParticipantStore';
 import useSearchStore from '../../stores/useSearchStore';
 import useTripStore from '../../stores/useTripStore';
@@ -158,144 +168,166 @@ function ParticipantsPage() {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto pb-24">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Управление участниками</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Всего участников: {participants.length}
-            {(searchTerm || hasActiveFilters) && ` • Найдено: ${filteredParticipants.length}`}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <Popover
-            trigger={
-              <Button variant="secondary" className="relative">
-                <Filter className="h-4 w-4 mr-2" /> Фильтр
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="relative h-20 mb-6">
+        <div
+          className={cn(
+            'absolute w-full top-0 transition-opacity duration-300',
+            selectedIds.length > 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          )}
+        >
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b h-20">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">Управление участниками</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Всего участников: {participants.length}
+                {(searchTerm || hasActiveFilters) && ` • Найдено: ${filteredParticipants.length}`}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <Popover
+                trigger={
+                  <Button variant="secondary" className="relative h-10">
+                    <Filter className="h-4 w-4 mr-2" /> Фильтр
+                    {hasActiveFilters && (
+                      <span className="absolute -top-1 -right-1 block h-2 w-2 rounded-full bg-primary" />
+                    )}
+                  </Button>
+                }
+              >
+                <ParticipantFiltersComponent
+                  filters={filters}
+                  onFiltersChange={handleFiltersChange}
+                />
                 {hasActiveFilters && (
-                  <span className="absolute -top-1 -right-1 block h-2 w-2 rounded-full bg-primary" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleFiltersReset}
+                    className="w-full mt-4 flex items-center gap-2"
+                  >
+                    <X className="h-3 w-3" />
+                    Сбросить фильтры
+                  </Button>
                 )}
+              </Popover>
+              <div className="inline-flex rounded-md border bg-card overflow-hidden h-10">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={cn(
+                    'flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors border-r',
+                    viewMode === 'grid'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted'
+                  )}
+                >
+                  <Grid className="h-4 w-4" />
+                  Сетка
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={cn(
+                    'flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors',
+                    viewMode === 'list'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted'
+                  )}
+                >
+                  <List className="h-4 w-4" />
+                  Список
+                </button>
+              </div>
+              <Button
+                onClick={handleAddNew}
+                variant="primary"
+                className="whitespace-nowrap flex items-center gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                Добавить участника
               </Button>
-            }
-          >
-            <ParticipantFiltersComponent filters={filters} onFiltersChange={handleFiltersChange} />
-            {hasActiveFilters && (
+            </div>
+          </div>
+        </div>
+
+        <div
+          className={cn(
+            'absolute w-full top-0 transition-opacity duration-300',
+            selectedIds.length > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          )}
+        >
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b h-20">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                <Check className="h-6 w-6 text-primary" />
+                Выбрано: {selectedIds.length}
+              </h2>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <Button variant="secondary" onClick={() => setIsSelectTripModalOpen(true)}>
+                <MapPinPlus className="mr-2" />
+                Добавить в поход
+              </Button>
+              <Button variant="primary" onClick={() => setIsNewTripModalOpen(true)}>
+                <MapPinPlusInside className="mr-2" />
+                Создать поход
+              </Button>
               <Button
                 variant="ghost"
-                size="sm"
-                onClick={handleFiltersReset}
-                className="w-full mt-4 flex items-center gap-2"
+                size="icon"
+                onClick={() => setSelectedIds([])}
+                className="h-10 w-10"
               >
-                <X className="h-3 w-3" />
-                Сбросить фильтры
+                <X className="h-4 w-4" />
               </Button>
-            )}
-          </Popover>
-          <div className="inline-flex rounded-md border bg-card overflow-hidden h-10">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={cn(
-                'flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors border-r',
-                viewMode === 'grid'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted'
-              )}
-            >
-              <Grid className="h-4 w-4" />
-              Сетка
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={cn(
-                'flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors',
-                viewMode === 'list'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-muted'
-              )}
-            >
-              <List className="h-4 w-4" />
-              Список
-            </button>
+            </div>
           </div>
-          <Button
-            onClick={handleAddNew}
-            variant="primary"
-            className="whitespace-nowrap flex items-center gap-2"
-          >
-            <UserPlus className="h-4 w-4" />
-            Добавить участника
-          </Button>
         </div>
-      </header>
+      </div>
 
-      {filteredParticipants.length === 0 ? (
-        <div className="text-center py-16 px-6 bg-muted/50 rounded-lg border">
-          <div className="max-w-md mx-auto">
-            <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">
-              {searchTerm || hasActiveFilters ? 'Участники не найдены' : 'Участников пока нет'}
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              {searchTerm || hasActiveFilters
-                ? 'Попробуйте изменить поисковый запрос или сбросить фильтры.'
-                : 'Добавьте первого участника, чтобы начать.'}
-            </p>
-            {!(searchTerm || hasActiveFilters) && (
-              <Button onClick={handleAddNew} variant="primary" size="lg">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Добавить первого участника
-              </Button>
+      <div className="pb-24">
+        {filteredParticipants.length === 0 ? (
+          <div className="text-center py-16 px-6 bg-muted/50 rounded-lg border">
+            <div className="max-w-md mx-auto">
+              <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                {searchTerm || hasActiveFilters ? 'Участники не найдены' : 'Участников пока нет'}
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {searchTerm || hasActiveFilters
+                  ? 'Попробуйте изменить поисковый запрос или сбросить фильтры.'
+                  : 'Добавьте первого участника, чтобы начать.'}
+              </p>
+              {!(searchTerm || hasActiveFilters) && (
+                <Button onClick={handleAddNew} variant="primary" size="lg">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Добавить первого участника
+                </Button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div
+            className={cn(
+              viewMode === 'list'
+                ? 'space-y-3'
+                : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6'
             )}
-          </div>
-        </div>
-      ) : (
-        <div
-          className={
-            viewMode === 'list'
-              ? 'space-y-3'
-              : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6'
-          }
-        >
-          {filteredParticipants.map((p) => (
-            <ParticipantCard
-              key={p.id}
-              participant={p}
-              onEdit={() => handleEdit(p)}
-              onDelete={(e) => handleDeleteRequest(e, p)}
-              onClone={() => handleClone(p.id)}
-              isCompact={viewMode === 'list'}
-              isSelected={selectedIds.includes(p.id)}
-              onSelect={handleSelectParticipant}
-            />
-          ))}
-        </div>
-      )}
-
-      {selectedIds.length > 0 && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-card border shadow-lg rounded-lg p-2 flex items-center gap-4 z-10 animate-fade-in w-full max-w-md sm:max-w-lg">
-          <div className="flex-shrink-0 flex items-center gap-2 text-sm font-medium pl-2">
-            <Check className="h-4 w-4 text-primary" />
-            <span>Выбрано: {selectedIds.length}</span>
-          </div>
-          <div className="flex-grow flex items-center gap-2 justify-end">
-            <Button variant="secondary" size="sm" onClick={() => setIsSelectTripModalOpen(true)}>
-              Добавить в поход
-            </Button>
-            <Button variant="primary" size="sm" onClick={() => setIsNewTripModalOpen(true)}>
-              <FilePlus className="h-4 w-4 mr-1" />
-              Создать поход
-            </Button>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSelectedIds([])}
-            className="h-8 w-8"
           >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+            {filteredParticipants.map((p) => (
+              <ParticipantCard
+                key={p.id}
+                participant={p}
+                onEdit={() => handleEdit(p)}
+                onDelete={(e) => handleDeleteRequest(e, p)}
+                onClone={() => handleClone(p.id)}
+                isCompact={viewMode === 'list'}
+                isSelected={selectedIds.includes(p.id)}
+                onSelect={handleSelectParticipant}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <Modal
         isOpen={isModalOpen}
@@ -326,7 +358,7 @@ function ParticipantsPage() {
             </span>
             ?
           </p>
-          <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md flex items-center gap-2">
+          <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md flex items-start gap-2">
             <svg
               className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5"
               fill="currentColor"
@@ -350,6 +382,7 @@ function ParticipantsPage() {
         onClose={() => setIsSelectTripModalOpen(false)}
         onConfirm={handleAddParticipantsToTrip}
         selectedCount={selectedIds.length}
+        selectedIds={selectedIds}
       />
 
       <Modal
@@ -360,6 +393,7 @@ function ParticipantsPage() {
         <TripForm
           onSubmit={handleCreateTripWithParticipants}
           onCancel={() => setIsNewTripModalOpen(false)}
+          initialParticipantIds={selectedIds}
         />
       </Modal>
     </div>

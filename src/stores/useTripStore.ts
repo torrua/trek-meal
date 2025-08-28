@@ -12,13 +12,31 @@ interface TripState {
   updateTrip: (id: number, data: Partial<Trip>) => void;
   removeParticipantFromAllTrips: (participantId: number) => void;
   isDishInUse: (dishId: number) => boolean;
-  addParticipantsToTrip: (tripId: number, participantIds: number[]) => void; // Новая функция
+  addParticipantsToTrip: (tripId: number, participantIds: number[]) => void;
+  removeParticipantFromTrip: (tripId: number, participantId: number) => void; // Новая функция
 }
 
 const useTripStore = create<TripState>()(
   persist(
     (set, get) => ({
       trips: [],
+
+      removeParticipantFromTrip: (tripId, participantId) => {
+        const trip = get().trips.find((t) => t.id === tripId);
+        if (!trip) {
+          toast.error('Поход не найден.');
+          return;
+        }
+
+        set((state) => ({
+          trips: state.trips.map((t) =>
+            t.id === tripId
+              ? { ...t, participants: t.participants.filter((id) => id !== participantId) }
+              : t
+          ),
+        }));
+        toast.success(`Участник удален из похода "${trip.name}"`);
+      },
 
       addParticipantsToTrip: (tripId, participantIds) => {
         const trip = get().trips.find((t) => t.id === tripId);
@@ -30,12 +48,8 @@ const useTripStore = create<TripState>()(
         set((state) => ({
           trips: state.trips.map((t) => {
             if (t.id === tripId) {
-              const newParticipants = [...t.participants];
-              participantIds.forEach((pId) => {
-                if (!newParticipants.includes(pId)) {
-                  newParticipants.push(pId);
-                }
-              });
+              // Используем Set для автоматического удаления дубликатов
+              const newParticipants = [...new Set([...t.participants, ...participantIds])];
               return { ...t, participants: newParticipants };
             }
             return t;
@@ -45,23 +59,54 @@ const useTripStore = create<TripState>()(
       },
 
       addTrip: (tripData) => {
-        // ... без изменений
+        const newTrip: Trip = {
+          ...tripData,
+          id: Date.now(),
+          createdAt: new Date().toISOString(),
+          status: 'planning',
+          selectedMeals: {},
+        };
+        set((state) => ({ trips: [...state.trips, newTrip] }));
+        toast.success(`Поход "${newTrip.name}" создан!`);
+        return newTrip;
       },
 
       deleteTrip: (tripId) => {
-        // ... без изменений
+        const tripToDelete = get().trips.find((t) => t.id === tripId);
+        if (tripToDelete) {
+          set((state) => ({
+            trips: state.trips.filter((trip) => trip.id !== tripId),
+          }));
+          toast.error(`Поход "${tripToDelete.name}" удален.`);
+        }
       },
 
       updateTrip: (tripId, updatedData) => {
-        // ... без изменений
+        set((state) => ({
+          trips: state.trips.map((trip) =>
+            trip.id === tripId ? { ...trip, ...updatedData } : trip
+          ),
+        }));
       },
 
       removeParticipantFromAllTrips: (participantId) => {
-        // ... без изменений
+        set((state) => ({
+          trips: state.trips.map((trip) => ({
+            ...trip,
+            participants: trip.participants.filter((id) => id !== participantId),
+          })),
+        }));
       },
 
-      isDishInUse: (dishId: number) => {
-        // ... без изменений
+      isDishInUse: (dishId) => {
+        const { trips } = get();
+        return trips.some((trip) =>
+          Object.values(trip.selectedMeals).some((mealPlan) =>
+            (mealPlan as MealPlanItem[]).some(
+              (item) => item.type === 'dish' && item.itemId === dishId
+            )
+          )
+        );
       },
     }),
     { name: 'trek-meal-trips' }

@@ -73,6 +73,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   onSelect,
 }) => {
   const {
+    id: participantId,
     gender,
     age: ageGroup,
     name,
@@ -82,7 +83,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
     email,
     birthDate,
   } = participant;
-  const { trips } = useTripStore();
+  const { trips, removeParticipantFromTrip } = useTripStore();
   const [activeTab, setActiveTab] = useState<TabType>('data');
 
   const cardStyles = PARTICIPANT_CONSTANTS.CARD_STYLES[gender];
@@ -91,8 +92,8 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   const age = useMemo(() => calculateAge(birthDate), [birthDate]);
 
   const participantTrips = useMemo(
-    () => trips.filter((trip) => trip.participants.includes(participant.id)),
-    [trips, participant.id]
+    () => trips.filter((trip) => trip.participants.includes(participantId)),
+    [trips, participantId]
   );
   const participantEquipment: unknown[] = useMemo(() => [], []);
 
@@ -120,7 +121,12 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
     e.stopPropagation();
     action();
   };
-  const handleCardClick = () => onSelect(participant.id);
+  const handleCardClick = () => onSelect(participantId);
+
+  const handleRemoveFromTrip = (e: React.MouseEvent, tripId: number) => {
+    e.stopPropagation();
+    removeParticipantFromTrip(tripId, participantId);
+  };
 
   const KebabMenu = () => (
     <DropdownMenu
@@ -347,13 +353,13 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
               displayedTrips.map((trip: Trip) => {
                 const difficulty = trip.difficulty ? DIFFICULTY_MAP[trip.difficulty] : null;
                 return (
-                  <Link
-                    to={`/trips/${trip.id}`}
-                    key={trip.id}
-                    className="block p-3 bg-muted rounded-lg hover:bg-secondary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex justify-between items-start gap-2">
+                  <div key={trip.id} className="p-3 bg-muted rounded-lg group/trip relative">
+                    <Link
+                      to={`/trips/${trip.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute inset-0 z-0"
+                    />
+                    <div className="relative z-10 flex justify-between items-start gap-2">
                       <div className="min-w-0">
                         <h4 className="font-medium text-foreground truncate">{trip.name}</h4>
                         <div className="text-xs text-muted-foreground flex items-center flex-wrap gap-x-2 gap-y-1 mt-1">
@@ -394,9 +400,15 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
                           <Clock className="h-3 w-3" />
                           {trip.status === 'completed' ? 'Завершен' : 'Планируется'}
                         </span>
+                        <button
+                          onClick={(e) => handleRemoveFromTrip(e, trip.id)}
+                          className="p-1 rounded-full text-muted-foreground hover:bg-danger/10 hover:text-danger opacity-0 group-hover/trip:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
                       </div>
                     </div>
-                  </Link>
+                  </div>
                 );
               })
             ) : (

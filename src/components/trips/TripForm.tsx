@@ -16,6 +16,7 @@ interface TripFormProps {
   onSubmit: (formData: TripData) => void;
   onCancel: () => void;
   trip?: Trip | null;
+  initialParticipantIds?: number[]; // Новый проп
 }
 
 const INITIAL_STATE: TripData = {
@@ -30,9 +31,17 @@ const INITIAL_STATE: TripData = {
   endDate: '',
 };
 
-const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) => {
+const TripForm: React.FC<TripFormProps> = ({
+  onSubmit,
+  onCancel,
+  trip = null,
+  initialParticipantIds = [],
+}) => {
   const { participants } = useParticipantStore();
-  const [formData, setFormData] = useState<TripData>(INITIAL_STATE);
+  const [formData, setFormData] = useState<TripData>({
+    ...INITIAL_STATE,
+    participants: initialParticipantIds, // Используем initialParticipantIds
+  });
   const { dateRange, days, handleDateRangeChange, handleDaysChange } = useTripDates(trip);
   const [errors, setErrors] = useState<{ name?: string }>({});
 
@@ -41,9 +50,10 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
       const { ...rest } = trip;
       setFormData({ ...INITIAL_STATE, ...rest });
     } else {
-      setFormData(INITIAL_STATE);
+      // Сбрасываем состояние, но сохраняем предустановленных участников
+      setFormData({ ...INITIAL_STATE, participants: initialParticipantIds });
     }
-  }, [trip]);
+  }, [trip, initialParticipantIds]);
 
   const handleChange = (field: keyof TripData, value: string | number) => {
     if (field === 'name' && String(value).trim().length > 0) {
@@ -77,7 +87,6 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
   };
 
   return (
-    // УБРАЛИ <div className="bg-secondary p-6 w-full">
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
@@ -150,7 +159,6 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
 
       <div>
         <label className="block text-sm font-medium text-foreground mb-1.5">Участники</label>
-        {/* Упростили стили, используя переменные темы */}
         <div className="max-h-32 overflow-y-auto p-3 border border-input rounded-md space-y-2 bg-background">
           {participants.length > 0 ? (
             participants.map((p: Participant) => (
@@ -175,7 +183,6 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
         </div>
       </div>
 
-      {/* Упростили стили */}
       <div className="flex justify-end gap-3 pt-4 border-t border-border">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Отмена

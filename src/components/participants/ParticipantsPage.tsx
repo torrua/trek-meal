@@ -2,8 +2,6 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import {
-  MapPinPlusInside,
-  MapPinPlus,
   Users,
   UserPlus,
   Grid,
@@ -11,6 +9,8 @@ import {
   Filter,
   X,
   Check,
+  MapPinPlus,
+  MapPinPlusInside,
 } from 'lucide-react';
 import useParticipantStore from '../../stores/useParticipantStore';
 import useSearchStore from '../../stores/useSearchStore';
@@ -264,11 +264,11 @@ function ParticipantsPage() {
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <Button variant="secondary" onClick={() => setIsSelectTripModalOpen(true)}>
-                <MapPinPlus className="mr-2" />
+                <MapPinPlus className="h-4 w-4 mr-2" />
                 Добавить в поход
               </Button>
               <Button variant="primary" onClick={() => setIsNewTripModalOpen(true)}>
-                <MapPinPlusInside className="mr-2" />
+                <MapPinPlusInside className="h-4 w-4 mr-2" />
                 Создать поход
               </Button>
               <Button
@@ -358,7 +358,7 @@ function ParticipantsPage() {
             </span>
             ?
           </p>
-          <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md flex items-start gap-2">
+          <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md flex items-center gap-2">
             <svg
               className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5"
               fill="currentColor"

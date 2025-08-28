@@ -1,10 +1,9 @@
 // src/hooks/useThemeAwareSelectStyles.ts
 
 import { useMemo } from 'react';
-import { StylesConfig, GroupBase } from 'react-select'; // <-- Импортируем GroupBase
+import { StylesConfig, GroupBase } from 'react-select';
 import useThemeStore from '../stores/useThemeStore';
 
-// --- ИСПРАВЛЕНИЕ: Хук теперь является дженериком ---
 export const useThemeAwareSelectStyles = <
   Option,
   IsMulti extends boolean = false,
@@ -76,6 +75,10 @@ export const useThemeAwareSelectStyles = <
           backgroundColor: colors.blue700,
           color: 'white',
         },
+      }),
+      menuPortal: (base) => ({
+        ...base,
+        zIndex: 9999, // Очень высокий z-index, чтобы быть поверх модалки
       }),
     };
   }, [theme]);

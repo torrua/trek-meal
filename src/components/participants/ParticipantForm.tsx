@@ -14,6 +14,7 @@ interface ParticipantFormProps {
   onSubmit: (data: ParticipantData) => Promise<void> | void;
   onCancel: () => void;
   isLoading?: boolean;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 type SelectOption<T> = { value: T; label: string };
@@ -34,30 +35,53 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
   onSubmit,
   onCancel,
   isLoading = false,
+  onDirtyChange,
 }) => {
   const [formData, setFormData] = useState<ParticipantData>(INITIAL_STATE);
   const [errors, setErrors] = useState<Partial<Record<keyof ParticipantData, string>>>({});
+  const [initialData, setInitialData] = useState<ParticipantData>(INITIAL_STATE);
 
   useEffect(() => {
+    let data: ParticipantData;
     if (participant) {
-      // Убрано неиспользуемое присваивание _id
-      const { id, ...data } = participant;
-      setFormData({ ...INITIAL_STATE, ...data });
+      const { id: _, ...participantData } = participant;
+      data = { ...INITIAL_STATE, ...participantData };
     } else {
-      setFormData(INITIAL_STATE);
+      data = INITIAL_STATE;
     }
+    setFormData(data);
+    setInitialData(data);
     setErrors({});
-  }, [participant]);
+    onDirtyChange?.(false);
+  }, [participant, onDirtyChange]);
+
+  // Проверка на изменения в форме
+  useEffect(() => {
+    const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
+    onDirtyChange?.(isDirty);
+  }, [formData, initialData, onDirtyChange]);
 
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
-    if (!formData.name.trim()) newErrors.name = 'Имя участника обязательно';
-    else if (formData.name.trim().length < 2)
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Имя участника обязательно';
+    } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Имя должно содержать минимум 2 символа';
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+    }
+
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Некорректный формат email';
-    if (formData.phone && !/^[+]?[0-9\s\-()]{7,}$/.test(formData.phone.trim()))
+    }
+
+    if (
+      formData.phone &&
+      formData.phone.trim() &&
+      !/^[+]?[0-9\s\-()]{7,}$/.test(formData.phone.trim())
+    ) {
       newErrors.phone = 'Некорректный формат телефона';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -164,6 +188,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
         onChange={handleInputChange}
         disabled={isLoading}
       />
+
       <Textarea
         label="Заметки (аллергии, предпочтения)"
         name="notes"

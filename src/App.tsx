@@ -11,7 +11,7 @@ import ProductsPage from './components/products/ProductsPage';
 import ParticipantsPage from './components/participants/ParticipantsPage';
 import CategoriesPage from './components/categories/CategoriesPage';
 import DishesPage from './components/dishes/DishesPage';
-import SettingsPage from './components/settings/SettingsPage'; // Новый импорт
+import SettingsPage from './components/settings/SettingsPage';
 
 function App() {
   return (

@@ -13,7 +13,7 @@ interface TripState {
   removeParticipantFromAllTrips: (participantId: number) => void;
   isDishInUse: (dishId: number) => boolean;
   addParticipantsToTrip: (tripId: number, participantIds: number[]) => void;
-  removeParticipantFromTrip: (tripId: number, participantId: number) => void; // Новая функция
+  removeParticipantFromTrip: (tripId: number, participantId: number) => void;
 }
 
 const useTripStore = create<TripState>()(
@@ -48,7 +48,6 @@ const useTripStore = create<TripState>()(
         set((state) => ({
           trips: state.trips.map((t) => {
             if (t.id === tripId) {
-              // Используем Set для автоматического удаления дубликатов
               const newParticipants = [...new Set([...t.participants, ...participantIds])];
               return { ...t, participants: newParticipants };
             }

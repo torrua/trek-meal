@@ -28,7 +28,6 @@ const SettingsPage: React.FC = () => {
         <h2 className="text-2xl font-bold text-foreground">Настройки</h2>
         <p className="text-sm text-muted-foreground mt-1">Управление данными приложения.</p>
       </header>
-
       <div className="bg-card border rounded-lg">
         <div className="p-6">
           <div className="flex items-start gap-4">
@@ -45,7 +44,6 @@ const SettingsPage: React.FC = () => {
             </div>
           </div>
         </div>
-
         <div className="bg-muted px-6 py-4 border-t flex flex-col sm:flex-row justify-end items-center gap-3">
           <Button variant="secondary" onClick={handleImportClick} className="w-full sm:w-auto">
             <Upload className="h-4 w-4 mr-2" />

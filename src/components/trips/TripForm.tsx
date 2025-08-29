@@ -16,7 +16,7 @@ interface TripFormProps {
   onSubmit: (formData: TripData) => void;
   onCancel: () => void;
   trip?: Trip | null;
-  initialParticipantIds?: number[]; // Новый проп
+  initialParticipantIds?: number[];
 }
 
 const INITIAL_STATE: TripData = {
@@ -40,7 +40,7 @@ const TripForm: React.FC<TripFormProps> = ({
   const { participants } = useParticipantStore();
   const [formData, setFormData] = useState<TripData>({
     ...INITIAL_STATE,
-    participants: initialParticipantIds, // Используем initialParticipantIds
+    participants: initialParticipantIds,
   });
   const { dateRange, days, handleDateRangeChange, handleDaysChange } = useTripDates(trip);
   const [errors, setErrors] = useState<{ name?: string }>({});
@@ -50,7 +50,6 @@ const TripForm: React.FC<TripFormProps> = ({
       const { ...rest } = trip;
       setFormData({ ...INITIAL_STATE, ...rest });
     } else {
-      // Сбрасываем состояние, но сохраняем предустановленных участников
       setFormData({ ...INITIAL_STATE, participants: initialParticipantIds });
     }
   }, [trip, initialParticipantIds]);

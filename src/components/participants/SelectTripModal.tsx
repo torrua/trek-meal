@@ -53,7 +53,7 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
     selectedCount === 1
       ? 'участника'
       : selectedCount > 1 && selectedCount < 5
-        ? 'участников'
+        ? 'участника'
         : 'участников';
 
   return (

@@ -62,7 +62,6 @@ export interface Dish {
 }
 export type DishData = Omit<Dish, 'id'>;
 
-// --- НОВАЯ СТРУКТУРА ДЛЯ ПЛАНА ПИТАНИЯ ---
 export type MealPlanItem =
   | {
       instanceId: string; // Уникальный ID для КАЖДОЙ строки в раскладке

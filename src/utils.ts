@@ -1,15 +1,20 @@
 // src/utils.ts
+
+import { parseISO, differenceInYears } from 'date-fns';
 import type { Trip, Product, Participant, Dish, MealPlanItem } from './types';
 
-// Функции getMealName, formatDate, pluralize, calculateDays, calculateEndDate остаются без изменений.
-import { parseISO, differenceInYears } from 'date-fns';
-
-// Новая функция для расчета возраста
 export const calculateAge = (birthDateString?: string): number | null => {
   if (!birthDateString) return null;
   try {
     const birthDate = parseISO(birthDateString);
-    return differenceInYears(new Date(), birthDate);
+    if (isNaN(birthDate.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
   } catch (error) {
     console.error('Invalid date format for age calculation:', birthDateString);
     return null;
@@ -27,32 +32,22 @@ export const getMealName = (mealNumber: number, totalMeals: number): string => {
 
 export const formatDate = (dateString: string): string => {
   if (!dateString) return 'Не указано';
-  const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-  return new Date(dateString).toLocaleDateString('ru-RU', options);
+  try {
+    const options: Intl.DateTimeFormatOptions = {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    };
+    return new Date(dateString).toLocaleDateString('ru-RU', options);
+  } catch (error) {
+    return 'Неверная дата';
+  }
 };
 
 export const pluralize = (number: number, words: [string, string, string]): string => {
   const cases = [2, 0, 1, 1, 1, 2];
   const num = Math.abs(number);
   return words[num % 100 > 4 && num % 100 < 20 ? 2 : cases[Math.min(num % 10, 5)]];
-};
-
-export const calculateDays = (startDate: string, endDate: string): number => {
-  if (!startDate || !endDate) return 1;
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  if (start > end) return 1;
-  const diffTime = Math.abs(end.getTime() - start.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays + 1;
-};
-
-export const calculateEndDate = (startDate: string, days: number): string => {
-  if (!startDate || !days || days < 1) return '';
-  const start = new Date(startDate);
-  const end = new Date(start);
-  end.setDate(start.getDate() + days - 1);
-  return end.toISOString().split('T')[0];
 };
 
 interface TripSummary {
@@ -64,7 +59,6 @@ interface TripSummary {
   averageCaloriesPerPersonPerDay: number;
 }
 
-// --- ИСПРАВЛЕННАЯ ВЕРСИЯ ---
 export const calculateTripSummary = (
   trip: Trip | undefined,
   allProducts: Product[],
@@ -86,12 +80,10 @@ export const calculateTripSummary = (
   const participantsCount = trip.participants?.length || 1;
   const daysCount = trip.days;
 
-  // Аккумуляторы для СУММАРНЫХ значений на одного человека за ВЕСЬ поход
   let totalWeightForOnePerson = 0;
   const totalNutritionForOnePerson = { calories: 0, proteins: 0, fats: 0, carbs: 0 };
   const perishable = new Set<string>();
 
-  // Вспомогательная функция для обработки одного продукта
   const processProduct = (productId: number, weight: number) => {
     const product = allProducts.find((p) => p.id === productId);
     if (product) {
@@ -107,8 +99,6 @@ export const calculateTripSummary = (
     }
   };
 
-  // --- ГЛАВНОЕ ИЗМЕНЕНИЕ ---
-  // Итерируем по ВСЕМ запланированным приемам пищи, а не только первого дня.
   Object.values(trip.selectedMeals).forEach((mealItems) => {
     (mealItems as MealPlanItem[]).forEach((item) => {
       if (item.type === 'product') {
@@ -122,8 +112,6 @@ export const calculateTripSummary = (
     });
   });
 
-  // Теперь, когда у нас есть СУММАРНЫЕ значения на одного человека,
-  // мы можем рассчитать итоговые и средние показатели.
   const totalWeight = totalWeightForOnePerson * participantsCount;
   const totalNutrition = {
     calories: Math.round(totalNutritionForOnePerson.calories * participantsCount),
@@ -132,11 +120,10 @@ export const calculateTripSummary = (
     carbs: Math.round(totalNutritionForOnePerson.carbs * participantsCount),
   };
 
-  // Рассчитываем ЧЕСТНЫЕ средние значения, деля суммарные показатели на количество дней
-  const averageWeightPerPersonPerDay = Math.round(totalWeightForOnePerson / daysCount);
-  const averageCaloriesPerPersonPerDay = Math.round(
-    totalNutritionForOnePerson.calories / daysCount
-  );
+  const averageWeightPerPersonPerDay =
+    daysCount > 0 ? Math.round(totalWeightForOnePerson / daysCount) : 0;
+  const averageCaloriesPerPersonPerDay =
+    daysCount > 0 ? Math.round(totalNutritionForOnePerson.calories / daysCount) : 0;
 
   const tripParticipants = allParticipants.filter((p) => trip.participants?.includes(p.id));
 

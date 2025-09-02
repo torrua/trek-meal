@@ -6,7 +6,9 @@ import Button from '../../ui/Button';
 import { toast } from 'react-hot-toast';
 import type { Product, ProductData, ProductPortion, Category } from '../../types';
 import Input from '../../ui/Input';
+import Select from '../../ui/Select';
 import Textarea from '../../ui/Textarea';
+import { X } from 'lucide-react';
 
 interface ProductFormProps {
   product: Product | null;
@@ -80,9 +82,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     onSubmit(formData);
   };
 
+  const categoryOptions = [
+    { value: '', label: 'Без категории' },
+    ...categories.map((cat: Category) => ({ value: String(cat.id), label: cat.name })),
+  ];
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="p-1 space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
           label="Название *"
           name="name"
@@ -91,37 +98,15 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           required
           autoFocus
         />
-        <div>
-          <label htmlFor="categoryId" className="block text-sm font-medium text-foreground mb-1.5">
-            Категория
-          </label>
-          <select
-            id="categoryId"
-            name="categoryId"
-            value={formData.categoryId || ''}
-            onChange={handleChange}
-          >
-            <option value="">Без категории</option>
-            {categories.map((cat: Category) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="Категория"
+          name="categoryId"
+          value={String(formData.categoryId || '')}
+          onChange={handleChange}
+          options={categoryOptions}
+        />
       </div>
-      <div>
-        <label htmlFor="packaging" className="block text-sm font-medium text-foreground mb-1.5">
-          Упаковка
-        </label>
-        <select id="packaging" name="packaging" value={formData.packaging} onChange={handleChange}>
-          <option value="">Без упаковки</option>
-          <option value="Пакет">Пакет</option>
-          <option value="Банка">Банка</option>
-          <option value="Коробка">Коробка</option>
-          <option value="Бутылка">Бутылка</option>
-        </select>
-      </div>
+
       <Textarea
         label="Описание"
         name="description"
@@ -131,16 +116,17 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
       />
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Пищевая ценность (на 100г)
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Input
             label="Калории"
             name="calories"
             type="number"
             value={formData.calories}
             onChange={handleChange}
+            min="0"
           />
           <Input
             label="Белки"
@@ -148,6 +134,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             type="number"
             value={formData.proteins}
             onChange={handleChange}
+            min="0"
           />
           <Input
             label="Жиры"
@@ -155,6 +142,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             type="number"
             value={formData.fats}
             onChange={handleChange}
+            min="0"
           />
           <Input
             label="Углеводы"
@@ -162,25 +150,31 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
             type="number"
             value={formData.carbs}
             onChange={handleChange}
+            min="0"
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-3 p-3 bg-background rounded-md border border-input">
+      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
         <input
           id="isPerishable"
           name="isPerishable"
           type="checkbox"
           checked={formData.isPerishable}
           onChange={handleChange}
-          className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
-        <label htmlFor="isPerishable" className="text-sm font-medium text-foreground">
+        <label
+          htmlFor="isPerishable"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
           Скоропортящийся продукт
         </label>
       </div>
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Порции *</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Порции *
+        </label>
         <div className="space-y-3">
           {formData.portions.map((portion, index) => (
             <div key={index} className="flex items-center gap-2">
@@ -189,6 +183,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                 placeholder="Название (напр. 'Малая')"
                 value={portion.name}
                 onChange={(e) => handlePortionChange(index, 'name', e.target.value)}
+                containerClassName="flex-grow"
               />
               <Input
                 type="number"
@@ -196,7 +191,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                 value={portion.weight}
                 onChange={(e) => handlePortionChange(index, 'weight', e.target.value)}
                 required
-                className="w-32 flex-shrink-0"
+                min="0"
+                containerClassName="w-32 flex-shrink-0"
               />
               <Button
                 type="button"
@@ -205,7 +201,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                 onClick={() => removePortion(index)}
                 disabled={formData.portions.length <= 1}
               >
-                –
+                <X className="w-4 h-4" />
               </Button>
             </div>
           ))}
@@ -214,8 +210,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           + Добавить порцию
         </Button>
       </div>
-      <div className="flex justify-end gap-3 pt-4 border-t border-border">
-        <Button type="button" variant="ghost" onClick={onCancel}>
+      <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <Button type="button" variant="secondary" onClick={onCancel}>
           Отмена
         </Button>
         <Button type="submit" variant="primary">

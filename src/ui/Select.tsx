@@ -1,24 +1,25 @@
-// src/ui/Textarea.tsx
+// src/ui/Select.tsx
 
 import React from 'react';
 import cn from 'classnames';
 import { AlertCircle } from 'lucide-react';
 
-interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label: string;
+  options: Array<{ value: string; label: string }>;
   error?: string;
   containerClassName?: string;
 }
 
-const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   (
     {
       label,
       name,
       value,
       onChange,
-      placeholder,
-      rows = 4,
+      options,
+      required,
       error,
       disabled = false,
       containerClassName,
@@ -34,18 +35,17 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           className="block text-sm font-medium text-gray-700 dark:text-gray-300"
         >
           {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
         </label>
-        <textarea
+        <select
           id={name}
           ref={ref}
           name={name}
-          value={value || ''}
+          value={value}
           onChange={onChange}
-          placeholder={placeholder}
-          rows={rows}
           disabled={disabled}
           className={cn(
-            'w-full px-4 py-3 bg-white dark:bg-gray-700 border rounded-xl shadow-sm transition-all resize-none text-sm',
+            'w-full px-4 py-3 bg-white dark:bg-gray-700 border rounded-xl shadow-sm transition-all appearance-none cursor-pointer text-sm',
             error
               ? 'border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500'
               : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
@@ -53,7 +53,13 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             className
           )}
           {...props}
-        />
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
         {error && (
           <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
             <AlertCircle className="w-4 h-4" />
@@ -65,6 +71,6 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   }
 );
 
-Textarea.displayName = 'Textarea';
+Select.displayName = 'Select';
 
-export default Textarea;
+export default Select;

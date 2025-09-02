@@ -1,8 +1,7 @@
 // src/components/participants/ParticipantsPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { Users, UserPlus, Search, X, Filter } from 'lucide-react';
-import cn from 'classnames';
+import { Users, UserPlus, Filter } from 'lucide-react';
 import useParticipantStore from '../../stores/useParticipantStore';
 import useSearchStore from '../../stores/useSearchStore';
 import useTripStore from '../../stores/useTripStore';
@@ -18,7 +17,7 @@ const ParticipantsPage: React.FC = () => {
   const { participants, addParticipant, updateParticipant, deleteParticipant, cloneParticipant } =
     useParticipantStore();
   const { trips } = useTripStore();
-  const { searchTerm, setSearchTerm } = useSearchStore();
+  const { searchTerm } = useSearchStore();
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [filters, setFilters] = useState<ParticipantFilters>({
@@ -47,19 +46,17 @@ const ParticipantsPage: React.FC = () => {
   const filteredParticipants = useMemo(() => {
     let result = participants;
 
-    // Поиск
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase();
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(search) ||
           p.notes?.toLowerCase().includes(search) ||
-          p.phone?.toLowerCase().includes(search) ||
-          p.email?.toLowerCase().includes(search)
+          p.email?.toLowerCase().includes(search) ||
+          p.phone?.toLowerCase().includes(search)
       );
     }
 
-    // Фильтры
     result = result.filter((p) => {
       if (filters.gender !== 'all' && p.gender !== filters.gender) return false;
       if (filters.age !== 'all' && p.age !== filters.age) return false;
@@ -92,49 +89,43 @@ const ParticipantsPage: React.FC = () => {
 
   const handleFormSubmit = useCallback(
     (formData: ParticipantData) => {
-      try {
-        if (editingParticipant) {
-          updateParticipant(editingParticipant.id, formData);
-        } else {
-          addParticipant(formData);
-        }
-        setShowFormModal(false);
-        setEditingParticipant(null);
-      } catch (error) {
-        console.error('Error saving participant:', error);
+      if (editingParticipant) {
+        updateParticipant(editingParticipant.id, formData);
+      } else {
+        addParticipant(formData);
       }
+      setShowFormModal(false);
+      setEditingParticipant(null);
     },
-    [editingParticipant, updateParticipant, addParticipant]
+    [editingParticipant, addParticipant, updateParticipant]
   );
 
   const handleClone = useCallback(
     (id: number) => {
-      try {
-        cloneParticipant(id);
-      } catch (error) {
-        console.error('Error cloning participant:', error);
-      }
+      cloneParticipant(id);
     },
     [cloneParticipant]
   );
 
   const handleDelete = useCallback(
     (id: number) => {
-      if (
-        window.confirm(
-          'Вы уверены, что хотите удалить этого участника? Это действие нельзя отменить.'
-        )
-      ) {
-        try {
-          if (id === activeId) setActiveId(null);
-          deleteParticipant(id);
-        } catch (error) {
-          console.error('Error deleting participant:', error);
-        }
+      if (window.confirm('Вы уверены, что хотите удалить этого участника?')) {
+        if (id === activeId) setActiveId(null);
+        deleteParticipant(id);
       }
     },
     [activeId, deleteParticipant]
   );
+
+  const handleAddToTrip = useCallback((participantId: number) => {
+    // TODO: Implement "add to trip" modal logic
+    alert(`Добавление участника ID:${participantId} в поход...`);
+  }, []);
+
+  const handleAddEquipment = useCallback((participantId: number) => {
+    // TODO: Implement equipment functionality
+    alert(`Добавление снаряжения для участника ID:${participantId}...`);
+  }, []);
 
   const handleCloseModal = useCallback(() => {
     setShowFormModal(false);
@@ -146,140 +137,116 @@ const ParticipantsPage: React.FC = () => {
     [filters]
   );
 
-  const clearSearch = useCallback(() => {
-    setSearchTerm('');
-  }, [setSearchTerm]);
-
-  const toggleFilters = useCallback(() => {
-    setShowFilters(!showFilters);
-  }, [showFilters]);
+  const toggleFilters = useCallback(() => setShowFilters((prev) => !prev), []);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Участники</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Управление базой данных участников походов • {participants.length} участников
-            </p>
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Участники</h1>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={toggleFilters}
+              variant="secondary"
+              size="icon"
+              className="relative"
+              title={showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
+            >
+              <Filter className="w-4 h-4" />
+              {hasActiveFilters && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
+                  {Object.values(filters).filter((value) => value !== 'all').length}
+                </span>
+              )}
+            </Button>
+            <Button onClick={handleAddNew} variant="primary" size="icon" title="Добавить участника">
+              <UserPlus className="w-4 h-4" />
+            </Button>
           </div>
-          <Button onClick={handleAddNew} className="flex items-center gap-2">
-            <UserPlus className="w-4 h-4" />
-            Добавить участника
-          </Button>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Поиск участников по имени, телефону, email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            />
-            {searchTerm && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                title="Очистить поиск"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-          <button
-            onClick={toggleFilters}
-            className={cn(
-              'flex items-center gap-2 px-4 py-3 rounded-lg border transition-all',
-              showFilters || hasActiveFilters
-                ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300'
-                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400'
-            )}
-            title={showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
-          >
-            <Filter className="w-4 h-4" />
-            <span className="text-sm font-medium">Фильтры</span>
-            {hasActiveFilters && (
-              <span className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
-                {Object.values(filters).filter((value) => value !== 'all').length}
-              </span>
-            )}
-          </button>
-        </div>
-        {showFilters && (
+      {showFilters && (
+        <div className="mb-4 sm:mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
           <ParticipantFiltersComponent
             filters={filters}
             onFiltersChange={setFilters}
             stats={stats}
           />
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-320px)] min-h-[600px]">
-        {/* Left Panel - Participants List */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 h-[calc(100vh-200px)] sm:h-[calc(100vh-280px)] lg:h-[calc(100vh-320px)] min-h-[500px] sm:min-h-[600px]">
         <div className="lg:col-span-1">
-          <div className="h-full overflow-y-auto pr-2 space-y-4 custom-scrollbar">
-            {filteredParticipants.map((participant) => (
+          <div className="h-full overflow-y-auto pr-1 lg:pr-2 space-y-3 lg:space-y-4 custom-scrollbar">
+            {filteredParticipants.map((p) => (
               <ParticipantCard
-                key={participant.id}
-                participant={participant}
-                isSelected={activeId === participant.id}
+                key={p.id}
+                participant={p}
+                isSelected={activeId === p.id}
                 onSelect={setActiveId}
-                onEdit={() => handleEdit(participant)}
-                onClone={() => handleClone(participant.id)}
-                onDelete={() => handleDelete(participant.id)}
+                onEdit={() => handleEdit(p)}
+                onClone={() => handleClone(p.id)}
+                onDelete={() => handleDelete(p.id)}
+                onAddToTrip={() => handleAddToTrip(p.id)}
+                onAddEquipment={() => handleAddEquipment(p.id)}
               />
             ))}
+
             {filteredParticipants.length === 0 && (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <h3 className="text-lg font-medium mb-2">Участники не найдены</h3>
+              <div className="text-center py-8 sm:py-12 text-gray-500 dark:text-gray-400">
+                <Users className="w-10 sm:w-12 h-10 sm:h-12 mx-auto mb-2 sm:mb-3 opacity-50" />
+                <h3 className="text-base sm:text-lg font-medium mb-2">Участники не найдены</h3>
                 {searchTerm || hasActiveFilters ? (
-                  <div className="space-y-2">
-                    <p className="text-sm">Попробуйте изменить критерии поиска или фильтры</p>
-                    {searchTerm && (
-                      <button
-                        onClick={clearSearch}
-                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
-                      >
-                        Очистить поиск
-                      </button>
-                    )}
-                  </div>
+                  <p className="text-sm">Попробуйте изменить критерии поиска или фильтры.</p>
                 ) : (
-                  <div className="space-y-2">
-                    <p className="text-sm">Пока что участников нет</p>
+                  <>
+                    <p className="text-sm">Пока что участников нет.</p>
                     <Button onClick={handleAddNew} size="sm" className="mt-3">
                       <UserPlus className="w-4 h-4 mr-2" />
                       Добавить первого участника
                     </Button>
-                  </div>
+                  </>
                 )}
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Panel - Participant Detail */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 hidden lg:block">
           <div className="h-full">
             <ParticipantDetail
               participant={selectedParticipant}
+              onAddToTrip={handleAddToTrip}
+              onAddEquipment={handleAddEquipment}
               onEdit={() => selectedParticipant && handleEdit(selectedParticipant)}
             />
           </div>
         </div>
       </div>
 
-      {/* Modal */}
+      {activeId !== null && (
+        <div className="lg:hidden">
+          <Modal
+            isOpen={activeId !== null}
+            onClose={() => setActiveId(null)}
+            title={selectedParticipant?.name || 'Детали участника'}
+          >
+            <ParticipantDetail
+              participant={selectedParticipant}
+              onAddToTrip={handleAddToTrip}
+              onAddEquipment={handleAddEquipment}
+              onEdit={() => {
+                if (selectedParticipant) {
+                  handleEdit(selectedParticipant);
+                  setActiveId(null);
+                }
+              }}
+            />
+          </Modal>
+        </div>
+      )}
+
       <Modal
         isOpen={showFormModal}
         onClose={handleCloseModal}

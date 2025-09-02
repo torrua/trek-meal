@@ -6,6 +6,8 @@ import cn from 'classnames';
 import { Toaster } from 'react-hot-toast';
 import useSearchStore from '../../stores/useSearchStore';
 import ThemeSwitcher from './ThemeSwitcher';
+import Input from '../../ui/Input';
+import { Search } from 'lucide-react';
 
 const navLinkBaseClasses =
   'px-4 py-2 rounded-md cursor-pointer transition-colors duration-200 text-sm font-medium border';
@@ -119,12 +121,15 @@ const Layout: React.FC = () => {
           </NavLink>
         </nav>
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <input
+          <Input
             type="text"
             placeholder={getPlaceholder()}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             disabled={isSearchDisabled}
+            icon={Search}
+            className="py-2.5 h-10"
+            containerClassName="w-full md:w-64"
           />
           <ThemeSwitcher />
         </div>

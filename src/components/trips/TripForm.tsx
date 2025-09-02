@@ -9,6 +9,7 @@ import useParticipantStore from '../../stores/useParticipantStore';
 import Button from '../../ui/Button';
 import ThemedDatePicker from '../../ui/ThemedDatePicker';
 import Input from '../../ui/Input';
+import Select from '../../ui/Select';
 import Textarea from '../../ui/Textarea';
 import type { Trip, TripData, Participant } from '../../types';
 
@@ -47,18 +48,21 @@ const TripForm: React.FC<TripFormProps> = ({
 
   useEffect(() => {
     if (trip) {
-      const { ...rest } = trip;
+      const { id: _id, createdAt: _ca, status: _st, selectedMeals: _sm, ...rest } = trip;
       setFormData({ ...INITIAL_STATE, ...rest });
     } else {
       setFormData({ ...INITIAL_STATE, participants: initialParticipantIds });
     }
   }, [trip, initialParticipantIds]);
 
-  const handleChange = (field: keyof TripData, value: string | number) => {
-    if (field === 'name' && String(value).trim().length > 0) {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    if (name === 'name' && String(value).trim().length > 0) {
       setErrors((prev) => ({ ...prev, name: undefined }));
     }
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleParticipantToggle = (id: number) => {
@@ -86,41 +90,41 @@ const TripForm: React.FC<TripFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="p-1 space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
           label="Название похода *"
+          name="name"
           type="text"
           value={formData.name}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            handleChange('name', e.target.value)
-          }
+          onChange={handleChange}
           error={errors.name}
           autoFocus
+          required
         />
         <Input
           label="Место (регион)"
+          name="destination"
           type="text"
           value={formData.destination}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            handleChange('destination', e.target.value)
-          }
+          onChange={handleChange}
           placeholder="Например, Кавказ"
         />
       </div>
 
       <Textarea
         label="Описание"
+        name="description"
         value={formData.description}
-        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-          handleChange('description', e.target.value)
-        }
+        onChange={handleChange}
         rows={3}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
         <div className="md:col-span-6">
-          <label className="block text-sm font-medium text-foreground mb-1.5">Даты похода</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Даты похода
+          </label>
           <ThemedDatePicker
             wrapperClassName="w-full"
             selectsRange
@@ -134,56 +138,57 @@ const TripForm: React.FC<TripFormProps> = ({
         <Input
           containerClassName="md:col-span-2"
           label="Дней"
+          name="days"
           type="number"
           min="1"
           value={days}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            handleDaysChange(Number(e.target.value))
-          }
+          onChange={(e) => handleDaysChange(Number(e.target.value))}
+          required
         />
-        <div className="md:col-span-4">
-          <label className="block text-sm font-medium text-foreground mb-1.5">Сложность</label>
-          <select
-            value={formData.difficulty}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              handleChange('difficulty', e.target.value)
-            }
-          >
-            <option value="easy">Легкий</option>
-            <option value="medium">Средний</option>
-            <option value="hard">Сложный</option>
-          </select>
-        </div>
+        <Select
+          containerClassName="md:col-span-4"
+          label="Сложность"
+          name="difficulty"
+          value={formData.difficulty}
+          onChange={handleChange}
+          options={[
+            { value: 'easy', label: 'Легкий' },
+            { value: 'medium', label: 'Средний' },
+            { value: 'hard', label: 'Сложный' },
+          ]}
+        />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-1.5">Участники</label>
-        <div className="max-h-32 overflow-y-auto p-3 border border-input rounded-md space-y-2 bg-background">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          Участники
+        </label>
+        <div className="max-h-40 overflow-y-auto p-3 border border-gray-300 dark:border-gray-600 rounded-xl space-y-2 bg-white dark:bg-gray-700">
           {participants.length > 0 ? (
             participants.map((p: Participant) => (
               <label
                 key={p.id}
-                className="flex items-center gap-3 p-2 rounded-md hover:bg-muted cursor-pointer transition-colors"
+                className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors"
               >
                 <input
                   type="checkbox"
                   checked={formData.participants.includes(p.id)}
                   onChange={() => handleParticipantToggle(p.id)}
-                  className="h-4 w-4 rounded border-input text-primary focus:ring-ring bg-background"
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 bg-white dark:bg-gray-700"
                 />
-                <span className="text-sm text-foreground">{p.name}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">{p.name}</span>
               </label>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
               Сначала добавьте участников.
             </p>
           )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-4 border-t border-border">
-        <Button type="button" variant="ghost" onClick={onCancel}>
+      <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <Button type="button" variant="secondary" onClick={onCancel}>
           Отмена
         </Button>
         <Button type="submit" variant="primary">

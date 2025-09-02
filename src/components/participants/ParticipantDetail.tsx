@@ -1,55 +1,126 @@
 // src/components/participants/ParticipantDetail.tsx
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   User,
-  Baby,
   MapPin,
   Phone,
   Mail,
   Calendar,
   Clock,
-  Edit,
   Info,
   Trash2,
+  ChevronDown,
+  Backpack,
+  ExternalLink,
+  Gauge,
+  AlertTriangle,
+  Award,
+  CirclePlus,
+  Edit, // --- ИЗМЕНЕНИЕ: Импортируем иконку Edit
 } from 'lucide-react';
-import cn from 'classnames';
-import type { Participant, Trip } from '../../types';
+import type { Participant } from '../../types';
+import useTripStore from '../../stores/useTripStore';
 import { calculateAge, formatDate } from '../../utils';
 import { EXPERIENCE_CONFIG } from '../../constants/participants';
-import useTripStore from '../../stores/useTripStore';
 import Button from '../../ui/Button';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import cn from 'classnames';
+import { isFuture, parseISO } from 'date-fns';
 
 interface ParticipantDetailProps {
   participant: Participant | null;
-  onEdit: () => void;
+  onAddToTrip: (participantId: number) => void;
+  onAddEquipment: (participantId: number) => void;
+  onEdit: () => void; // --- ИЗМЕНЕНИЕ: Добавляем onEdit
 }
 
-const DIFFICULTY_MAP: { [key in Trip['difficulty']]: { text: string; className: string } } = {
-  easy: {
-    text: 'Легкий',
-    className: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-  },
-  medium: {
-    text: 'Средний',
-    className: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-  },
-  hard: {
-    text: 'Сложный',
-    className: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-  },
+const DIFFICULTY_CONFIG = {
+  easy: { color: 'bg-green-500', icon: Gauge },
+  medium: { color: 'bg-yellow-500', icon: Gauge },
+  hard: { color: 'bg-red-500', icon: Gauge },
 };
 
-const ParticipantDetail: React.FC<ParticipantDetailProps> = ({ participant, onEdit }) => {
+interface AccordionSectionProps {
+  title: string;
+  icon: React.ElementType;
+  count?: number;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+  actionButton?: React.ReactNode;
+}
+
+const AccordionSection: React.FC<AccordionSectionProps> = ({
+  title,
+  icon: Icon,
+  count,
+  isOpen,
+  onToggle,
+  children,
+  actionButton,
+}) => (
+  <div className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+    <button
+      onClick={onToggle}
+      className="w-full flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+    >
+      <div className="flex items-center gap-3">
+        <Icon className="w-5 h-5 text-blue-600" />
+        <span className="font-semibold text-gray-900 dark:text-white">{title}</span>
+        {count !== undefined && count > 0 && (
+          <span className="text-sm text-gray-500 dark:text-gray-400">• {count}</span>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        {actionButton}
+        <ChevronDown
+          className={cn('w-5 h-5 text-gray-400 transition-transform', { 'rotate-180': isOpen })}
+        />
+      </div>
+    </button>
+    <div
+      className={cn(
+        'grid transition-all duration-300 ease-in-out',
+        isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+      )}
+    >
+      <div className="overflow-hidden">
+        <div className="p-4 pt-2">{children}</div>
+      </div>
+    </div>
+  </div>
+);
+
+const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
+  participant,
+  onAddToTrip,
+  onAddEquipment,
+  onEdit, // --- ИЗМЕНЕНИЕ: Получаем onEdit
+}) => {
   const { trips, removeParticipantFromTrip } = useTripStore();
+  const navigate = useNavigate();
+  const [openSections, setOpenSections] = useState<string[]>(['data']);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{
+    show: boolean;
+    tripId: number | null;
+  }>({
+    show: false,
+    tripId: null,
+  });
+
+  useEffect(() => {
+    if (participant) {
+      setOpenSections(['data']);
+    }
+  }, [participant]);
 
   if (!participant) {
     return (
       <div className="h-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
         <div className="text-center">
-          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Users className="w-10 h-10 text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -64,190 +135,316 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({ participant, onEd
   }
 
   const experienceInfo = EXPERIENCE_CONFIG[participant.experienceLevel];
-  const age = calculateAge(participant.birthDate);
-  const isChild = participant.age === 'child';
   const participantTrips = trips.filter((trip) => trip.participants.includes(participant.id));
+
+  const sortedTrips = participantTrips.sort((a, b) => {
+    const dateA = parseISO(a.startDate);
+    const dateB = parseISO(b.startDate);
+    const isAFuture = isFuture(dateA);
+    const isBFuture = isFuture(b.startDate);
+
+    if (isAFuture && !isBFuture) return -1;
+    if (!isAFuture && isBFuture) return 1;
+    if (isAFuture && isBFuture) return dateA.getTime() - dateB.getTime();
+    return dateB.getTime() - dateA.getTime();
+  });
 
   const handleRemoveFromTrip = (e: React.MouseEvent, tripId: number) => {
     e.preventDefault();
     e.stopPropagation();
-    if (window.confirm('Удалить участника из этого похода?')) {
-      removeParticipantFromTrip(tripId, participant.id);
+    setShowDeleteConfirm({ show: true, tripId });
+  };
+
+  const confirmRemoveFromTrip = () => {
+    if (showDeleteConfirm.tripId && participant) {
+      removeParticipantFromTrip(showDeleteConfirm.tripId, participant.id);
+      setShowDeleteConfirm({ show: false, tripId: null });
     }
+  };
+
+  const cancelRemoveFromTrip = () => {
+    setShowDeleteConfirm({ show: false, tripId: null });
+  };
+
+  const handleToggleSection = (sectionId: string) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
   };
 
   return (
     <div className="h-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center flex-shrink-0">
-              {isChild ? (
-                <Baby className="w-8 h-8 text-white" />
-              ) : (
-                <User className="w-8 h-8 text-white" />
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <AccordionSection
+          title="Данные"
+          icon={User}
+          isOpen={openSections.includes('data')}
+          onToggle={() => handleToggleSection('data')}
+          // --- ИЗМЕНЕНИЕ: Добавляем кнопку "Редактировать" ---
+          actionButton={
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+              title="Редактировать данные"
+            >
+              <Edit className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            </button>
+          }
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <Award className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 flex-shrink-0" />
+                <div>
+                  <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+                    Опыт
+                  </p>
+                  <p
+                    className={cn(
+                      'text-sm sm:text-base font-semibold',
+                      experienceInfo.className.replace(
+                        /bg-\w+-50|border-\w+-200|dark:bg-\w+-900\/30|dark:border-\w+-700/g,
+                        ''
+                      )
+                    )}
+                  >
+                    {experienceInfo.label}
+                  </p>
+                </div>
+              </div>
+              {participant.birthDate && (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <Calendar className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+                      Дата рождения
+                    </p>
+                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+                      {formatDate(participant.birthDate)}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {participant.phone && (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <Phone className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+                      Телефон
+                    </p>
+                    <a
+                      href={`tel:${participant.phone}`}
+                      className="text-sm sm:text-base text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors break-all"
+                    >
+                      {participant.phone}
+                    </a>
+                  </div>
+                </div>
+              )}
+              {participant.email && (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <Mail className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
+                      Email
+                    </p>
+                    <a
+                      href={`mailto:${participant.email}`}
+                      className="text-sm sm:text-base text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors break-all"
+                    >
+                      {participant.email}
+                    </a>
+                  </div>
+                </div>
               )}
             </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 truncate">
-                {participant.name}
-              </h2>
-              <div className="flex items-center gap-3 mb-2 flex-wrap">
-                <span className="text-gray-600 dark:text-gray-300">
-                  {age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}
-                </span>
-                <span
-                  className={cn(
-                    'px-3 py-1 rounded-full text-sm font-medium border',
-                    experienceInfo.className
-                  )}
-                >
-                  {experienceInfo.label}
-                </span>
-              </div>
-            </div>
-          </div>
-          <Button onClick={onEdit} className="flex items-center gap-2 flex-shrink-0">
-            <Edit className="w-4 h-4" />
-            Изменить
-          </Button>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-        {/* Contact Information */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <User className="w-5 h-5 text-blue-600" />
-            Контактная информация
-          </h3>
-          <div className="grid grid-cols-1 gap-4">
-            {participant.phone && (
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <Phone className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">Телефон</p>
-                  <a
-                    href={`tel:${participant.phone}`}
-                    className="text-gray-600 dark:text-gray-300 hover:underline break-all"
-                  >
-                    {participant.phone}
-                  </a>
-                </div>
-              </div>
-            )}
-            {participant.email && (
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <Mail className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">Email</p>
-                  <a
-                    href={`mailto:${participant.email}`}
-                    className="text-gray-600 dark:text-gray-300 break-all hover:underline"
-                  >
-                    {participant.email}
-                  </a>
-                </div>
-              </div>
-            )}
-            {participant.birthDate && (
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <Calendar className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">Дата рождения</p>
-                  <p className="text-gray-600 dark:text-gray-300">
-                    {formatDate(participant.birthDate)}
+            {participant.notes && (
+              <div>
+                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Info className="w-5 h-5" />
+                  Заметки
+                </h4>
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                    {participant.notes}
                   </p>
                 </div>
               </div>
             )}
-            {!participant.phone && !participant.email && !participant.birthDate && (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <p>Контактная информация не указана</p>
-              </div>
-            )}
           </div>
-        </div>
+        </AccordionSection>
 
-        {/* Notes */}
-        {participant.notes && (
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Info className="w-5 h-5 text-blue-600" />
-              Заметки
-            </h3>
-            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                {participant.notes}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Trips */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-blue-600" />
-            Походы ({participantTrips.length})
-          </h3>
+        <AccordionSection
+          title="Походы"
+          icon={MapPin}
+          count={participantTrips.length}
+          isOpen={openSections.includes('trips')}
+          onToggle={() => handleToggleSection('trips')}
+          actionButton={
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToTrip(participant.id);
+              }}
+              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+              title="Добавить в поход"
+            >
+              <CirclePlus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            </button>
+          }
+        >
           {participantTrips.length > 0 ? (
             <div className="space-y-3">
-              {participantTrips.map((trip) => (
-                <Link
-                  to={`/trips/${trip.id}`}
-                  key={trip.id}
-                  className="block p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group/trip relative"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-1 truncate">
-                        {trip.name}
-                      </h4>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 flex-wrap">
-                        <Clock className="w-4 h-4 flex-shrink-0" />
-                        <span>{formatDate(trip.startDate)}</span>
-                        {trip.destination && (
-                          <>
-                            <span>•</span>
-                            <MapPin className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate">{trip.destination}</span>
-                          </>
-                        )}
+              {sortedTrips.map((trip) => {
+                const isUpcoming = isFuture(parseISO(trip.startDate));
+                const difficultyConfig = DIFFICULTY_CONFIG[trip.difficulty];
+
+                return (
+                  <div
+                    key={trip.id}
+                    className="group/trip relative p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                  >
+                    <div className="absolute top-3 right-3 z-10 opacity-0 group-hover/trip:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1">
+                        <button
+                          onClick={() => navigate(`/trips/${trip.id}`)}
+                          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                          title="Открыть поход"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
+                        </button>
+                        <button
+                          onClick={(e) => handleRemoveFromTrip(e, trip.id)}
+                          className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-md transition-colors"
+                          title="Удалить участника из этого похода"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span
-                        className={cn(
-                          'px-3 py-1.5 rounded-full text-xs font-medium',
-                          DIFFICULTY_MAP[trip.difficulty].className
+
+                    <div className="pr-16">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div
+                          className={cn(
+                            'w-4 h-4 rounded flex items-center justify-center',
+                            difficultyConfig.color
+                          )}
+                        >
+                          <Gauge className="w-2.5 h-2.5 text-white" />
+                        </div>
+                        <h4 className="font-medium text-gray-900 dark:text-white truncate flex-1">
+                          {trip.name}
+                        </h4>
+                        {isUpcoming && (
+                          <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">
+                            Предстоящий
+                          </span>
                         )}
-                      >
-                        {DIFFICULTY_MAP[trip.difficulty].text}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => handleRemoveFromTrip(e, trip.id)}
-                        className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 opacity-0 group-hover/trip:opacity-100 transition-all"
-                        title="Удалить участника из этого похода"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-sm text-gray-600 dark:text-gray-300">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          {trip.startDate && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4 flex-shrink-0" />
+                              <span>{formatDate(trip.startDate)}</span>
+                            </div>
+                          )}
+                          {trip.destination && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4 flex-shrink-0" />
+                              <span className="truncate">{trip.destination}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Users className="w-4 h-4 flex-shrink-0" />
+                            <span>{trip.participants.length} чел.</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <MapPin className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>Участник не записан в походы.</p>
+              <MapPin className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="font-medium mb-1">Участник не записан в походы</p>
+              <p className="text-xs">
+                Добавьте участника в поход, нажав &ldquo;+&rdquo; в заголовке
+              </p>
             </div>
           )}
-        </div>
+        </AccordionSection>
+
+        <AccordionSection
+          title="Снаряжение"
+          icon={Backpack}
+          isOpen={openSections.includes('equipment')}
+          onToggle={() => handleToggleSection('equipment')}
+          actionButton={
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddEquipment(participant.id);
+              }}
+              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+              title="Добавить снаряжение"
+            >
+              <CirclePlus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            </button>
+          }
+        >
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <Backpack className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p className="font-medium mb-1">Снаряжение не добавлено</p>
+            <p className="text-xs">Эта функция находится в разработке</p>
+          </div>
+        </AccordionSection>
       </div>
+
+      {showDeleteConfirm.show && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 max-w-sm sm:max-w-md w-full shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-4 sm:w-5 h-4 sm:h-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+                  Удалить участника
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                  Это действие нельзя отменить
+                </p>
+              </div>
+            </div>
+            <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-4 sm:mb-6">
+              Вы уверены, что хотите удалить участника из этого похода?
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+              <Button
+                variant="ghost"
+                onClick={cancelRemoveFromTrip}
+                className="px-4 py-2 order-2 sm:order-1"
+              >
+                Отмена
+              </Button>
+              <Button
+                onClick={confirmRemoveFromTrip}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white order-1 sm:order-2"
+              >
+                Удалить
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

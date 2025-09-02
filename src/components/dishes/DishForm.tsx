@@ -1,13 +1,15 @@
 // src/components/dishes/DishForm.tsx
 
 import React, { useState, useEffect } from 'react';
-import { SingleValue } from 'react-select'; // <-- ИСПРАВЛЕНИЕ: Добавляем импорт
+import { SingleValue } from 'react-select';
 import ThemedSelect from '../../ui/ThemedSelect';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
 import Button from '../../ui/Button';
+import Input from '../../ui/Input';
 import type { Dish, DishData, DishProduct, Product, SubmitDishAction } from '../../types';
 import { toast } from 'react-hot-toast';
+import { X } from 'lucide-react';
 
 interface DishFormProps {
   dish: Dish | null;
@@ -28,10 +30,9 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
   const { dishes } = useDishStore();
 
   useEffect(() => {
-    // --- ИСПРАВЛЕНИЕ БАГА С МУТАЦИЕЙ ---
     const initializeState = (sourceDish: Dish, isCloning: boolean) => {
       setName(sourceDish.name + (isCloning ? ' (копия)' : ''));
-      // Создаем ГЛУБОКУЮ копию массива, чтобы избежать мутации оригинала
+      // --- ИСПРАВЛЕНИЕ: Глубокое копирование для предотвращения мутации ---
       setProducts(JSON.parse(JSON.stringify(sourceDish.products)));
     };
 
@@ -109,19 +110,18 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
   };
 
   return (
-    <div className="space-y-4">
+    <div className="p-1 space-y-6">
+      <Input
+        label="Название блюда *"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        required
+        autoFocus
+      />
       <div>
-        <label className="block text-sm font-medium mb-1">Название блюда *</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className="w-full px-3 py-2 border border-primary rounded-md"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-secondary-foreground mb-2">Состав *</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Состав *
+        </label>
         <div className="space-y-3">
           {products.map((p, index) => {
             const selectedProduct = allProducts.find((prod: Product) => prod.id === p.productId);
@@ -149,21 +149,22 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
                   isDisabled={!selectedProduct}
                   className="w-48"
                 />
-                <input
+                <Input
                   type="number"
                   value={p.weight || ''}
                   onChange={(e) => handleWeightChange(index, e.target.value)}
                   required
-                  className="w-24 px-3 py-2 border border-primary rounded-md"
+                  min="0"
+                  className="w-24 text-center"
                   placeholder="Вес (г)"
                 />
                 <Button
                   type="button"
                   variant="danger"
+                  size="icon"
                   onClick={() => removeProductField(index)}
-                  className="!px-3 !py-2"
                 >
-                  –
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
             );
@@ -174,8 +175,8 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
         </Button>
       </div>
 
-      <div className="flex justify-end gap-3 pt-4 border-t">
-        <Button type="button" variant="ghost" onClick={onCancel}>
+      <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <Button type="button" variant="secondary" onClick={onCancel}>
           Отмена
         </Button>
         {dishToClone ? (

@@ -4,9 +4,9 @@ import React, { useState, useMemo } from 'react';
 import useCategoryStore from '../../stores/useCategoryStore';
 import useSearchStore from '../../stores/useSearchStore';
 import type { Category, CategoryData } from '../../types';
-
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
+import Input from '../../ui/Input';
 import ConfirmModal from '../../ui/ConfirmModal';
 import CategoryCard from './CategoryCard';
 
@@ -29,40 +29,37 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-[auto_1fr] gap-4 items-end">
-        <div>
-          <label className="block text-sm font-medium mb-1">Эмодзи</label>
-          <input
-            type="text"
-            value={emoji}
-            onChange={(e) => setEmoji(e.target.value)}
-            className="w-20 h-10 text-2xl text-center px-3 py-2 border border-primary rounded-md"
-            maxLength={2}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Название категории</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full h-10 px-3 py-2 border border-primary rounded-md"
-          />
-        </div>
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-1">Цвет</label>
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-          className="w-full h-10 border border-primary rounded-md p-1"
+    <form onSubmit={handleSubmit} className="p-1 space-y-6">
+      <Input
+        label="Название категории *"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        required
+        autoFocus
+        placeholder="Например, Крупы и макароны"
+      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <Input
+          label="Эмодзи"
+          value={emoji}
+          onChange={(e) => setEmoji(e.target.value)}
+          placeholder="🌾"
+          maxLength={2}
         />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            Цвет
+          </label>
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="w-full h-[50px] border border-gray-300 dark:border-gray-600 rounded-xl p-1 bg-white dark:bg-gray-700"
+          />
+        </div>
       </div>
-      <div className="flex justify-end gap-3 pt-4">
-        <Button type="button" variant="ghost" onClick={onCancel}>
+      <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <Button type="button" variant="secondary" onClick={onCancel}>
           Отмена
         </Button>
         <Button type="submit">{category ? 'Сохранить' : 'Добавить'}</Button>
@@ -106,9 +103,8 @@ function CategoriesPage() {
     handleCloseModal();
   };
 
-  // --- ИЗМЕНЕНИЕ ---
   const handleRequestDelete = (e: React.MouseEvent, category: Category) => {
-    e.stopPropagation(); // Останавливаем всплытие, чтобы не открылась модалка редактирования
+    e.stopPropagation();
     setCategoryToDelete(category);
   };
 
@@ -139,7 +135,6 @@ function CategoriesPage() {
               key={cat.id}
               category={cat}
               onEdit={() => handleOpenModal(cat)}
-              // --- ИЗМЕНЕНИЕ ---
               onDelete={(e) => handleRequestDelete(e, cat)}
             />
           ))}

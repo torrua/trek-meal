@@ -20,26 +20,24 @@ import type {
   Product,
   Dish,
   DishData,
-  Participant,
   MealPlanItem,
   Category,
   SubmitDishAction,
 } from '../../types';
 
-type SelectParticipantOption = { value: number; label: string };
 type SelectMealOption = { value: string; label: string };
 type GroupedMealOption = { label: string; options: SelectMealOption[] };
 type CloningState = {
   instanceId: string;
   dish: Dish;
-  mealId: string; // <-- Нам нужно знать, в какой прием пищи добавлять
+  mealId: string;
 } | null;
 
 const DishContents = ({ dish }: { dish: Dish }) => {
   const { products: allProducts } = useProductStore();
   const { categories } = useCategoryStore();
   return (
-    <ul className="text-xs text-secondary-foreground pl-5 mt-1 space-y-0.5">
+    <ul className="text-xs text-muted-foreground pl-5 mt-1 space-y-0.5">
       {dish.products.map((p) => {
         const product = allProducts.find((ap) => ap.id === p.productId);
         const category = product
@@ -102,14 +100,6 @@ function TripPlanningPage() {
     if (productOptions.length > 0) options.push({ label: 'Продукты', options: productOptions });
     return options;
   }, [products, dishes]);
-
-  const availableParticipantsOptions: SelectParticipantOption[] = useMemo(
-    () =>
-      participants
-        .filter((p: Participant) => !trip?.participants.includes(p.id))
-        .map((p: Participant) => ({ value: p.id, label: p.name })),
-    [participants, trip]
-  );
 
   const handleMealItemAdd = (mealId: string, selectedOption: SingleValue<SelectMealOption>) => {
     if (!trip || !selectedOption) return;
@@ -185,7 +175,6 @@ function TripPlanningPage() {
         updateTrip(trip.id, { selectedMeals: newSelectedMeals });
       }
     } else if (action === 'add_as_new') {
-      // --- ИСПРАВЛЕНИЕ: Добавляем новое блюдо в текущий прием пищи ---
       const mealId = cloningState.mealId;
       const newItem: MealPlanItem = {
         instanceId: `${Date.now()}`,
@@ -205,20 +194,9 @@ function TripPlanningPage() {
     setExpandedDishes((prev) => ({ ...prev, [instanceId]: !prev[instanceId] }));
   };
 
-  // При первом рендере разворачиваем первый день
   useEffect(() => {
     setExpandedDays({ 0: true });
   }, []);
-
-  const handleParticipantAdd = (selectedOption: SingleValue<SelectParticipantOption>) => {
-    if (!trip || !selectedOption) return;
-    updateTrip(trip.id, { participants: [...trip.participants, selectedOption.value] });
-  };
-
-  const handleParticipantRemove = (participantId: number) => {
-    if (!trip) return;
-    updateTrip(trip.id, { participants: trip.participants.filter((id) => id !== participantId) });
-  };
 
   const handleDetailsUpdate = (formData: TripData) => {
     if (!trip) return;
@@ -265,7 +243,7 @@ function TripPlanningPage() {
           {Array.from({ length: trip.days }).map((_, dayIndex) => (
             <div key={dayIndex} className="border rounded-lg">
               <button
-                className="w-full p-3 bg-muted font-bold border-b flex justify-between items-center hover:bg-muted transition-all group"
+                className="w-full p-3 bg-muted font-bold border-b flex justify-between items-center hover:bg-muted/80 transition-all group"
                 onClick={() =>
                   setExpandedDays((prev) => ({ ...prev, [dayIndex]: !prev[dayIndex] }))
                 }
@@ -274,7 +252,7 @@ function TripPlanningPage() {
                 <svg
                   className={`w-5 h-5 text-muted-foreground transition-transform duration-200 transform ${
                     expandedDays[dayIndex] ? 'rotate-180' : ''
-                  } group-hover:text-secondary`}
+                  } group-hover:text-foreground`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -351,7 +329,6 @@ function TripPlanningPage() {
                                 );
                               }
                             } else {
-                              // item.type === 'product'
                               const product = products.find((p) => p.id === item.itemId);
                               content = (
                                 <div className="flex items-center justify-between">
@@ -370,7 +347,7 @@ function TripPlanningPage() {
                             return (
                               <div
                                 key={item.instanceId}
-                                className="text-sm p-1.5 bg-blue-50 rounded"
+                                className="text-sm p-1.5 bg-card-foreground/5 dark:bg-card-foreground/10 rounded"
                               >
                                 {content}
                               </div>
@@ -384,8 +361,8 @@ function TripPlanningPage() {
                           value={null}
                           formatGroupLabel={(data) => (
                             <div className="flex items-center justify-between">
-                              <span className="font-bold text-secondary">{data.label}</span>
-                              <span className="text-xs bg-gray-200 text-secondary-foreground rounded-full px-1.5">
+                              <span className="font-bold text-foreground">{data.label}</span>
+                              <span className="text-xs bg-muted text-muted-foreground rounded-full px-1.5">
                                 {data.options.length}
                               </span>
                             </div>
@@ -403,7 +380,7 @@ function TripPlanningPage() {
         <div className="space-y-6">
           <section>
             <h3 className="text-xl font-semibold">Сводка</h3>
-            <div className="p-4 mt-2 border rounded-lg bg-secondary">
+            <div className="p-4 mt-2 border rounded-lg bg-card">
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
                   <div className="text-xl font-bold text-blue-600">
@@ -429,41 +406,6 @@ function TripPlanningPage() {
                   </div>
                   <div className="text-xs text-muted-foreground uppercase">ккал/чел/день</div>
                 </div>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h3 className="text-xl font-semibold">Участники ({summary.tripParticipants.length})</h3>
-            <div className="space-y-2 mt-2">
-              <ThemedSelect
-                options={availableParticipantsOptions}
-                onChange={handleParticipantAdd}
-                placeholder="Добавить участника..."
-                value={null}
-                noOptionsMessage={() => 'Все участники уже в походе'}
-              />
-              <div className="p-4 border rounded-lg bg-secondary space-y-1">
-                {summary.tripParticipants.length > 0 ? (
-                  summary.tripParticipants.map((p) => (
-                    <div
-                      key={p.id}
-                      className="flex justify-between items-center text-sm p-1.5 bg-muted rounded"
-                    >
-                      <span>{p.name}</span>
-                      <button
-                        onClick={() => handleParticipantRemove(p.id)}
-                        className="text-red-500 hover:text-red-700 font-bold px-2"
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-2">
-                    Добавьте участников
-                  </p>
-                )}
               </div>
             </div>
           </section>

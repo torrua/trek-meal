@@ -7,13 +7,13 @@ import type { Trip, TripData, MealPlanItem } from '../types';
 
 interface TripState {
   trips: Trip[];
-  addTrip: (data: TripData) => Trip;
+  addTrip: (data: TripData) => Trip | undefined;
   deleteTrip: (id: number) => void;
   updateTrip: (id: number, data: Partial<Trip>) => void;
   removeParticipantFromAllTrips: (participantId: number) => void;
   isDishInUse: (dishId: number) => boolean;
   addParticipantsToTrip: (tripId: number, participantIds: number[]) => void;
-  removeParticipantFromTrip: (tripId: number, participantId: number) => void;
+  removeParticipantFromTrip: (tripId: number, participantId: number) => void; // --- НОВАЯ ФУНКЦИЯ ---
 }
 
 const useTripStore = create<TripState>()(
@@ -21,6 +21,7 @@ const useTripStore = create<TripState>()(
     (set, get) => ({
       trips: [],
 
+      // --- НОВАЯ ФУНКЦИЯ ---
       removeParticipantFromTrip: (tripId, participantId) => {
         const trip = get().trips.find((t) => t.id === tripId);
         if (!trip) {

@@ -6,7 +6,7 @@ import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
 import useDishStore from '../stores/useDishStore';
 import useCategoryStore from '../stores/useCategoryStore';
-import type { Participant } from '../types';
+import type { Participant, Trip } from '../types';
 
 /**
  * Собирает данные из всех хранилищ и экспортирует их в JSON файл.
@@ -113,6 +113,32 @@ export const exportParticipantToJson = (participant: Participant) => {
     toast.success(`Данные участника "${participant.name}" экспортированы!`);
   } catch (error) {
     console.error('Ошибка при экспорте данных участника:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует данные одного похода в JSON файл.
+ * @param trip - Объект похода для экспорта.
+ */
+export const exportTripToJson = (trip: Trip) => {
+  try {
+    const jsonString = JSON.stringify(trip, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = trip.name.replace(/\s+/g, '-').toLowerCase();
+    a.download = `trip-${safeName}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Данные похода "${trip.name}" экспортированы!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте данных похода:', error);
     toast.error('Произошла ошибка при экспорте.');
   }
 };

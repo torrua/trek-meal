@@ -1,6 +1,7 @@
 // src/components/participants/ParticipantsPage.tsx
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Users, UserPlus, Filter } from 'lucide-react';
 import useParticipantStore from '../../stores/useParticipantStore';
 import useSearchStore from '../../stores/useSearchStore';
@@ -19,6 +20,7 @@ const ParticipantsPage: React.FC = () => {
     useParticipantStore();
   const { trips } = useTripStore();
   const { searchTerm } = useSearchStore();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [filters, setFilters] = useState<ParticipantFilters>({
@@ -30,6 +32,18 @@ const ParticipantsPage: React.FC = () => {
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    const selectedId = searchParams.get('selectedId');
+    if (selectedId) {
+      const participantExists = participants.some((p) => p.id === Number(selectedId));
+      if (participantExists) {
+        setActiveId(Number(selectedId));
+        // Очищаем search param после использования, чтобы URL был чистым
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, participants, setSearchParams]);
 
   const filteredParticipants = useMemo(() => {
     let result = participants;

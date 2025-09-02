@@ -1,7 +1,8 @@
 // src/components/participants/ParticipantCard.tsx
 
 import React, { useState } from 'react';
-import { Copy, Trash2, Baby, User, MapPin, Backpack, Edit } from 'lucide-react';
+// --- ИЗМЕНЕНИЕ: 'Edit' удален из импорта ---
+import { Copy, Trash2, Baby, User, MapPin, Backpack } from 'lucide-react';
 import cn from 'classnames';
 import type { Participant } from '../../types';
 import { calculateAge } from '../../utils';
@@ -23,7 +24,6 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   participant,
   isSelected,
   onSelect,
-  onEdit,
   onClone,
   onDelete,
 }) => {
@@ -36,7 +36,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   const participantTrips = trips.filter((trip) => trip.participants.includes(participant.id));
 
   const tripCount = participantTrips.length;
-  const equipmentCount = 0;
+  const equipmentCount = 0; // Заглушка, пока функционал не реализован
 
   const ExperienceIcon = experienceInfo.icon;
 
@@ -59,7 +59,6 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
         )}
       >
         <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1">
-          {/* --- ИЗМЕНЕНИЕ: Кнопка "Редактировать" удалена --- */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -85,6 +84,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
       <div className="p-3">
         <div className="flex items-center gap-3">
+          {/* Аватар */}
           <div
             className={cn(
               'flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center p-0.5',
@@ -99,28 +99,32 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
               )}
             </div>
           </div>
+          {/* Информационный блок */}
           <div className="min-w-0 flex-1">
+            {/* Верхняя строка */}
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-gray-900 dark:text-white truncate">
                 {participant.name}
               </h3>
               <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+              <p className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+                {age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}
+              </p>
+            </div>
+
+            {/* Нижняя строка */}
+            <div className="flex items-center gap-3 mt-1.5 text-sm text-gray-500 dark:text-gray-400">
               <div title={`Опыт: ${experienceInfo.label}`}>
                 <ExperienceIcon className={cn('w-4 h-4', experienceInfo.colorClassName)} />
               </div>
               <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}
-              </p>
-            </div>
-            <div className="flex items-center gap-3 mt-1.5 text-sm text-gray-500 dark:text-gray-400">
               <div className="flex items-center gap-1.5" title="Походы">
-                <MapPin className="w-3.5 h-3.5" />
+                <MapPin className="w-4 h-4" />
                 <span className="font-medium">{tripCount}</span>
               </div>
               <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
               <div className="flex items-center gap-1.5" title="Снаряжение">
-                <Backpack className="w-3.5 h-3.5" />
+                <Backpack className="w-4 h-4" />
                 <span className="font-medium">{equipmentCount}</span>
               </div>
             </div>

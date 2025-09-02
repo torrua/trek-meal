@@ -20,7 +20,7 @@ export interface ParticipantFilters {
 interface ParticipantFiltersProps {
   filters: ParticipantFilters;
   onFiltersChange: (filters: ParticipantFilters) => void;
-  stats: { [key: string]: number };
+  // --- ИЗМЕНЕНИЕ: 'stats' удален ---
 }
 
 interface FilterOption {
@@ -113,9 +113,9 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
 const ParticipantFiltersComponent: React.FC<ParticipantFiltersProps> = ({
   filters,
   onFiltersChange,
-  stats,
 }) => {
-  const handleFilterChange = (filterKey: keyof ParticipantFilters, value: any) => {
+  // --- ИЗМЕНЕНИЕ: Тип 'any' заменен на 'string' ---
+  const handleFilterChange = (filterKey: keyof ParticipantFilters, value: string) => {
     onFiltersChange({ ...filters, [filterKey]: value });
   };
 
@@ -140,7 +140,6 @@ const ParticipantFiltersComponent: React.FC<ParticipantFiltersProps> = ({
         )}
       </div>
 
-      {/* --- ИЗМЕНЕНИЕ: Используем flex-wrap для адаптивности --- */}
       <div className="flex flex-wrap gap-3 sm:gap-4">
         <FilterDropdown
           label="Пол"

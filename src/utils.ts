@@ -1,6 +1,7 @@
 // src/utils.ts
 
-import { parseISO, differenceInYears } from 'date-fns';
+// --- ИЗМЕНЕНИЕ: 'differenceInYears' удален ---
+import { parseISO } from 'date-fns';
 import type { Trip, Product, Participant, Dish, MealPlanItem } from './types';
 
 export const calculateAge = (birthDateString?: string): number | null => {

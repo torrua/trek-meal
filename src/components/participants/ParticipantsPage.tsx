@@ -30,19 +30,6 @@ const ParticipantsPage: React.FC = () => {
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  const stats = useMemo(
-    () => ({
-      adults: participants.filter((p) => p.age === 'adult').length,
-      children: participants.filter((p) => p.age === 'child').length,
-      withTrips: participants.filter((p) => trips.some((trip) => trip.participants.includes(p.id)))
-        .length,
-      withoutTrips: participants.filter(
-        (p) => !trips.some((trip) => trip.participants.includes(p.id))
-      ).length,
-    }),
-    [participants, trips]
-  );
-
   const filteredParticipants = useMemo(() => {
     let result = participants;
 
@@ -168,11 +155,8 @@ const ParticipantsPage: React.FC = () => {
 
       {showFilters && (
         <div className="mb-4 sm:mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
-          <ParticipantFiltersComponent
-            filters={filters}
-            onFiltersChange={setFilters}
-            stats={stats}
-          />
+          {/* --- ИЗМЕНЕНИЕ: 'stats' больше не передается --- */}
+          <ParticipantFiltersComponent filters={filters} onFiltersChange={setFilters} />
         </div>
       )}
 

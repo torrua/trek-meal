@@ -18,11 +18,11 @@ import {
   AlertTriangle,
   Award,
   CirclePlus,
-  Edit, // --- ИЗМЕНЕНИЕ: Импортируем иконку Edit
+  Edit,
 } from 'lucide-react';
 import type { Participant } from '../../types';
 import useTripStore from '../../stores/useTripStore';
-import { calculateAge, formatDate } from '../../utils';
+import { formatDate } from '../../utils';
 import { EXPERIENCE_CONFIG } from '../../constants/participants';
 import Button from '../../ui/Button';
 import { useNavigate } from 'react-router-dom';
@@ -33,7 +33,7 @@ interface ParticipantDetailProps {
   participant: Participant | null;
   onAddToTrip: (participantId: number) => void;
   onAddEquipment: (participantId: number) => void;
-  onEdit: () => void; // --- ИЗМЕНЕНИЕ: Добавляем onEdit
+  onEdit: () => void;
 }
 
 const DIFFICULTY_CONFIG = {
@@ -97,7 +97,7 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
   participant,
   onAddToTrip,
   onAddEquipment,
-  onEdit, // --- ИЗМЕНЕНИЕ: Получаем onEdit
+  onEdit,
 }) => {
   const { trips, removeParticipantFromTrip } = useTripStore();
   const navigate = useNavigate();
@@ -180,7 +180,6 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
           icon={User}
           isOpen={openSections.includes('data')}
           onToggle={() => handleToggleSection('data')}
-          // --- ИЗМЕНЕНИЕ: Добавляем кнопку "Редактировать" ---
           actionButton={
             <button
               onClick={(e) => {
@@ -375,9 +374,8 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <MapPin className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p className="font-medium mb-1">Участник не записан в походы</p>
-              <p className="text-xs">
-                Добавьте участника в поход, нажав &ldquo;+&rdquo; в заголовке
-              </p>
+              {/* --- ИЗМЕНЕНИЕ: Исправлена ошибка с кавычками --- */}
+              <p className="text-xs">{'Добавьте участника в поход, нажав "+" в заголовке'}</p>
             </div>
           )}
         </AccordionSection>
@@ -403,7 +401,8 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <Backpack className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p className="font-medium mb-1">Снаряжение не добавлено</p>
-            <p className="text-xs">Эта функция находится в разработке</p>
+            {/* --- ИЗМЕНЕНИЕ: Исправлена ошибка с кавычками (превентивно) --- */}
+            <p className="text-xs">{'Эта функция находится в разработке'}</p>
           </div>
         </AccordionSection>
       </div>

@@ -50,9 +50,9 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
           notes: '',
         };
 
-    // Удаляем id из данных формы
+    // --- ИЗМЕНЕНИЕ: Переименовываем 'id' в '_id' ---
     if ('id' in dataToSet) {
-      const { id, ...formDataWithoutId } = dataToSet as Participant;
+      const { id: _id, ...formDataWithoutId } = dataToSet as Participant;
       setFormData(formDataWithoutId);
       setInitialData(formDataWithoutId);
     } else {
@@ -106,7 +106,6 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Очищаем ошибку для этого поля при изменении
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }

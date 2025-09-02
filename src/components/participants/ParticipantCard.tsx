@@ -1,12 +1,11 @@
 // src/components/participants/ParticipantCard.tsx
 
 import React, { useState } from 'react';
-// --- ИЗМЕНЕНИЕ: 'Edit' удален из импорта ---
-import { Copy, Trash2, Baby, User, MapPin, Backpack } from 'lucide-react';
+import { Copy, Trash2, MapPin, Backpack, Share } from 'lucide-react';
 import cn from 'classnames';
 import type { Participant } from '../../types';
 import { calculateAge } from '../../utils';
-import { EXPERIENCE_CONFIG } from '../../constants/participants';
+import { EXPERIENCE_CONFIG, GENDER_CONFIG } from '../../constants/participants';
 import useTripStore from '../../stores/useTripStore';
 
 interface ParticipantCardProps {
@@ -18,6 +17,7 @@ interface ParticipantCardProps {
   onDelete: () => void;
   onAddToTrip: () => void;
   onAddEquipment: () => void;
+  onExport: () => void;
 }
 
 const ParticipantCard: React.FC<ParticipantCardProps> = ({
@@ -26,26 +26,30 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   onSelect,
   onClone,
   onDelete,
+  onExport,
 }) => {
   const [showActions, setShowActions] = useState(false);
   const { trips } = useTripStore();
 
   const experienceInfo = EXPERIENCE_CONFIG[participant.experienceLevel];
+  const genderInfo = GENDER_CONFIG[participant.gender];
   const age = calculateAge(participant.birthDate);
   const isChild = participant.age === 'child';
   const participantTrips = trips.filter((trip) => trip.participants.includes(participant.id));
 
   const tripCount = participantTrips.length;
-  const equipmentCount = 0; // Заглушка, пока функционал не реализован
+  const equipmentCount = 0;
 
   const ExperienceIcon = experienceInfo.icon;
 
   return (
     <div
       className={cn(
-        'group relative bg-white dark:bg-gray-800 rounded-xl border transition-all duration-200 hover:shadow-lg cursor-pointer',
+        'group relative bg-white dark:bg-gray-800 rounded-lg border transition-all duration-200 hover:shadow-lg cursor-pointer',
+        'border-l-4',
+        genderInfo.borderClassName,
         isSelected
-          ? 'border-blue-400 shadow-blue-100 dark:shadow-blue-900/20 shadow-lg ring-1 ring-blue-400/30 dark:ring-blue-500/30'
+          ? 'border-blue-400 shadow-blue-100 dark:shadow-blue-900/20 shadow-lg'
           : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
       )}
       onClick={() => onSelect(participant.id)}
@@ -59,6 +63,16 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
         )}
       >
         <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onExport();
+            }}
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+            title="Экспортировать"
+          >
+            <Share className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -82,51 +96,31 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
         </div>
       </div>
 
-      <div className="p-3">
-        <div className="flex items-center gap-3">
-          {/* Аватар */}
-          <div
-            className={cn(
-              'flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center p-0.5',
-              experienceInfo.ringClassName
-            )}
-          >
-            <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 rounded-[9px] flex items-center justify-center">
-              {isChild ? (
-                <Baby className="w-5 h-5 text-white" />
-              ) : (
-                <User className="w-5 h-5 text-white" />
-              )}
-            </div>
+      <div className="p-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+              {participant.name}
+            </h3>
+            <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+            <p className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+              {age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}
+            </p>
           </div>
-          {/* Информационный блок */}
-          <div className="min-w-0 flex-1">
-            {/* Верхняя строка */}
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                {participant.name}
-              </h3>
-              <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-              <p className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
-                {age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}
-              </p>
-            </div>
 
-            {/* Нижняя строка */}
-            <div className="flex items-center gap-3 mt-1.5 text-sm text-gray-500 dark:text-gray-400">
-              <div title={`Опыт: ${experienceInfo.label}`}>
-                <ExperienceIcon className={cn('w-4 h-4', experienceInfo.colorClassName)} />
-              </div>
-              <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-              <div className="flex items-center gap-1.5" title="Походы">
-                <MapPin className="w-4 h-4" />
-                <span className="font-medium">{tripCount}</span>
-              </div>
-              <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-              <div className="flex items-center gap-1.5" title="Снаряжение">
-                <Backpack className="w-4 h-4" />
-                <span className="font-medium">{equipmentCount}</span>
-              </div>
+          <div className="flex items-center gap-3 mt-2 text-sm text-gray-500 dark:text-gray-400">
+            <div title={`Опыт: ${experienceInfo.label}`}>
+              <ExperienceIcon className={cn('w-4 h-4', experienceInfo.colorClassName)} />
+            </div>
+            <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+            <div className="flex items-center gap-1.5" title="Походы">
+              <MapPin className="w-4 h-4" />
+              <span className="font-medium">{tripCount}</span>
+            </div>
+            <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+            <div className="flex items-center gap-1.5" title="Снаряжение">
+              <Backpack className="w-4 h-4" />
+              <span className="font-medium">{equipmentCount}</span>
             </div>
           </div>
         </div>

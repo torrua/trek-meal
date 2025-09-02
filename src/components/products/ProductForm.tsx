@@ -1,14 +1,14 @@
 // src/components/products/ProductForm.tsx
 
 import React, { useState, useEffect } from 'react';
+import { Tag, X } from 'lucide-react';
 import useCategoryStore from '../../stores/useCategoryStore';
 import Button from '../../ui/Button';
 import { toast } from 'react-hot-toast';
 import type { Product, ProductData, ProductPortion, Category } from '../../types';
 import Input from '../../ui/Input';
-import Select from '../../ui/Select';
+import DropdownSelect from '../../ui/DropdownSelect';
 import Textarea from '../../ui/Textarea';
-import { X } from 'lucide-react';
 
 interface ProductFormProps {
   product: Product | null;
@@ -46,12 +46,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     }
   }, [product]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const isChecked = (e.target as HTMLInputElement).checked;
     setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? isChecked : value }));
+  };
+
+  const handleSelectChange = (name: keyof ProductData, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handlePortionChange = (index: number, field: keyof ProductPortion, value: string) => {
@@ -84,7 +86,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
 
   const categoryOptions = [
     { value: '', label: 'Без категории' },
-    ...categories.map((cat: Category) => ({ value: String(cat.id), label: cat.name })),
+    ...categories.map((cat: Category) => ({
+      value: String(cat.id),
+      label: cat.name,
+      icon: () => <span className="text-lg">{cat.emoji}</span>,
+    })),
   ];
 
   return (
@@ -98,11 +104,11 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           required
           autoFocus
         />
-        <Select
+        <DropdownSelect
           label="Категория"
-          name="categoryId"
+          icon={Tag}
           value={String(formData.categoryId || '')}
-          onChange={handleChange}
+          onChange={(value) => handleSelectChange('categoryId', value)}
           options={categoryOptions}
         />
       </div>

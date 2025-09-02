@@ -1,12 +1,13 @@
 // src/components/participants/ParticipantForm.tsx
 
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, Calendar, Save, AlertCircle, X } from 'lucide-react';
+import { User, Phone, Mail, Calendar, Save, AlertCircle, X, Users, Award } from 'lucide-react';
 import type { Participant, ParticipantData } from '../../types';
 import Button from '../../ui/Button';
 import Input from '../../ui/Input';
-import Select from '../../ui/Select';
+import DropdownSelect from '../../ui/DropdownSelect';
 import Textarea from '../../ui/Textarea';
+import ConfirmModal from '../../ui/ConfirmModal';
 
 interface ParticipantFormProps {
   participant: Participant | null;
@@ -33,6 +34,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
   });
   const [initialData, setInitialData] = useState<ParticipantData>(formData);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
 
   const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
 
@@ -50,7 +52,6 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
           notes: '',
         };
 
-    // --- ИЗМЕНЕНИЕ: Переименовываем 'id' в '_id' ---
     if ('id' in dataToSet) {
       const { id: _id, ...formDataWithoutId } = dataToSet as Participant;
       setFormData(formDataWithoutId);
@@ -65,24 +66,20 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Обязательные поля
     if (!formData.name.trim()) {
       newErrors.name = 'Имя обязательно';
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Имя должно содержать минимум 2 символа';
     }
 
-    // Валидация email
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Некорректный формат email';
     }
 
-    // Валидация телефона
     if (formData.phone && formData.phone.length < 10) {
       newErrors.phone = 'Телефон должен содержать минимум 10 цифр';
     }
 
-    // Валидация даты рождения
     if (formData.birthDate) {
       const birthDate = new Date(formData.birthDate);
       const today = new Date();
@@ -100,9 +97,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
@@ -111,14 +106,21 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
     }
   };
 
+  const handleSelectChange = (name: keyof ParticipantData, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value as ParticipantData[keyof ParticipantData] }));
+  };
+
   const handleCancel = () => {
     if (isDirty && !isLoading) {
-      if (window.confirm('У вас есть несохраненные изменения. Вы уверены, что хотите уйти?')) {
-        onCancel();
-      }
+      setConfirmModalOpen(true);
     } else {
       onCancel();
     }
+  };
+
+  const handleConfirmCancel = () => {
+    setConfirmModalOpen(false);
+    onCancel();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -134,7 +136,6 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
   return (
     <div className="max-h-[80vh] overflow-y-auto">
       <form onSubmit={handleSubmit} className="p-1 space-y-6">
-        {/* Основная информация */}
         <div className="space-y-6">
           <div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
@@ -156,31 +157,27 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
                 />
               </div>
 
-              <Select
+              <DropdownSelect
                 label="Пол"
-                name="gender"
+                icon={Users}
                 value={formData.gender}
-                onChange={handleChange}
+                onChange={(value) => handleSelectChange('gender', value)}
                 options={[
                   { value: 'male', label: 'Мужской' },
                   { value: 'female', label: 'Женский' },
                 ]}
-                required
-                error={errors.gender}
                 disabled={isLoading}
               />
 
-              <Select
+              <DropdownSelect
                 label="Возрастная группа"
-                name="age"
+                icon={Users}
                 value={formData.age}
-                onChange={handleChange}
+                onChange={(value) => handleSelectChange('age', value)}
                 options={[
                   { value: 'adult', label: 'Взрослый' },
                   { value: 'child', label: 'Ребенок' },
                 ]}
-                required
-                error={errors.age}
                 disabled={isLoading}
               />
 
@@ -195,24 +192,21 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
                 disabled={isLoading}
               />
 
-              <Select
+              <DropdownSelect
                 label="Уровень опыта"
-                name="experienceLevel"
+                icon={Award}
                 value={formData.experienceLevel}
-                onChange={handleChange}
+                onChange={(value) => handleSelectChange('experienceLevel', value)}
                 options={[
                   { value: 'beginner', label: 'Новичок' },
                   { value: 'experienced', label: 'Опытный' },
                   { value: 'professional', label: 'Профессионал' },
                 ]}
-                required
-                error={errors.experienceLevel}
                 disabled={isLoading}
               />
             </div>
           </div>
 
-          {/* Контактная информация */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
               Контактная информация
@@ -244,7 +238,6 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
             </div>
           </div>
 
-          {/* Дополнительная информация */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
               Дополнительная информация
@@ -262,7 +255,6 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
           </div>
         </div>
 
-        {/* Кнопки управления */}
         <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
           <Button
             type="button"
@@ -288,13 +280,24 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
           </Button>
         </div>
 
-        {/* Индикатор несохраненных изменений */}
         {isDirty && !isLoading && (
           <div className="flex items-center justify-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
             <AlertCircle className="w-4 h-4" />У вас есть несохраненные изменения
           </div>
         )}
       </form>
+
+      <ConfirmModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        onConfirm={handleConfirmCancel}
+        title="Несохраненные изменения"
+        variant="danger"
+        confirmText="Уйти"
+        cancelText="Остаться"
+      >
+        <p>Вы уверены, что хотите уйти? Все несохраненные изменения будут потеряны.</p>
+      </ConfirmModal>
     </div>
   );
 };

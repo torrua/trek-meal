@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import { formatISO } from 'date-fns';
-
+import { Gauge } from 'lucide-react';
 import { useTripDates } from '../../hooks/useTripDates';
 import useParticipantStore from '../../stores/useParticipantStore';
 import Button from '../../ui/Button';
 import ThemedDatePicker from '../../ui/ThemedDatePicker';
 import Input from '../../ui/Input';
-import Select from '../../ui/Select';
+import DropdownSelect from '../../ui/DropdownSelect';
 import Textarea from '../../ui/Textarea';
 import type { Trip, TripData, Participant } from '../../types';
 
@@ -55,14 +55,16 @@ const TripForm: React.FC<TripFormProps> = ({
     }
   }, [trip, initialParticipantIds]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === 'name' && String(value).trim().length > 0) {
       setErrors((prev) => ({ ...prev, name: undefined }));
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: keyof TripData, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value as TripData[keyof TripData] }));
   };
 
   const handleParticipantToggle = (id: number) => {
@@ -120,7 +122,7 @@ const TripForm: React.FC<TripFormProps> = ({
         rows={3}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
         <div className="md:col-span-6">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Даты похода
@@ -145,12 +147,12 @@ const TripForm: React.FC<TripFormProps> = ({
           onChange={(e) => handleDaysChange(Number(e.target.value))}
           required
         />
-        <Select
+        <DropdownSelect
           containerClassName="md:col-span-4"
           label="Сложность"
-          name="difficulty"
+          icon={Gauge}
           value={formData.difficulty}
-          onChange={handleChange}
+          onChange={(value) => handleSelectChange('difficulty', value)}
           options={[
             { value: 'easy', label: 'Легкий' },
             { value: 'medium', label: 'Средний' },

@@ -12,6 +12,7 @@ import ParticipantFiltersComponent, { ParticipantFilters } from './ParticipantFi
 import ParticipantForm from './ParticipantForm';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
+import { exportParticipantToJson } from '../../utils/backup';
 
 const ParticipantsPage: React.FC = () => {
   const { participants, addParticipant, updateParticipant, deleteParticipant, cloneParticipant } =
@@ -114,6 +115,16 @@ const ParticipantsPage: React.FC = () => {
     alert(`Добавление снаряжения для участника ID:${participantId}...`);
   }, []);
 
+  const handleExport = useCallback(
+    (participantId: number) => {
+      const participant = participants.find((p) => p.id === participantId);
+      if (participant) {
+        exportParticipantToJson(participant);
+      }
+    },
+    [participants]
+  );
+
   const handleCloseModal = useCallback(() => {
     setShowFormModal(false);
     setEditingParticipant(null);
@@ -155,7 +166,6 @@ const ParticipantsPage: React.FC = () => {
 
       {showFilters && (
         <div className="mb-4 sm:mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
-          {/* --- ИЗМЕНЕНИЕ: 'stats' больше не передается --- */}
           <ParticipantFiltersComponent filters={filters} onFiltersChange={setFilters} />
         </div>
       )}
@@ -174,6 +184,7 @@ const ParticipantsPage: React.FC = () => {
                 onDelete={() => handleDelete(p.id)}
                 onAddToTrip={() => handleAddToTrip(p.id)}
                 onAddEquipment={() => handleAddEquipment(p.id)}
+                onExport={() => handleExport(p.id)}
               />
             ))}
 

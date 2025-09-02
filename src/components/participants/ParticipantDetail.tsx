@@ -70,7 +70,10 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
         <Icon className="w-5 h-5 text-blue-600" />
         <span className="font-semibold text-gray-900 dark:text-white">{title}</span>
         {count !== undefined && count > 0 && (
-          <span className="text-sm text-gray-500 dark:text-gray-400">• {count}</span>
+          <>
+            <span className="text-gray-300 dark:text-gray-600 font-light mx-1">•</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">{count}</span>
+          </>
         )}
       </div>
       <div className="flex items-center gap-2">
@@ -374,8 +377,11 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <MapPin className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p className="font-medium mb-1">Участник не записан в походы</p>
-              {/* --- ИЗМЕНЕНИЕ: Исправлена ошибка с кавычками --- */}
-              <p className="text-xs">{'Добавьте участника в поход, нажав "+" в заголовке'}</p>
+              <p className="text-xs flex items-center justify-center gap-1">
+                {'Добавьте участника в поход, нажав'}
+                <CirclePlus className="w-3 h-3 inline-block" />
+                {'в заголовке'}
+              </p>
             </div>
           )}
         </AccordionSection>
@@ -401,7 +407,6 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <Backpack className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p className="font-medium mb-1">Снаряжение не добавлено</p>
-            {/* --- ИЗМЕНЕНИЕ: Исправлена ошибка с кавычками (превентивно) --- */}
             <p className="text-xs">{'Эта функция находится в разработке'}</p>
           </div>
         </AccordionSection>

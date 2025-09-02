@@ -6,6 +6,7 @@ import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
 import useDishStore from '../stores/useDishStore';
 import useCategoryStore from '../stores/useCategoryStore';
+import type { Participant } from '../types';
 
 /**
  * Собирает данные из всех хранилищ и экспортирует их в JSON файл.
@@ -87,4 +88,31 @@ export const importDataFromJson = (file: File) => {
     toast.error('Не удалось прочитать файл.');
   };
   reader.readAsText(file);
+};
+
+/**
+ * Экспортирует данные одного участника в JSON файл.
+ * @param participant - Объект участника для экспорта.
+ */
+export const exportParticipantToJson = (participant: Participant) => {
+  try {
+    const jsonString = JSON.stringify(participant, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    // Создаем безопасное имя файла
+    const safeName = participant.name.replace(/\s+/g, '-').toLowerCase();
+    a.download = `participant-${safeName}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Данные участника "${participant.name}" экспортированы!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте данных участника:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
 };

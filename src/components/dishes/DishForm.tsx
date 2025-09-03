@@ -32,7 +32,6 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
   useEffect(() => {
     const initializeState = (sourceDish: Dish, isCloning: boolean) => {
       setName(sourceDish.name + (isCloning ? ' (копия)' : ''));
-      // --- ИСПРАВЛЕНИЕ: Глубокое копирование для предотвращения мутации ---
       setProducts(JSON.parse(JSON.stringify(sourceDish.products)));
     };
 
@@ -135,37 +134,45 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
               portionOptions.find((opt) => opt.value === p.weight) ||
               portionOptions.find((opt) => opt.value === CUSTOM_WEIGHT_VALUE);
             return (
-              <div key={index} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
+              <div
+                key={index}
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
+              >
                 <ThemedSelect<ProductOption>
+                  className="w-full"
                   options={productOptions}
                   value={productOptions.find((opt) => opt.value === p.productId)}
                   onChange={(opt) => handleProductChange(index, opt)}
                   placeholder="Выберите продукт..."
+                  menuPortalTarget={document.body}
                 />
-                <ThemedSelect<PortionOption>
-                  options={portionOptions}
-                  value={currentPortion}
-                  onChange={(opt) => handlePortionChange(index, opt)}
-                  isDisabled={!selectedProduct}
-                  className="w-48"
-                />
-                <Input
-                  type="number"
-                  value={p.weight || ''}
-                  onChange={(e) => handleWeightChange(index, e.target.value)}
-                  required
-                  min="0"
-                  className="w-24 text-center"
-                  placeholder="Вес (г)"
-                />
-                <Button
-                  type="button"
-                  variant="danger"
-                  size="icon"
-                  onClick={() => removeProductField(index)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
+                <div className="flex-shrink-0 flex items-center gap-2 w-full sm:w-auto">
+                  <ThemedSelect<PortionOption>
+                    className="flex-1"
+                    options={portionOptions}
+                    value={currentPortion}
+                    onChange={(opt) => handlePortionChange(index, opt)}
+                    isDisabled={!selectedProduct}
+                    menuPortalTarget={document.body}
+                  />
+                  <Input
+                    type="number"
+                    value={p.weight || ''}
+                    onChange={(e) => handleWeightChange(index, e.target.value)}
+                    required
+                    min="0"
+                    className="w-24 text-center"
+                    placeholder="Вес (г)"
+                  />
+                  <Button
+                    type="button"
+                    variant="danger"
+                    size="icon"
+                    onClick={() => removeProductField(index)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             );
           })}

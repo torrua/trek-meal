@@ -1,92 +1,69 @@
 // src/components/products/ProductCard.tsx
 
 import React from 'react';
-import useCategoryStore from '../../stores/useCategoryStore';
-import type { Product, Category } from '../../types';
+import cn from 'classnames';
+import { Component, Edit, Trash2 } from 'lucide-react';
+import type { Product } from '../../types';
 
 interface ProductCardProps {
   product: Product;
+  isSelected?: boolean; // --- ИЗМЕНЕНИЕ: Сделано необязательным
+  onSelect?: () => void; // --- ИЗМЕНЕНИЕ: Сделано необязательным
   onEdit: () => void;
   onDelete: (e: React.MouseEvent) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) => {
-  const { categories } = useCategoryStore();
-  const category = categories.find((c: Category) => c.id === product.categoryId);
-
-  const handleCardClick = () => onEdit();
-  const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
-    e.stopPropagation();
-    action();
-  };
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete(e);
-  };
-
+const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  isSelected,
+  onSelect,
+  onEdit,
+  onDelete,
+}) => {
   return (
     <div
-      className="bg-secondary border border-primary rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
-      onClick={handleCardClick}
+      onClick={onSelect}
+      className={cn(
+        'group relative bg-white dark:bg-gray-800 rounded-xl border transition-all duration-200 hover:shadow-lg',
+        onSelect ? 'cursor-pointer' : 'cursor-default', // Курсор меняется в зависимости от наличия onSelect
+        isSelected
+          ? 'border-blue-400 shadow-blue-100 dark:shadow-blue-900/20 shadow-lg ring-1 ring-blue-400/30 dark:ring-blue-500/30'
+          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+      )}
     >
-      {/* === HEADER === */}
-      <div className="p-4 border-b border-secondary">
-        <h3 className="text-lg font-bold text-primary truncate" title={product.name}>
-          {product.name}
-        </h3>
-        <div className="flex items-center gap-2 mt-1.5 flex-wrap h-5">
-          {category && (
-            <span
-              className="px-2 py-0.5 text-xs font-medium text-white rounded-full"
-              style={{ backgroundColor: category.color }}
-            >
-              {category.emoji} {category.name}
-            </span>
-          )}
-          {product.isPerishable && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-              Скоропортящийся
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* === BODY === */}
-      <div className="p-4 flex-grow">
-        <div className="grid grid-cols-4 gap-2 text-center">
-          <div>
-            <div className="text-xl font-bold text-blue-600">{product.calories}</div>
-            <div className="text-xs text-muted-foreground">ккал</div>
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Component className="w-5 h-5 text-gray-500" />
           </div>
-          <div>
-            <div className="text-xl font-bold text-blue-600">{product.proteins}</div>
-            <div className="text-xs text-muted-foreground">белки</div>
-          </div>
-          <div>
-            <div className="text-xl font-bold text-blue-600">{product.fats}</div>
-            <div className="text-xs text-muted-foreground">жиры</div>
-          </div>
-          <div>
-            <div className="text-xl font-bold text-blue-600">{product.carbs}</div>
-            <div className="text-xs text-muted-foreground">у/воды</div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-gray-900 dark:text-white truncate">{product.name}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              {product.calories} ккал / 100г
+            </p>
           </div>
         </div>
       </div>
-
-      {/* === FOOTER === */}
-      <div className="p-3 bg-muted border-t border-secondary flex justify-end gap-2">
-        <button
-          onClick={(e) => handleButtonClick(e, onEdit)}
-          className="text-sm font-medium text-blue-600 hover:text-blue-800"
-        >
-          Редактировать
-        </button>
-        <button
-          onClick={handleDeleteClick}
-          className="text-sm font-medium text-red-600 hover:text-red-800"
-        >
-          Удалить
-        </button>
+      <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+            title="Редактировать"
+          >
+            <Edit className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
+          </button>
+          <button
+            onClick={onDelete}
+            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-md transition-colors"
+            title="Удалить"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+          </button>
+        </div>
       </div>
     </div>
   );

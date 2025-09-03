@@ -1,29 +1,25 @@
-// src/components/categories/CategoryCard.tsx
+// src/components/database/mealtypes/MealTypeCard.tsx
 
 import React from 'react';
 import cn from 'classnames';
-import useProductStore from '../../stores/useProductStore';
-import type { Category } from '../../types';
-import { Edit, Trash2 } from 'lucide-react';
+import { Utensils, Edit, Trash2 } from 'lucide-react';
+import type { MealType } from '../../../stores/useMealTypesStore';
 
-interface CategoryCardProps {
-  category: Category;
+interface MealTypeCardProps {
+  mealType: MealType;
   isSelected: boolean;
   onSelect: () => void;
   onEdit: () => void;
   onDelete: (e: React.MouseEvent) => void;
 }
 
-const CategoryCard: React.FC<CategoryCardProps> = ({
-  category,
+const MealTypeCard: React.FC<MealTypeCardProps> = ({
+  mealType,
   isSelected,
   onSelect,
   onEdit,
   onDelete,
 }) => {
-  const { products } = useProductStore();
-  const productCount = products.filter((p) => p.categoryId === category.id).length;
-
   return (
     <div
       onClick={onSelect}
@@ -36,19 +32,13 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
     >
       <div className="p-4">
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl"
-            style={{ backgroundColor: category.color }}
-          >
-            {category.emoji}
+          <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Utensils className="w-5 h-5 text-gray-500" />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-              {category.name}
+              {mealType.name}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              {productCount} продуктов
-            </p>
           </div>
         </div>
       </div>
@@ -77,4 +67,4 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
   );
 };
 
-export default CategoryCard;
+export default MealTypeCard;

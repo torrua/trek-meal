@@ -1,83 +1,69 @@
 // src/components/dishes/DishCard.tsx
 
-import React, { useMemo } from 'react';
+import React from 'react';
+import cn from 'classnames';
+import { Soup, Edit, Trash2 } from 'lucide-react';
+import type { Dish } from '../../types';
 import useProductStore from '../../stores/useProductStore';
-import type { Dish, Product } from '../../types';
 
 interface DishCardProps {
   dish: Dish;
+  isSelected: boolean;
+  onSelect: () => void;
   onEdit: () => void;
   onDelete: (e: React.MouseEvent) => void;
 }
 
-const DishCard: React.FC<DishCardProps> = ({ dish, onEdit, onDelete }) => {
-  const { products: allProducts } = useProductStore();
-
-  // --- ИСПРАВЛЕНИЕ: Теперь мы используем allProducts для получения имен ---
-  const dishContents = useMemo(() => {
-    return dish.products.map((p) => {
-      const product = allProducts.find((ap: Product) => ap.id === p.productId);
-      return {
-        name: product?.name || 'Неизвестный продукт',
-        weight: p.weight,
-      };
-    });
-  }, [dish.products, allProducts]);
-
-  const totalWeight = dish.products.reduce((sum, p) => sum + p.weight, 0);
-
-  const handleCardClick = () => onEdit();
-  const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
-    e.stopPropagation();
-    action();
-  };
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete(e);
-  };
+const DishCard: React.FC<DishCardProps> = ({ dish, isSelected, onSelect, onEdit, onDelete }) => {
+  const { products } = useProductStore();
+  const totalWeight = dish.products.reduce((sum, p) => {
+    const product = products.find((prod) => prod.id === p.productId);
+    return sum + (product ? p.weight : 0);
+  }, 0);
 
   return (
     <div
-      className="bg-secondary border border-primary rounded-lg shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
-      onClick={handleCardClick}
+      onClick={onSelect}
+      className={cn(
+        'group relative bg-white dark:bg-gray-800 rounded-xl border transition-all duration-200 hover:shadow-lg cursor-pointer',
+        isSelected
+          ? 'border-blue-400 shadow-blue-100 dark:shadow-blue-900/20 shadow-lg ring-1 ring-blue-400/30 dark:ring-blue-500/30'
+          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+      )}
     >
-      {/* === HEADER === */}
-      <div className="p-4 border-b border-secondary">
-        <h3 className="text-lg font-bold text-primary truncate" title={dish.name}>
-          {dish.name}
-        </h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          {dish.products.length} комп. / {totalWeight} г
-        </p>
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Soup className="w-5 h-5 text-gray-500" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-gray-900 dark:text-white truncate">{dish.name}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              {dish.products.length} комп. / {totalWeight} г
+            </p>
+          </div>
+        </div>
       </div>
-
-      {/* === BODY --- */}
-      <div className="p-4 flex-grow">
-        <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Состав:</h4>
-        <ul className="space-y-1 list-disc pl-5 text-sm">
-          {dishContents.map((item, index) => (
-            <li key={index} className="flex justify-between">
-              <span>{item.name}</span>
-              <span className="font-medium text-secondary">{item.weight} г</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* === FOOTER === */}
-      <div className="p-3 bg-muted border-t border-secondary flex justify-end gap-2">
-        <button
-          onClick={(e) => handleButtonClick(e, onEdit)}
-          className="text-sm font-medium text-blue-600 hover:text-blue-800"
-        >
-          Редактировать
-        </button>
-        <button
-          onClick={handleDeleteClick}
-          className="text-sm font-medium text-red-600 hover:text-red-800"
-        >
-          Удалить
-        </button>
+      <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+            title="Редактировать"
+          >
+            <Edit className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
+          </button>
+          <button
+            onClick={onDelete}
+            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-md transition-colors"
+            title="Удалить"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+          </button>
+        </div>
       </div>
     </div>
   );

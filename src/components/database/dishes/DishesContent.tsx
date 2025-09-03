@@ -1,44 +1,59 @@
 // src/components/database/dishes/DishesContent.tsx
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import useDishStore from '../../../stores/useDishStore';
 import useTripStore from '../../../stores/useTripStore';
 import useSearchStore from '../../../stores/useSearchStore';
 import type { Dish, DishData, SubmitDishAction } from '../../../types';
 import DishCard from '../../dishes/DishCard';
+import DishDetail from '../../dishes/DishDetail';
 import DishForm from '../../dishes/DishForm';
 import Modal from '../../../ui/Modal';
 import Button from '../../../ui/Button';
 import ConfirmModal from '../../../ui/ConfirmModal';
 import { toast } from 'react-hot-toast';
-import { Plus } from 'lucide-react';
+import { Soup, CirclePlus } from 'lucide-react';
 
-const DishesContent: React.FC = () => {
+interface DishesContentProps {
+  setAddHandler: (handler: (() => void) | null) => void;
+}
+
+const DishesContent: React.FC<DishesContentProps> = ({ setAddHandler }) => {
   const { dishes, addDish, updateDish, deleteDish } = useDishStore();
   const { isDishInUse } = useTripStore();
   const { searchTerm } = useSearchStore();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeId, setActiveId] = useState<number | null>(null);
+  const [isFormModalOpen, setFormModalOpen] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [dishToDelete, setDishToDelete] = useState<Dish | null>(null);
 
   const filteredDishes = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return dishes;
-    }
-    const lowercasedFilter = searchTerm.toLowerCase();
-    return dishes.filter((dish: Dish) => dish.name.toLowerCase().includes(lowercasedFilter));
+    return dishes.filter(
+      (dish) =>
+        !searchTerm.trim() || dish.name.toLowerCase().includes(searchTerm.trim().toLowerCase())
+    );
   }, [dishes, searchTerm]);
 
-  const handleAddNew = () => {
-    setEditingDish(null);
-    setIsModalOpen(true);
-  };
+  const selectedDish = useMemo(
+    () => dishes.find((d) => d.id === activeId) || null,
+    [activeId, dishes]
+  );
 
-  const handleEdit = (dish: Dish) => {
+  const handleAddNew = useCallback(() => {
+    setEditingDish(null);
+    setFormModalOpen(true);
+  }, []);
+
+  useEffect(() => {
+    setAddHandler(() => handleAddNew);
+    return () => setAddHandler(null);
+  }, [setAddHandler, handleAddNew]);
+
+  const handleEdit = useCallback((dish: Dish) => {
     setEditingDish(dish);
-    setIsModalOpen(true);
-  };
+    setFormModalOpen(true);
+  }, []);
 
   const handleRequestDelete = (e: React.MouseEvent, dish: Dish) => {
     e.stopPropagation();
@@ -54,6 +69,7 @@ const DishesContent: React.FC = () => {
 
   const handleConfirmDelete = () => {
     if (dishToDelete) {
+      if (dishToDelete.id === activeId) setActiveId(null);
       deleteDish(dishToDelete.id);
       setDishToDelete(null);
     }
@@ -67,53 +83,55 @@ const DishesContent: React.FC = () => {
         addDish(formData);
       }
     }
-    setIsModalOpen(false);
+    setFormModalOpen(false);
     setEditingDish(null);
   };
 
   return (
-    <div>
-      <div className="flex justify-end mb-6">
-        <Button onClick={handleAddNew}>
-          <Plus className="w-4 h-4 mr-2" />
-          Создать блюдо
-        </Button>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 h-full">
+      <div className="lg:col-span-1">
+        <div className="h-[calc(100vh-360px)] min-h-[400px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+          {filteredDishes.length === 0 ? (
+            <div className="text-center py-16 px-6 text-gray-500">
+              <Soup className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium text-foreground">
+                {searchTerm ? 'Блюда не найдены' : 'Блюд пока нет'}
+              </h3>
+              {!searchTerm && (
+                <Button onClick={handleAddNew} className="mt-4">
+                  <CirclePlus className="w-4 h-4 mr-2" />
+                  Создать первое блюдо
+                </Button>
+              )}
+            </div>
+          ) : (
+            filteredDishes.map((dish) => (
+              <DishCard
+                key={dish.id}
+                dish={dish}
+                isSelected={activeId === dish.id}
+                onSelect={() => setActiveId(dish.id)}
+                onEdit={() => handleEdit(dish)}
+                onDelete={(e) => handleRequestDelete(e, dish)}
+              />
+            ))
+          )}
+        </div>
       </div>
 
-      {filteredDishes.length === 0 ? (
-        <div className="text-center py-16 px-6 bg-muted rounded-lg">
-          <h3 className="text-lg font-medium text-foreground">
-            {searchTerm ? 'Блюда не найдены' : 'У вас пока нет сохраненных блюд'}
-          </h3>
-          <p className="text-muted-foreground mt-2 mb-4">
-            {searchTerm
-              ? 'Попробуйте изменить поисковый запрос.'
-              : 'Создайте свое первое блюдо, чтобы ускорить планирование походов.'}
-          </p>
-          {!searchTerm && <Button onClick={handleAddNew}>Создать первое блюдо</Button>}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredDishes.map((dish) => (
-            <DishCard
-              key={dish.id}
-              dish={dish}
-              onEdit={() => handleEdit(dish)}
-              onDelete={(e) => handleRequestDelete(e, dish)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="lg:col-span-2 hidden lg:block">
+        <DishDetail dish={selectedDish} onEdit={() => selectedDish && handleEdit(selectedDish)} />
+      </div>
 
       <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isFormModalOpen}
+        onClose={() => setFormModalOpen(false)}
         title={editingDish ? 'Редактировать блюдо' : 'Новое блюдо'}
       >
         <DishForm
           dish={editingDish}
           onSubmit={handleFormSubmit}
-          onCancel={() => setIsModalOpen(false)}
+          onCancel={() => setFormModalOpen(false)}
         />
       </Modal>
 

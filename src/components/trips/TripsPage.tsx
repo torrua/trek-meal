@@ -60,8 +60,9 @@ const TripsPage: React.FC = () => {
     return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [trips, searchTerm, filters, getEffectiveStatus]);
 
-  const selectedTrip = useMemo(
-    () => trips.find((t) => t.id === activeId) || null,
+  // --- ИЗМЕНЕНИЕ: Тип изменен с Trip | null на Trip | undefined ---
+  const selectedTrip: Trip | undefined = useMemo(
+    () => trips.find((t) => t.id === activeId),
     [activeId, trips]
   );
 
@@ -225,7 +226,7 @@ const TripsPage: React.FC = () => {
         <div className="lg:col-span-2 hidden lg:block">
           <div className="h-full">
             <TripDetail
-              trip={selectedTrip}
+              trip={selectedTrip ?? null}
               onEdit={() => selectedTrip && handleEdit(selectedTrip)}
               onAddParticipant={handleAddParticipant}
             />
@@ -241,7 +242,7 @@ const TripsPage: React.FC = () => {
             title={selectedTrip?.name || 'Детали похода'}
           >
             <TripDetail
-              trip={selectedTrip}
+              trip={selectedTrip ?? null}
               onEdit={() => {
                 if (selectedTrip) {
                   handleEdit(selectedTrip);

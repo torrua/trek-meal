@@ -9,7 +9,6 @@ import type { Participant } from '../../types';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
 import ThemedSelect from '../../ui/ThemedSelect';
-import { toast } from 'react-hot-toast';
 
 interface AddParticipantsModalProps {
   isOpen: boolean;
@@ -45,9 +44,7 @@ const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onC
     if (!tripId || selectedParticipants.length === 0) return;
     const participantIds = selectedParticipants.map((p) => p.value);
     addParticipantsToTrip(tripId, participantIds);
-    // --- ИЗМЕНЕНИЕ: Не закрываем окно, а сбрасываем состояние ---
     setSelectedParticipants([]);
-    // toast.success('Участники добавлены!'); // Уведомление теперь в сторе
   };
 
   const handleClose = () => {
@@ -72,7 +69,7 @@ const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onC
           isSearchable
           autoFocus
           menuPortalTarget={document.body}
-          closeMenuOnSelect={false} // --- ИЗМЕНЕНИЕ: Позволяет выбрать несколько, не закрывая меню
+          closeMenuOnSelect={false}
         />
       </div>
 

@@ -20,7 +20,6 @@ export interface Participant {
   gender: Gender;
   age: AgeGroup;
   notes: string;
-  // Новые поля
   experienceLevel: ExperienceLevel;
   phone?: string;
   email?: string;
@@ -64,21 +63,20 @@ export type DishData = Omit<Dish, 'id'>;
 
 export type MealPlanItem =
   | {
-      instanceId: string; // Уникальный ID для КАЖДОЙ строки в раскладке
+      instanceId: string;
       type: 'dish';
-      itemId: number; // Тут будет dishId
+      itemId: number;
     }
   | {
       instanceId: string;
       type: 'product';
-      itemId: number; // Тут будет productId
+      itemId: number;
       weight: number;
     };
 
 export interface SelectedMeals {
   [mealId: string]: MealPlanItem[];
 }
-// ------------------------------------------
 
 // --- Походы ---
 export type TripDifficulty = 'easy' | 'medium' | 'hard';
@@ -87,7 +85,7 @@ export type TripStatus = 'planning' | 'completed' | 'active';
 export interface Trip {
   id: number;
   createdAt: string;
-  status: TripStatus;
+  status: 'planning' | 'completed';
   name: string;
   description: string;
   destination: string;
@@ -97,7 +95,7 @@ export interface Trip {
   endDate: string;
   participants: number[];
   mealsPerDay: number;
-  selectedMeals: SelectedMeals; // <-- Теперь использует новую структуру
+  selectedMeals: SelectedMeals;
 }
 export type TripData = Omit<Trip, 'id' | 'createdAt' | 'status' | 'selectedMeals'>;
 

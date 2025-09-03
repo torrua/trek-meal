@@ -38,7 +38,6 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
   const tripOptions: TripOption[] = useMemo(() => {
     let availableTrips = trips.filter((t) => t.status === 'planning');
 
-    // Если выбран только один участник, исключаем походы, где он уже участвует
     if (selectedIds.length === 1) {
       const singleParticipantId = selectedIds[0];
       availableTrips = availableTrips.filter((t) => !t.participants.includes(singleParticipantId));
@@ -102,7 +101,6 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
     </div>
   );
 
-  // Сброс состояния при открытии/закрытии модального окна
   React.useEffect(() => {
     if (!isOpen) {
       setSelectedTrip(null);
@@ -118,7 +116,6 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
       size="lg"
     >
       <div className="space-y-6">
-        {/* Информационное сообщение */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
@@ -145,7 +142,6 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
           </div>
         </div>
 
-        {/* Селектор походов */}
         {tripOptions.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -161,12 +157,8 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
               isSearchable
               isDisabled={isSubmitting}
               menuPortalTarget={document.body}
-              styles={{
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-              }}
             />
 
-            {/* Детали выбранного похода */}
             {selectedTrip && (
               <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
                 <h4 className="font-medium text-gray-900 dark:text-white mb-3">
@@ -196,11 +188,7 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
                     <Users className="w-4 h-4 text-gray-400" />
                     <div>
                       <div className="font-medium">Участники</div>
-                      <div>
-                        Текущих: {selectedTrip.trip.participants.length}
-                        {selectedTrip.trip.maxParticipants &&
-                          ` / ${selectedTrip.trip.maxParticipants} макс.`}
-                      </div>
+                      <div>Текущих: {selectedTrip.trip.participants.length}</div>
                     </div>
                   </div>
                   {selectedTrip.trip.description && (
@@ -216,10 +204,9 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
         )}
       </div>
 
-      {/* Кнопки управления */}
       <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-200 dark:border-gray-700">
         <Button
-          variant="ghost"
+          variant="secondary"
           onClick={handleClose}
           disabled={isSubmitting}
           className="flex items-center gap-2"

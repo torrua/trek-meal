@@ -42,9 +42,10 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
   );
 
   useEffect(() => {
+    // --- ИЗМЕНЕНИЕ: Явно указываем тип для нового участника ---
     const dataToSet = participant
       ? { ...participant }
-      : {
+      : ({
           name: '',
           gender: 'male',
           age: 'adult',
@@ -53,7 +54,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
           email: '',
           birthDate: '',
           notes: '',
-        };
+        } as ParticipantData);
 
     if ('id' in dataToSet) {
       const { id: _id, ...formDataWithoutId } = dataToSet as Participant;

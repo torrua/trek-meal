@@ -12,9 +12,9 @@ import {
   Sun,
   Utensils,
   Gauge,
-  MapPin,
   UserRoundPlus,
   HandPlatter,
+  MapPin,
 } from 'lucide-react';
 import type { Trip, Participant } from '../../types';
 import { formatDate } from '../../utils';
@@ -104,7 +104,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
   );
 
   const summary = useMemo(
-    () => calculateTripSummary(trip, products, allParticipants, dishes),
+    () => calculateTripSummary(trip || undefined, products, allParticipants, dishes),
     [trip, products, allParticipants, dishes]
   );
 
@@ -151,6 +151,15 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
 
   return (
     <div className="h-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white truncate">{trip.name}</h2>
+        {trip.destination && (
+          <p className="text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+            <MapPin className="w-4 h-4" />
+            <span>{trip.destination}</span>
+          </p>
+        )}
+      </div>
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <AccordionSection
           title="Данные"

@@ -20,14 +20,14 @@ import {
   CirclePlus,
   Edit,
 } from 'lucide-react';
-import type { Participant } from '../../types';
+import type { Participant, Trip } from '../../types';
 import useTripStore from '../../stores/useTripStore';
 import { formatDate } from '../../utils';
 import { EXPERIENCE_CONFIG } from '../../constants/participants';
-import Button from '../../ui/Button';
 import { useNavigate } from 'react-router-dom';
 import cn from 'classnames';
 import { isFuture, parseISO } from 'date-fns';
+import ConfirmModal from '../../ui/ConfirmModal';
 
 interface ParticipantDetailProps {
   participant: Participant | null;
@@ -301,7 +301,6 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
           {participantTrips.length > 0 ? (
             <div className="space-y-3">
               {sortedTrips.map((trip) => {
-                const isUpcoming = isFuture(parseISO(trip.startDate));
                 const difficultyConfig = DIFFICULTY_CONFIG[trip.difficulty];
 
                 return (
@@ -341,7 +340,7 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
                         <h4 className="font-medium text-gray-900 dark:text-white truncate flex-1">
                           {trip.name}
                         </h4>
-                        {isUpcoming && (
+                        {isFuture(parseISO(trip.startDate)) && (
                           <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">
                             Предстоящий
                           </span>
@@ -412,43 +411,19 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
         </AccordionSection>
       </div>
 
-      {showDeleteConfirm.show && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 max-w-sm sm:max-w-md w-full shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 sm:w-10 h-8 sm:h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-4 sm:w-5 h-4 sm:h-5 text-red-600 dark:text-red-400" />
-              </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-                  Удалить участника
-                </h3>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  Это действие нельзя отменить
-                </p>
-              </div>
-            </div>
-            <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 mb-4 sm:mb-6">
-              Вы уверены, что хотите удалить участника из этого похода?
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
-              <Button
-                variant="ghost"
-                onClick={cancelRemoveFromTrip}
-                className="px-4 py-2 order-2 sm:order-1"
-              >
-                Отмена
-              </Button>
-              <Button
-                onClick={confirmRemoveFromTrip}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white order-1 sm:order-2"
-              >
-                Удалить
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={showDeleteConfirm.show}
+        onClose={cancelRemoveFromTrip}
+        onConfirm={confirmRemoveFromTrip}
+        title={`Удалить участника?`}
+        variant="danger"
+        confirmText="Удалить"
+      >
+        <p>
+          Вы уверены, что хотите удалить участника{' '}
+          <span className="font-bold">{participant?.name}</span> из похода?
+        </p>
+      </ConfirmModal>
     </div>
   );
 };

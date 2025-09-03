@@ -37,29 +37,34 @@ const ParticipantListItem: React.FC<ParticipantListItemProps> = ({
       )}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex flex-col">
-            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-              {participant.name}
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
-              {age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}
-            </p>
+        {/* --- ИЗМЕНЕНИЕ: Все элементы теперь в одной строке --- */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+            {participant.name}
+          </h3>
+          <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+          <p className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+            {age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}
+          </p>
+          <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+          <div title={`Опыт: ${experienceInfo.label}`}>
+            <ExperienceIcon className={cn('w-4 h-4', experienceInfo.colorClassName)} />
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-            <div title={`Опыт: ${experienceInfo.label}`}>
-              <ExperienceIcon className={cn('w-4 h-4', experienceInfo.colorClassName)} />
-            </div>
-            <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-            <div className="flex items-center gap-1.5" title="Походы">
-              <MapPin className="w-4 h-4" />
-              <span className="font-medium">{tripCount}</span>
-            </div>
-            <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-            <div className="flex items-center gap-1.5" title="Снаряжение">
-              <Backpack className="w-4 h-4" />
-              <span className="font-medium">{equipmentCount}</span>
-            </div>
+          <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+          <div
+            className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"
+            title="Походы"
+          >
+            <MapPin className="w-4 h-4" />
+            <span className="font-medium">{tripCount}</span>
+          </div>
+          <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+          <div
+            className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"
+            title="Снаряжение"
+          >
+            <Backpack className="w-4 h-4" />
+            <span className="font-medium">{equipmentCount}</span>
           </div>
         </div>
       </div>

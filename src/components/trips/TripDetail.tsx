@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import type { Trip, Participant } from '../../types';
 import { formatDate } from '../../utils';
-import Button from '../../ui/Button';
 import { useNavigate } from 'react-router-dom';
 import cn from 'classnames';
 import useParticipantStore from '../../stores/useParticipantStore';
@@ -55,9 +54,9 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
   actionButton,
 }) => (
   <div className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-    <div
+    <button
       onClick={onToggle}
-      className="flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+      className="w-full flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
     >
       <div className="flex items-center gap-3">
         <Icon className="w-5 h-5 text-blue-600" />
@@ -75,7 +74,7 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
           className={cn('w-5 h-5 text-gray-400 transition-transform', { 'rotate-180': isOpen })}
         />
       </div>
-    </div>
+    </button>
     <div
       className={cn(
         'grid transition-all duration-300 ease-in-out',
@@ -151,12 +150,63 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
 
   return (
     <div className="h-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white truncate">{trip.name}</h2>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">{trip.destination}</p>
-      </div>
+      {/* --- ИЗМЕНЕНИЕ: Заголовок полностью удален --- */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {/* ... (AccordionSection "Информация" без изменений, но с исправленным лейблом "Длительность") */}
+        <AccordionSection
+          title="Информация"
+          icon={Info}
+          isOpen={openSections.includes('info')}
+          onToggle={() => handleToggleSection('info')}
+          actionButton={
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+              title="Редактировать поход"
+            >
+              <Edit className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            </button>
+          }
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {trip.startDate && (
+              <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Даты</p>
+                  <p className="text-base text-gray-600 dark:text-gray-300">
+                    {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
+                  </p>
+                </div>
+              </div>
+            )}
+            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <Sun className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">Длительность</p>
+                <p className="text-base text-gray-600 dark:text-gray-300">{trip.days}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <Flame className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">Сложность</p>
+                <p className={cn('text-base', difficultyInfo.colorClassName)}>
+                  {difficultyInfo.label}
+                </p>
+              </div>
+            </div>
+          </div>
+          {trip.description && (
+            <div className="mt-4">
+              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                {trip.description}
+              </p>
+            </div>
+          )}
+        </AccordionSection>
 
         <AccordionSection
           title="Участники"
@@ -193,9 +243,68 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
           </div>
         </AccordionSection>
 
-        {/* ... (AccordionSection "Питание" с обновленными стилями) */}
+        <AccordionSection
+          title="Питание"
+          icon={Utensils}
+          isOpen={openSections.includes('summary')}
+          onToggle={() => handleToggleSection('summary')}
+          actionButton={
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/trips/${trip.id}`);
+              }}
+              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
+              title="Перейти к планированию"
+            >
+              <HandPlatter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            </button>
+          }
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <Utensils className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  Приемов пищи в день
+                </p>
+                <p className="text-base text-gray-600 dark:text-gray-300">{trip.mealsPerDay}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <BarChart className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">г/чел/день</p>
+                <p className="text-base text-gray-600 dark:text-gray-300">
+                  {summary.averageWeightPerPersonPerDay}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg col-span-2">
+              <Flame className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">ккал/чел/день</p>
+                <p className="text-base text-gray-600 dark:text-gray-300">
+                  {summary.averageCaloriesPerPersonPerDay}
+                </p>
+              </div>
+            </div>
+          </div>
+        </AccordionSection>
       </div>
-      {/* ... (ConfirmModal без изменений) */}
+      <ConfirmModal
+        isOpen={!!participantToRemove}
+        onClose={() => setParticipantToRemove(null)}
+        onConfirm={handleConfirmRemove}
+        title={`Удалить участника?`}
+        variant="danger"
+        confirmText="Удалить"
+      >
+        <p>
+          Вы уверены, что хотите удалить участника{' '}
+          <span className="font-bold">{participantToRemove?.name}</span> из этого похода?
+        </p>
+      </ConfirmModal>
     </div>
   );
 };

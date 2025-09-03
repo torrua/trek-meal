@@ -152,7 +152,7 @@ const ParticipantsPage: React.FC = () => {
   const toggleFilters = useCallback(() => setShowFilters((prev) => !prev), []);
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto h-full">
       <div className="mb-4 sm:mb-6">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Участники</h1>
@@ -185,8 +185,8 @@ const ParticipantsPage: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 h-[calc(100vh-200px)] sm:h-[calc(100vh-280px)] lg:h-[calc(100vh-320px)] min-h-[500px] sm:min-h-[600px]">
-        <div className="lg:col-span-1">
-          <div className="h-full overflow-y-auto pr-1 lg:pr-2 space-y-3 lg:space-y-4 custom-scrollbar">
+        <div className="lg:col-span-1 h-full">
+          <div className="h-full overflow-y-auto space-y-3 lg:space-y-4 custom-scrollbar">
             {filteredParticipants.map((p) => (
               <ParticipantCard
                 key={p.id}
@@ -222,7 +222,7 @@ const ParticipantsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-2 hidden lg:block">
+        <div className="lg:col-span-2 hidden lg:block h-full">
           <div className="h-full">
             <ParticipantDetail
               participant={selectedParticipant}

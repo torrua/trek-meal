@@ -35,7 +35,7 @@ const TripCard: React.FC<TripCardProps> = ({
       className={cn(
         'group relative bg-white dark:bg-gray-800 rounded-lg border transition-all duration-200 hover:shadow-lg cursor-pointer',
         'border-l-4',
-        statusConfig.borderClassName, // --- ИЗМЕНЕНИЕ: Цвет границы теперь от статуса
+        statusConfig.borderClassName,
         isSelected
           ? 'border-blue-400 shadow-blue-100 dark:shadow-blue-900/20 shadow-lg'
           : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover-border-gray-600'
@@ -85,24 +85,29 @@ const TripCard: React.FC<TripCardProps> = ({
       </div>
 
       <div className="p-4">
-        <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-gray-900 dark:text-white truncate pr-5">{trip.name}</h3>
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex items-start justify-between">
+            <h3 className="font-semibold text-gray-900 dark:text-white truncate pr-5">
+              {trip.name}
+            </h3>
+          </div>
           {trip.destination && (
-            <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
               <MapPin className="w-3.5 h-3.5" />
               <span>{trip.destination}</span>
             </div>
           )}
 
-          <div className="flex items-center gap-4 mt-3 text-sm text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3">
-            {/* --- ИЗМЕНЕНИЕ: Иконка сложности переехала сюда --- */}
+          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 pt-1">
             <div title={`Сложность: ${difficultyConfig.label}`}>
               <DifficultyIcon className={cn('w-4 h-4', difficultyConfig.colorClassName)} />
             </div>
-            <div className="flex items-center gap-1.5" title="Дата начала">
-              <Calendar className="w-4 h-4" />
-              <span className="font-medium">{formatDate(trip.startDate)}</span>
-            </div>
+            {trip.startDate && (
+              <div className="flex items-center gap-1.5" title="Дата начала">
+                <Calendar className="w-4 h-4" />
+                <span className="font-medium">{formatDate(trip.startDate)}</span>
+              </div>
+            )}
             <div className="flex items-center gap-1.5" title="Участники">
               <Users className="w-4 h-4" />
               <span className="font-medium">{trip.participants.length}</span>

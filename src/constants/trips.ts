@@ -1,6 +1,6 @@
 // src/constants/trips.ts
 
-import { List, CheckCircle, Clock, Gauge, Flame } from 'lucide-react';
+import { List, CheckCircle, Clock, Gauge } from 'lucide-react';
 import type { TripDifficulty, TripStatus } from '../types';
 
 export const TRIP_STATUS_OPTIONS = [
@@ -11,10 +11,9 @@ export const TRIP_STATUS_OPTIONS = [
 
 export const TRIP_DIFFICULTY_OPTIONS = [
   { value: 'all', label: 'Любая сложность', icon: Gauge },
-  // --- ИЗМЕНЕНИЕ: Исправлена иконка ---
-  { value: 'easy', label: 'Легкие', icon: Flame },
-  { value: 'medium', label: 'Средние', icon: Flame },
-  { value: 'hard', label: 'Сложные', icon: Flame },
+  { value: 'easy', label: 'Легкие', icon: Gauge },
+  { value: 'medium', label: 'Средние', icon: Gauge },
+  { value: 'hard', label: 'Сложные', icon: Gauge },
 ];
 
 export const DIFFICULTY_CONFIG: Record<
@@ -23,22 +22,21 @@ export const DIFFICULTY_CONFIG: Record<
 > = {
   easy: {
     label: 'Легкий',
-    icon: Flame,
+    icon: Gauge,
     colorClassName: 'text-green-600 dark:text-green-400',
   },
   medium: {
     label: 'Средний',
-    icon: Flame,
+    icon: Gauge,
     colorClassName: 'text-yellow-600 dark:text-yellow-400',
   },
   hard: {
     label: 'Сложный',
-    icon: Flame,
+    icon: Gauge,
     colorClassName: 'text-red-600 dark:text-red-400',
   },
 };
 
-// --- НОВЫЙ КОНФИГ ДЛЯ СТАТУСОВ ---
 export const STATUS_CONFIG: Record<
   TripStatus,
   { label: string; icon: React.ElementType; borderClassName: string }

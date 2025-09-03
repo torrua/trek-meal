@@ -1,6 +1,6 @@
 // src/components/participants/ParticipantForm.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, Phone, Mail, Calendar, Save, AlertCircle, X, Users, Award } from 'lucide-react';
 import type { Participant, ParticipantData } from '../../types';
 import Button from '../../ui/Button';
@@ -36,7 +36,10 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
 
-  const isDirty = JSON.stringify(formData) !== JSON.stringify(initialData);
+  const isDirty = useMemo(
+    () => JSON.stringify(formData) !== JSON.stringify(initialData),
+    [formData, initialData]
+  );
 
   useEffect(() => {
     const dataToSet = participant
@@ -106,12 +109,12 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
     }
   };
 
-  const handleSelectChange = (name: keyof ParticipantData, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value as ParticipantData[keyof ParticipantData] }));
-  };
+  const handleSelectChange = useCallback((field: keyof ParticipantData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
   const handleCancel = () => {
-    if (isDirty && !isLoading) {
+    if (isDirty) {
       setConfirmModalOpen(true);
     } else {
       onCancel();
@@ -134,7 +137,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
     formData.name.trim().length > 0 && Object.keys(errors).every((key) => !errors[key]);
 
   return (
-    <div className="max-h-[80vh] overflow-y-auto">
+    <>
       <form onSubmit={handleSubmit} className="p-1 space-y-6">
         <div className="space-y-6">
           <div>
@@ -298,7 +301,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
       >
         <p>Вы уверены, что хотите уйти? Все несохраненные изменения будут потеряны.</p>
       </ConfirmModal>
-    </div>
+    </>
   );
 };
 

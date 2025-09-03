@@ -58,7 +58,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
     >
       <div
         className={cn(
-          'absolute top-3 right-3 z-10 transition-opacity duration-200',
+          'absolute top-2 right-2 z-10 transition-opacity duration-200',
           showActions || isSelected ? 'opacity-100' : 'opacity-0'
         )}
       >
@@ -96,9 +96,9 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-2">
             <h3 className="font-semibold text-gray-900 dark:text-white truncate">
               {participant.name}
             </h3>
@@ -108,17 +108,17 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-3 mt-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
             <div title={`Опыт: ${experienceInfo.label}`}>
               <ExperienceIcon className={cn('w-4 h-4', experienceInfo.colorClassName)} />
             </div>
             <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-            <div className="flex items-center gap-1.5" title="Походы">
+            <div className="flex items-center gap-1" title="Походы">
               <MapPin className="w-4 h-4" />
               <span className="font-medium">{tripCount}</span>
             </div>
             <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-            <div className="flex items-center gap-1.5" title="Снаряжение">
+            <div className="flex items-center gap-1" title="Снаряжение">
               <Backpack className="w-4 h-4" />
               <span className="font-medium">{equipmentCount}</span>
             </div>

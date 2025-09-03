@@ -1,7 +1,7 @@
 // src/components/trips/TripsPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { Backpack, Filter, Plus } from 'lucide-react';
+import { Backpack, Filter, Plus, MapPinPlus } from 'lucide-react';
 import useTripStore from '../../stores/useTripStore';
 import useSearchStore from '../../stores/useSearchStore';
 import type { Trip, TripData } from '../../types';
@@ -160,7 +160,7 @@ const TripsPage: React.FC = () => {
               )}
             </Button>
             <Button onClick={handleAddNew} variant="primary" size="icon" title="Создать поход">
-              <Plus className="w-4 h-4" />
+              <MapPinPlus className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -227,7 +227,13 @@ const TripsPage: React.FC = () => {
           >
             <TripDetail
               trip={selectedTrip}
-              onEdit={() => selectedTrip && handleEdit(selectedTrip)}
+              // --- ИСПРАВЛЕНИЕ: Теперь мы и открываем форму, и закрываем текущее окно ---
+              onEdit={() => {
+                if (selectedTrip) {
+                  handleEdit(selectedTrip);
+                  setActiveId(null);
+                }
+              }}
               onAddParticipant={handleAddParticipant}
             />
           </Modal>

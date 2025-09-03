@@ -11,8 +11,9 @@ import {
   Backpack,
   Sun,
   Utensils,
-  Flame,
-  CirclePlus,
+  Gauge,
+  MapPin,
+  UserRoundPlus,
   HandPlatter,
 } from 'lucide-react';
 import type { Trip, Participant } from '../../types';
@@ -150,10 +151,9 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
 
   return (
     <div className="h-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-      {/* --- ИЗМЕНЕНИЕ: Заголовок полностью удален --- */}
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <AccordionSection
-          title="Информация"
+          title="Данные"
           icon={Info}
           isOpen={openSections.includes('info')}
           onToggle={() => handleToggleSection('info')}
@@ -170,42 +170,50 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
             </button>
           }
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {trip.startDate && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {trip.startDate && (
+                <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Даты</p>
+                    <p className="text-base text-gray-600 dark:text-gray-300">
+                      {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                <Sun className="w-5 h-5 text-gray-400 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">Даты</p>
-                  <p className="text-base text-gray-600 dark:text-gray-300">
-                    {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Длительность</p>
+                  <p className="text-base text-gray-600 dark:text-gray-300">{trip.days}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <Gauge className="w-5 h-5 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Сложность</p>
+                  <p className={cn('text-base', difficultyInfo.colorClassName)}>
+                    {difficultyInfo.label}
+                  </p>
+                </div>
+              </div>
+            </div>
+            {trip.description && (
+              <div className="mt-4">
+                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Info className="w-5 h-5" />
+                  Заметки
+                </h4>
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                    {trip.description}
                   </p>
                 </div>
               </div>
             )}
-            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <Sun className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">Длительность</p>
-                <p className="text-base text-gray-600 dark:text-gray-300">{trip.days}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <Flame className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">Сложность</p>
-                <p className={cn('text-base', difficultyInfo.colorClassName)}>
-                  {difficultyInfo.label}
-                </p>
-              </div>
-            </div>
           </div>
-          {trip.description && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                {trip.description}
-              </p>
-            </div>
-          )}
         </AccordionSection>
 
         <AccordionSection
@@ -223,7 +231,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
               className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
               title="Добавить участника"
             >
-              <CirclePlus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <UserRoundPlus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </button>
           }
         >
@@ -261,7 +269,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
             </button>
           }
         >
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
               <Utensils className="w-5 h-5 text-gray-400 mt-0.5" />
               <div>
@@ -277,15 +285,6 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
                 <p className="text-sm font-medium text-gray-900 dark:text-white">г/чел/день</p>
                 <p className="text-base text-gray-600 dark:text-gray-300">
                   {summary.averageWeightPerPersonPerDay}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg col-span-2">
-              <Flame className="w-5 h-5 text-gray-400 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">ккал/чел/день</p>
-                <p className="text-base text-gray-600 dark:text-gray-300">
-                  {summary.averageCaloriesPerPersonPerDay}
                 </p>
               </div>
             </div>

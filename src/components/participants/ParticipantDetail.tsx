@@ -1,6 +1,6 @@
 // src/components/participants/ParticipantDetail.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Users,
   User,
@@ -15,12 +15,12 @@ import {
   Backpack,
   ExternalLink,
   Gauge,
-  AlertTriangle,
   Award,
-  CirclePlus,
   Edit,
+  MapPinPlus,
+  CirclePlus,
 } from 'lucide-react';
-import type { Participant, Trip } from '../../types';
+import type { Participant } from '../../types';
 import useTripStore from '../../stores/useTripStore';
 import { formatDate } from '../../utils';
 import { EXPERIENCE_CONFIG } from '../../constants/participants';
@@ -113,11 +113,19 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
     tripId: null,
   });
 
+  const participantTrips = useMemo(
+    () => (participant ? trips.filter((trip) => trip.participants.includes(participant.id)) : []),
+    [trips, participant]
+  );
+
   useEffect(() => {
     if (participant) {
-      setOpenSections(['data']);
+      // --- ИЗМЕНЕНИЕ: Не сбрасываем состояние, если секция уже открыта ---
+      if (!openSections.includes('data')) {
+        setOpenSections(['data']);
+      }
     }
-  }, [participant]);
+  }, [participant, openSections]);
 
   if (!participant) {
     return (
@@ -138,7 +146,6 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
   }
 
   const experienceInfo = EXPERIENCE_CONFIG[participant.experienceLevel];
-  const participantTrips = trips.filter((trip) => trip.participants.includes(participant.id));
 
   const sortedTrips = participantTrips.sort((a, b) => {
     const dateA = parseISO(a.startDate);
@@ -294,7 +301,7 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
               className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
               title="Добавить в поход"
             >
-              <CirclePlus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <MapPinPlus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </button>
           }
         >
@@ -378,7 +385,7 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
               <p className="font-medium mb-1">Участник не записан в походы</p>
               <p className="text-xs flex items-center justify-center gap-1">
                 {'Добавьте участника в поход, нажав'}
-                <CirclePlus className="w-3 h-3 inline-block" />
+                <MapPinPlus className="w-3 h-3 inline-block" />
                 {'в заголовке'}
               </p>
             </div>

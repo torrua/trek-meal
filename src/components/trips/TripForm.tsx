@@ -3,12 +3,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import { formatISO, parseISO } from 'date-fns';
-import { Flame, AlertCircle, X, Save } from 'lucide-react';
+import { AlertCircle, X, Save } from 'lucide-react';
 import { useTripDates } from '../../hooks/useTripDates';
 import Button from '../../ui/Button';
 import ThemedDatePicker from '../../ui/ThemedDatePicker';
 import Input from '../../ui/Input';
-import DropdownSelect from '../../ui/DropdownSelect';
+import ThemedSelect from '../../ui/ThemedSelect';
 import Textarea from '../../ui/Textarea';
 import type { Trip, TripData } from '../../types';
 import ConfirmModal from '../../ui/ConfirmModal';
@@ -17,36 +17,31 @@ interface TripFormProps {
   onSubmit: (formData: TripData) => void;
   onCancel: () => void;
   trip?: Trip | null;
-  initialParticipantIds?: number[];
 }
 
-const INITIAL_STATE: TripData = {
+const INITIAL_STATE: Omit<TripData, 'participants'> = {
   name: '',
   description: '',
   destination: '',
   difficulty: 'easy',
   days: 1,
   mealsPerDay: 3,
-  participants: [],
   startDate: '',
   endDate: '',
 };
 
-const TripForm: React.FC<TripFormProps> = ({
-  onSubmit,
-  onCancel,
-  trip = null,
-  initialParticipantIds = [],
-}) => {
-  const [formData, setFormData] = useState<TripData>(INITIAL_STATE);
-  const [initialData, setInitialData] = useState<TripData>(INITIAL_STATE);
+const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) => {
+  const [formData, setFormData] = useState<TripData>({ ...INITIAL_STATE, participants: [] });
+  const [initialData, setInitialData] = useState<TripData>({ ...INITIAL_STATE, participants: [] });
   const { dateRange, days, handleDateRangeChange, handleDaysChange } = useTripDates(
-    trip || { ...INITIAL_STATE, days: 1 }
+    trip || { ...INITIAL_STATE, participants: [], days: 1 }
   );
   const [errors, setErrors] = useState<{ name?: string }>({});
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
 
   const isDirty = useMemo(() => {
+    if (!initialData) return false;
+
     const initialStartDate = initialData.startDate
       ? formatISO(parseISO(initialData.startDate), { representation: 'date' })
       : '';
@@ -67,13 +62,13 @@ const TripForm: React.FC<TripFormProps> = ({
       const { id: _id, createdAt: _ca, status: _st, selectedMeals: _sm, ...rest } = trip;
       dataToSet = { ...INITIAL_STATE, ...rest };
     } else {
-      dataToSet = { ...INITIAL_STATE, participants: initialParticipantIds, days: 1 };
+      dataToSet = { ...INITIAL_STATE, participants: [], days: 1 };
     }
     setFormData(dataToSet);
     setInitialData(dataToSet);
-  }, [trip, initialParticipantIds]);
+  }, [trip]);
 
-  const handleFieldChange = useCallback((field: keyof TripData, value: any) => {
+  const handleFieldChange = useCallback((field: keyof TripData, value: string | number) => {
     if (field === 'name' && String(value).trim().length > 0) {
       setErrors((prev) => ({ ...prev, name: undefined }));
     }
@@ -107,6 +102,12 @@ const TripForm: React.FC<TripFormProps> = ({
     };
     onSubmit(finalFormData);
   };
+
+  const difficultyOptions = [
+    { value: 'easy', label: 'Легкий' },
+    { value: 'medium', label: 'Средний' },
+    { value: 'hard', label: 'Сложный' },
+  ];
 
   return (
     <>
@@ -151,6 +152,7 @@ const TripForm: React.FC<TripFormProps> = ({
             onChange={handleDateRangeChange}
             isClearable={true}
             monthsShown={1}
+            wrapperClassName="w-full"
           />
         </div>
 
@@ -164,17 +166,17 @@ const TripForm: React.FC<TripFormProps> = ({
             onChange={(e) => handleDaysChange(Number(e.target.value))}
             required
           />
-          <DropdownSelect
-            label="Сложность"
-            icon={Flame}
-            value={formData.difficulty}
-            onChange={(value) => handleFieldChange('difficulty', value)}
-            options={[
-              { value: 'easy', label: 'Легкий' },
-              { value: 'medium', label: 'Средний' },
-              { value: 'hard', label: 'Сложный' },
-            ]}
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Сложность
+            </label>
+            <ThemedSelect
+              value={difficultyOptions.find((opt) => opt.value === formData.difficulty)}
+              onChange={(option) => option && handleFieldChange('difficulty', option.value)}
+              options={difficultyOptions}
+              menuPortalTarget={document.body}
+            />
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">

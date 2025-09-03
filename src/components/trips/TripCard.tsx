@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { MapPin, Users, Calendar, Copy, Trash2, Share } from 'lucide-react';
 import cn from 'classnames';
-import type { Trip } from '../../types';
+import { isPast, isFuture, parseISO } from 'date-fns';
+import type { Trip, TripStatus } from '../../types';
 import { formatDate } from '../../utils';
 import { DIFFICULTY_CONFIG, STATUS_CONFIG } from '../../constants/trips';
 
@@ -26,8 +27,21 @@ const TripCard: React.FC<TripCardProps> = ({
   onExport,
 }) => {
   const [showActions, setShowActions] = useState(false);
+
+  const getEffectiveStatus = (): TripStatus => {
+    if (!trip.startDate || !trip.endDate) {
+      return 'planning';
+    }
+    const start = parseISO(trip.startDate);
+    const end = parseISO(trip.endDate);
+    if (isPast(end)) return 'completed';
+    if (isFuture(start)) return 'planning';
+    return 'active';
+  };
+
+  const effectiveStatus = getEffectiveStatus();
   const difficultyConfig = DIFFICULTY_CONFIG[trip.difficulty];
-  const statusConfig = STATUS_CONFIG[trip.status];
+  const statusConfig = STATUS_CONFIG[effectiveStatus];
   const DifficultyIcon = difficultyConfig.icon;
 
   return (
@@ -86,32 +100,38 @@ const TripCard: React.FC<TripCardProps> = ({
 
       <div className="p-4">
         <div className="min-w-0 flex-1 space-y-2">
-          <div className="flex items-start justify-between">
-            <h3 className="font-semibold text-gray-900 dark:text-white truncate pr-5">
-              {trip.name}
-            </h3>
-          </div>
-          {trip.destination && (
-            <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-              <MapPin className="w-3.5 h-3.5" />
-              <span>{trip.destination}</span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 pt-1">
+          {/* --- ИЗМЕНЕНИЕ: Новая двухстрочная структура --- */}
+          <div className="flex items-center gap-2">
             <div title={`Сложность: ${difficultyConfig.label}`}>
               <DifficultyIcon className={cn('w-4 h-4', difficultyConfig.colorClassName)} />
             </div>
-            {trip.startDate && (
-              <div className="flex items-center gap-1.5" title="Дата начала">
-                <Calendar className="w-4 h-4" />
-                <span className="font-medium">{formatDate(trip.startDate)}</span>
-              </div>
-            )}
+            <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+            <h3 className="font-semibold text-gray-900 dark:text-white truncate">{trip.name}</h3>
+          </div>
+
+          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
             <div className="flex items-center gap-1.5" title="Участники">
               <Users className="w-4 h-4" />
               <span className="font-medium">{trip.participants.length}</span>
             </div>
+            {trip.destination && (
+              <>
+                <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+                <div className="flex items-center gap-1.5" title="Место">
+                  <MapPin className="w-4 h-4" />
+                  <span className="font-medium truncate">{trip.destination}</span>
+                </div>
+              </>
+            )}
+            {trip.startDate && (
+              <>
+                <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+                <div className="flex items-center gap-1.5" title="Дата начала">
+                  <Calendar className="w-4 h-4" />
+                  <span className="font-medium">{formatDate(trip.startDate)}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -82,7 +82,7 @@ export interface SelectedMeals {
 
 // --- Походы ---
 export type TripDifficulty = 'easy' | 'medium' | 'hard';
-export type TripStatus = 'planning' | 'completed';
+export type TripStatus = 'planning' | 'completed' | 'active';
 
 export interface Trip {
   id: number;

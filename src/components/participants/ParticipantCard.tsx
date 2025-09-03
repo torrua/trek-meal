@@ -35,10 +35,8 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   const genderInfo = GENDER_CONFIG[participant.gender];
   const age = calculateAge(participant.birthDate);
   const isChild = participant.age === 'child';
-  const participantTrips = trips.filter((trip) => trip.participants.includes(participant.id));
-
-  const tripCount = participantTrips.length;
-  const equipmentCount = 0;
+  const tripCount = trips.filter((trip) => trip.participants.includes(participant.id)).length;
+  const equipmentCount = 0; // Заглушка
 
   const ExperienceIcon = experienceInfo.icon;
 
@@ -50,7 +48,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
         genderInfo.borderClassName,
         isSelected
           ? 'border-blue-400 shadow-blue-100 dark:shadow-blue-900/20 shadow-lg'
-          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover-border-gray-600'
       )}
       onClick={() => onSelect(participant.id)}
       onMouseEnter={() => setShowActions(true)}
@@ -58,7 +56,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
     >
       <div
         className={cn(
-          'absolute top-2 right-2 z-10 transition-opacity duration-200',
+          'absolute top-3 right-3 z-10 transition-opacity duration-200',
           showActions || isSelected ? 'opacity-100' : 'opacity-0'
         )}
       >
@@ -96,9 +94,10 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
         </div>
       </div>
 
-      <div className="p-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-2">
+      {/* --- ИЗМЕНЕНИЕ: Отступы и структура приведены в соответствие с TripCard --- */}
+      <div className="p-4">
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex items-center gap-2">
             <h3 className="font-semibold text-gray-900 dark:text-white truncate">
               {participant.name}
             </h3>
@@ -108,17 +107,17 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 pt-1">
             <div title={`Опыт: ${experienceInfo.label}`}>
               <ExperienceIcon className={cn('w-4 h-4', experienceInfo.colorClassName)} />
             </div>
             <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-            <div className="flex items-center gap-1" title="Походы">
+            <div className="flex items-center gap-1.5" title="Походы">
               <MapPin className="w-4 h-4" />
               <span className="font-medium">{tripCount}</span>
             </div>
             <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-            <div className="flex items-center gap-1" title="Снаряжение">
+            <div className="flex items-center gap-1.5" title="Снаряжение">
               <Backpack className="w-4 h-4" />
               <span className="font-medium">{equipmentCount}</span>
             </div>

@@ -6,7 +6,7 @@ import { TRIP_STATUS_OPTIONS, TRIP_DIFFICULTY_OPTIONS } from '../../constants/tr
 import DropdownSelect from '../../ui/DropdownSelect';
 
 export interface TripFilters {
-  status: 'all' | 'planning' | 'completed';
+  status: 'all' | 'planning' | 'completed' | 'active';
   difficulty: 'all' | 'easy' | 'medium' | 'hard';
 }
 
@@ -40,6 +40,7 @@ const TripFiltersComponent: React.FC<TripFiltersProps> = ({ filters, onFiltersCh
           </button>
         )}
       </div>
+
       <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
         <DropdownSelect
           label="Статус"

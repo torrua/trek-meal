@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, UserPlus, Filter } from 'lucide-react';
+import { Users, UserRoundPlus, Filter } from 'lucide-react';
 import useParticipantStore from '../../stores/useParticipantStore';
 import useSearchStore from '../../stores/useSearchStore';
 import useTripStore from '../../stores/useTripStore';
@@ -39,7 +39,6 @@ const ParticipantsPage: React.FC = () => {
       const participantExists = participants.some((p) => p.id === Number(selectedId));
       if (participantExists) {
         setActiveId(Number(selectedId));
-        // Очищаем search param после использования, чтобы URL был чистым
         setSearchParams({}, { replace: true });
       }
     }
@@ -120,12 +119,10 @@ const ParticipantsPage: React.FC = () => {
   );
 
   const handleAddToTrip = useCallback((participantId: number) => {
-    // TODO: Implement "add to trip" modal logic
     alert(`Добавление участника ID:${participantId} в поход...`);
   }, []);
 
   const handleAddEquipment = useCallback((participantId: number) => {
-    // TODO: Implement equipment functionality
     alert(`Добавление снаряжения для участника ID:${participantId}...`);
   }, []);
 
@@ -152,7 +149,7 @@ const ParticipantsPage: React.FC = () => {
   const toggleFilters = useCallback(() => setShowFilters((prev) => !prev), []);
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto h-full">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       <div className="mb-4 sm:mb-6">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Участники</h1>
@@ -172,7 +169,7 @@ const ParticipantsPage: React.FC = () => {
               )}
             </Button>
             <Button onClick={handleAddNew} variant="primary" size="icon" title="Добавить участника">
-              <UserPlus className="w-4 h-4" />
+              <UserRoundPlus className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -185,8 +182,8 @@ const ParticipantsPage: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 h-[calc(100vh-200px)] sm:h-[calc(100vh-280px)] lg:h-[calc(100vh-320px)] min-h-[500px] sm:min-h-[600px]">
-        <div className="lg:col-span-1 h-full">
-          <div className="h-full overflow-y-auto space-y-3 lg:space-y-4 custom-scrollbar">
+        <div className="lg:col-span-1">
+          <div className="h-full overflow-y-auto pr-1 lg:pr-2 space-y-3 lg:space-y-4 custom-scrollbar">
             {filteredParticipants.map((p) => (
               <ParticipantCard
                 key={p.id}
@@ -201,7 +198,6 @@ const ParticipantsPage: React.FC = () => {
                 onExport={() => handleExport(p.id)}
               />
             ))}
-
             {filteredParticipants.length === 0 && (
               <div className="text-center py-8 sm:py-12 text-gray-500 dark:text-gray-400">
                 <Users className="w-10 sm:w-12 h-10 sm:h-12 mx-auto mb-2 sm:mb-3 opacity-50" />
@@ -212,7 +208,7 @@ const ParticipantsPage: React.FC = () => {
                   <>
                     <p className="text-sm">Пока что участников нет.</p>
                     <Button onClick={handleAddNew} size="sm" className="mt-3">
-                      <UserPlus className="w-4 h-4 mr-2" />
+                      <UserRoundPlus className="w-4 h-4 mr-2" />
                       Добавить первого участника
                     </Button>
                   </>
@@ -222,7 +218,7 @@ const ParticipantsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-2 hidden lg:block h-full">
+        <div className="lg:col-span-2 hidden lg:block">
           <div className="h-full">
             <ParticipantDetail
               participant={selectedParticipant}

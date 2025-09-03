@@ -1,10 +1,10 @@
 // src/components/trips/TripsPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { Backpack, Filter, Plus, MapPinPlus } from 'lucide-react';
+import { Backpack, Filter, MapPinPlus } from 'lucide-react';
 import useTripStore from '../../stores/useTripStore';
 import useSearchStore from '../../stores/useSearchStore';
-import type { Trip, TripData } from '../../types';
+import type { Trip, TripData, TripStatus } from '../../types';
 import TripCard from './TripCard';
 import TripDetail from './TripDetail';
 import TripFiltersComponent, { TripFilters } from './TripFiltersComponent';
@@ -14,6 +14,8 @@ import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/ConfirmModal';
 import { toast } from 'react-hot-toast';
 import { exportTripToJson } from '../../utils/backup';
+import AddParticipantsModal from './AddParticipantsModal';
+import { isPast, isFuture, parseISO } from 'date-fns';
 
 const TripsPage: React.FC = () => {
   const { trips, addTrip, deleteTrip, updateTrip } = useTripStore();
@@ -25,6 +27,18 @@ const TripsPage: React.FC = () => {
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [tripToDelete, setTripToDelete] = useState<Trip | null>(null);
+  const [isAddParticipantModalOpen, setAddParticipantModalOpen] = useState(false);
+
+  const getEffectiveStatus = useCallback((trip: Trip): TripStatus => {
+    if (!trip.startDate || !trip.endDate) {
+      return 'planning';
+    }
+    const start = parseISO(trip.startDate);
+    const end = parseISO(trip.endDate);
+    if (isPast(end)) return 'completed';
+    if (isFuture(start)) return 'planning';
+    return 'active';
+  }, []);
 
   const filteredTrips = useMemo(() => {
     let result = trips;
@@ -37,13 +51,14 @@ const TripsPage: React.FC = () => {
     }
 
     result = result.filter((t) => {
-      if (filters.status !== 'all' && t.status !== filters.status) return false;
+      const effectiveStatus = getEffectiveStatus(t);
+      if (filters.status !== 'all' && effectiveStatus !== filters.status) return false;
       if (filters.difficulty !== 'all' && t.difficulty !== filters.difficulty) return false;
       return true;
     });
 
     return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [trips, searchTerm, filters]);
+  }, [trips, searchTerm, filters, getEffectiveStatus]);
 
   const selectedTrip = useMemo(
     () => trips.find((t) => t.id === activeId) || null,
@@ -82,7 +97,7 @@ const TripsPage: React.FC = () => {
       const originalTrip = trips.find((t) => t.id === tripId);
       if (!originalTrip) return;
 
-      const { name, participants, ...rest } = originalTrip;
+      const { name, participants: _participants, ...rest } = originalTrip;
       const clonedTripData: TripData = {
         ...rest,
         name: `${name} (копия)`,
@@ -128,7 +143,7 @@ const TripsPage: React.FC = () => {
 
   const handleAddParticipant = useCallback(() => {
     if (selectedTrip) {
-      toast.success('Функционал добавления участника здесь будет реализован.');
+      setAddParticipantModalOpen(true);
     }
   }, [selectedTrip]);
 
@@ -197,7 +212,7 @@ const TripsPage: React.FC = () => {
                   <>
                     <p className="text-sm">Пока что походов нет.</p>
                     <Button onClick={handleAddNew} size="sm" className="mt-3">
-                      <Plus className="w-4 h-4 mr-2" />
+                      <MapPinPlus className="w-4 h-4 mr-2" />
                       Создать первый поход
                     </Button>
                   </>
@@ -227,7 +242,6 @@ const TripsPage: React.FC = () => {
           >
             <TripDetail
               trip={selectedTrip}
-              // --- ИСПРАВЛЕНИЕ: Теперь мы и открываем форму, и закрываем текущее окно ---
               onEdit={() => {
                 if (selectedTrip) {
                   handleEdit(selectedTrip);
@@ -261,6 +275,12 @@ const TripsPage: React.FC = () => {
           <span className="font-bold">{tripToDelete?.name}</span>? Это действие нельзя отменить.
         </p>
       </ConfirmModal>
+
+      <AddParticipantsModal
+        isOpen={isAddParticipantModalOpen}
+        onClose={() => setAddParticipantModalOpen(false)}
+        tripId={activeId}
+      />
     </div>
   );
 };

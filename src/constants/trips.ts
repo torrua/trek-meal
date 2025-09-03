@@ -1,11 +1,13 @@
 // src/constants/trips.ts
 
-import { List, CheckCircle, Clock, Gauge } from 'lucide-react';
+import { List, CheckCircle, Clock, Gauge, Route } from 'lucide-react';
 import type { TripDifficulty, TripStatus } from '../types';
 
 export const TRIP_STATUS_OPTIONS = [
   { value: 'all', label: 'Все статусы', icon: List },
   { value: 'planning', label: 'Планируются', icon: Clock },
+  // --- ИЗМЕНЕНИЕ: Добавлена новая опция фильтра ---
+  { value: 'active', label: 'На маршруте', icon: Route },
   { value: 'completed', label: 'Завершенные', icon: CheckCircle },
 ];
 
@@ -44,11 +46,16 @@ export const STATUS_CONFIG: Record<
   planning: {
     label: 'Планируется',
     icon: Clock,
-    borderClassName: 'border-l-yellow-500',
+    borderClassName: 'border-l-amber-500',
+  },
+  active: {
+    label: 'На маршруте',
+    icon: Route,
+    borderClassName: 'border-l-rose-600',
   },
   completed: {
     label: 'Завершен',
     icon: CheckCircle,
-    borderClassName: 'border-l-green-500',
+    borderClassName: 'border-l-emerald-600',
   },
 };

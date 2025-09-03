@@ -13,7 +13,7 @@ interface TripState {
   removeParticipantFromAllTrips: (participantId: number) => void;
   isDishInUse: (dishId: number) => boolean;
   addParticipantsToTrip: (tripId: number, participantIds: number[]) => void;
-  removeParticipantFromTrip: (tripId: number, participantId: number) => void; // --- НОВАЯ ФУНКЦИЯ ---
+  removeParticipantFromTrip: (tripId: number, participantId: number) => void;
 }
 
 const useTripStore = create<TripState>()(
@@ -21,7 +21,6 @@ const useTripStore = create<TripState>()(
     (set, get) => ({
       trips: [],
 
-      // --- НОВАЯ ФУНКЦИЯ ---
       removeParticipantFromTrip: (tripId, participantId) => {
         const trip = get().trips.find((t) => t.id === tripId);
         if (!trip) {
@@ -55,7 +54,13 @@ const useTripStore = create<TripState>()(
             return t;
           }),
         }));
-        toast.success(`Участники добавлены в поход "${trip.name}"`);
+        // --- ИЗМЕНЕНИЕ: Более умное уведомление ---
+        const count = participantIds.length;
+        if (count === 1) {
+          toast.success(`Участник добавлен в поход "${trip.name}"`);
+        } else {
+          toast.success(`${count} участников добавлено в поход "${trip.name}"`);
+        }
       },
 
       addTrip: (tripData) => {

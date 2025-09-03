@@ -9,9 +9,9 @@ import Modal from '../../../ui/Modal';
 import Button from '../../../ui/Button';
 import Input from '../../../ui/Input';
 import ConfirmModal from '../../../ui/ConfirmModal';
-import CategoryCard from '../../categories/CategoryCard';
-import CategoryDetail from '../../categories/CategoryDetail';
-import ProductForm from '../../products/ProductForm';
+import CategoryCard from './CategoryCard';
+import CategoryDetail from './CategoryDetail';
+import ProductForm from '../products/ProductForm';
 import { CirclePlus, Tag, Palette } from 'lucide-react';
 
 interface CategoryFormProps {

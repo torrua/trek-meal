@@ -1,9 +1,9 @@
-// src/components/dishes/DishDetail.tsx
+// src/components/database/dishes/DishDetail.tsx
 
 import React from 'react';
 import { Utensils, Edit } from 'lucide-react';
-import type { Dish } from '../../types';
-import useProductStore from '../../stores/useProductStore';
+import type { Dish } from '../../../types';
+import useProductStore from '../../../stores/useProductStore';
 
 interface DishDetailProps {
   dish: Dish | null;

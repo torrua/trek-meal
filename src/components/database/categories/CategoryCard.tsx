@@ -1,25 +1,28 @@
-// src/components/dishes/DishCard.tsx
+// src/components/database/categories/CategoryCard.tsx
 
 import React from 'react';
 import cn from 'classnames';
-import { Soup, Edit, Trash2 } from 'lucide-react';
-import type { Dish } from '../../types';
-import useProductStore from '../../stores/useProductStore';
+import useProductStore from '../../../stores/useProductStore';
+import type { Category } from '../../../types';
+import { Edit, Trash2 } from 'lucide-react';
 
-interface DishCardProps {
-  dish: Dish;
+interface CategoryCardProps {
+  category: Category;
   isSelected: boolean;
   onSelect: () => void;
   onEdit: () => void;
   onDelete: (e: React.MouseEvent) => void;
 }
 
-const DishCard: React.FC<DishCardProps> = ({ dish, isSelected, onSelect, onEdit, onDelete }) => {
+const CategoryCard: React.FC<CategoryCardProps> = ({
+  category,
+  isSelected,
+  onSelect,
+  onEdit,
+  onDelete,
+}) => {
   const { products } = useProductStore();
-  const totalWeight = dish.products.reduce((sum, p) => {
-    const product = products.find((prod) => prod.id === p.productId);
-    return sum + (product ? p.weight : 0);
-  }, 0);
+  const productCount = products.filter((p) => p.categoryId === category.id).length;
 
   return (
     <div
@@ -32,14 +35,19 @@ const DishCard: React.FC<DishCardProps> = ({ dish, isSelected, onSelect, onEdit,
       )}
     >
       <div className="p-4">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Soup className="w-5 h-5 text-gray-500" />
+        <div className="flex items-center gap-3">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl"
+            style={{ backgroundColor: category.color }}
+          >
+            {category.emoji}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-gray-900 dark:text-white truncate">{dish.name}</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+              {category.name}
+            </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              {dish.products.length} комп. / {totalWeight} г
+              {productCount} продуктов
             </p>
           </div>
         </div>
@@ -69,4 +77,4 @@ const DishCard: React.FC<DishCardProps> = ({ dish, isSelected, onSelect, onEdit,
   );
 };
 
-export default DishCard;
+export default CategoryCard;

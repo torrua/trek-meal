@@ -14,7 +14,7 @@ import Button from '../../ui/Button';
 import Modal from '../../ui/Modal';
 import ConfirmModal from '../../ui/ConfirmModal';
 import TripForm from '../trips/TripForm';
-import DishForm from '../dishes/DishForm';
+import DishForm from '../database/dishes/DishForm';
 import type {
   TripData,
   Product,

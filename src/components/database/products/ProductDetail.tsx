@@ -1,9 +1,9 @@
-// src/components/products/ProductDetail.tsx
+// src/components/database/products/ProductDetail.tsx
 
 import React from 'react';
 import { Package, Thermometer, Zap, Tag, Info, Edit, Apple, Beef, Carrot } from 'lucide-react';
-import type { Product, Category } from '../../types';
-import useCategoryStore from '../../stores/useCategoryStore';
+import type { Product, Category } from '../../../types';
+import useCategoryStore from '../../../stores/useCategoryStore';
 import cn from 'classnames';
 
 interface ProductDetailProps {

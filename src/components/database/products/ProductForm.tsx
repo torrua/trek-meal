@@ -1,14 +1,14 @@
-// src/components/products/ProductForm.tsx
+// src/components/database/products/ProductForm.tsx
 
 import React, { useState, useEffect } from 'react';
 import { Tag, X } from 'lucide-react';
-import useCategoryStore from '../../stores/useCategoryStore';
-import Button from '../../ui/Button';
+import useCategoryStore from '../../../stores/useCategoryStore';
+import Button from '../../../ui/Button';
 import { toast } from 'react-hot-toast';
-import type { Product, ProductData, ProductPortion, Category } from '../../types';
-import Input from '../../ui/Input';
-import DropdownSelect from '../../ui/DropdownSelect';
-import Textarea from '../../ui/Textarea';
+import type { Product, ProductData, ProductPortion, Category } from '../../../types';
+import Input from '../../../ui/Input';
+import DropdownSelect from '../../../ui/DropdownSelect';
+import Textarea from '../../../ui/Textarea';
 
 interface ProductFormProps {
   product: Product | null;

@@ -1,53 +1,45 @@
-// src/components/categories/CategoryCard.tsx
+// src/components/database/products/ProductCard.tsx
 
 import React from 'react';
 import cn from 'classnames';
-import useProductStore from '../../stores/useProductStore';
-import type { Category } from '../../types';
-import { Edit, Trash2 } from 'lucide-react';
+import { Component, Edit, Trash2 } from 'lucide-react';
+import type { Product } from '../../../types';
 
-interface CategoryCardProps {
-  category: Category;
-  isSelected: boolean;
-  onSelect: () => void;
+interface ProductCardProps {
+  product: Product;
+  isSelected?: boolean; // --- ИЗМЕНЕНИЕ: Сделано необязательным
+  onSelect?: () => void; // --- ИЗМЕНЕНИЕ: Сделано необязательным
   onEdit: () => void;
   onDelete: (e: React.MouseEvent) => void;
 }
 
-const CategoryCard: React.FC<CategoryCardProps> = ({
-  category,
+const ProductCard: React.FC<ProductCardProps> = ({
+  product,
   isSelected,
   onSelect,
   onEdit,
   onDelete,
 }) => {
-  const { products } = useProductStore();
-  const productCount = products.filter((p) => p.categoryId === category.id).length;
-
   return (
     <div
       onClick={onSelect}
       className={cn(
-        'group relative bg-white dark:bg-gray-800 rounded-xl border transition-all duration-200 hover:shadow-lg cursor-pointer',
+        'group relative bg-white dark:bg-gray-800 rounded-xl border transition-all duration-200 hover:shadow-lg',
+        onSelect ? 'cursor-pointer' : 'cursor-default', // Курсор меняется в зависимости от наличия onSelect
         isSelected
           ? 'border-blue-400 shadow-blue-100 dark:shadow-blue-900/20 shadow-lg ring-1 ring-blue-400/30 dark:ring-blue-500/30'
           : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
       )}
     >
       <div className="p-4">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl"
-            style={{ backgroundColor: category.color }}
-          >
-            {category.emoji}
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Component className="w-5 h-5 text-gray-500" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-              {category.name}
-            </h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white truncate">{product.name}</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              {productCount} продуктов
+              {product.calories} ккал / 100г
             </p>
           </div>
         </div>
@@ -77,4 +69,4 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
   );
 };
 
-export default CategoryCard;
+export default ProductCard;

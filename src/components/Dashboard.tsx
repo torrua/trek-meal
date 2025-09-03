@@ -10,7 +10,7 @@ import useCategoryStore from '../stores/useCategoryStore';
 import { calculateTripSummary } from '../utils';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
-import ProductForm from './products/ProductForm';
+import ProductForm from './database/products/ProductForm';
 import type { Trip, Product, ProductData, Category } from '../types';
 
 // Карточка для статистики

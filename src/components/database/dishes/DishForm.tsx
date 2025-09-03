@@ -1,13 +1,13 @@
-// src/components/dishes/DishForm.tsx
+// src/components/database/dishes/DishForm.tsx
 
 import React, { useState, useEffect } from 'react';
 import { SingleValue } from 'react-select';
-import ThemedSelect from '../../ui/ThemedSelect';
-import useProductStore from '../../stores/useProductStore';
-import useDishStore from '../../stores/useDishStore';
-import Button from '../../ui/Button';
-import Input from '../../ui/Input';
-import type { Dish, DishData, DishProduct, Product, SubmitDishAction } from '../../types';
+import ThemedSelect from '../../../ui/ThemedSelect';
+import useProductStore from '../../../stores/useProductStore';
+import useDishStore from '../../../stores/useDishStore';
+import Button from '../../../ui/Button';
+import Input from '../../../ui/Input';
+import type { Dish, DishData, DishProduct, Product, SubmitDishAction } from '../../../types';
 import { toast } from 'react-hot-toast';
 import { X } from 'lucide-react';
 

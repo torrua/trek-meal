@@ -1,9 +1,9 @@
-// src/components/categories/CategoryDetail.tsx
+// src/components/database/categories/CategoryDetail.tsx
 
 import React from 'react';
 import { Tag, Edit, Package } from 'lucide-react';
-import type { Category, Product } from '../../types';
-import useProductStore from '../../stores/useProductStore';
+import type { Category, Product } from '../../../types';
+import useProductStore from '../../../stores/useProductStore';
 import ProductCard from '../products/ProductCard';
 
 interface CategoryDetailProps {

@@ -1,18 +1,19 @@
-// src/components/dishes/DishesPage.tsx
+// src/components/database/dishes/DishesContent.tsx
 
 import React, { useState, useMemo } from 'react';
-import useDishStore from '../../stores/useDishStore';
-import useTripStore from '../../stores/useTripStore';
-import useSearchStore from '../../stores/useSearchStore';
-import type { Dish, DishData, SubmitDishAction } from '../../types';
-import DishCard from './DishCard';
-import DishForm from './DishForm';
-import Modal from '../../ui/Modal';
-import Button from '../../ui/Button';
-import ConfirmModal from '../../ui/ConfirmModal';
+import useDishStore from '../../../stores/useDishStore';
+import useTripStore from '../../../stores/useTripStore';
+import useSearchStore from '../../../stores/useSearchStore';
+import type { Dish, DishData, SubmitDishAction } from '../../../types';
+import DishCard from '../../dishes/DishCard';
+import DishForm from '../../dishes/DishForm';
+import Modal from '../../../ui/Modal';
+import Button from '../../../ui/Button';
+import ConfirmModal from '../../../ui/ConfirmModal';
 import { toast } from 'react-hot-toast';
+import { Plus } from 'lucide-react';
 
-function DishesPage() {
+const DishesContent: React.FC = () => {
   const { dishes, addDish, updateDish, deleteDish } = useDishStore();
   const { isDishInUse } = useTripStore();
   const { searchTerm } = useSearchStore();
@@ -39,9 +40,8 @@ function DishesPage() {
     setIsModalOpen(true);
   };
 
-  // --- ИЗМЕНЕНИЕ ---
   const handleRequestDelete = (e: React.MouseEvent, dish: Dish) => {
-    e.stopPropagation(); // Останавливаем всплытие
+    e.stopPropagation();
     if (isDishInUse(dish.id)) {
       toast.error(
         'Это блюдо используется в одном или нескольких походах. Сначала удалите его из раскладок.',
@@ -72,15 +72,17 @@ function DishesPage() {
   };
 
   return (
-    <div className="p-6">
-      <header className="flex justify-between items-center mb-6 pb-4 border-b">
-        <h2 className="text-2xl font-bold text-primary">Мои блюда и шаблоны</h2>
-        <Button onClick={handleAddNew}>+ Создать блюдо</Button>
-      </header>
+    <div>
+      <div className="flex justify-end mb-6">
+        <Button onClick={handleAddNew}>
+          <Plus className="w-4 h-4 mr-2" />
+          Создать блюдо
+        </Button>
+      </div>
 
       {filteredDishes.length === 0 ? (
         <div className="text-center py-16 px-6 bg-muted rounded-lg">
-          <h3 className="text-lg font-medium text-secondary">
+          <h3 className="text-lg font-medium text-foreground">
             {searchTerm ? 'Блюда не найдены' : 'У вас пока нет сохраненных блюд'}
           </h3>
           <p className="text-muted-foreground mt-2 mb-4">
@@ -97,7 +99,6 @@ function DishesPage() {
               key={dish.id}
               dish={dish}
               onEdit={() => handleEdit(dish)}
-              // --- ИЗМЕНЕНИЕ ---
               onDelete={(e) => handleRequestDelete(e, dish)}
             />
           ))}
@@ -131,6 +132,6 @@ function DishesPage() {
       </ConfirmModal>
     </div>
   );
-}
+};
 
-export default DishesPage;
+export default DishesContent;

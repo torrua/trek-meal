@@ -1,22 +1,21 @@
-// src/components/products/ProductsPage.tsx
+// src/components/database/products/ProductsContent.tsx
 
 import React, { useState, useMemo } from 'react';
-import useProductStore from '../../stores/useProductStore';
-import useCategoryStore from '../../stores/useCategoryStore';
-import useSearchStore from '../../stores/useSearchStore';
-import type { Product, Category, ProductData } from '../../types';
+import useProductStore from '../../../stores/useProductStore';
+import useCategoryStore from '../../../stores/useCategoryStore';
+import useSearchStore from '../../../stores/useSearchStore';
+import type { Product, Category, ProductData } from '../../../types';
+import ProductCard from '../../products/ProductCard';
+import ProductForm from '../../products/ProductForm';
+import Modal from '../../../ui/Modal';
+import Button from '../../../ui/Button';
+import ConfirmModal from '../../../ui/ConfirmModal';
+import ThemedSelect from '../../../ui/ThemedSelect';
+import { Plus } from 'lucide-react';
 
-import ProductCard from './ProductCard';
-import ProductForm from './ProductForm';
-import Modal from '../../ui/Modal';
-import Button from '../../ui/Button';
-import ConfirmModal from '../../ui/ConfirmModal';
-import ThemedSelect from '../../ui/ThemedSelect'; // <-- ИЗМЕНЕНИЕ: Используем ThemedSelect
-
-// Тип для опций селектора категорий
 type CategoryOption = { value: string; label: string };
 
-function ProductsPage() {
+const ProductsContent: React.FC = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
   const { categories } = useCategoryStore();
   const { searchTerm } = useSearchStore();
@@ -88,26 +87,23 @@ function ProductsPage() {
   };
 
   return (
-    <div className="p-6">
-      <header className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6 pb-4 border-b border-primary">
-        <h2 className="text-2xl font-bold text-primary">Управление продуктами</h2>
-        <div className="flex items-center gap-4">
-          <ThemedSelect<CategoryOption>
-            className="w-full md:w-48"
-            value={filterCategory}
-            options={categoryOptions}
-            onChange={(option) => setFilterCategory(option as CategoryOption)}
-          />
-
-          <Button onClick={handleAddNew} variant="primary" className="whitespace-nowrap">
-            + Добавить продукт
-          </Button>
-        </div>
-      </header>
+    <div>
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
+        <ThemedSelect<CategoryOption>
+          className="w-full md:w-56"
+          value={filterCategory}
+          options={categoryOptions}
+          onChange={(option) => setFilterCategory(option as CategoryOption)}
+        />
+        <Button onClick={handleAddNew} variant="primary" className="w-full md:w-auto">
+          <Plus className="w-4 h-4 mr-2" />
+          Добавить продукт
+        </Button>
+      </div>
 
       {filteredProducts.length === 0 ? (
         <div className="text-center py-16 px-6 bg-muted rounded-lg">
-          <h3 className="text-lg font-medium text-secondary">
+          <h3 className="text-lg font-medium text-foreground">
             {searchTerm || filterCategory.value !== 'all'
               ? 'Продукты не найдены'
               : 'Продуктов пока нет'}
@@ -163,6 +159,6 @@ function ProductsPage() {
       </ConfirmModal>
     </div>
   );
-}
+};
 
-export default ProductsPage;
+export default ProductsContent;

@@ -1,14 +1,15 @@
-// src/components/categories/CategoriesPage.tsx
+// src/components/database/categories/CategoriesContent.tsx
 
 import React, { useState, useMemo } from 'react';
-import useCategoryStore from '../../stores/useCategoryStore';
-import useSearchStore from '../../stores/useSearchStore';
-import type { Category, CategoryData } from '../../types';
-import Modal from '../../ui/Modal';
-import Button from '../../ui/Button';
-import Input from '../../ui/Input';
-import ConfirmModal from '../../ui/ConfirmModal';
-import CategoryCard from './CategoryCard';
+import useCategoryStore from '../../../stores/useCategoryStore';
+import useSearchStore from '../../../stores/useSearchStore';
+import type { Category, CategoryData } from '../../../types';
+import Modal from '../../../ui/Modal';
+import Button from '../../../ui/Button';
+import Input from '../../../ui/Input';
+import ConfirmModal from '../../../ui/ConfirmModal';
+import CategoryCard from '../../categories/CategoryCard';
+import { Plus } from 'lucide-react';
 
 interface CategoryFormProps {
   category: Category | null;
@@ -68,7 +69,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
   );
 };
 
-function CategoriesPage() {
+const CategoriesContent: React.FC = () => {
   const { categories, addCategory, updateCategory, deleteCategory } = useCategoryStore();
   const { searchTerm } = useSearchStore();
 
@@ -116,15 +117,17 @@ function CategoriesPage() {
   };
 
   return (
-    <div className="p-6">
-      <header className="flex justify-between items-center mb-6 pb-4 border-b">
-        <h2 className="text-2xl font-bold text-primary">Категории продуктов</h2>
-        <Button onClick={() => handleOpenModal()}>+ Добавить категорию</Button>
-      </header>
+    <div>
+      <div className="flex justify-end mb-6">
+        <Button onClick={() => handleOpenModal()}>
+          <Plus className="w-4 h-4 mr-2" />
+          Добавить категорию
+        </Button>
+      </div>
 
       {filteredCategories.length === 0 ? (
         <div className="text-center py-16 px-6 bg-muted rounded-lg">
-          <h3 className="text-lg font-medium text-secondary">
+          <h3 className="text-lg font-medium text-foreground">
             {searchTerm ? 'Категории не найдены' : 'Категорий пока нет'}
           </h3>
         </div>
@@ -171,6 +174,6 @@ function CategoriesPage() {
       </ConfirmModal>
     </div>
   );
-}
+};
 
-export default CategoriesPage;
+export default CategoriesContent;

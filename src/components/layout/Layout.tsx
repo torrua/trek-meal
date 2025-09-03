@@ -25,13 +25,21 @@ const Layout: React.FC = () => {
 
   const getPlaceholder = () => {
     if (['/', '/settings'].includes(location.pathname) || isPlanningPage) return 'Поиск недоступен';
+    // --- ИЗМЕНЕНИЕ: Логика плейсхолдера обновлена ---
+    if (location.pathname === '/nutrition') {
+      const tab = new URLSearchParams(location.search).get('tab') || 'products';
+      switch (tab) {
+        case 'products':
+          return 'Поиск по продуктам...';
+        case 'dishes':
+          return 'Поиск по блюдам...';
+        case 'categories':
+          return 'Поиск по категориям...';
+        default:
+          return 'Поиск...';
+      }
+    }
     switch (location.pathname) {
-      case '/products':
-        return 'Поиск по продуктам...';
-      case '/dishes':
-        return 'Поиск по блюдам...';
-      case '/categories':
-        return 'Поиск по категориям...';
       case '/participants':
         return 'Поиск по участникам...';
       case '/trips':
@@ -60,29 +68,14 @@ const Layout: React.FC = () => {
           >
             Главная
           </NavLink>
+          {/* --- ИЗМЕНЕНИЕ: Старые ссылки заменены на одну новую --- */}
           <NavLink
-            to="/products"
+            to="/nutrition"
             className={({ isActive }) =>
               cn(navLinkBaseClasses, isActive ? navLinkActiveClasses : navLinkInactiveClasses)
             }
           >
-            Продукты
-          </NavLink>
-          <NavLink
-            to="/dishes"
-            className={({ isActive }) =>
-              cn(navLinkBaseClasses, isActive ? navLinkActiveClasses : navLinkInactiveClasses)
-            }
-          >
-            Блюда
-          </NavLink>
-          <NavLink
-            to="/categories"
-            className={({ isActive }) =>
-              cn(navLinkBaseClasses, isActive ? navLinkActiveClasses : navLinkInactiveClasses)
-            }
-          >
-            Категории
+            Питание
           </NavLink>
           <NavLink
             to="/participants"

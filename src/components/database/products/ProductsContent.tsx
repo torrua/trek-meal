@@ -1,16 +1,18 @@
 // src/components/database/products/ProductsContent.tsx
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import useProductStore from '../../../stores/useProductStore';
 import useSearchStore from '../../../stores/useSearchStore';
 import type { Product, ProductData } from '../../../types';
-import ProductCard from './ProductCard';
-import ProductDetail from './ProductDetail';
-import ProductForm from './ProductForm';
+import ProductCard from '../products/ProductCard';
+import ProductDetail from '../products/ProductDetail';
+import ProductForm from './ProductForm'; // Изменена вложенность
 import Modal from '../../../ui/Modal';
 import Button from '../../../ui/Button';
 import ConfirmModal from '../../../ui/ConfirmModal';
-import { Component, CirclePlus } from 'lucide-react';
+import { Component, CirclePlus, UploadCloud } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import ImportProductsModal from './ImportProductsModal';
 
 interface ProductsContentProps {
   setAddHandler: (handler: (() => void) | null) => void;
@@ -24,6 +26,10 @@ const ProductsContent: React.FC<ProductsContentProps> = ({ setAddHandler }) => {
   const [isFormModalOpen, setFormModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+
+  const [isImportModalOpen, setImportModalOpen] = useState(false);
+  const [fileContent, setFileContent] = useState<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredProducts = useMemo(() => {
     return products.filter(
@@ -48,6 +54,24 @@ const ProductsContent: React.FC<ProductsContentProps> = ({ setAddHandler }) => {
     setAddHandler(() => handleAddNew);
     return () => setAddHandler(null);
   }, [setAddHandler, handleAddNew]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = JSON.parse(e.target?.result as string);
+          setFileContent(content);
+          setImportModalOpen(true);
+        } catch (error) {
+          toast.error('Ошибка парсинга JSON. Проверьте формат файла.');
+        }
+      };
+      reader.readAsText(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleEdit = useCallback((product: Product) => {
     setEditingProduct(product);
@@ -78,8 +102,21 @@ const ProductsContent: React.FC<ProductsContentProps> = ({ setAddHandler }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 h-full">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".json"
+        className="hidden"
+      />
       <div className="lg:col-span-1">
-        <div className="h-[calc(100vh-360px)] min-h-[400px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+        <div className="flex justify-end mb-4">
+          <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
+            <UploadCloud className="w-4 h-4 mr-2" />
+            Импорт
+          </Button>
+        </div>
+        <div className="h-[calc(100vh-420px)] min-h-[400px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-16 px-6 text-gray-500">
               <Component className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -140,6 +177,12 @@ const ProductsContent: React.FC<ProductsContentProps> = ({ setAddHandler }) => {
           <span className="font-bold">{productToDelete?.name}</span>?
         </p>
       </ConfirmModal>
+
+      <ImportProductsModal
+        isOpen={isImportModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        fileContent={fileContent}
+      />
     </div>
   );
 };

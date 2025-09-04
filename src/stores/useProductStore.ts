@@ -9,6 +9,7 @@ import useDishStore from './useDishStore';
 interface ProductState {
   products: Product[];
   addProduct: (data: ProductData) => void;
+  addMultipleProducts: (data: ProductData[]) => void; // --- НОВАЯ ФУНКЦИЯ ---
   updateProduct: (id: number, data: ProductData) => void;
   deleteProduct: (id: number) => void;
   removeCategoryFromProducts: (categoryId: number) => void;
@@ -36,6 +37,24 @@ const useProductStore = create<ProductState>()(
         };
         set((state) => ({ products: [...state.products, newProduct] }));
         toast.success(`Продукт "${newProduct.name}" добавлен.`);
+      },
+
+      addMultipleProducts: (productsData) => {
+        const newProducts: Product[] = productsData.map((data) => ({
+          ...data,
+          id: Date.now() + Math.random(), // Добавляем Math.random для уникальности при быстром добавлении
+          calories: Number(data.calories) || 0,
+          proteins: Number(data.proteins) || 0,
+          fats: Number(data.fats) || 0,
+          carbs: Number(data.carbs) || 0,
+          categoryId: data.categoryId ? Number(data.categoryId) : null,
+          portions: data.portions.map((p) => ({
+            ...p,
+            weight: Number(p.weight) || 0,
+          })),
+        }));
+        set((state) => ({ products: [...state.products, ...newProducts] }));
+        toast.success(`${newProducts.length} продуктов успешно импортировано!`);
       },
 
       updateProduct: (id, updatedData) => {

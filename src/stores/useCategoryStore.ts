@@ -1,3 +1,5 @@
+// src/stores/useCategoryStore.ts
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
@@ -6,7 +8,7 @@ import type { Category, CategoryData } from '../types';
 
 interface CategoryState {
   categories: Category[];
-  addCategory: (data: CategoryData) => void;
+  addCategory: (data: CategoryData) => Category; // --- ИЗМЕНЕНИЕ: Теперь возвращает созданную категорию ---
   updateCategory: (id: number, data: CategoryData) => void;
   deleteCategory: (id: number) => void;
 }
@@ -24,6 +26,7 @@ const useCategoryStore = create<CategoryState>()(
         const newCategory = { ...categoryData, id: Date.now() };
         set((state) => ({ categories: [...state.categories, newCategory] }));
         toast.success(`Категория "${newCategory.name}" добавлена.`);
+        return newCategory; // --- ИЗМЕНЕНИЕ: Возвращаем результат ---
       },
 
       updateCategory: (id, updatedData) => {

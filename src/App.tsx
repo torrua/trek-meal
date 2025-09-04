@@ -9,14 +9,13 @@ import TripsPage from './components/trips/TripsPage';
 import TripPlanningPage from './components/trip-planning/TripPlanningPage';
 import ParticipantsPage from './components/participants/ParticipantsPage';
 import SettingsPage from './components/settings/SettingsPage';
-import DatabasePage from './components/database/DatabasePage'; // --- ИЗМЕНЕНИЕ: Новый импорт
+import DatabasePage from './components/database/DatabasePage';
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Layout />}>
+      <Route element={<Layout />}>
         <Route index element={<Dashboard />} />
-        {/* --- ИЗМЕНЕНИЕ: Старые роуты заменены на один новый --- */}
         <Route path="nutrition" element={<DatabasePage />} />
         <Route path="participants" element={<ParticipantsPage />} />
         <Route path="trips" element={<TripsPage />} />

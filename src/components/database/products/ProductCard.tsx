@@ -3,12 +3,13 @@
 import React from 'react';
 import cn from 'classnames';
 import { Component, Edit, Trash2 } from 'lucide-react';
-import type { Product } from '../../../types';
+import type { Product, Category } from '../../../types';
+import useCategoryStore from '../../../stores/useCategoryStore';
 
 interface ProductCardProps {
   product: Product;
-  isSelected?: boolean; // --- ИЗМЕНЕНИЕ: Сделано необязательным
-  onSelect?: () => void; // --- ИЗМЕНЕНИЕ: Сделано необязательным
+  isSelected?: boolean;
+  onSelect?: () => void;
   onEdit: () => void;
   onDelete: (e: React.MouseEvent) => void;
 }
@@ -20,16 +21,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const { categories } = useCategoryStore();
+  const category = categories.find((c: Category) => c.id === product.categoryId);
+
   return (
     <div
       onClick={onSelect}
       className={cn(
-        'group relative bg-white dark:bg-gray-800 rounded-xl border transition-all duration-200 hover:shadow-lg',
-        onSelect ? 'cursor-pointer' : 'cursor-default', // Курсор меняется в зависимости от наличия onSelect
+        'group relative bg-white dark:bg-gray-800 rounded-lg border transition-all duration-200 hover:shadow-lg',
+        onSelect ? 'cursor-pointer' : 'cursor-default',
         isSelected
           ? 'border-blue-400 shadow-blue-100 dark:shadow-blue-900/20 shadow-lg ring-1 ring-blue-400/30 dark:ring-blue-500/30'
-          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600',
+        category && category.color && 'border-l-4'
       )}
+      style={{ borderLeftColor: category && category.color ? category.color : 'transparent' }}
     >
       <div className="p-4">
         <div className="flex items-start gap-3">

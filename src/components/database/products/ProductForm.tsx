@@ -1,7 +1,7 @@
 // src/components/database/products/ProductForm.tsx
 
 import React, { useState, useEffect } from 'react';
-import { Tag, X } from 'lucide-react';
+import { Tag, Trash2 } from 'lucide-react';
 import useCategoryStore from '../../../stores/useCategoryStore';
 import Button from '../../../ui/Button';
 import { toast } from 'react-hot-toast';
@@ -207,7 +207,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                 onClick={() => removePortion(index)}
                 disabled={formData.portions.length <= 1}
               >
-                <X className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" />
               </Button>
             </div>
           ))}

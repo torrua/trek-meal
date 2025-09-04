@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import type { Product, ProductData } from '../types';
-import useDishStore from './useDishStore'; // <-- Импортируем стор блюд для проверки
+import useDishStore from './useDishStore';
 
 interface ProductState {
   products: Product[];
@@ -12,6 +12,7 @@ interface ProductState {
   updateProduct: (id: number, data: ProductData) => void;
   deleteProduct: (id: number) => void;
   removeCategoryFromProducts: (categoryId: number) => void;
+  removePortionFromProduct: (productId: number, portionName: string) => void;
 }
 
 const useProductStore = create<ProductState>()(
@@ -44,21 +45,17 @@ const useProductStore = create<ProductState>()(
         toast.success(`Продукт "${updatedData.name}" обновлен.`);
       },
 
-      // --- ШАГ 3: ОБНОВЛЕННАЯ ЛОГИКА УДАЛЕНИЯ ---
       deleteProduct: (id) => {
-        // 1. Проверяем, используется ли продукт, через другой стор.
         const isUsed = useDishStore.getState().isProductInUse(id);
 
         if (isUsed) {
-          // 2. Если используется - блокируем удаление и информируем пользователя.
           toast.error(
             'Невозможно удалить продукт, так как он используется в одном или нескольких блюдах. Сначала удалите его из блюд.',
-            { duration: 5000 } // Увеличиваем длительность, чтобы пользователь успел прочитать
+            { duration: 5000 }
           );
-          return; // Прерываем выполнение функции
+          return;
         }
 
-        // 3. Если не используется - безопасно удаляем.
         const productToDelete = get().products.find((p) => p.id === id);
         if (productToDelete) {
           set((state) => ({
@@ -73,6 +70,23 @@ const useProductStore = create<ProductState>()(
           products: state.products.map((product) =>
             product.categoryId === categoryId ? { ...product, categoryId: null } : product
           ),
+        }));
+      },
+
+      removePortionFromProduct: (productId, portionName) => {
+        set((state) => ({
+          products: state.products.map((product) => {
+            if (product.id === productId) {
+              const newPortions = product.portions.filter((p) => p.name !== portionName);
+              if (newPortions.length === 0) {
+                toast.error('Нельзя удалить последнюю порцию у продукта.');
+                return product;
+              }
+              toast.success(`Порция "${portionName}" удалена.`);
+              return { ...product, portions: newPortions };
+            }
+            return product;
+          }),
         }));
       },
     }),

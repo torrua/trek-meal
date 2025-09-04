@@ -38,53 +38,53 @@ const DatabasePage: React.FC = () => {
     }
   };
 
+  // --- ИЗМЕНЕНИЕ: Стили кнопок теперь идентичны главной навигации ---
   const tabBaseClasses =
-    'px-4 py-2.5 text-sm font-medium rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 whitespace-nowrap flex-shrink-0';
-  const tabActiveClasses = 'bg-primary text-primary-foreground';
-  const tabInactiveClasses = 'text-muted-foreground hover:bg-muted hover:text-foreground';
+    'px-4 py-2 rounded-md cursor-pointer transition-colors duration-200 text-sm font-medium border';
+  const tabActiveClasses = 'bg-primary text-primary-foreground border-primary';
+  const tabInactiveClasses = 'bg-card text-card-foreground border-border hover:bg-muted';
 
   return (
     <div className="p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-        <div className="overflow-x-auto pb-2">
-          <div className="flex items-center gap-2 p-1.5 bg-muted rounded-xl w-max">
-            <button
-              onClick={() => handleTabChange('products')}
-              className={cn(
-                tabBaseClasses,
-                activeTab === 'products' ? tabActiveClasses : tabInactiveClasses
-              )}
-            >
-              Продукты
-            </button>
-            <button
-              onClick={() => handleTabChange('dishes')}
-              className={cn(
-                tabBaseClasses,
-                activeTab === 'dishes' ? tabActiveClasses : tabInactiveClasses
-              )}
-            >
-              Блюда
-            </button>
-            <button
-              onClick={() => handleTabChange('categories')}
-              className={cn(
-                tabBaseClasses,
-                activeTab === 'categories' ? tabActiveClasses : tabInactiveClasses
-              )}
-            >
-              Категории
-            </button>
-            <button
-              onClick={() => handleTabChange('meal-types')}
-              className={cn(
-                tabBaseClasses,
-                activeTab === 'meal-types' ? tabActiveClasses : tabInactiveClasses
-              )}
-            >
-              Приемы пищи
-            </button>
-          </div>
+        {/* --- ИЗМЕНЕНИЕ: Полностью переработана верстка блока вкладок --- */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => handleTabChange('products')}
+            className={cn(
+              tabBaseClasses,
+              activeTab === 'products' ? tabActiveClasses : tabInactiveClasses
+            )}
+          >
+            Продукты
+          </button>
+          <button
+            onClick={() => handleTabChange('dishes')}
+            className={cn(
+              tabBaseClasses,
+              activeTab === 'dishes' ? tabActiveClasses : tabInactiveClasses
+            )}
+          >
+            Блюда
+          </button>
+          <button
+            onClick={() => handleTabChange('categories')}
+            className={cn(
+              tabBaseClasses,
+              activeTab === 'categories' ? tabActiveClasses : tabInactiveClasses
+            )}
+          >
+            Категории
+          </button>
+          <button
+            onClick={() => handleTabChange('meal-types')}
+            className={cn(
+              tabBaseClasses,
+              activeTab === 'meal-types' ? tabActiveClasses : tabInactiveClasses
+            )}
+          >
+            Приемы пищи
+          </button>
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">

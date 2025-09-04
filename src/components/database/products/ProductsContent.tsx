@@ -1,44 +1,56 @@
 // src/components/database/products/ProductsContent.tsx
 
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import useProductStore from '../../../stores/useProductStore';
 import useSearchStore from '../../../stores/useSearchStore';
-import type { Product, ProductData } from '../../../types';
+import type { Product, ProductData, Category } from '../../../types';
 import ProductCard from '../products/ProductCard';
 import ProductDetail from '../products/ProductDetail';
-import ProductForm from './ProductForm'; // Изменена вложенность
+import ProductForm from './ProductForm';
 import Modal from '../../../ui/Modal';
 import Button from '../../../ui/Button';
 import ConfirmModal from '../../../ui/ConfirmModal';
-import { Component, CirclePlus, UploadCloud } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import ImportProductsModal from './ImportProductsModal';
+import { Component, CirclePlus } from 'lucide-react';
+import ThemedSelect from '../../../ui/ThemedSelect';
+import useCategoryStore from '../../../stores/useCategoryStore';
 
 interface ProductsContentProps {
   setAddHandler: (handler: (() => void) | null) => void;
+  showFilters: boolean;
 }
 
-const ProductsContent: React.FC<ProductsContentProps> = ({ setAddHandler }) => {
+type CategoryOption = { value: string; label: string };
+
+const ProductsContent: React.FC<ProductsContentProps> = ({ setAddHandler, showFilters }) => {
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
+  const { categories } = useCategoryStore();
   const { searchTerm } = useSearchStore();
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [isFormModalOpen, setFormModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [filterCategory, setFilterCategory] = useState<CategoryOption>({
+    value: 'all',
+    label: 'Все категории',
+  });
 
-  const [isImportModalOpen, setImportModalOpen] = useState(false);
-  const [fileContent, setFileContent] = useState<any>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const categoryOptions: CategoryOption[] = [
+    { value: 'all', label: 'Все категории' },
+    ...categories.map((cat: Category) => ({ value: String(cat.id), label: cat.name })),
+  ];
 
   const filteredProducts = useMemo(() => {
-    return products.filter(
-      (p) =>
+    return products.filter((p) => {
+      const categoryMatch =
+        filterCategory.value === 'all' || String(p.categoryId) === filterCategory.value;
+      const searchMatch =
         !searchTerm.trim() ||
         p.name.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
-        p.description?.toLowerCase().includes(searchTerm.trim().toLowerCase())
-    );
-  }, [products, searchTerm]);
+        p.description?.toLowerCase().includes(searchTerm.trim().toLowerCase());
+      return categoryMatch && searchMatch;
+    });
+  }, [products, searchTerm, filterCategory]);
 
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === activeId) || null,
@@ -54,24 +66,6 @@ const ProductsContent: React.FC<ProductsContentProps> = ({ setAddHandler }) => {
     setAddHandler(() => handleAddNew);
     return () => setAddHandler(null);
   }, [setAddHandler, handleAddNew]);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const content = JSON.parse(e.target?.result as string);
-          setFileContent(content);
-          setImportModalOpen(true);
-        } catch (error) {
-          toast.error('Ошибка парсинга JSON. Проверьте формат файла.');
-        }
-      };
-      reader.readAsText(file);
-    }
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
 
   const handleEdit = useCallback((product: Product) => {
     setEditingProduct(product);
@@ -102,28 +96,27 @@ const ProductsContent: React.FC<ProductsContentProps> = ({ setAddHandler }) => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 h-full">
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept=".json"
-        className="hidden"
-      />
       <div className="lg:col-span-1">
-        <div className="flex justify-end mb-4">
-          <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
-            <UploadCloud className="w-4 h-4 mr-2" />
-            Импорт
-          </Button>
-        </div>
-        <div className="h-[calc(100vh-420px)] min-h-[400px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+        {showFilters && (
+          <div className="mb-4">
+            <ThemedSelect<CategoryOption>
+              className="w-full"
+              value={filterCategory}
+              options={categoryOptions}
+              onChange={(option) => setFilterCategory(option as CategoryOption)}
+            />
+          </div>
+        )}
+        <div className="h-[calc(100vh-360px)] min-h-[400px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-16 px-6 text-gray-500">
               <Component className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-medium text-foreground">
-                {searchTerm ? 'Продукты не найдены' : 'Продуктов пока нет'}
+                {searchTerm || filterCategory.value !== 'all'
+                  ? 'Продукты не найдены'
+                  : 'Продуктов пока нет'}
               </h3>
-              {!searchTerm && (
+              {!searchTerm && filterCategory.value === 'all' && (
                 <Button onClick={handleAddNew} className="mt-4">
                   <CirclePlus className="w-4 h-4 mr-2" />
                   Добавить первый продукт
@@ -177,12 +170,6 @@ const ProductsContent: React.FC<ProductsContentProps> = ({ setAddHandler }) => {
           <span className="font-bold">{productToDelete?.name}</span>?
         </p>
       </ConfirmModal>
-
-      <ImportProductsModal
-        isOpen={isImportModalOpen}
-        onClose={() => setImportModalOpen(false)}
-        fileContent={fileContent}
-      />
     </div>
   );
 };

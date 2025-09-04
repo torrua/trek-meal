@@ -10,7 +10,7 @@ import Modal from '../../../ui/Modal';
 import Button from '../../../ui/Button';
 import Input from '../../../ui/Input';
 import ThemedSelect from '../../../ui/ThemedSelect';
-import { AlertTriangle, CheckCircle, PackagePlus, FileQuestion } from 'lucide-react';
+import { CheckCircle, PackagePlus, Info } from 'lucide-react';
 
 interface ImportProductsModalProps {
   isOpen: boolean;
@@ -18,9 +18,8 @@ interface ImportProductsModalProps {
   fileContent: any;
 }
 
-type CategoryMap = Record<number, number | 'new'>;
-type NewCategoryNames = Record<number, string>;
-type CategoryOption = { value: number | 'new'; label: string };
+type CategoryOption = { value: number | string; label: string; __isNew__?: boolean };
+type StagedProduct = ProductData & { originalCategoryId?: number | null };
 
 const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
   isOpen,
@@ -28,74 +27,56 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
   fileContent,
 }) => {
   const { categories, addCategory } = useCategoryStore();
-  const { addMultipleProducts } = useProductStore();
+  const { products: existingProducts, addMultipleProducts } = useProductStore();
 
-  const [productsToImport, setProductsToImport] = useState<ProductData[]>([]);
-  const [unmappedCategories, setUnmappedCategories] = useState<number[]>([]);
-  const [categoryMap, setCategoryMap] = useState<CategoryMap>({});
-  const [newCategoryNames, setNewCategoryNames] = useState<NewCategoryNames>({});
+  const [stagedProducts, setStagedProducts] = useState<StagedProduct[]>([]);
+  const [totalProductsInFile, setTotalProductsInFile] = useState(0);
   const [defaultPortion, setDefaultPortion] = useState({ name: 'Стандартная', weight: 100 });
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (fileContent && fileContent.products && Array.isArray(fileContent.products)) {
-      setProductsToImport(fileContent.products);
-      const importedCategoryIds = new Set(
-        fileContent.products.map((p: ProductData) => p.categoryId).filter(Boolean)
-      );
-      const existingCategoryIds = new Set(categories.map((c) => c.id));
-      const newUnmapped = Array.from(importedCategoryIds).filter(
-        (id) => !existingCategoryIds.has(id as number)
-      ) as number[];
-      setUnmappedCategories(newUnmapped);
+      setTotalProductsInFile(fileContent.products.length);
+      const existingProductNames = new Set(existingProducts.map((p) => p.name.toLowerCase()));
+      const productsToStage: StagedProduct[] = fileContent.products
+        .filter((p: any) => p.name && !existingProductNames.has(p.name.toLowerCase()))
+        .map((p: any) => ({
+          ...p,
+          categoryId: p.categoryId || null,
+        }));
+      setStagedProducts(productsToStage);
     } else {
-      setProductsToImport([]);
-      setUnmappedCategories([]);
+      setStagedProducts([]);
+      setTotalProductsInFile(0);
     }
-  }, [fileContent, categories]);
+  }, [fileContent, existingProducts]);
 
-  const categoryOptions: CategoryOption[] = [
-    { value: 'new', label: '＋ Создать новую категорию' },
-    ...categories.map((c: Category) => ({ value: c.id, label: c.name })),
-  ];
+  const categoryOptions: CategoryOption[] = categories.map((c: Category) => ({
+    value: c.id,
+    label: c.name,
+  }));
 
-  const handleCategoryMappingChange = (importedId: number, option: SingleValue<CategoryOption>) => {
-    setCategoryMap((prev) => ({ ...prev, [importedId]: option?.value ?? '' }));
+  const handleCategoryChange = (index: number, option: SingleValue<CategoryOption>) => {
+    const newStagedProducts = [...stagedProducts];
+    if (option && option.__isNew__) {
+      const newCategory = addCategory({ name: option.label, color: '#cccccc', emoji: '📦' });
+      newStagedProducts[index].categoryId = newCategory.id;
+    } else {
+      newStagedProducts[index].categoryId = (option?.value as number) ?? null;
+    }
+    setStagedProducts(newStagedProducts);
   };
 
   const isReadyToImport = useMemo(() => {
-    const allCategoriesMapped = unmappedCategories.every((id) => {
-      const mapping = categoryMap[id];
-      if (!mapping) return false;
-      if (mapping === 'new' && !newCategoryNames[id]?.trim()) return false;
-      return true;
-    });
-    return allCategoriesMapped && defaultPortion.name.trim() && defaultPortion.weight > 0;
-  }, [unmappedCategories, categoryMap, newCategoryNames, defaultPortion]);
+    return stagedProducts.length > 0 && defaultPortion.name.trim() && defaultPortion.weight > 0;
+  }, [stagedProducts, defaultPortion]);
 
   const handleImport = async () => {
     setIsProcessing(true);
-    const finalCategoryMap: Record<number, number> = {};
-
-    for (const importedId of unmappedCategories) {
-      const mapping = categoryMap[importedId];
-      if (mapping === 'new') {
-        const newCategoryName = newCategoryNames[importedId];
-        const newCategory = addCategory({ name: newCategoryName, color: '#cccccc', emoji: '📦' });
-        finalCategoryMap[importedId] = newCategory.id;
-      } else {
-        finalCategoryMap[importedId] = mapping;
-      }
-    }
-
-    const processedProducts: ProductData[] = productsToImport.map((product) => {
-      const newCategoryId =
-        product.categoryId && finalCategoryMap[product.categoryId]
-          ? finalCategoryMap[product.categoryId]
-          : product.categoryId;
+    const processedProducts: ProductData[] = stagedProducts.map((product) => {
+      const { originalCategoryId: _original, ...productData } = product;
       return {
-        ...product,
-        categoryId: newCategoryId,
+        ...productData,
         portions: [defaultPortion],
       };
     });
@@ -105,51 +86,25 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
     onClose();
   };
 
+  const duplicatesCount = totalProductsInFile - stagedProducts.length;
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Импорт продуктов" size="xl">
       <div className="space-y-6">
         <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg flex items-center gap-3">
           <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
           <p className="text-green-800 dark:text-green-200">
-            Найдено <strong>{productsToImport.length}</strong> продуктов для импорта.
+            Найдено <strong>{totalProductsInFile}</strong> продуктов. Готово к импорту:{' '}
+            <strong>{stagedProducts.length}</strong>.
           </p>
         </div>
-
-        {unmappedCategories.length > 0 && (
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg flex items-center gap-2">
-              <FileQuestion className="w-5 h-5 text-amber-500" />
-              Сопоставление категорий
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Некоторые категории из файла не найдены. Укажите, что с ними делать.
+        {duplicatesCount > 0 && (
+          <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg flex items-center gap-3">
+            <Info className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+            <p className="text-amber-800 dark:text-amber-200">
+              <strong>{duplicatesCount}</strong> продуктов уже существуют в вашей базе и будут
+              пропущены.
             </p>
-            {unmappedCategories.map((id) => (
-              <div key={id} className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-md">
-                  <span className="text-sm">
-                    Категория из файла (ID: <span className="font-mono">{id}</span>)
-                  </span>
-                </div>
-                <div>
-                  <ThemedSelect
-                    options={categoryOptions}
-                    onChange={(option) => handleCategoryMappingChange(id, option)}
-                    placeholder="Выберите действие..."
-                    menuPortalTarget={document.body}
-                  />
-                  {categoryMap[id] === 'new' && (
-                    <Input
-                      containerClassName="mt-2"
-                      placeholder="Название новой категории..."
-                      onChange={(e) =>
-                        setNewCategoryNames((prev) => ({ ...prev, [id]: e.target.value }))
-                      }
-                    />
-                  )}
-                </div>
-              </div>
-            ))}
           </div>
         )}
 
@@ -159,7 +114,7 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
             Порция по умолчанию
           </h3>
           <p className="text-sm text-muted-foreground">
-            Укажите стандартную порцию, которая будет добавлена ко всем импортируемым продуктам.
+            Эта порция будет добавлена ко всем импортируемым продуктам.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
@@ -177,13 +132,35 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
             />
           </div>
         </div>
+
+        <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+          {stagedProducts.map((product, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+            >
+              <span className="font-medium truncate">{product.name}</span>
+              <ThemedSelect
+                isCreatable
+                options={categoryOptions}
+                value={categoryOptions.find((opt) => opt.value === product.categoryId)}
+                onChange={(option) => handleCategoryChange(index, option)}
+                placeholder="Без категории"
+                isClearable
+                menuPortalTarget={document.body}
+                formatCreateLabel={(inputValue) => `Создать "${inputValue}"`}
+                closeMenuOnScroll={true}
+              />
+            </div>
+          ))}
+        </div>
       </div>
       <div className="flex justify-end gap-3 pt-6 mt-6 border-t">
         <Button variant="secondary" onClick={onClose}>
           Отмена
         </Button>
         <Button onClick={handleImport} disabled={!isReadyToImport || isProcessing}>
-          {isProcessing ? 'Обработка...' : 'Импортировать'}
+          {isProcessing ? 'Обработка...' : `Импортировать ${stagedProducts.length} продуктов`}
         </Button>
       </div>
     </Modal>

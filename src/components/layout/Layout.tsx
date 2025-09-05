@@ -7,11 +7,27 @@ import { Toaster } from 'react-hot-toast';
 import useSearchStore from '../../stores/useSearchStore';
 import ThemeSwitcher from './ThemeSwitcher';
 import Input from '../../ui/Input';
-import { Search, Menu, X, Home, Utensils, Users, MapPin, Settings } from 'lucide-react';
+import {
+  Search,
+  Menu,
+  X,
+  Home,
+  Utensils,
+  Users,
+  MapPin,
+  Settings,
+  Component,
+  Soup,
+  Tag,
+} from 'lucide-react';
 
+// --- РЕФАКТОРИНГ: Обновленная структура навигации ---
 const navigation = [
   { path: '/', label: 'Главная', icon: Home },
-  { path: '/nutrition', label: 'Питание', icon: Utensils },
+  { path: '/products', label: 'Продукты', icon: Component },
+  { path: '/dishes', label: 'Блюда', icon: Soup },
+  { path: '/categories', label: 'Категории', icon: Tag },
+  { path: '/meal-types', label: 'Приемы пищи', icon: Utensils },
   { path: '/participants', label: 'Участники', icon: Users },
   { path: '/trips', label: 'Походы', icon: MapPin },
   { path: '/settings', label: 'Настройки', icon: Settings },
@@ -22,20 +38,21 @@ const Layout: React.FC = () => {
   const { searchTerm, setSearchTerm, clearSearchTerm } = useSearchStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Закрывать мобильное меню при смене страницы
   useEffect(() => {
     setIsMenuOpen(false);
     clearSearchTerm();
   }, [location.pathname, clearSearchTerm]);
 
   const getPlaceholder = () => {
-    if (location.pathname.startsWith('/nutrition')) return 'Поиск по питанию...';
+    if (location.pathname.startsWith('/products')) return 'Поиск по продуктам...';
+    if (location.pathname.startsWith('/dishes')) return 'Поиск по блюдам...';
+    if (location.pathname.startsWith('/categories')) return 'Поиск по категориям...';
     if (location.pathname.startsWith('/participants')) return 'Поиск по участникам...';
     if (location.pathname.startsWith('/trips')) return 'Поиск по походам...';
     return 'Поиск недоступен';
   };
 
-  const isSearchDisabled = ['/', '/settings'].includes(location.pathname);
+  const isSearchDisabled = ['/', '/settings', '/meal-types'].includes(location.pathname);
 
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
     cn(
@@ -57,16 +74,16 @@ const Layout: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Toaster position="bottom-right" />
       <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-screen-xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3 flex-shrink-0">
               <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <MapPin className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-foreground">Trek Meal</h1>
+              <h1 className="text-xl font-bold text-foreground hidden sm:block">Trek Meal</h1>
             </div>
 
-            <div className="hidden md:flex items-center space-x-1">
+            <nav className="hidden lg:flex items-center space-x-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -76,7 +93,7 @@ const Layout: React.FC = () => {
                   </NavLink>
                 );
               })}
-            </div>
+            </nav>
 
             <div className="flex items-center space-x-2">
               <div className="hidden sm:block">
@@ -90,7 +107,7 @@ const Layout: React.FC = () => {
                 />
               </div>
               <ThemeSwitcher />
-              <div className="md:hidden">
+              <div className="lg:hidden">
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="p-2 rounded-lg text-muted-foreground hover:bg-muted"
@@ -101,7 +118,7 @@ const Layout: React.FC = () => {
             </div>
           </div>
           {isMenuOpen && (
-            <div className="md:hidden border-t py-4">
+            <div className="lg:hidden border-t py-4">
               <div className="space-y-1">
                 {navigation.map((item) => {
                   const Icon = item.icon;

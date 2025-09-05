@@ -1,22 +1,25 @@
 // src/App.tsx
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-
 import Layout from './components/layout/Layout';
 import Dashboard from './components/Dashboard';
-import TripsPage from './components/trips/TripsPage';
-import TripPlanningPage from './components/trip-planning/TripPlanningPage';
-import ParticipantsPage from './components/participants/ParticipantsPage';
-import SettingsPage from './components/settings/SettingsPage';
-import DatabasePage from './components/database/DatabasePage';
-
+import TripPlanningPage from './pages/TripPlanningPage';
+import SettingsPage from './pages/SettingsPage';
+import TripsPage from './pages/TripsPage';
+import ParticipantsPage from './pages/ParticipantsPage';
+import ProductsPage from './pages/ProductsPage';
+import DishesPage from './pages/DishesPage';
+import CategoriesPage from './pages/CategoriesPage';
+import MealTypesPage from './pages/MealTypesPage';
 function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Dashboard />} />
-        <Route path="nutrition" element={<DatabasePage />} />
+        <Route path="products" element={<ProductsPage />} />
+        <Route path="dishes" element={<DishesPage />} />
+        <Route path="categories" element={<CategoriesPage />} />
+        <Route path="meal-types" element={<MealTypesPage />} />
         <Route path="participants" element={<ParticipantsPage />} />
         <Route path="trips" element={<TripsPage />} />
         <Route path="trips/:tripId" element={<TripPlanningPage />} />
@@ -25,5 +28,4 @@ function App() {
     </Routes>
   );
 }
-
 export default App;

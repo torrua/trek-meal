@@ -1,0 +1,462 @@
+// src/components/trip-planning/TripPlanningPage.tsx
+
+import React, { useMemo, useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { SingleValue } from 'react-select';
+import ThemedSelect from '../ui/ThemedSelect';
+import useTripStore from '../stores/useTripStore';
+import useProductStore from '../stores/useProductStore';
+import useParticipantStore from '../stores/useParticipantStore';
+import useDishStore from '../stores/useDishStore';
+import useCategoryStore from '../stores/useCategoryStore';
+import { calculateTripSummary, getMealName, formatDate } from '../utils';
+import Button from '../ui/Button';
+import Modal from '../ui/Modal';
+import ConfirmModal from '../ui/ConfirmModal';
+import TripForm from '../components/trips/TripForm';
+import DishForm from '../components/dishes/DishForm';
+import type {
+  TripData,
+  Product,
+  Dish,
+  DishData,
+  MealPlanItem,
+  Category,
+  SubmitDishAction,
+} from '../types';
+
+type SelectMealOption = { value: string; label: string };
+type GroupedMealOption = { label: string; options: SelectMealOption[] };
+type CloningState = {
+  instanceId: string;
+  dish: Dish;
+  mealId: string;
+} | null;
+
+const DishContents = ({ dish }: { dish: Dish }) => {
+  const { products: allProducts } = useProductStore();
+  const { categories } = useCategoryStore();
+  return (
+    <ul className="text-xs text-muted-foreground pl-5 mt-1 space-y-0.5">
+      {dish.products.map((p) => {
+        const product = allProducts.find((ap) => ap.id === p.productId);
+        const category = product
+          ? categories.find((c: Category) => c.id === product.categoryId)
+          : null;
+        return (
+          <li key={`${dish.id}-${p.productId}`} className="flex items-center gap-2">
+            <span>
+              {product?.name || '???'}: {p.weight} г
+            </span>
+            {category && (
+              <span
+                className="text-white text-[10px] px-1.5 rounded-full"
+                style={{ backgroundColor: category.color }}
+              >
+                {category.name}
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+};
+
+function TripPlanningPage() {
+  const { tripId } = useParams<{ tripId: string }>();
+  const navigate = useNavigate();
+  const numericTripId = tripId ? parseInt(tripId, 10) : undefined;
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDishFormOpen, setIsDishFormOpen] = useState(false);
+  const [cloningState, setCloningState] = useState<CloningState>(null);
+  const [expandedDishes, setExpandedDishes] = useState<Record<string, boolean>>({});
+  const [expandedDays, setExpandedDays] = useState<Record<number, boolean>>({});
+
+  const trip = useTripStore((state) => state.trips.find((t) => t.id === numericTripId));
+  const updateTrip = useTripStore((state) => state.updateTrip);
+  const { products } = useProductStore();
+  const { participants } = useParticipantStore();
+  const { dishes, addDish } = useDishStore();
+
+  const summary = useMemo(
+    () => calculateTripSummary(trip, products, participants, dishes),
+    [trip, products, participants, dishes]
+  );
+
+  const groupedMealOptions: GroupedMealOption[] = useMemo(() => {
+    const productOptions: SelectMealOption[] = products.map((p: Product) => ({
+      value: `product-${p.id}`,
+      label: p.name,
+    }));
+    const dishOptions: SelectMealOption[] = dishes.map((d: Dish) => ({
+      value: `dish-${d.id}`,
+      label: `⭐ ${d.name}`,
+    }));
+
+    const options = [];
+    if (dishOptions.length > 0) options.push({ label: 'Блюда', options: dishOptions });
+    if (productOptions.length > 0) options.push({ label: 'Продукты', options: productOptions });
+    return options;
+  }, [products, dishes]);
+
+  const handleMealItemAdd = (mealId: string, selectedOption: SingleValue<SelectMealOption>) => {
+    if (!trip || !selectedOption) return;
+
+    const [type, idStr] = selectedOption.value.split('-');
+    const itemId = parseInt(idStr, 10);
+
+    let newItem: MealPlanItem;
+
+    if (type === 'dish') {
+      newItem = { instanceId: `${Date.now()}`, type: 'dish', itemId };
+    } else {
+      const product = products.find((p) => p.id === itemId);
+      newItem = {
+        instanceId: `${Date.now()}`,
+        type: 'product',
+        itemId,
+        weight: product?.portions?.[0]?.weight || 0,
+      };
+    }
+
+    const newSelectedMeals = JSON.parse(JSON.stringify(trip.selectedMeals || {}));
+    if (!newSelectedMeals[mealId]) newSelectedMeals[mealId] = [];
+    newSelectedMeals[mealId].push(newItem);
+    updateTrip(trip.id, { selectedMeals: newSelectedMeals });
+  };
+
+  const handleMealItemRemove = (mealId: string, instanceId: string) => {
+    if (!trip) return;
+    const newSelectedMeals = JSON.parse(JSON.stringify(trip.selectedMeals || {}));
+    if (newSelectedMeals[mealId]) {
+      newSelectedMeals[mealId] = newSelectedMeals[mealId].filter(
+        (item: MealPlanItem) => item.instanceId !== instanceId
+      );
+      updateTrip(trip.id, { selectedMeals: newSelectedMeals });
+    }
+  };
+
+  const handleCloneRequest = (instanceId: string, dish: Dish, mealId: string) => {
+    setCloningState({ instanceId, dish, mealId });
+  };
+
+  const handleCloneConfirm = () => {
+    if (cloningState) {
+      setIsDishFormOpen(true);
+    }
+  };
+
+  const handleCloneSubmit = (newDishData: DishData, action: SubmitDishAction) => {
+    const newDish = addDish(newDishData);
+    if (!newDish || !trip || !cloningState) {
+      setIsDishFormOpen(false);
+      setCloningState(null);
+      return;
+    }
+
+    const newSelectedMeals = JSON.parse(JSON.stringify(trip.selectedMeals));
+
+    if (action === 'replace') {
+      let itemReplaced = false;
+      for (const mealId in newSelectedMeals) {
+        const mealItems = newSelectedMeals[mealId] as MealPlanItem[];
+        const itemIndex = mealItems.findIndex(
+          (item) => item.instanceId === cloningState.instanceId
+        );
+        if (itemIndex !== -1) {
+          mealItems[itemIndex] = { ...mealItems[itemIndex], itemId: newDish.id };
+          itemReplaced = true;
+          break;
+        }
+      }
+      if (itemReplaced) {
+        updateTrip(trip.id, { selectedMeals: newSelectedMeals });
+      }
+    } else if (action === 'add_as_new') {
+      const mealId = cloningState.mealId;
+      const newItem: MealPlanItem = {
+        instanceId: `${Date.now()}`,
+        type: 'dish',
+        itemId: newDish.id,
+      };
+      if (!newSelectedMeals[mealId]) newSelectedMeals[mealId] = [];
+      newSelectedMeals[mealId].push(newItem);
+      updateTrip(trip.id, { selectedMeals: newSelectedMeals });
+    }
+
+    setIsDishFormOpen(false);
+    setCloningState(null);
+  };
+
+  const toggleDishExpansion = (instanceId: string) => {
+    setExpandedDishes((prev) => ({ ...prev, [instanceId]: !prev[instanceId] }));
+  };
+
+  useEffect(() => {
+    setExpandedDays({ 0: true });
+  }, []);
+
+  const handleDetailsUpdate = (formData: TripData) => {
+    if (!trip) return;
+    updateTrip(trip.id, formData);
+    setIsEditModalOpen(false);
+  };
+
+  if (!trip) {
+    return (
+      <div className="p-6 text-center">
+        <h2 className="text-xl font-bold">Поход не найден</h2>
+        <p className="text-muted-foreground my-4">
+          Возможно, он был удален или вы перешли по неверной ссылке.
+        </p>
+        <Button onClick={() => navigate('/trips')} className="mt-4">
+          Назад к походам
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b">
+        <div>
+          <h2 className="text-2xl font-bold text-primary">{trip.name}</h2>
+          <p className="text-sm text-muted-foreground">
+            {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
+          </p>
+        </div>
+        <div className="flex gap-2 flex-shrink-0">
+          <Button variant="ghost" onClick={() => setIsEditModalOpen(true)}>
+            Редактировать
+          </Button>
+          <Button variant="ghost" onClick={() => navigate('/trips')}>
+            ← К списку походов
+          </Button>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <h3 className="text-xl font-semibold">План питания</h3>
+          {Array.from({ length: trip.days }).map((_, dayIndex) => (
+            <div key={dayIndex} className="border rounded-lg">
+              <button
+                className="w-full p-3 bg-muted font-bold border-b flex justify-between items-center hover:bg-muted/80 transition-all group"
+                onClick={() =>
+                  setExpandedDays((prev) => ({ ...prev, [dayIndex]: !prev[dayIndex] }))
+                }
+              >
+                <span>День {dayIndex + 1}</span>
+                <svg
+                  className={`w-5 h-5 text-muted-foreground transition-transform duration-200 transform ${
+                    expandedDays[dayIndex] ? 'rotate-180' : ''
+                  } group-hover:text-foreground`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {expandedDays[dayIndex] && (
+                <div className="divide-y">
+                  {Array.from({ length: trip.mealsPerDay }).map((_, mealIndex) => {
+                    const mealId = `${dayIndex + 1}-${mealIndex + 1}`;
+                    const selectedItems = (trip.selectedMeals?.[mealId] || []) as MealPlanItem[];
+
+                    return (
+                      <div key={mealIndex} className="p-3">
+                        <h5 className="font-semibold mb-2">
+                          {getMealName(mealIndex + 1, trip.mealsPerDay)}
+                        </h5>
+                        <div className="space-y-1 mb-2">
+                          {selectedItems.map((item) => {
+                            let content = null;
+                            if (item.type === 'dish') {
+                              const dish = dishes.find((d) => d.id === item.itemId);
+                              if (dish) {
+                                const totalWeight = dish.products.reduce(
+                                  (sum, p) => sum + p.weight,
+                                  0
+                                );
+                                const isExpanded = expandedDishes[item.instanceId];
+                                content = (
+                                  <div>
+                                    <div
+                                      className="flex items-center justify-between cursor-pointer"
+                                      onClick={() => toggleDishExpansion(item.instanceId)}
+                                    >
+                                      <span>
+                                        ⭐ {dish.name} ({totalWeight} г)
+                                      </span>
+                                      <div
+                                        className="flex items-center gap-1"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <button
+                                          onClick={() =>
+                                            handleCloneRequest(item.instanceId, dish, mealId)
+                                          }
+                                          className="text-blue-600 hover:text-blue-800 text-xs"
+                                        >
+                                          [Ред.]
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            handleMealItemRemove(mealId, item.instanceId)
+                                          }
+                                          className="text-red-500 hover:text-red-700 font-bold px-2"
+                                        >
+                                          &times;
+                                        </button>
+                                      </div>
+                                    </div>
+                                    {isExpanded && <DishContents dish={dish} />}
+                                  </div>
+                                );
+                              } else {
+                                content = (
+                                  <div className="italic text-muted-foreground">
+                                    Блюдо не найдено
+                                  </div>
+                                );
+                              }
+                            } else {
+                              const product = products.find((p) => p.id === item.itemId);
+                              content = (
+                                <div className="flex items-center justify-between">
+                                  <span>
+                                    {product?.name || 'Продукт не найден'} ({item.weight} г)
+                                  </span>
+                                  <button
+                                    onClick={() => handleMealItemRemove(mealId, item.instanceId)}
+                                    className="text-red-500 hover:text-red-700 font-bold px-2"
+                                  >
+                                    &times;
+                                  </button>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div
+                                key={item.instanceId}
+                                className="text-sm p-1.5 bg-card-foreground/5 dark:bg-card-foreground/10 rounded"
+                              >
+                                {content}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <ThemedSelect<SelectMealOption, false, GroupedMealOption>
+                          options={groupedMealOptions}
+                          onChange={(option) => handleMealItemAdd(mealId, option)}
+                          placeholder="Добавить продукт или блюдо..."
+                          value={null}
+                          formatGroupLabel={(data) => (
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-foreground">{data.label}</span>
+                              <span className="text-xs bg-muted text-muted-foreground rounded-full px-1.5">
+                                {data.options.length}
+                              </span>
+                            </div>
+                          )}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-6">
+          <section>
+            <h3 className="text-xl font-semibold">Сводка</h3>
+            <div className="p-4 mt-2 border rounded-lg bg-card">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <div className="text-xl font-bold text-blue-600">
+                    {summary.tripParticipants.length}
+                  </div>
+                  <div className="text-xs text-muted-foreground uppercase">Участников</div>
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-blue-600">
+                    {(summary.totalWeight / 1000).toFixed(2)}
+                  </div>
+                  <div className="text-xs text-muted-foreground uppercase">Кг еды</div>
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-blue-600">
+                    {summary.averageWeightPerPersonPerDay}
+                  </div>
+                  <div className="text-xs text-muted-foreground uppercase">г/чел/день</div>
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-blue-600">
+                    {summary.averageCaloriesPerPersonPerDay}
+                  </div>
+                  <div className="text-xs text-muted-foreground uppercase">ккал/чел/день</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Редактировать поход"
+      >
+        <TripForm
+          trip={trip}
+          onSubmit={handleDetailsUpdate}
+          onCancel={() => setIsEditModalOpen(false)}
+        />
+      </Modal>
+
+      <ConfirmModal
+        isOpen={!!cloningState}
+        onClose={() => setCloningState(null)}
+        onConfirm={handleCloneConfirm}
+        title={`Редактировать "${cloningState?.dish.name}"?`}
+        confirmText="Создать и редактировать копию"
+      >
+        <p>
+          Чтобы изменить состав этого блюда, будет создана его редактируемая копия. Исходный шаблон
+          останется без изменений.
+        </p>
+      </ConfirmModal>
+
+      <Modal
+        isOpen={isDishFormOpen}
+        onClose={() => {
+          setIsDishFormOpen(false);
+          setCloningState(null);
+        }}
+        title={`Редактирование копии блюда`}
+      >
+        <DishForm
+          dish={null}
+          dishToClone={cloningState?.dish || null}
+          onSubmit={handleCloneSubmit}
+          onCancel={() => {
+            setIsDishFormOpen(false);
+            setCloningState(null);
+          }}
+        />
+      </Modal>
+    </div>
+  );
+}
+
+export default TripPlanningPage;

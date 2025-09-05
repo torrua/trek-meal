@@ -6,7 +6,6 @@ import type { TripDifficulty, TripStatus } from '../types';
 export const TRIP_STATUS_OPTIONS = [
   { value: 'all', label: 'Все статусы', icon: List },
   { value: 'planning', label: 'Планируются', icon: Clock },
-  // --- ИЗМЕНЕНИЕ: Добавлена новая опция фильтра ---
   { value: 'active', label: 'На маршруте', icon: Route },
   { value: 'completed', label: 'Завершенные', icon: CheckCircle },
 ];
@@ -41,21 +40,21 @@ export const DIFFICULTY_CONFIG: Record<
 
 export const STATUS_CONFIG: Record<
   TripStatus,
-  { label: string; icon: React.ElementType; borderClassName: string }
+  { label: string; icon: React.ElementType; color: string }
 > = {
   planning: {
     label: 'Планируется',
     icon: Clock,
-    borderClassName: 'border-l-amber-500',
+    color: '#f59e0b', // amber-500
   },
   active: {
     label: 'На маршруте',
     icon: Route,
-    borderClassName: 'border-l-rose-600',
+    color: '#db2777', // rose-600
   },
   completed: {
     label: 'Завершен',
     icon: CheckCircle,
-    borderClassName: 'border-l-emerald-600',
+    color: '#059669', // emerald-600
   },
 };

@@ -34,22 +34,43 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ trigger, children }) => {
     setIsOpen((prev) => !prev);
   };
 
+  const renderTrigger = () => {
+    if (React.isValidElement(trigger)) {
+      // Явно указываем тип пропсов для TypeScript
+      return React.cloneElement(
+        trigger as React.ReactElement<{ onClick?: React.MouseEventHandler }>,
+        {
+          onClick: (e: React.MouseEvent) => {
+            trigger.props.onClick?.(e);
+            handleTriggerClick(e);
+          },
+        }
+      );
+    }
+    return trigger;
+  };
+
   return (
     <div className="relative" ref={menuRef}>
-      <div onClick={handleTriggerClick} className="cursor-pointer">
-        {trigger}
-      </div>
+      {renderTrigger()}
       {isOpen && (
         <div
           className={cn(
-            'absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-card shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10',
-            'animate-fade-in' // Используем ту же анимацию
+            'absolute right-0 mt-2 w-48 origin-top-right rounded-xl bg-card shadow-lg ring-1 ring-border focus:outline-none z-20',
+            'animate-fade-in'
           )}
           role="menu"
           aria-orientation="vertical"
         >
-          <div className="py-1" role="none" onClick={() => setIsOpen(false)}>
-            {children}
+          <div className="p-1" role="none" onClick={() => setIsOpen(false)}>
+            {React.Children.map(children, (child) =>
+              React.isValidElement(child)
+                ? React.cloneElement(child, {
+                    ...child.props,
+                    className: cn(child.props.className, 'rounded-md'),
+                  })
+                : child
+            )}
           </div>
         </div>
       )}

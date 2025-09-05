@@ -11,7 +11,6 @@ const buttonVariants = cva(
       variant: {
         primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
         danger: 'bg-danger text-danger-foreground hover:bg-danger/90',
-        // ИСПРАВЛЕНИЕ: Добавляем границу и улучшаем hover-эффект
         secondary: 'bg-secondary text-secondary-foreground border border-input hover:bg-muted',
         ghost: 'hover:bg-muted hover:text-muted-foreground',
       },

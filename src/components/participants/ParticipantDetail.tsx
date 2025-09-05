@@ -1,143 +1,67 @@
 // src/components/participants/ParticipantDetail.tsx
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
-  Users,
   User,
   MapPin,
   Phone,
   Mail,
   Calendar,
-  Clock,
-  Info,
   Trash2,
-  ChevronDown,
   Backpack,
-  ExternalLink,
-  Gauge,
   Award,
   Edit,
   MapPinPlus,
-  CirclePlus,
+  Users,
 } from 'lucide-react';
-import type { Participant } from '../../types';
+import type { Participant, Trip } from '../../types';
 import useTripStore from '../../stores/useTripStore';
-import { formatDate } from '../../utils';
+import { formatDate, getEffectiveStatus } from '../../utils/index';
 import { EXPERIENCE_CONFIG } from '../../constants/participants';
+import { DIFFICULTY_CONFIG, STATUS_CONFIG } from '../../constants/trips';
 import { useNavigate } from 'react-router-dom';
-import cn from 'classnames';
 import { isFuture, parseISO } from 'date-fns';
 import ConfirmModal from '../../ui/ConfirmModal';
+import DetailPane from '../../ui/DetailPane';
+import CompactCard from '../../ui/CompactCard';
+import Button from '../../ui/Button';
 
+// --- ИЗМЕНЕНИЕ: Обновлен интерфейс пропсов ---
 interface ParticipantDetailProps {
   participant: Participant | null;
-  onAddToTrip: (participantId: number) => void;
-  onAddEquipment: (participantId: number) => void;
+  onAddToTrip: () => void;
   onEdit: () => void;
+  openSections: string[];
+  onToggleSection: (sectionId: string) => void;
 }
-
-const DIFFICULTY_CONFIG = {
-  easy: { color: 'bg-green-500', icon: Gauge },
-  medium: { color: 'bg-yellow-500', icon: Gauge },
-  hard: { color: 'bg-red-500', icon: Gauge },
-};
-
-interface AccordionSectionProps {
-  title: string;
-  icon: React.ElementType;
-  count?: number;
-  isOpen: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-  actionButton?: React.ReactNode;
-}
-
-const AccordionSection: React.FC<AccordionSectionProps> = ({
-  title,
-  icon: Icon,
-  count,
-  isOpen,
-  onToggle,
-  children,
-  actionButton,
-}) => (
-  <div className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-    <button
-      onClick={onToggle}
-      className="w-full flex justify-between items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-    >
-      <div className="flex items-center gap-3">
-        <Icon className="w-5 h-5 text-blue-600" />
-        <span className="font-semibold text-gray-900 dark:text-white">{title}</span>
-        {count !== undefined && count > 0 && (
-          <>
-            <span className="text-gray-300 dark:text-gray-600 font-light mx-1">•</span>
-            <span className="text-sm text-gray-500 dark:text-gray-400">{count}</span>
-          </>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        {actionButton}
-        <ChevronDown
-          className={cn('w-5 h-5 text-gray-400 transition-transform', { 'rotate-180': isOpen })}
-        />
-      </div>
-    </button>
-    <div
-      className={cn(
-        'grid transition-all duration-300 ease-in-out',
-        isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-      )}
-    >
-      <div className="overflow-hidden">
-        <div className="p-4 pt-2">{children}</div>
-      </div>
-    </div>
-  </div>
-);
 
 const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
   participant,
   onAddToTrip,
-  onAddEquipment,
   onEdit,
+  openSections, // <-- Получаем из пропсов
+  onToggleSection, // <-- Получаем из пропсов
 }) => {
   const { trips, removeParticipantFromTrip } = useTripStore();
   const navigate = useNavigate();
-  const [openSections, setOpenSections] = useState<string[]>(['data']);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{
-    show: boolean;
-    tripId: number | null;
-  }>({
-    show: false,
-    tripId: null,
-  });
+  const [tripToRemove, setTripToRemove] = useState<Trip | null>(null);
+
+  // --- ИЗМЕНЕНИЕ: Внутреннее состояние и useEffect удалены отсюда ---
 
   const participantTrips = useMemo(
     () => (participant ? trips.filter((trip) => trip.participants.includes(participant.id)) : []),
     [trips, participant]
   );
 
-  useEffect(() => {
-    if (participant) {
-      // --- ИЗМЕНЕНИЕ: Не сбрасываем состояние, если секция уже открыта ---
-      if (!openSections.includes('data')) {
-        setOpenSections(['data']);
-      }
-    }
-  }, [participant, openSections]);
-
   if (!participant) {
     return (
-      <div className="h-full flex items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Users className="w-10 h-10 text-gray-400" />
+      <div className="h-full flex items-center justify-center bg-card rounded-2xl border">
+        <div className="text-center p-4">
+          <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Users className="w-10 h-10 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            Выберите участника
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400">
+          <h3 className="text-lg font-medium text-foreground mb-2">Выберите участника</h3>
+          <p className="text-muted-foreground">
             Кликните на карточку для просмотра подробной информации.
           </p>
         </div>
@@ -145,293 +69,149 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
     );
   }
 
-  const experienceInfo = EXPERIENCE_CONFIG[participant.experienceLevel];
-
-  const sortedTrips = participantTrips.sort((a, b) => {
+  const sortedTrips = [...participantTrips].sort((a, b) => {
     const dateA = parseISO(a.startDate);
     const dateB = parseISO(b.startDate);
-    const isAFuture = isFuture(dateA);
-    const isBFuture = isFuture(b.startDate);
-
-    if (isAFuture && !isBFuture) return -1;
-    if (!isAFuture && isBFuture) return 1;
-    if (isAFuture && isBFuture) return dateA.getTime() - dateB.getTime();
-    return dateB.getTime() - dateA.getTime();
+    return isFuture(dateA) && !isFuture(dateB)
+      ? -1
+      : !isFuture(dateA) && isFuture(dateB)
+        ? 1
+        : isFuture(dateA) && isFuture(dateB)
+          ? dateA.getTime() - dateB.getTime()
+          : dateB.getTime() - dateA.getTime();
   });
 
-  const handleRemoveFromTrip = (e: React.MouseEvent, tripId: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowDeleteConfirm({ show: true, tripId });
-  };
-
-  const confirmRemoveFromTrip = () => {
-    if (showDeleteConfirm.tripId && participant) {
-      removeParticipantFromTrip(showDeleteConfirm.tripId, participant.id);
-      setShowDeleteConfirm({ show: false, tripId: null });
+  const handleConfirmRemove = () => {
+    if (tripToRemove) {
+      removeParticipantFromTrip(tripToRemove.id, participant.id);
+      setTripToRemove(null);
     }
   };
 
-  const cancelRemoveFromTrip = () => {
-    setShowDeleteConfirm({ show: false, tripId: null });
-  };
+  const experienceInfo = EXPERIENCE_CONFIG[participant.experienceLevel];
 
-  const handleToggleSection = (sectionId: string) => {
-    setOpenSections((prev) =>
-      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
-    );
-  };
-
-  return (
-    <div className="h-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <AccordionSection
-          title="Данные"
-          icon={User}
-          isOpen={openSections.includes('data')}
-          onToggle={() => handleToggleSection('data')}
-          actionButton={
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
-              title="Редактировать данные"
-            >
-              <Edit className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-            </button>
-          }
-        >
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <Award className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 flex-shrink-0" />
-                <div>
-                  <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
-                    Опыт
-                  </p>
-                  <p
-                    className={cn(
-                      'text-sm sm:text-base font-semibold',
-                      experienceInfo.className.replace(
-                        /bg-\w+-50|border-\w+-200|dark:bg-\w+-900\/30|dark:border-\w+-700/g,
-                        ''
-                      )
-                    )}
-                  >
-                    {experienceInfo.label}
-                  </p>
-                </div>
-              </div>
-              {participant.birthDate && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <Calendar className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
-                      Дата рождения
-                    </p>
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
-                      {formatDate(participant.birthDate)}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {participant.phone && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <Phone className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
-                      Телефон
-                    </p>
-                    <a
-                      href={`tel:${participant.phone}`}
-                      className="text-sm sm:text-base text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors break-all"
-                    >
-                      {participant.phone}
-                    </a>
-                  </div>
-                </div>
-              )}
-              {participant.email && (
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <Mail className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
-                      Email
-                    </p>
-                    <a
-                      href={`mailto:${participant.email}`}
-                      className="text-sm sm:text-base text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors break-all"
-                    >
-                      {participant.email}
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
-            {participant.notes && (
-              <div>
-                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                  <Info className="w-5 h-5" />
-                  Заметки
-                </h4>
-                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                    {participant.notes}
-                  </p>
-                </div>
-              </div>
+  const sections = [
+    {
+      id: 'data',
+      title: 'Данные',
+      icon: User,
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <CompactCard
+              icon={Award}
+              title="Опыт"
+              details={experienceInfo.label}
+              borderColor={
+                experienceInfo.colorClassName.includes('green')
+                  ? '#10b981'
+                  : experienceInfo.colorClassName.includes('yellow')
+                    ? '#f59e0b'
+                    : '#ef4444'
+              }
+            />
+            {participant.birthDate && (
+              <CompactCard
+                icon={Calendar}
+                title="Дата рождения"
+                details={formatDate(participant.birthDate)}
+              />
+            )}
+            {participant.phone && (
+              <CompactCard icon={Phone} title="Телефон" details={participant.phone} />
+            )}
+            {participant.email && (
+              <CompactCard icon={Mail} title="Email" details={participant.email} />
             )}
           </div>
-        </AccordionSection>
-
-        <AccordionSection
-          title="Походы"
-          icon={MapPin}
-          count={participantTrips.length}
-          isOpen={openSections.includes('trips')}
-          onToggle={() => handleToggleSection('trips')}
-          actionButton={
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddToTrip(participant.id);
-              }}
-              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
-              title="Добавить в поход"
-            >
-              <MapPinPlus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-            </button>
-          }
-        >
-          {participantTrips.length > 0 ? (
-            <div className="space-y-3">
-              {sortedTrips.map((trip) => {
-                const difficultyConfig = DIFFICULTY_CONFIG[trip.difficulty];
-
-                return (
-                  <div
-                    key={trip.id}
-                    className="group/trip relative p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
-                  >
-                    <div className="absolute top-3 right-3 z-10 opacity-0 group-hover/trip:opacity-100 transition-opacity">
-                      <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1">
-                        <button
-                          onClick={() => navigate(`/trips/${trip.id}`)}
-                          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-                          title="Открыть поход"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
-                        </button>
-                        <button
-                          onClick={(e) => handleRemoveFromTrip(e, trip.id)}
-                          className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-md transition-colors"
-                          title="Удалить участника из этого похода"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="pr-16">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div
-                          className={cn(
-                            'w-4 h-4 rounded flex items-center justify-center',
-                            difficultyConfig.color
-                          )}
-                        >
-                          <Gauge className="w-2.5 h-2.5 text-white" />
-                        </div>
-                        <h4 className="font-medium text-gray-900 dark:text-white truncate flex-1">
-                          {trip.name}
-                        </h4>
-                        {isFuture(parseISO(trip.startDate)) && (
-                          <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full">
-                            Предстоящий
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-sm text-gray-600 dark:text-gray-300">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          {trip.startDate && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-4 h-4 flex-shrink-0" />
-                              <span>{formatDate(trip.startDate)}</span>
-                            </div>
-                          )}
-                          {trip.destination && (
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4 flex-shrink-0" />
-                              <span className="truncate">{trip.destination}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1">
-                            <Users className="w-4 h-4 flex-shrink-0" />
-                            <span>{trip.participants.length} чел.</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <MapPin className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="font-medium mb-1">Участник не записан в походы</p>
-              <p className="text-xs flex items-center justify-center gap-1">
-                {'Добавьте участника в поход, нажав'}
-                <MapPinPlus className="w-3 h-3 inline-block" />
-                {'в заголовке'}
+          {participant.notes && (
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {participant.notes}
               </p>
             </div>
           )}
-        </AccordionSection>
+        </div>
+      ),
+    },
+    {
+      id: 'trips',
+      title: 'Походы',
+      icon: MapPin,
+      actionButton: (
+        <Button size="sm" variant="ghost" onClick={onAddToTrip} title="Добавить в поход">
+          <MapPinPlus className="w-4 h-4" />
+        </Button>
+      ),
+      content: (
+        <div className="space-y-2">
+          {sortedTrips.length > 0 ? (
+            sortedTrips.map((trip) => (
+              <CompactCard
+                key={trip.id}
+                title={trip.name}
+                icon={DIFFICULTY_CONFIG[trip.difficulty].icon}
+                details={`${formatDate(trip.startDate)} - ${trip.destination || 'Без места'}`}
+                onClick={() => navigate(`/trips/${trip.id}`)}
+                borderColor={STATUS_CONFIG[getEffectiveStatus(trip)].color}
+                tag={
+                  isFuture(parseISO(trip.startDate))
+                    ? { text: 'План', color: STATUS_CONFIG.planning.color }
+                    : undefined
+                }
+                menuItems={[
+                  {
+                    label: 'Убрать из похода',
+                    icon: Trash2,
+                    onClick: () => setTripToRemove(trip),
+                    className: 'text-danger',
+                  },
+                ]}
+              />
+            ))
+          ) : (
+            <p className="text-sm text-center py-4 text-muted-foreground">Нет походов</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: 'equipment',
+      title: 'Снаряжение',
+      icon: Backpack,
+      content: (
+        <p className="text-sm text-center py-4 text-muted-foreground">Раздел в разработке</p>
+      ),
+    },
+  ];
 
-        <AccordionSection
-          title="Снаряжение"
-          icon={Backpack}
-          isOpen={openSections.includes('equipment')}
-          onToggle={() => handleToggleSection('equipment')}
-          actionButton={
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onAddEquipment(participant.id);
-              }}
-              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-md transition-colors"
-              title="Добавить снаряжение"
-            >
-              <CirclePlus className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-            </button>
-          }
-        >
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <Backpack className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p className="font-medium mb-1">Снаряжение не добавлено</p>
-            <p className="text-xs">{'Эта функция находится в разработке'}</p>
+  return (
+    <>
+      <DetailPane sections={sections} openSections={openSections} onToggleSection={onToggleSection}>
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground truncate">{participant.name}</h2>
+            <p className="text-muted-foreground">{experienceInfo.label}</p>
           </div>
-        </AccordionSection>
-      </div>
-
+          <Button variant="secondary" onClick={onEdit}>
+            <Edit className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Изменить</span>
+          </Button>
+        </div>
+      </DetailPane>
       <ConfirmModal
-        isOpen={showDeleteConfirm.show}
-        onClose={cancelRemoveFromTrip}
-        onConfirm={confirmRemoveFromTrip}
-        title={`Удалить участника?`}
+        isOpen={!!tripToRemove}
+        onClose={() => setTripToRemove(null)}
+        onConfirm={handleConfirmRemove}
+        title="Убрать из похода?"
         variant="danger"
-        confirmText="Удалить"
       >
         <p>
-          Вы уверены, что хотите удалить участника{' '}
-          <span className="font-bold">{participant?.name}</span> из похода?
+          Убрать участника <span className="font-bold">{participant.name}</span> из похода{' '}
+          <span className="font-bold">{tripToRemove?.name}</span>?
         </p>
       </ConfirmModal>
-    </div>
+    </>
   );
 };
 

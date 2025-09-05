@@ -25,6 +25,7 @@ const ThemedSelect = <
 
   const SelectComponent = isCreatable ? CreatableSelect : Select;
 
+  // --- ИЗМЕНЕНИЕ: menuPortalTarget теперь по умолчанию ---
   return <SelectComponent {...rest} styles={themedStyles} menuPortalTarget={document.body} />;
 };
 

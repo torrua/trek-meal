@@ -85,7 +85,7 @@ export type TripStatus = 'planning' | 'completed' | 'active';
 export interface Trip {
   id: number;
   createdAt: string;
-  status: 'planning' | 'completed';
+  status: 'planning' | 'completed'; // Note: status is for persistence, effectiveStatus is calculated
   name: string;
   description: string;
   destination: string;
@@ -100,3 +100,9 @@ export interface Trip {
 export type TripData = Omit<Trip, 'id' | 'createdAt' | 'status' | 'selectedMeals'>;
 
 export type SubmitDishAction = 'add_as_new' | 'replace' | 'create_or_update';
+
+// --- НОВЫЙ ТИП: Для импортируемых файлов ---
+export interface ImportedJsonData {
+  products: ProductData[];
+  // Можно будет расширять другими ключами в будущем
+}

@@ -26,14 +26,13 @@ const useDishStore = create<DishState>()(
           return;
         }
 
-        // Проверяем, существует ли другое блюдо с таким же именем (игнорируя регистр)
         const isDuplicate = get().dishes.some(
           (d) => d.name.trim().toLowerCase() === trimmedName.toLowerCase()
         );
 
         if (isDuplicate) {
           toast.error(`Блюдо с названием "${trimmedName}" уже существует.`);
-          return; // <-- КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Прерываем выполнение
+          return; // --- ИСПРАВЛЕНИЕ: Прерываем выполнение
         }
 
         if (data.products.length === 0) {

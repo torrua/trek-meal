@@ -1,15 +1,13 @@
-// src/constants/participants.ts
-
 import { Users, User, Baby, MapPin, Zap, Star, Award } from 'lucide-react';
 
 export const GENDER_CONFIG = {
   male: {
     icon: User,
-    borderClassName: 'border-l-blue-500',
+    color: '#3b82f6', // blue-500
   },
   female: {
     icon: User,
-    borderClassName: 'border-l-pink-500',
+    color: '#ec4899', // pink-500
   },
 };
 
@@ -41,22 +39,16 @@ export const TRIPS_OPTIONS = [
 export const EXPERIENCE_CONFIG = {
   beginner: {
     label: 'Новичок',
-    className:
-      'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700',
     icon: Zap,
     colorClassName: 'text-green-600 dark:text-green-400',
   },
   experienced: {
     label: 'Опытный',
-    className:
-      'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700',
     icon: Star,
     colorClassName: 'text-yellow-600 dark:text-yellow-400',
   },
   professional: {
     label: 'Профессионал',
-    className:
-      'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700',
     icon: Award,
     colorClassName: 'text-red-600 dark:text-red-400',
   },

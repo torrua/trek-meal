@@ -41,7 +41,8 @@ const TripFiltersComponent: React.FC<TripFiltersProps> = ({ filters, onFiltersCh
         )}
       </div>
 
-      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+      {/* --- ИЗМЕНЕНИЕ: Используем Flexbox вместо Grid --- */}
+      <div className="flex flex-wrap items-center gap-4">
         <DropdownSelect
           label="Статус"
           icon={List}

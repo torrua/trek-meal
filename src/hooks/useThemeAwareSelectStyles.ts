@@ -51,6 +51,9 @@ export const useThemeAwareSelectStyles = <
         backgroundColor: colors.bgSecondary,
         border: `1px solid ${colors.borderPrimary}`,
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        // --- ИЗМЕНЕНИЯ ЗДЕСЬ ---
+        width: 'auto', // Позволяет меню подстраиваться под ширину контента
+        minWidth: '100%', // Гарантирует, что меню не будет уже, чем инпут
       }),
       option: (base, { isFocused, isSelected }) => ({
         ...base,
@@ -78,7 +81,7 @@ export const useThemeAwareSelectStyles = <
       }),
       menuPortal: (base) => ({
         ...base,
-        zIndex: 9999, // Очень высокий z-index, чтобы быть поверх модалки
+        zIndex: 9999,
       }),
     };
   }, [theme]);

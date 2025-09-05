@@ -12,7 +12,6 @@ import {
   Award,
   Edit,
   MapPinPlus,
-  Users,
 } from 'lucide-react';
 import type { Participant, Trip } from '../../types';
 import useTripStore from '../../stores/useTripStore';
@@ -25,8 +24,8 @@ import ConfirmModal from '../../ui/ConfirmModal';
 import DetailPane from '../../ui/DetailPane';
 import CompactCard from '../../ui/CompactCard';
 import Button from '../../ui/Button';
+import InfoField from '../../ui/InfoField'; // <-- Импортируем новый компонент
 
-// --- ИЗМЕНЕНИЕ: Обновлен интерфейс пропсов ---
 interface ParticipantDetailProps {
   participant: Participant | null;
   onAddToTrip: () => void;
@@ -39,14 +38,12 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
   participant,
   onAddToTrip,
   onEdit,
-  openSections, // <-- Получаем из пропсов
-  onToggleSection, // <-- Получаем из пропсов
+  openSections,
+  onToggleSection,
 }) => {
   const { trips, removeParticipantFromTrip } = useTripStore();
   const navigate = useNavigate();
   const [tripToRemove, setTripToRemove] = useState<Trip | null>(null);
-
-  // --- ИЗМЕНЕНИЕ: Внутреннее состояние и useEffect удалены отсюда ---
 
   const participantTrips = useMemo(
     () => (participant ? trips.filter((trip) => trip.participants.includes(participant.id)) : []),
@@ -54,19 +51,7 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
   );
 
   if (!participant) {
-    return (
-      <div className="h-full flex items-center justify-center bg-card rounded-2xl border">
-        <div className="text-center p-4">
-          <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Users className="w-10 h-10 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">Выберите участника</h3>
-          <p className="text-muted-foreground">
-            Кликните на карточку для просмотра подробной информации.
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const sortedTrips = [...participantTrips].sort((a, b) => {
@@ -97,11 +82,12 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
       icon: User,
       content: (
         <div className="space-y-4">
+          {/* --- ИЗМЕНЕНИЕ: Используем новый компонент InfoField --- */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <CompactCard
+            <InfoField
               icon={Award}
-              title="Опыт"
-              details={experienceInfo.label}
+              label="Опыт"
+              value={experienceInfo.label}
               borderColor={
                 experienceInfo.colorClassName.includes('green')
                   ? '#10b981'
@@ -111,21 +97,19 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
               }
             />
             {participant.birthDate && (
-              <CompactCard
+              <InfoField
                 icon={Calendar}
-                title="Дата рождения"
-                details={formatDate(participant.birthDate)}
+                label="Дата рождения"
+                value={formatDate(participant.birthDate)}
               />
             )}
             {participant.phone && (
-              <CompactCard icon={Phone} title="Телефон" details={participant.phone} />
+              <InfoField icon={Phone} label="Телефон" value={participant.phone} />
             )}
-            {participant.email && (
-              <CompactCard icon={Mail} title="Email" details={participant.email} />
-            )}
+            {participant.email && <InfoField icon={Mail} label="Email" value={participant.email} />}
           </div>
           {participant.notes && (
-            <div className="p-4 bg-muted rounded-lg">
+            <div className="p-4 bg-muted/50 rounded-lg">
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                 {participant.notes}
               </p>

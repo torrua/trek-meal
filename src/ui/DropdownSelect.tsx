@@ -1,6 +1,6 @@
 // src/ui/DropdownSelect.tsx
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import cn from 'classnames';
 
@@ -18,7 +18,7 @@ interface DropdownSelectProps {
   icon: React.ComponentType<{ className?: string }>;
   containerClassName?: string;
   disabled?: boolean;
-  isActive?: boolean; // --- НОВЫЙ PROP ---
+  isActive?: boolean;
 }
 
 const DropdownSelect: React.FC<DropdownSelectProps> = ({
@@ -29,11 +29,16 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
   icon: Icon,
   containerClassName,
   disabled = false,
-  isActive = false, // --- ЗНАЧЕНИЕ ПО УМОЛЧАНИЮ ---
+  isActive = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const selectedOption = options.find((opt) => opt.value === value);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [minMenuWidth, setMinMenuWidth] = useState(0);
+
+  // --- ИСПРАВЛЕНИЕ: Добавляем проверку на случай, если `options` не передан ---
+  const safeOptions = options || [];
+  const selectedOption = safeOptions.find((opt) => opt.value === value);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -45,17 +50,23 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
+  useLayoutEffect(() => {
+    if (isOpen && triggerRef.current) {
+      setMinMenuWidth(triggerRef.current.offsetWidth);
+    }
+  }, [isOpen]);
+
   return (
     <div className={cn('space-y-1.5', containerClassName)} ref={dropdownRef}>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
-      <div className="relative">
+      <div className="relative inline-block text-left">
         <button
+          ref={triggerRef}
           type="button"
           disabled={disabled}
           onClick={() => !disabled && setIsOpen(!isOpen)}
-          // --- ИЗМЕНЕНИЕ: Логика стиля теперь зависит от пропа isActive ---
           className={cn(
-            'flex items-center justify-between w-full px-4 py-3 rounded-xl border transition-all hover:shadow-sm text-left shadow-sm',
+            'flex items-center justify-between px-4 py-3 rounded-xl border transition-all hover:shadow-sm text-left shadow-sm min-w-[220px]',
             isActive
               ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700'
               : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500',
@@ -82,10 +93,12 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             )}
           />
         </button>
-
         {isOpen && (
-          <div className="absolute z-50 top-full left-0 mt-2 min-w-full w-max max-w-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-2 animate-fade-in">
-            {options.map((option) => (
+          <div
+            style={{ minWidth: `${minMenuWidth}px` }}
+            className="absolute z-50 top-full left-0 mt-2 w-max max-w-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-2 animate-fade-in"
+          >
+            {safeOptions.map((option) => (
               <button
                 type="button"
                 key={option.value}

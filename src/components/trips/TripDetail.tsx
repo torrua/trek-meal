@@ -28,6 +28,7 @@ import ConfirmModal from '../../ui/ConfirmModal';
 import useTripStore from '../../stores/useTripStore';
 import DetailPane from '../../ui/DetailPane';
 import Button from '../../ui/Button';
+import InfoField from '../../ui/InfoField'; // <-- Импортируем новый компонент
 
 interface TripDetailProps {
   trip: Trip | null;
@@ -61,8 +62,6 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
   }, [trip]);
 
   if (!trip) {
-    // Этот return больше не используется, т.к. заглушка теперь в родительском компоненте,
-    // но оставим его для надежности
     return null;
   }
 
@@ -99,32 +98,20 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {trip.startDate && (
-              <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-                <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Даты</p>
-                  <p className="text-base text-muted-foreground">
-                    {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
-                  </p>
-                </div>
-              </div>
+              <InfoField
+                icon={Calendar}
+                label="Даты"
+                value={`${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}`}
+              />
             )}
-            <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-              <Sun className="w-5 h-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-foreground">Длительность</p>
-                <p className="text-base text-muted-foreground">{trip.days}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-              <Gauge className="w-5 h-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-foreground">Сложность</p>
-                <p className={cn('text-base', difficultyInfo.colorClassName)}>
-                  {difficultyInfo.label}
-                </p>
-              </div>
-            </div>
+            <InfoField icon={Sun} label="Длительность" value={`${trip.days} дней`} />
+            <InfoField
+              icon={Gauge}
+              label="Сложность"
+              value={
+                <span className={cn(difficultyInfo.colorClassName)}>{difficultyInfo.label}</span>
+              }
+            />
           </div>
           {trip.description && (
             <div className="p-4 bg-muted/50 rounded-lg">
@@ -178,22 +165,12 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
       ),
       content: (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-            <Utensils className="w-5 h-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Приемов пищи в день</p>
-              <p className="text-base text-muted-foreground">{trip.mealsPerDay}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-            <BarChart className="w-5 h-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-foreground">г/чел/день</p>
-              <p className="text-base text-muted-foreground">
-                {summary.averageWeightPerPersonPerDay}
-              </p>
-            </div>
-          </div>
+          <InfoField icon={Utensils} label="Приемов пищи в день" value={trip.mealsPerDay} />
+          <InfoField
+            icon={BarChart}
+            label="г/чел/день"
+            value={summary.averageWeightPerPersonPerDay}
+          />
         </div>
       ),
     },

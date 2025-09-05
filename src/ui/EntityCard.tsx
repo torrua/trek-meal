@@ -40,9 +40,12 @@ const EntityCard: React.FC<EntityCardProps> = ({
   menuItems,
   isSelected,
   onSelect,
-  borderColor = 'transparent',
+  borderColor,
   className,
 }) => {
+  // Используем цвет по умолчанию, если borderColor не передан или пустой
+  const effectiveBorderColor = borderColor || '#E5E7EB';
+
   return (
     <div
       onClick={onSelect}
@@ -55,14 +58,14 @@ const EntityCard: React.FC<EntityCardProps> = ({
         className
       )}
       style={{
-        borderLeftColor: isSelected ? '#3B82F6' : borderColor,
+        borderLeftColor: isSelected ? '#3B82F6' : effectiveBorderColor,
       }}
     >
       {/* Контекстное меню - появляется при hover как в ProductCard */}
       <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
         <DropdownMenu
           trigger={
-            <button className="p-1.5 bg-white dark:bg-gray-800 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 shadow-md border border-gray-200 dark:border-gray-600">
+            <button className="p-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-600 transition-colors">
               <MoreVertical className="w-4 h-4 text-gray-600 dark:text-gray-300" />
             </button>
           }

@@ -1,12 +1,13 @@
 // src/pages/DishesPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { CirclePlus, Soup } from 'lucide-react';
+import { CirclePlus, Soup, Edit, Trash2 } from 'lucide-react';
 import useDishStore from '../stores/useDishStore';
 import useTripStore from '../stores/useTripStore';
+import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Dish, DishData, SubmitDishAction } from '../types';
-import DishCard from '../components/dishes/DishCard';
+import EntityCard, { MenuItem } from '../ui/EntityCard';
 import DishDetail from '../components/dishes/DishDetail';
 import DishForm from '../components/dishes/DishForm';
 import Modal from '../ui/Modal';
@@ -17,6 +18,7 @@ import { toast } from 'react-hot-toast';
 const DishesPage: React.FC = () => {
   const { dishes, addDish, updateDish, deleteDish } = useDishStore();
   const { isDishInUse } = useTripStore();
+  const { products } = useProductStore();
   const { searchTerm } = useSearchStore();
 
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -46,17 +48,19 @@ const DishesPage: React.FC = () => {
     setFormModalOpen(true);
   }, []);
 
-  const handleRequestDelete = (e: React.MouseEvent, dish: Dish) => {
-    e.stopPropagation();
-    if (isDishInUse(dish.id)) {
-      toast.error(
-        'Это блюдо используется в одном или нескольких походах. Сначала удалите его из раскладок.',
-        { duration: 5000 }
-      );
-    } else {
-      setDishToDelete(dish);
-    }
-  };
+  const handleRequestDelete = useCallback(
+    (dish: Dish) => {
+      if (isDishInUse(dish.id)) {
+        toast.error(
+          'Это блюдо используется в одном или нескольких походах. Сначала удалите его из раскладок.',
+          { duration: 5000 }
+        );
+      } else {
+        setDishToDelete(dish);
+      }
+    },
+    [isDishInUse]
+  );
 
   const handleConfirmDelete = () => {
     if (dishToDelete) {
@@ -108,16 +112,39 @@ const DishesPage: React.FC = () => {
               )}
             </div>
           ) : (
-            filteredDishes.map((dish) => (
-              <DishCard
-                key={dish.id}
-                dish={dish}
-                isSelected={activeId === dish.id}
-                onSelect={() => setActiveId(dish.id)}
-                onEdit={() => handleEdit(dish)}
-                onDelete={(e) => handleRequestDelete(e, dish)}
-              />
-            ))
+            filteredDishes.map((dish) => {
+              const totalWeight = dish.products.reduce((sum, p) => {
+                const product = products.find((prod) => prod.id === p.productId);
+                return sum + (product ? p.weight : 0);
+              }, 0);
+
+              const subtitle = `${dish.products.length} комп. / ${totalWeight} г`;
+
+              const menuItems: MenuItem[] = [
+                { label: 'Редактировать', icon: Edit, onClick: () => handleEdit(dish) },
+                {
+                  label: 'Удалить',
+                  icon: Trash2,
+                  onClick: () => handleRequestDelete(dish),
+                  className:
+                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
+                },
+              ];
+
+              return (
+                <EntityCard
+                  key={dish.id}
+                  title={dish.name}
+                  subtitle={subtitle}
+                  icon={Soup}
+                  iconColor="text-gray-500"
+                  details={[]} // Детали уже отображены в subtitle
+                  isSelected={activeId === dish.id}
+                  onSelect={() => setActiveId(dish.id)}
+                  menuItems={menuItems}
+                />
+              );
+            })
           )}
         </div>
 

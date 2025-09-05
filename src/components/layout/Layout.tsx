@@ -21,17 +21,23 @@ import {
   Tag,
 } from 'lucide-react';
 
-// --- РЕФАКТОРИНГ: Обновленная структура навигации ---
-const navigation = [
+// --- ИЗМЕНЕНИЕ: Новая логическая группировка меню ---
+const navigationRow1 = [
   { path: '/', label: 'Главная', icon: Home },
+  { path: '/trips', label: 'Походы', icon: MapPin },
+  { path: '/participants', label: 'Участники', icon: Users },
+  { path: '/settings', label: 'Настройки', icon: Settings },
+];
+
+const navigationRow2 = [
   { path: '/products', label: 'Продукты', icon: Component },
   { path: '/dishes', label: 'Блюда', icon: Soup },
   { path: '/categories', label: 'Категории', icon: Tag },
   { path: '/meal-types', label: 'Приемы пищи', icon: Utensils },
-  { path: '/participants', label: 'Участники', icon: Users },
-  { path: '/trips', label: 'Походы', icon: MapPin },
-  { path: '/settings', label: 'Настройки', icon: Settings },
 ];
+
+// Полный список для мобильного меню
+const mobileNavigation = [...navigationRow1, ...navigationRow2];
 
 const Layout: React.FC = () => {
   const location = useLocation();
@@ -56,7 +62,7 @@ const Layout: React.FC = () => {
 
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
+      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap',
       isActive
         ? 'bg-primary text-primary-foreground shadow-sm'
         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -64,7 +70,7 @@ const Layout: React.FC = () => {
 
   const mobileNavLinkClasses = ({ isActive }: { isActive: boolean }) =>
     cn(
-      'flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium transition-all',
+      'flex items-center gap-3 w-full px-4 py-3 rounded-lg text-left text-sm font-medium transition-all whitespace-nowrap',
       isActive
         ? 'bg-primary text-primary-foreground'
         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -75,26 +81,37 @@ const Layout: React.FC = () => {
       <Toaster position="bottom-right" />
       <header className="bg-card border-b border-border sticky top-0 z-50">
         <div className="max-w-screen-xl mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-24">
             <div className="flex items-center space-x-3 flex-shrink-0">
               <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <MapPin className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-xl font-bold text-foreground hidden sm:block">Trek Meal</h1>
             </div>
-
-            <nav className="hidden lg:flex items-center space-x-1">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink key={item.path} to={item.path} className={navLinkClasses} end>
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </NavLink>
-                );
-              })}
-            </nav>
-
+            <div className="hidden lg:flex flex-col items-center gap-1">
+              <nav className="flex items-center space-x-1">
+                {navigationRow1.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink key={item.path} to={item.path} className={navLinkClasses} end>
+                      <Icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </nav>
+              <nav className="flex items-center space-x-1">
+                {navigationRow2.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink key={item.path} to={item.path} className={navLinkClasses} end>
+                      <Icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  );
+                })}
+              </nav>
+            </div>
             <div className="flex items-center space-x-2">
               <div className="hidden sm:block">
                 <Input
@@ -120,7 +137,7 @@ const Layout: React.FC = () => {
           {isMenuOpen && (
             <div className="lg:hidden border-t py-4">
               <div className="space-y-1">
-                {navigation.map((item) => {
+                {mobileNavigation.map((item) => {
                   const Icon = item.icon;
                   return (
                     <NavLink key={item.path} to={item.path} className={mobileNavLinkClasses} end>

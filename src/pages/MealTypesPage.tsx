@@ -6,9 +6,9 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import ConfirmModal from '../ui/ConfirmModal';
 import Modal from '../ui/Modal';
-import MealTypeCard from '../components/mealtypes/MealTypeCard';
+import EntityCard, { MenuItem } from '../ui/EntityCard';
 import MealTypeDetail from '../components/mealtypes/MealTypeDetail';
-import { CirclePlus, Utensils } from 'lucide-react';
+import { CirclePlus, Utensils, Edit, Trash2 } from 'lucide-react';
 
 interface MealTypeFormProps {
   mealType: MealType | null;
@@ -74,10 +74,9 @@ const MealTypesPage: React.FC = () => {
     setFormModalOpen(false);
   };
 
-  const handleDeleteRequest = (e: React.MouseEvent, mealType: MealType) => {
-    e.stopPropagation();
+  const handleDeleteRequest = useCallback((mealType: MealType) => {
     setTypeToDelete(mealType);
-  };
+  }, []);
 
   const handleDeleteConfirm = () => {
     if (typeToDelete) {
@@ -100,6 +99,7 @@ const MealTypesPage: React.FC = () => {
           </div>
         </div>
       </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         <div className="lg:col-span-1 space-y-3">
           {mealTypes.length === 0 ? (
@@ -112,18 +112,34 @@ const MealTypesPage: React.FC = () => {
               </Button>
             </div>
           ) : (
-            mealTypes.map((mt) => (
-              <MealTypeCard
-                key={mt.id}
-                mealType={mt}
-                isSelected={activeId === mt.id}
-                onSelect={() => setActiveId(mt.id)}
-                onEdit={() => handleEdit(mt)}
-                onDelete={(e) => handleDeleteRequest(e, mt)}
-              />
-            ))
+            mealTypes.map((mt) => {
+              const menuItems: MenuItem[] = [
+                { label: 'Редактировать', icon: Edit, onClick: () => handleEdit(mt) },
+                {
+                  label: 'Удалить',
+                  icon: Trash2,
+                  onClick: () => handleDeleteRequest(mt),
+                  className:
+                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
+                },
+              ];
+
+              return (
+                <EntityCard
+                  key={mt.id}
+                  title={mt.name}
+                  icon={Utensils}
+                  iconColor="text-gray-500"
+                  details={[]} // У приемов пищи нет дополнительных деталей
+                  isSelected={activeId === mt.id}
+                  onSelect={() => setActiveId(mt.id)}
+                  menuItems={menuItems}
+                />
+              );
+            })
           )}
         </div>
+
         <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
           {selectedMealType ? (
             <MealTypeDetail

@@ -1,22 +1,22 @@
 // src/pages/ProductsPage.tsx
 
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { CirclePlus, Filter, UploadCloud, Component } from 'lucide-react';
+import { CirclePlus, Filter, UploadCloud, Component, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import useProductStore from '../stores/useProductStore';
-import useSearchStore from '../stores/useSearchStore';
 import useCategoryStore from '../stores/useCategoryStore';
-import type { Product, ProductData, Category, ImportedJsonData } from '../types';
-import ProductCard from '../components/products/ProductCard';
+import useSearchStore from '../stores/useSearchStore';
+import type { Product, ProductData, ImportedJsonData, Category } from '../types';
+import EntityCard, { MenuItem } from '../ui/EntityCard';
 import ProductDetail from '../components/products/ProductDetail';
 import ProductForm from '../components/products/ProductForm';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
-import ThemedSelect from '../ui/ThemedSelect';
 import ImportProductsModal from '../components/products/ImportProductsModal';
-
-type CategoryOption = { value: string; label: string };
+import ProductFiltersComponent, {
+  ProductFilters,
+} from '../components/products/ProductFiltersComponent';
 
 const ProductsPage: React.FC = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
@@ -28,30 +28,25 @@ const ProductsPage: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterCategory, setFilterCategory] = useState<CategoryOption>({
-    value: 'all',
-    label: 'Все категории',
-  });
   const [isImportModalOpen, setImportModalOpen] = useState(false);
   const [fileContent, setFileContent] = useState<ImportedJsonData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const categoryOptions: CategoryOption[] = [
-    { value: 'all', label: 'Все категории' },
-    ...categories.map((cat: Category) => ({ value: String(cat.id), label: cat.name })),
-  ];
+  const [filters, setFilters] = useState<ProductFilters>({ categoryId: 'all' });
 
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      const categoryMatch =
-        filterCategory.value === 'all' || String(p.categoryId) === filterCategory.value;
-      const searchMatch =
-        !searchTerm.trim() ||
-        p.name.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
-        p.description?.toLowerCase().includes(searchTerm.trim().toLowerCase());
-      return categoryMatch && searchMatch;
-    });
-  }, [products, searchTerm, filterCategory]);
+    return products
+      .filter((p) => {
+        const categoryMatch =
+          filters.categoryId === 'all' || String(p.categoryId) === filters.categoryId;
+        const searchMatch =
+          !searchTerm.trim() ||
+          p.name.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
+          p.description?.toLowerCase().includes(searchTerm.trim().toLowerCase());
+        return categoryMatch && searchMatch;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [products, searchTerm, filters]);
 
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === activeId) || null,
@@ -68,10 +63,9 @@ const ProductsPage: React.FC = () => {
     setFormModalOpen(true);
   }, []);
 
-  const handleRequestDelete = (e: React.MouseEvent, product: Product) => {
-    e.stopPropagation();
+  const handleRequestDelete = useCallback((product: Product) => {
     setProductToDelete(product);
-  };
+  }, []);
 
   const handleConfirmDelete = () => {
     if (productToDelete) {
@@ -108,6 +102,8 @@ const ProductsPage: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const hasActiveFilters = useMemo(() => filters.categoryId !== 'all', [filters]);
+
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       <input
@@ -126,8 +122,12 @@ const ProductsPage: React.FC = () => {
               size="icon"
               onClick={() => setShowFilters((prev) => !prev)}
               title="Фильтр"
+              className="relative"
             >
               <Filter className="w-4 h-4" />
+              {hasActiveFilters && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-card" />
+              )}
             </Button>
             <Button
               variant="secondary"
@@ -146,13 +146,8 @@ const ProductsPage: React.FC = () => {
       </div>
 
       {showFilters && (
-        <div className="mb-4">
-          <ThemedSelect<CategoryOption>
-            className="w-full sm:max-w-xs"
-            value={filterCategory}
-            options={categoryOptions}
-            onChange={(option) => setFilterCategory(option as CategoryOption)}
-          />
+        <div className="mb-4 sm:mb-6 bg-card rounded-xl border p-3 sm:p-4">
+          <ProductFiltersComponent filters={filters} onFiltersChange={setFilters} />
         </div>
       )}
 
@@ -162,11 +157,9 @@ const ProductsPage: React.FC = () => {
             <div className="text-center py-16 px-6 text-muted-foreground">
               <Component className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-medium text-foreground">
-                {searchTerm || filterCategory.value !== 'all'
-                  ? 'Продукты не найдены'
-                  : 'Продуктов пока нет'}
+                {searchTerm || hasActiveFilters ? 'Продукты не найдены' : 'Продуктов пока нет'}
               </h3>
-              {!searchTerm && filterCategory.value === 'all' && (
+              {!searchTerm && !hasActiveFilters && (
                 <Button onClick={handleAddNew} className="mt-4">
                   <CirclePlus className="w-4 h-4 mr-2" />
                   Добавить первый продукт
@@ -174,16 +167,46 @@ const ProductsPage: React.FC = () => {
               )}
             </div>
           ) : (
-            filteredProducts.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                isSelected={activeId === p.id}
-                onSelect={() => setActiveId(p.id)}
-                onEdit={() => handleEdit(p)}
-                onDelete={(e) => handleRequestDelete(e, p)}
-              />
-            ))
+            filteredProducts.map((product) => {
+              const category = categories.find((c: Category) => c.id === product.categoryId);
+
+              const details = [
+                {
+                  icon: Component,
+                  text: `${product.calories} ккал / 100г`,
+                  title: 'Калорийность',
+                },
+              ];
+
+              const menuItems: MenuItem[] = [
+                {
+                  label: 'Редактировать',
+                  icon: Edit,
+                  onClick: () => handleEdit(product),
+                },
+                {
+                  label: 'Удалить',
+                  icon: Trash2,
+                  onClick: () => handleRequestDelete(product),
+                  className:
+                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
+                },
+              ];
+
+              return (
+                <EntityCard
+                  key={product.id}
+                  title={product.name}
+                  icon={Component}
+                  iconColor="text-gray-500"
+                  details={details}
+                  menuItems={menuItems}
+                  isSelected={activeId === product.id}
+                  onSelect={() => setActiveId(product.id)}
+                  borderColor={category?.color}
+                />
+              );
+            })
           )}
         </div>
 

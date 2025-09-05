@@ -20,6 +20,7 @@ import useProductStore from '../../stores/useProductStore';
 import ConfirmModal from '../../ui/ConfirmModal';
 import DetailPane from '../../ui/DetailPane';
 import Button from '../../ui/Button';
+import InfoField from '../../ui/InfoField'; // <-- Импортируем новый компонент
 
 interface ProductDetailProps {
   product: Product | null;
@@ -60,24 +61,18 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onEdit }) => {
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {category && (
-              <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-                <Tag className="w-5 h-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Категория</p>
-                  <p className="text-base text-muted-foreground">
+              <InfoField
+                icon={Tag}
+                label="Категория"
+                value={
+                  <>
                     {category.emoji} {category.name}
-                  </p>
-                </div>
-              </div>
+                  </>
+                }
+              />
             )}
             {product.isPerishable && (
-              <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-                <Thermometer className="w-5 h-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Особенность</p>
-                  <p className="text-base text-muted-foreground">Скоропортящийся</p>
-                </div>
-              </div>
+              <InfoField icon={Thermometer} label="Особенность" value="Скоропортящийся" />
             )}
           </div>
           {product.description && (
@@ -96,34 +91,26 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onEdit }) => {
       icon: BarChart,
       content: (
         <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-            <Flame className="w-5 h-5 mt-0.5 text-yellow-500" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Калории</p>
-              <p className="text-base text-muted-foreground">{product.calories}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-            <Puzzle className="w-5 h-5 mt-0.5 text-red-500" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Белки</p>
-              <p className="text-base text-muted-foreground">{product.proteins} г</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-            <Puzzle className="w-5 h-5 mt-0.5 text-amber-500" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Жиры</p>
-              <p className="text-base text-muted-foreground">{product.fats} г</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-            <Puzzle className="w-5 h-5 mt-0.5 text-orange-500" />
-            <div>
-              <p className="text-sm font-medium text-foreground">Углеводы</p>
-              <p className="text-base text-muted-foreground">{product.carbs} г</p>
-            </div>
-          </div>
+          <InfoField
+            icon={Flame}
+            label="Калории"
+            value={<span className="font-semibold">{product.calories}</span>}
+          />
+          <InfoField
+            icon={Puzzle}
+            label="Белки"
+            value={<span className="font-semibold">{product.proteins} г</span>}
+          />
+          <InfoField
+            icon={Puzzle}
+            label="Жиры"
+            value={<span className="font-semibold">{product.fats} г</span>}
+          />
+          <InfoField
+            icon={Puzzle}
+            label="Углеводы"
+            value={<span className="font-semibold">{product.carbs} г</span>}
+          />
         </div>
       ),
     },

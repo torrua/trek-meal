@@ -59,7 +59,8 @@ const ParticipantFiltersComponent: React.FC<ParticipantFiltersProps> = ({
         )}
       </div>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+      {/* --- ИЗМЕНЕНИЕ: Используем Flexbox вместо Grid --- */}
+      <div className="flex flex-wrap items-center gap-4">
         <DropdownSelect
           label="Пол"
           icon={Users}

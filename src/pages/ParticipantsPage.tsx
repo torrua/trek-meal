@@ -246,7 +246,6 @@ const ParticipantsPage: React.FC = () => {
           )}
         </div>
 
-        {/* --- ИЗМЕНЕНИЕ: Заглушка теперь без рамки --- */}
         <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
           {selectedParticipant ? (
             <ParticipantDetail

@@ -262,7 +262,7 @@ const CategoriesPage: React.FC = () => {
           <span className="font-bold">{categoryToDelete?.name}</span>?
         </p>
         <p className="text-sm text-muted-foreground mt-2">
-          Все продукты в этой категории будут перемещены в &quot;Без категории&quot;.
+          Все продукты в этой категории будут перемещены в &quote;Без категории&quote;.
         </p>
       </ConfirmModal>
     </div>

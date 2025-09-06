@@ -1,7 +1,7 @@
 // src/pages/ProductsPage.tsx
 
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { CirclePlus, Filter, UploadCloud, Component, Edit, Trash2 } from 'lucide-react';
+import { CirclePlus, Filter, UploadCloud, Component, Edit, Trash2, Flame, Dna } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import useProductStore from '../stores/useProductStore';
 import useCategoryStore from '../stores/useCategoryStore';
@@ -172,10 +172,20 @@ const ProductsPage: React.FC = () => {
 
               const details = [
                 {
-                  icon: Component,
-                  text: `${product.calories} ккал / 100г`,
-                  title: 'Калорийность',
+                  icon: Flame,
+                  text: `${product.calories} ккал`,
+                  title: 'Калорийность на 100г',
                 },
+                // Добавляем информацию о БЖУ если есть
+                ...(product.proteins || product.fats || product.carbs
+                  ? [
+                      {
+                        icon: Dna,
+                        text: `Б:${product.proteins || 0} Ж:${product.fats || 0} У:${product.carbs || 0}`,
+                        title: 'Белки, жиры, углеводы на 100г',
+                      },
+                    ]
+                  : []),
               ];
 
               const menuItems: MenuItem[] = [
@@ -198,7 +208,7 @@ const ProductsPage: React.FC = () => {
                   key={product.id}
                   title={product.name}
                   icon={Component}
-                  iconColor="text-gray-500"
+                  iconColor={category?.color ? 'text-current' : 'text-gray-500'}
                   details={details}
                   menuItems={menuItems}
                   isSelected={activeId === product.id}

@@ -123,13 +123,13 @@ const EntityCard: React.FC<EntityCardProps> = ({
             <div className={cn('flex-shrink-0', iconColor || 'text-gray-500 dark:text-gray-400')}>
               <Icon className="w-4 h-4" />
             </div>
-            <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+            <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
             <h3 className="font-semibold text-gray-900 dark:text-white truncate" title={title}>
               {title}
             </h3>
             {subtitle && (
               <>
-                <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+                <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
                 <p
                   className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0"
                   title={subtitle}
@@ -142,18 +142,18 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
           {/* Детали - с лучшей типографикой */}
           {details.length > 0 && (
-            <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 flex-wrap pt-1">
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 flex-wrap pt-1">
               {details.map((detail, index) => (
                 <React.Fragment key={index}>
                   {index > 0 && (
-                    <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+                    <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
                   )}
                   <div
-                    className={cn('flex items-center gap-1.5', detail.className)}
+                    className={cn('flex items-center gap-2', detail.className)}
                     title={detail.title}
                   >
                     <detail.icon className="w-4 h-4 flex-shrink-0" />
-                    <span className="font-medium">{detail.text}</span>
+                    {detail.text && <span className="font-medium">{detail.text}</span>}
                   </div>
                 </React.Fragment>
               ))}

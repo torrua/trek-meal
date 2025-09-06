@@ -44,35 +44,32 @@ const DetailPane: React.FC<DetailPaneProps> = ({
               <div key={id} className="border-b border-border last:border-b-0">
                 <div
                   className={cn(
-                    'w-full flex justify-between items-center p-4 transition-colors',
-                    'bg-muted/50 hover:bg-muted/70',
-                    onToggleSection && 'cursor-pointer' // <--- Добавляем курсор только если есть функция
+                    'w-full flex justify-between items-center px-4 py-3 transition-colors cursor-pointer',
+                    'bg-muted/50 hover:bg-muted/70'
                   )}
+                  onClick={() => onToggleSection?.(id)}
                 >
-                  <button
-                    onClick={() => onToggleSection?.(id)} // <--- ИСПРАВЛЕНИЕ: Опциональный вызов
-                    disabled={!onToggleSection} // <--- ИСПРАВЛЕНИЕ: Отключаем кнопку, если нет обработчика
-                    className="flex-1 flex justify-between items-center text-left"
-                  >
-                    <div className="flex items-center gap-3 min-h-[28px]">
-                      <Icon className="w-5 h-5 text-primary flex-shrink-0" />
-                      <span className="font-semibold text-foreground">{title}</span>
-                    </div>
-                    {onToggleSection && ( // <--- ИСПРАВЛЕНИЕ: Показываем стрелку только если можно переключать
-                      <ChevronDown
-                        className={cn(
-                          'w-5 h-5 text-muted-foreground transition-transform duration-200 flex-shrink-0',
-                          { 'rotate-180': isOpen }
-                        )}
-                      />
-                    )}
-                  </button>
+                  {/* Left side: Icon + Title */}
+                  <div className="flex items-center gap-3 min-h-[24px] flex-1 min-w-0">
+                    <Icon className="w-5 h-5 text-primary flex-shrink-0" />
+                    <span className="font-semibold text-foreground truncate">{title}</span>
+                  </div>
 
-                  {actionButton && (
-                    <div className="ml-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                      {actionButton}
-                    </div>
-                  )}
+                  {/* Right side: Action button + Open/Close button */}
+                  <div className="flex items-center gap-2 flex-shrink-0 min-h-[24px]">
+                    {actionButton && <div onClick={(e) => e.stopPropagation()}>{actionButton}</div>}
+
+                    {onToggleSection && (
+                      <div className="p-1" onClick={(e) => e.stopPropagation()}>
+                        <ChevronDown
+                          className={cn(
+                            'w-5 h-5 text-muted-foreground transition-transform duration-200',
+                            { 'rotate-180': isOpen }
+                          )}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div
                   className={cn(

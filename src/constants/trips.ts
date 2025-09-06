@@ -24,7 +24,7 @@ export const DIFFICULTY_CONFIG: Record<
   easy: {
     label: 'Легкий',
     icon: Gauge,
-    colorClassName: 'text-green-600 dark:text-green-400',
+    colorClassName: 'text-green-500 dark:text-green-300',
   },
   medium: {
     label: 'Средний',

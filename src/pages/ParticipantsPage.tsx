@@ -195,6 +195,9 @@ const ParticipantsPage: React.FC = () => {
 
             const subtitle = age ? `${age} лет` : p.age === 'child' ? 'Ребенок' : 'Взрослый';
 
+            // Use gender color for border (male/female)
+            const genderBorderColor = genderInfo.color;
+
             const details = [
               { icon: MapPin, text: tripCount, title: 'Походы' },
               { icon: Backpack, text: 0, title: 'Снаряжение' },
@@ -228,7 +231,7 @@ const ParticipantsPage: React.FC = () => {
                 details={details}
                 isSelected={activeId === p.id}
                 onSelect={() => setActiveId(p.id)}
-                borderColor={genderInfo.color}
+                borderColor={genderBorderColor}
                 menuItems={menuItems}
               />
             );

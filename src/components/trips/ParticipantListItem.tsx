@@ -39,61 +39,66 @@ const ParticipantListItem: React.FC<ParticipantListItemProps> = ({
     >
       {/* КОМПАКТНАЯ однострочная информация */}
       <div className="flex items-center justify-between">
-        {/* --- ИЗМЕНЕНИЕ: Все элементы теперь в одной строке --- */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-          <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-            {participant.name}
-          </h3>
-          <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-          <p className="text-gray-500 dark:text-gray-400 flex-shrink-0">
-            {age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}
-          </p>
-          <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+        {/* Left section: Experience • Name • Age */}
+        <div className="flex items-center gap-x-1.5 text-sm">
           <div title={`Опыт: ${experienceInfo.label}`}>
             <ExperienceIcon className={cn('w-4 h-4', experienceInfo.colorClassName)} />
           </div>
-          <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-          <div
-            className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"
-            title="Походы"
-          >
-            <MapPin className="w-4 h-4" />
-            <span className="font-medium">{tripCount}</span>
-          </div>
-          <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-          <div
-            className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"
-            title="Снаряжение"
-          >
-            <Backpack className="w-4 h-4" />
-            <span className="font-medium">{equipmentCount}</span>
-          </div>
+          <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
+          <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+            {participant.name}
+          </h3>
+          <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
+          <p className="text-gray-500 dark:text-gray-400 flex-shrink-0">
+            {age ? `${age} лет` : isChild ? 'Ребенок' : 'Взрослый'}
+          </p>
         </div>
 
-        {/* Кнопки действий - компактные */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onView();
-            }}
-            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
-            title="Открыть профиль"
-            aria-label={`Открыть профиль ${participant.name}`}
-          >
-            <ExternalLink className="w-3 h-3 text-gray-600 dark:text-gray-300" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition-colors"
-            title="Удалить из похода"
-            aria-label={`Удалить ${participant.name} из похода`}
-          >
-            <Trash2 className="w-3 h-3 text-red-600 dark:text-red-400" />
-          </button>
+        {/* Right section: Trips • Equip + context menu */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-x-1.5 text-sm">
+            <div
+              className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"
+              title="Походы"
+            >
+              <MapPin className="w-4 h-4" />
+              <span className="font-medium">{tripCount}</span>
+            </div>
+            <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
+            <div
+              className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"
+              title="Снаряжение"
+            >
+              <Backpack className="w-4 h-4" />
+              <span className="font-medium">{equipmentCount}</span>
+            </div>
+          </div>
+
+          {/* Context menu buttons */}
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onView();
+              }}
+              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+              title="Открыть профиль"
+              aria-label={`Открыть профиль ${participant.name}`}
+            >
+              <ExternalLink className="w-3 h-3 text-gray-600 dark:text-gray-300" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+              className="p-1 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition-colors"
+              title="Удалить из похода"
+              aria-label={`Удалить ${participant.name} из похода`}
+            >
+              <Trash2 className="w-3 h-3 text-red-600 dark:text-red-400" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

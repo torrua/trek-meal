@@ -40,7 +40,7 @@ export const EXPERIENCE_CONFIG = {
   beginner: {
     label: 'Новичок',
     icon: Zap,
-    colorClassName: 'text-green-600 dark:text-green-400',
+    colorClassName: 'text-green-500 dark:text-green-300',
   },
   experienced: {
     label: 'Опытный',

@@ -1,7 +1,17 @@
 // src/pages/TripsPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { Backpack, Filter, MapPinPlus, Edit, Copy, Trash2, Share } from 'lucide-react';
+import {
+  Backpack,
+  Filter,
+  MapPinPlus,
+  Edit,
+  Copy,
+  Trash2,
+  Share,
+  Clock,
+  Route,
+} from 'lucide-react';
 import useTripStore from '../stores/useTripStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Trip, TripData } from '../types';
@@ -201,7 +211,24 @@ const TripsPage: React.FC = () => {
           {filteredTrips.map((trip) => {
             const difficultyConfig = DIFFICULTY_CONFIG[trip.difficulty];
             const statusConfig = STATUS_CONFIG[trip.effectiveStatus];
+            const statusBorderColor =
+              statusConfig.icon === Clock
+                ? '#f97316' // orange-600
+                : statusConfig.icon === Route
+                  ? '#9333ea' // purple-600
+                  : '#4b5563'; // gray-600
             const details = [
+              {
+                icon: statusConfig.icon,
+                text: '',
+                title: statusConfig.label,
+                className:
+                  statusConfig.icon === Clock
+                    ? 'text-orange-600 dark:text-orange-400'
+                    : statusConfig.icon === Route
+                      ? 'text-purple-600 dark:text-purple-400'
+                      : 'text-gray-600 dark:text-gray-400',
+              },
               { icon: Users, text: trip.participants.length, title: 'Участники' },
               ...(trip.destination
                 ? [{ icon: MapPin, text: trip.destination, title: 'Место' }]
@@ -220,7 +247,7 @@ const TripsPage: React.FC = () => {
                 details={details}
                 isSelected={activeId === trip.id}
                 onSelect={() => handleSelectTrip(trip.id)}
-                borderColor={statusConfig.color}
+                borderColor={statusBorderColor}
                 data-testid={`trip-card-${trip.id}`}
                 menuItems={[
                   {

@@ -80,21 +80,21 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
       id: 'data',
       title: 'Данные',
       icon: User,
+      actionButton: (
+        <Button size="sm" variant="ghost" onClick={onEdit} title="Редактировать участника">
+          <Edit className="w-4 h-4" />
+        </Button>
+      ),
       content: (
         <div className="space-y-4">
           {/* --- ИЗМЕНЕНИЕ: Используем новый компонент InfoField --- */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InfoField
               icon={Award}
+              iconClassName={experienceInfo.colorClassName}
               label="Опыт"
               value={experienceInfo.label}
-              borderColor={
-                experienceInfo.colorClassName.includes('green')
-                  ? '#10b981'
-                  : experienceInfo.colorClassName.includes('yellow')
-                    ? '#f59e0b'
-                    : '#ef4444'
-              }
+              valueClassName={experienceInfo.colorClassName}
             />
             {participant.birthDate && (
               <InfoField
@@ -163,6 +163,11 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
       id: 'equipment',
       title: 'Снаряжение',
       icon: Backpack,
+      actionButton: (
+        <Button size="sm" variant="ghost" disabled title="В разработке">
+          <Backpack className="w-4 h-4" />
+        </Button>
+      ),
       content: (
         <p className="text-sm text-center py-4 text-muted-foreground">Раздел в разработке</p>
       ),

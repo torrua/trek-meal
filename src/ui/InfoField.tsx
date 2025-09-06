@@ -8,6 +8,7 @@ interface InfoFieldProps {
   iconClassName?: string;
   label: string;
   value: React.ReactNode;
+  valueClassName?: string;
   className?: string;
   'data-testid'?: string;
 }
@@ -17,6 +18,7 @@ const InfoField: React.FC<InfoFieldProps> = ({
   iconClassName,
   label,
   value,
+  valueClassName,
   className,
   'data-testid': testId,
 }) => (
@@ -33,7 +35,9 @@ const InfoField: React.FC<InfoFieldProps> = ({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm text-muted-foreground">{label}</p>
-        <div className="text-sm font-medium text-foreground mt-0.5">{value}</div>
+        <div className={cn('text-sm font-medium mt-0.5', valueClassName || 'text-foreground')}>
+          {value}
+        </div>
       </div>
     </div>
   </div>

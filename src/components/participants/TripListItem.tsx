@@ -15,7 +15,7 @@ interface TripListItemProps {
 }
 
 const TripListItem: React.FC<TripListItemProps> = ({ trip, onRemove, onView }) => {
-  const difficultyInfo = DIFFICULTY_CONFIG[trip.difficulty];
+  const _difficultyInfo = DIFFICULTY_CONFIG[trip.difficulty];
   const effectiveStatus = getEffectiveStatus(trip);
   const statusConfig = STATUS_CONFIG[effectiveStatus];
 
@@ -26,8 +26,6 @@ const TripListItem: React.FC<TripListItemProps> = ({ trip, onRemove, onView }) =
       : effectiveStatus === 'active'
         ? '#9333ea' // purple-600
         : '#4b5563'; // gray-600
-
-  const DifficultyIcon = difficultyInfo.icon;
 
   return (
     <div

@@ -21,7 +21,6 @@ import useParticipantStore from '../stores/useParticipantStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Equipment, EquipmentData, EquipmentCategory, Participant } from '../types';
 import EntityCard, { MenuItem } from '../ui/EntityCard';
-import EquipmentListItem from '../components/equipment/EquipmentListItem';
 import EquipmentForm from '../components/equipment/EquipmentForm';
 import EquipmentFiltersComponent, {
   EquipmentFilters,

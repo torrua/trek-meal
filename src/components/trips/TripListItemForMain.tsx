@@ -2,17 +2,7 @@
 
 import React from 'react';
 import cn from 'classnames';
-import {
-  Calendar,
-  MapPin,
-  ExternalLink,
-  Trash2,
-  Users,
-  Backpack,
-  Edit,
-  Copy,
-  Share,
-} from 'lucide-react';
+import { Calendar, MapPin, Trash2, Users, Edit, Copy, Share } from 'lucide-react';
 import type { Trip } from '../../types';
 import { formatDate, getEffectiveStatus } from '../../utils/index';
 import { DIFFICULTY_CONFIG, STATUS_CONFIG } from '../../constants/trips';

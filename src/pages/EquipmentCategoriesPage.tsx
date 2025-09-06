@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CirclePlus, Filter, Backpack, Edit, Copy, Trash2, Share, Tag } from 'lucide-react';
+import { CirclePlus, Filter, Backpack, Edit, Copy, Trash2, Tag } from 'lucide-react';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useSearchStore from '../stores/useSearchStore';

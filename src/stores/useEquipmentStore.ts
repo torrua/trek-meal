@@ -111,7 +111,11 @@ const useEquipmentStore = create<EquipmentState>()(
 
           if (participantsData) {
             const participants = JSON.parse(participantsData).state?.participants || [];
-            if (participants.some((p: any) => p.equipmentIds?.includes(equipmentId))) {
+            if (
+              participants.some((p: { equipmentIds?: number[] }) =>
+                p.equipmentIds?.includes(equipmentId)
+              )
+            ) {
               return true;
             }
           }
@@ -120,9 +124,12 @@ const useEquipmentStore = create<EquipmentState>()(
             const trips = JSON.parse(tripsData).state?.trips || [];
             if (
               trips.some(
-                (t: any) =>
+                (t: {
+                  requiredEquipmentIds?: number[];
+                  assignedEquipment?: Record<string, number[]>;
+                }) =>
                   t.requiredEquipmentIds?.includes(equipmentId) ||
-                  Object.values(t.assignedEquipment || {}).some((ids: any) =>
+                  Object.values(t.assignedEquipment || {}).some((ids: number[]) =>
                     ids?.includes(equipmentId)
                   )
               )

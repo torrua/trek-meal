@@ -11,7 +11,6 @@ import {
   Zap,
   Droplet,
   Wheat,
-  Trash2,
   BarChart,
   PackagePlus,
   Component,

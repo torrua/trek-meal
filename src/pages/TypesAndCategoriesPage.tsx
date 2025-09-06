@@ -2,13 +2,11 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Tag, Backpack, Utensils, Component } from 'lucide-react';
+import { Backpack, Utensils, Component } from 'lucide-react';
 import TabNavigation, { TabItem } from '../ui/TabNavigation';
 import useCategoryStore from '../stores/useCategoryStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useMealTypesStore from '../stores/useMealTypesStore';
-import useProductStore from '../stores/useProductStore';
-import useEquipmentStore from '../stores/useEquipmentStore';
 
 // Import existing page content components (we'll extract the main content from existing pages)
 import CategoriesPageContent from './../components/categories/CategoriesPageContent';
@@ -23,8 +21,6 @@ const TypesAndCategoriesPage: React.FC = () => {
   const { categories: productCategories } = useCategoryStore();
   const { categories: equipmentCategories } = useEquipmentCategoryStore();
   const { mealTypes } = useMealTypesStore();
-  const { products } = useProductStore();
-  const { equipment } = useEquipmentStore();
 
   // Initialize active tab from URL parameter
   useEffect(() => {

@@ -32,22 +32,29 @@ const TripsPage: React.FC = () => {
   const [tripToDelete, setTripToDelete] = useState<Trip | null>(null);
   const [isAddParticipantModalOpen, setAddParticipantModalOpen] = useState(false);
 
+  // Мемоизация для оптимизации производительности
   const filteredTrips = useMemo(() => {
     let result = trips.map((t) => ({ ...t, effectiveStatus: getEffectiveStatus(t) }));
 
+    // Фильтрация по поисковому запросу
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase();
       result = result.filter(
-        (t) => t.name.toLowerCase().includes(search) || t.destination.toLowerCase().includes(search)
+        (t) =>
+          t.name.toLowerCase().includes(search) ||
+          t.destination?.toLowerCase().includes(search) ||
+          t.description?.toLowerCase().includes(search)
       );
     }
 
+    // Фильтрация по статусу и сложности
     result = result.filter((t) => {
       if (filters.status !== 'all' && t.effectiveStatus !== filters.status) return false;
       if (filters.difficulty !== 'all' && t.difficulty !== filters.difficulty) return false;
       return true;
     });
 
+    // Сортировка по дате создания (новые сверху)
     return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [trips, searchTerm, filters]);
 
@@ -65,38 +72,72 @@ const TripsPage: React.FC = () => {
 
   const handleFormSubmit = useCallback(
     (formData: TripData) => {
-      if (editingTrip) {
-        updateTrip(editingTrip.id, formData);
-        toast.success(`Поход "${formData.name}" обновлен.`);
-      } else {
-        const newTrip = addTrip(formData);
-        if (newTrip) setActiveId(newTrip.id);
+      try {
+        if (editingTrip) {
+          updateTrip(editingTrip.id, formData);
+          toast.success(`Поход "${formData.name}" обновлен.`);
+        } else {
+          const newTrip = addTrip(formData);
+          if (newTrip) {
+            setActiveId(newTrip.id);
+            toast.success(`Поход "${formData.name}" создан.`);
+          }
+        }
+        setShowFormModal(false);
+        setEditingTrip(null);
+      } catch (error) {
+        toast.error('Произошла ошибка при сохранении похода');
+        console.error('Error saving trip:', error);
       }
-      setShowFormModal(false);
-      setEditingTrip(null);
     },
     [editingTrip, addTrip, updateTrip]
   );
 
   const handleClone = useCallback(
     (trip: Trip) => {
-      const { name, participants: _p, ...rest } = trip;
-      const clonedTripData: TripData = { ...rest, name: `${name} (копия)`, participants: [] };
-      const newTrip = addTrip(clonedTripData);
-      if (newTrip) {
-        setActiveId(newTrip.id);
-        toast.success(`Поход "${trip.name}" клонирован.`);
+      try {
+        const { name, participants: _p, ...rest } = trip;
+        const clonedTripData: TripData = {
+          ...rest,
+          name: `${name} (копия)`,
+          participants: [],
+        };
+        const newTrip = addTrip(clonedTripData);
+        if (newTrip) {
+          setActiveId(newTrip.id);
+          toast.success(`Поход "${trip.name}" клонирован.`);
+        }
+      } catch (error) {
+        toast.error('Ошибка при клонировании похода');
+        console.error('Error cloning trip:', error);
       }
     },
     [addTrip]
   );
 
+  const handleExport = useCallback((trip: Trip) => {
+    try {
+      exportTripToJson(trip);
+      toast.success('Поход экспортирован');
+    } catch (error) {
+      toast.error('Ошибка при экспорте');
+      console.error('Export error:', error);
+    }
+  }, []);
+
   const handleRequestDelete = useCallback((trip: Trip) => setTripToDelete(trip), []);
+
   const handleConfirmDelete = useCallback(() => {
     if (tripToDelete) {
-      if (tripToDelete.id === activeId) setActiveId(null);
-      deleteTrip(tripToDelete.id);
-      setTripToDelete(null);
+      try {
+        if (tripToDelete.id === activeId) setActiveId(null);
+        deleteTrip(tripToDelete.id);
+        setTripToDelete(null);
+        toast.success(`Поход "${tripToDelete.name}" удален`);
+      } catch (error) {
+        toast.error('Ошибка при удалении похода');
+        console.error('Delete error:', error);
+      }
     }
   }, [tripToDelete, activeId, deleteTrip]);
 
@@ -109,6 +150,10 @@ const TripsPage: React.FC = () => {
     if (selectedTrip) setAddParticipantModalOpen(true);
   }, [selectedTrip]);
 
+  const handleSelectTrip = useCallback((tripId: number) => {
+    setActiveId(tripId);
+  }, []);
+
   const hasActiveFilters = useMemo(
     () => Object.values(filters).some((v) => v !== 'all'),
     [filters]
@@ -116,6 +161,7 @@ const TripsPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+      {/* Заголовок и действия */}
       <div className="mb-4 sm:mb-6">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-xl sm:text-2xl font-bold text-foreground">Походы</h1>
@@ -126,6 +172,7 @@ const TripsPage: React.FC = () => {
               size="icon"
               className="relative"
               title="Фильтры"
+              aria-label="Показать фильтры"
             >
               <Filter className="w-4 h-4" />
               {hasActiveFilters && (
@@ -140,13 +187,16 @@ const TripsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Фильтры */}
       {showFilters && (
         <div className="mb-4 sm:mb-6 bg-card rounded-xl border p-3 sm:p-4">
           <TripFiltersComponent filters={filters} onFiltersChange={setFilters} />
         </div>
       )}
 
+      {/* Основной контент */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+        {/* Список походов */}
         <div className="lg:col-span-1 space-y-3">
           {filteredTrips.map((trip) => {
             const difficultyConfig = DIFFICULTY_CONFIG[trip.difficulty];
@@ -166,30 +216,58 @@ const TripsPage: React.FC = () => {
                 key={trip.id}
                 title={trip.name}
                 icon={difficultyConfig.icon}
+                iconColor={difficultyConfig.colorClassName} // ИСПРАВЛЕНИЕ: Добавляем цвет иконки
                 details={details}
                 isSelected={activeId === trip.id}
-                onSelect={() => setActiveId(trip.id)}
+                onSelect={() => handleSelectTrip(trip.id)}
                 borderColor={statusConfig.color}
+                data-testid={`trip-card-${trip.id}`}
                 menuItems={[
-                  { label: 'Редактировать', icon: Edit, onClick: () => handleEdit(trip) },
-                  { label: 'Клонировать', icon: Copy, onClick: () => handleClone(trip) },
-                  { label: 'Экспорт', icon: Share, onClick: () => exportTripToJson(trip) },
+                  {
+                    label: 'Редактировать',
+                    icon: Edit,
+                    onClick: () => handleEdit(trip),
+                  },
+                  {
+                    label: 'Клонировать',
+                    icon: Copy,
+                    onClick: () => handleClone(trip),
+                  },
+                  {
+                    label: 'Экспорт',
+                    icon: Share,
+                    onClick: () => handleExport(trip),
+                  },
                   {
                     label: 'Удалить',
                     icon: Trash2,
                     onClick: () => handleRequestDelete(trip),
-                    className: 'text-danger',
+                    className: 'text-red-600 dark:text-red-400',
                   },
                 ]}
               />
             );
           })}
+
+          {/* Пустое состояние */}
           {filteredTrips.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
               <Backpack className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <h3 className="text-lg font-medium mb-2">Походы не найдены</h3>
               {searchTerm || hasActiveFilters ? (
-                <p>Попробуйте изменить критерии поиска.</p>
+                <div className="space-y-3">
+                  <p>Попробуйте изменить критерии поиска.</p>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setFilters({ status: 'all', difficulty: 'all' });
+                      // Очистка поиска должна быть реализована в searchStore
+                    }}
+                  >
+                    Сбросить фильтры
+                  </Button>
+                </div>
               ) : (
                 <Button onClick={handleAddNew} size="sm" className="mt-3">
                   <MapPinPlus className="w-4 h-4 mr-2" />
@@ -200,6 +278,7 @@ const TripsPage: React.FC = () => {
           )}
         </div>
 
+        {/* Детали похода */}
         <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
           {selectedTrip ? (
             <TripDetail
@@ -223,6 +302,7 @@ const TripsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Модальное окно деталей для мобильных устройств */}
       {activeId !== null && (
         <div className="lg:hidden">
           <Modal
@@ -244,6 +324,7 @@ const TripsPage: React.FC = () => {
         </div>
       )}
 
+      {/* Модальное окно формы */}
       <Modal
         isOpen={showFormModal}
         onClose={handleCloseModal}
@@ -252,6 +333,7 @@ const TripsPage: React.FC = () => {
         <TripForm trip={editingTrip} onSubmit={handleFormSubmit} onCancel={handleCloseModal} />
       </Modal>
 
+      {/* Подтверждение удаления */}
       <ConfirmModal
         isOpen={!!tripToDelete}
         onClose={() => setTripToDelete(null)}
@@ -263,9 +345,14 @@ const TripsPage: React.FC = () => {
         <p>
           Вы уверены, что хотите удалить поход{' '}
           <span className="font-bold">{tripToDelete?.name}</span>?
+          <br />
+          <span className="text-sm text-muted-foreground mt-2 block">
+            Это действие нельзя отменить. Все данные о походе будут потеряны.
+          </span>
         </p>
       </ConfirmModal>
 
+      {/* Модальное окно добавления участников */}
       <AddParticipantsModal
         isOpen={isAddParticipantModalOpen}
         onClose={() => setAddParticipantModalOpen(false)}

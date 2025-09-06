@@ -1,6 +1,6 @@
 // src/components/trips/TripDetail.tsx
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   Users,
   Calendar,
@@ -28,7 +28,7 @@ import ConfirmModal from '../../ui/ConfirmModal';
 import useTripStore from '../../stores/useTripStore';
 import DetailPane from '../../ui/DetailPane';
 import Button from '../../ui/Button';
-import InfoField from '../../ui/InfoField'; // <-- Импортируем новый компонент
+import InfoField from '../../ui/InfoField';
 
 interface TripDetailProps {
   trip: Trip | null;
@@ -45,42 +45,57 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
   const [openSections, setOpenSections] = useState<string[]>(['info', 'participants']);
   const [participantToRemove, setParticipantToRemove] = useState<Participant | null>(null);
 
+  // Мемоизация для производительности
   const tripParticipants = useMemo(
     () => allParticipants.filter((p) => trip?.participants.includes(p.id)),
-    [allParticipants, trip]
+    [allParticipants, trip?.participants]
   );
 
-  const summary = useMemo(
-    () => calculateTripSummary(trip || undefined, products, allParticipants, dishes),
-    [trip, products, allParticipants, dishes]
-  );
+  const summary = useMemo(() => {
+    if (!trip) return null;
+    return calculateTripSummary(trip, products, allParticipants, dishes);
+  }, [trip?.id, products.length, allParticipants.length, dishes.length]);
 
+  // Инициализация открытых секций при смене похода
   React.useEffect(() => {
     if (trip) {
       setOpenSections(['info', 'participants']);
     }
-  }, [trip]);
+  }, [trip?.id]);
+
+  const handleToggleSection = useCallback((sectionId: string) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
+  }, []);
+
+  const handleRequestRemove = useCallback((participant: Participant) => {
+    setParticipantToRemove(participant);
+  }, []);
+
+  const handleConfirmRemove = useCallback(() => {
+    if (participantToRemove && trip) {
+      removeParticipantFromTrip(trip.id, participantToRemove.id);
+      setParticipantToRemove(null);
+    }
+  }, [participantToRemove, trip, removeParticipantFromTrip]);
+
+  const handleNavigateToParticipant = useCallback(
+    (participantId: number) => {
+      navigate(`/participants?selectedId=${participantId}`);
+    },
+    [navigate]
+  );
+
+  const handleNavigateToPlanning = useCallback(() => {
+    if (trip) {
+      navigate(`/trips/${trip.id}`);
+    }
+  }, [trip, navigate]);
 
   if (!trip) {
     return null;
   }
-
-  const handleToggleSection = (sectionId: string) => {
-    setOpenSections((prev) =>
-      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
-    );
-  };
-
-  const handleRequestRemove = (participant: Participant) => {
-    setParticipantToRemove(participant);
-  };
-
-  const handleConfirmRemove = () => {
-    if (participantToRemove) {
-      removeParticipantFromTrip(trip.id, participantToRemove.id);
-      setParticipantToRemove(null);
-    }
-  };
 
   const difficultyInfo = DIFFICULTY_CONFIG[trip.difficulty];
 
@@ -96,21 +111,29 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
       ),
       content: (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {trip.startDate && (
               <InfoField
                 icon={Calendar}
                 label="Даты"
                 value={`${formatDate(trip.startDate)} - ${formatDate(trip.endDate)}`}
+                data-testid="trip-dates"
               />
             )}
-            <InfoField icon={Sun} label="Длительность" value={`${trip.days} дней`} />
+            <InfoField
+              icon={Sun}
+              label="Длительность"
+              value={`${trip.days} ${trip.days === 1 ? 'день' : trip.days < 5 ? 'дня' : 'дней'}`}
+              data-testid="trip-duration"
+            />
             <InfoField
               icon={Gauge}
+              iconClassName={difficultyInfo.colorClassName} // ИСПРАВЛЕНИЕ: Добавляем цвет иконке
               label="Сложность"
               value={
                 <span className={cn(difficultyInfo.colorClassName)}>{difficultyInfo.label}</span>
               }
+              data-testid="trip-difficulty"
             />
           </div>
           {trip.description && (
@@ -128,7 +151,13 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
       title: `Участники (${tripParticipants.length})`,
       icon: Users,
       actionButton: (
-        <Button size="sm" variant="ghost" onClick={onAddParticipant} title="Добавить участника">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={onAddParticipant}
+          title="Добавить участника"
+          disabled={tripParticipants.length >= 20} // Ограничение на количество участников
+        >
           <UserRoundPlus className="w-4 h-4" />
         </Button>
       ),
@@ -140,11 +169,20 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
                 key={p.id}
                 participant={p}
                 onRemove={() => handleRequestRemove(p)}
-                onView={() => navigate(`/participants?selectedId=${p.id}`)}
+                onView={() => handleNavigateToParticipant(p.id)}
               />
             ))
           ) : (
-            <p className="text-sm text-center text-muted-foreground py-4">Участники не добавлены</p>
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <Users className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">Участники не добавлены</p>
+              <Button size="sm" onClick={onAddParticipant}>
+                <UserRoundPlus className="w-4 h-4 mr-2" />
+                Добавить первого участника
+              </Button>
+            </div>
           )}
         </div>
       ),
@@ -157,20 +195,37 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
         <Button
           size="sm"
           variant="ghost"
-          onClick={() => navigate(`/trips/${trip.id}`)}
+          onClick={handleNavigateToPlanning}
           title="Перейти к планированию"
         >
           <HandPlatter className="w-4 h-4" />
         </Button>
       ),
       content: (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <InfoField icon={Utensils} label="Приемов пищи в день" value={trip.mealsPerDay} />
-          <InfoField
-            icon={BarChart}
-            label="г/чел/день"
-            value={summary.averageWeightPerPersonPerDay}
-          />
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <InfoField
+              icon={Utensils}
+              label="Приемов пищи в день"
+              value={trip.mealsPerDay}
+              data-testid="meals-per-day"
+            />
+            {summary && (
+              <InfoField
+                icon={BarChart}
+                label="г/чел/день"
+                value={summary.averageWeightPerPersonPerDay}
+                data-testid="weight-per-person"
+              />
+            )}
+          </div>
+          {tripParticipants.length === 0 && (
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                Добавьте участников для расчета питания
+              </p>
+            </div>
+          )}
         </div>
       ),
     },
@@ -184,26 +239,33 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
         onToggleSection={handleToggleSection}
       >
         <div>
-          <h2 className="text-2xl font-bold text-foreground truncate">{trip.name}</h2>
+          <h2 className="text-2xl font-bold text-foreground truncate" title={trip.name}>
+            {trip.name}
+          </h2>
           {trip.destination && (
             <p className="text-muted-foreground mt-1 flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              <span>{trip.destination}</span>
+              <MapPin className="w-4 h-4 flex-shrink-0" />
+              <span title={trip.destination}>{trip.destination}</span>
             </p>
           )}
         </div>
       </DetailPane>
+
       <ConfirmModal
         isOpen={!!participantToRemove}
         onClose={() => setParticipantToRemove(null)}
         onConfirm={handleConfirmRemove}
-        title={`Удалить участника?`}
+        title="Удалить участника?"
         variant="danger"
         confirmText="Удалить"
       >
         <p>
           Вы уверены, что хотите удалить участника{' '}
           <span className="font-bold">{participantToRemove?.name}</span> из этого похода?
+          <br />
+          <span className="text-sm text-muted-foreground mt-2 block">
+            Участник останется в базе данных, но будет исключен из данного похода.
+          </span>
         </p>
       </ConfirmModal>
     </>

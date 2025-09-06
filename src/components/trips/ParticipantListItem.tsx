@@ -32,10 +32,12 @@ const ParticipantListItem: React.FC<ParticipantListItemProps> = ({
   return (
     <div
       className={cn(
-        'group relative bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-l-4 p-3 transition-colors hover:border-gray-300 dark:hover:border-gray-600',
+        'group relative bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-l-4 px-3 py-2 transition-all duration-200 hover:shadow-sm hover:border-gray-300 dark:hover:border-gray-600',
         genderInfo.borderClassName
       )}
+      data-testid={`participant-${participant.id}`}
     >
+      {/* КОМПАКТНАЯ однострочная информация */}
       <div className="flex items-center justify-between">
         {/* --- ИЗМЕНЕНИЕ: Все элементы теперь в одной строке --- */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -67,22 +69,30 @@ const ParticipantListItem: React.FC<ParticipantListItemProps> = ({
             <span className="font-medium">{equipmentCount}</span>
           </div>
         </div>
-      </div>
-      <div className="absolute top-1/2 -translate-y-1/2 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1">
+
+        {/* Кнопки действий - компактные */}
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1">
           <button
-            onClick={onView}
-            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
-            title="Перейти к участнику"
+            onClick={(e) => {
+              e.stopPropagation();
+              onView();
+            }}
+            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+            title="Открыть профиль"
+            aria-label={`Открыть профиль ${participant.name}`}
           >
-            <ExternalLink className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
+            <ExternalLink className="w-3 h-3 text-gray-600 dark:text-gray-300" />
           </button>
           <button
-            onClick={onRemove}
-            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-md transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition-colors"
             title="Удалить из похода"
+            aria-label={`Удалить ${participant.name} из похода`}
           >
-            <Trash2 className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+            <Trash2 className="w-3 h-3 text-red-600 dark:text-red-400" />
           </button>
         </div>
       </div>

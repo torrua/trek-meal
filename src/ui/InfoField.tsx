@@ -4,36 +4,39 @@ import React from 'react';
 import cn from 'classnames';
 
 interface InfoFieldProps {
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
+  iconClassName?: string;
   label: string;
   value: React.ReactNode;
-  borderColor?: string;
   className?: string;
+  'data-testid'?: string;
 }
 
 const InfoField: React.FC<InfoFieldProps> = ({
   icon: Icon,
+  iconClassName,
   label,
   value,
-  borderColor,
   className,
-}) => {
-  return (
-    <div
-      className={cn(
-        'flex items-start gap-3 p-3 bg-muted rounded-lg border-l-4 transition-colors hover:bg-muted/80',
-        borderColor ? `border-l-[${borderColor}]` : 'border-border',
-        className
-      )}
-      style={borderColor ? { borderLeftColor: borderColor } : {}}
-    >
-      <Icon className="w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
-      <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <div className="text-base text-muted-foreground">{value}</div>
+  'data-testid': testId,
+}) => (
+  <div
+    className={cn(
+      'p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600',
+      className
+    )}
+    data-testid={testId}
+  >
+    <div className="flex items-start gap-3">
+      <div className={cn('text-muted-foreground mt-0.5 flex-shrink-0', iconClassName)}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <div className="text-sm font-medium text-foreground mt-0.5">{value}</div>
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 export default InfoField;

@@ -10,12 +10,14 @@ export interface MenuItem {
   icon: React.ElementType;
   onClick: () => void;
   className?: string;
+  disabled?: boolean;
 }
 
 interface DetailItem {
   icon: React.ElementType;
   text: string | number;
   title?: string;
+  className?: string;
 }
 
 interface EntityCardProps {
@@ -29,6 +31,7 @@ interface EntityCardProps {
   onSelect: () => void;
   borderColor?: string;
   className?: string;
+  'data-testid'?: string; // Для тестирования
 }
 
 const EntityCard: React.FC<EntityCardProps> = ({
@@ -42,12 +45,14 @@ const EntityCard: React.FC<EntityCardProps> = ({
   onSelect,
   borderColor,
   className,
+  'data-testid': testId,
 }) => {
   // Используем цвет по умолчанию, если borderColor не передан или пустой
   const effectiveBorderColor = borderColor || '#E5E7EB';
 
   return (
     <div
+      data-testid={testId}
       onClick={onSelect}
       className={cn(
         'group relative bg-white dark:bg-gray-800 rounded-lg border transition-all duration-200 hover:shadow-lg cursor-pointer',
@@ -60,12 +65,26 @@ const EntityCard: React.FC<EntityCardProps> = ({
       style={{
         borderLeftColor: isSelected ? '#3B82F6' : effectiveBorderColor,
       }}
+      // Добавляем поддержку клавиатуры
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      tabIndex={0}
+      role="button"
+      aria-pressed={isSelected}
+      aria-label={`Выбрать ${title}`}
     >
       {/* Контекстное меню - появляется при hover как в ProductCard */}
       <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
         <DropdownMenu
           trigger={
-            <button className="p-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-600 transition-colors">
+            <button
+              className="p-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-600 transition-colors"
+              aria-label="Открыть меню действий"
+            >
               <MoreVertical className="w-4 h-4 text-gray-600 dark:text-gray-300" />
             </button>
           }
@@ -75,12 +94,18 @@ const EntityCard: React.FC<EntityCardProps> = ({
               key={item.label}
               onClick={(e) => {
                 e.stopPropagation();
-                item.onClick();
+                if (!item.disabled) {
+                  item.onClick();
+                }
               }}
+              disabled={item.disabled}
               className={cn(
                 'w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2',
-                item.className || 'text-gray-900 dark:text-gray-100'
+                item.disabled
+                  ? 'text-gray-400 cursor-not-allowed'
+                  : item.className || 'text-gray-900 dark:text-gray-100'
               )}
+              aria-label={item.label}
             >
               <item.icon className="w-4 h-4" />
               <span>{item.label}</span>
@@ -94,33 +119,46 @@ const EntityCard: React.FC<EntityCardProps> = ({
         <div className="min-w-0 flex-1 space-y-2">
           {/* Заголовок с подзаголовком - как в ParticipantCard */}
           <div className="flex items-center gap-2 pr-8">
-            <div className={cn('text-gray-500 dark:text-gray-400', iconColor)}>
+            {/* ИСПРАВЛЕНИЕ: Применяем цвет к иконке */}
+            <div className={cn('flex-shrink-0', iconColor || 'text-gray-500 dark:text-gray-400')}>
               <Icon className="w-4 h-4" />
             </div>
             <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-            <h3 className="font-semibold text-gray-900 dark:text-white truncate">{title}</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white truncate" title={title}>
+              {title}
+            </h3>
             {subtitle && (
               <>
                 <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-                <p className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">{subtitle}</p>
+                <p
+                  className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0"
+                  title={subtitle}
+                >
+                  {subtitle}
+                </p>
               </>
             )}
           </div>
 
           {/* Детали - с лучшей типографикой */}
-          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 flex-wrap pt-1">
-            {details.map((detail, index) => (
-              <React.Fragment key={index}>
-                {index > 0 && (
-                  <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
-                )}
-                <div className="flex items-center gap-1.5" title={detail.title}>
-                  <detail.icon className="w-4 h-4" />
-                  <span className="font-medium">{detail.text}</span>
-                </div>
-              </React.Fragment>
-            ))}
-          </div>
+          {details.length > 0 && (
+            <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 flex-wrap pt-1">
+              {details.map((detail, index) => (
+                <React.Fragment key={index}>
+                  {index > 0 && (
+                    <span className="text-gray-300 dark:text-gray-600 font-light">•</span>
+                  )}
+                  <div
+                    className={cn('flex items-center gap-1.5', detail.className)}
+                    title={detail.title}
+                  >
+                    <detail.icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="font-medium">{detail.text}</span>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

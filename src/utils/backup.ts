@@ -6,20 +6,96 @@ import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
 import useDishStore from '../stores/useDishStore';
 import useCategoryStore from '../stores/useCategoryStore';
+import useEquipmentStore from '../stores/useEquipmentStore';
+import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
+import useMealTypesStore from '../stores/useMealTypesStore';
+import useThemeStore from '../stores/useThemeStore';
 import type { Participant, Trip } from '../types';
 
+interface BackupMetadata {
+  version: string;
+  createdAt: string;
+  appVersion: string;
+  totalRecords: number;
+  breakdown: {
+    participants: number;
+    trips: number;
+    products: number;
+    dishes: number;
+    categories: number;
+    equipment: number;
+    equipmentCategories: number;
+    mealTypes: number;
+  };
+}
+
 /**
- * Собирает данные из всех хранилищ и экспортирует их в JSON файл.
+ * Создает полный снимок всех данных приложения и экспортирует их в JSON файл.
+ * Включает все доступные хранилища, метаданные и статистику.
  */
 export const exportDataToJson = () => {
   try {
+    // Собираем данные из всех хранилищ
+    const participants = useParticipantStore.getState().participants;
+    const trips = useTripStore.getState().trips;
+    const products = useProductStore.getState().products;
+    const dishes = useDishStore.getState().dishes;
+    const categories = useCategoryStore.getState().categories;
+    const equipment = useEquipmentStore.getState().equipment;
+    const equipmentCategories = useEquipmentCategoryStore.getState().categories;
+    const mealTypes = useMealTypesStore.getState().mealTypes;
+    const theme = useThemeStore.getState().theme;
+
+    // Создаем метаданные для резервной копии
+    const totalRecords =
+      participants.length +
+      trips.length +
+      products.length +
+      dishes.length +
+      categories.length +
+      equipment.length +
+      equipmentCategories.length +
+      mealTypes.length;
+
+    const metadata: BackupMetadata = {
+      version: '2.0.0',
+      createdAt: new Date().toISOString(),
+      appVersion: 'Trek Meal Pro',
+      totalRecords,
+      breakdown: {
+        participants: participants.length,
+        trips: trips.length,
+        products: products.length,
+        dishes: dishes.length,
+        categories: categories.length,
+        equipment: equipment.length,
+        equipmentCategories: equipmentCategories.length,
+        mealTypes: mealTypes.length,
+      },
+    };
+
+    // Полный снимок данных
     const dataToExport = {
-      participants: useParticipantStore.getState().participants,
-      trips: useTripStore.getState().trips,
-      products: useProductStore.getState().products,
-      dishes: useDishStore.getState().dishes,
-      categories: useCategoryStore.getState().categories,
-      // Добавьте сюда другие сторы при необходимости
+      _metadata: metadata,
+      data: {
+        participants,
+        trips,
+        products,
+        dishes,
+        categories,
+        equipment,
+        equipmentCategories,
+        mealTypes,
+        settings: {
+          theme,
+        },
+      },
+      // Для обратной совместимости с предыдущими версиями
+      participants,
+      trips,
+      products,
+      dishes,
+      categories,
     };
 
     const jsonString = JSON.stringify(dataToExport, null, 2);
@@ -28,17 +104,19 @@ export const exportDataToJson = () => {
 
     const a = document.createElement('a');
     a.href = url;
-    const date = new Date().toISOString().slice(0, 10);
-    a.download = `trek-meal-pro-backup-${date}.json`;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `trek-meal-complete-backup-${timestamp}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    toast.success('Данные успешно экспортированы!');
+    toast.success(`Полная резервная копия создана! (${totalRecords} записей)`, {
+      duration: 4000,
+    });
   } catch (error) {
-    console.error('Ошибка при экспорте данных:', error);
-    toast.error('Произошла ошибка при экспорте.');
+    console.error('Ошибка при создании резервной копии:', error);
+    toast.error('Произошла ошибка при создании резервной копии.');
   }
 };
 
@@ -56,22 +134,77 @@ export const importDataFromJson = (file: File) => {
       }
       const data = JSON.parse(jsonString);
 
-      // Валидация данных (проверяем наличие ключей)
-      const requiredKeys = ['participants', 'trips', 'products', 'dishes', 'categories'];
-      const hasAllKeys = requiredKeys.every((key) => key in data && Array.isArray(data[key]));
+      // Определяем тип резервной копии (новый формат или старый)
+      const isNewFormat = data._metadata && data.data;
+      let importData;
 
-      if (!hasAllKeys) {
-        throw new Error('Файл имеет неверную структуру.');
+      if (isNewFormat) {
+        // Новый формат с метаданными
+        importData = data.data;
+        console.log('Импорт резервной копии:', data._metadata);
+        toast.success(
+          `Найдена резервная копия v${data._metadata.version} (${data._metadata.totalRecords} записей)`
+        );
+      } else {
+        // Старый формат - обратная совместимость
+        importData = data;
+        const requiredKeys = ['participants', 'trips', 'products', 'dishes', 'categories'];
+        const hasAllKeys = requiredKeys.every((key) => key in data && Array.isArray(data[key]));
+
+        if (!hasAllKeys) {
+          throw new Error('Файл имеет неверную структуру.');
+        }
       }
 
-      // Применяем данные в сторы
-      useParticipantStore.setState({ participants: data.participants });
-      useTripStore.setState({ trips: data.trips });
-      useProductStore.setState({ products: data.products });
-      useDishStore.setState({ dishes: data.dishes });
-      useCategoryStore.setState({ categories: data.categories });
+      // Применяем данные в сторы с безопасными значениями по умолчанию
+      useParticipantStore.setState({
+        participants: Array.isArray(importData.participants) ? importData.participants : [],
+      });
+      useTripStore.setState({
+        trips: Array.isArray(importData.trips) ? importData.trips : [],
+      });
+      useProductStore.setState({
+        products: Array.isArray(importData.products) ? importData.products : [],
+      });
+      useDishStore.setState({
+        dishes: Array.isArray(importData.dishes) ? importData.dishes : [],
+      });
+      useCategoryStore.setState({
+        categories: Array.isArray(importData.categories) ? importData.categories : [],
+      });
 
-      toast.success('Данные успешно импортированы! Страница будет перезагружена.');
+      // Импорт новых данных (если есть)
+      if (isNewFormat) {
+        if (Array.isArray(importData.equipment)) {
+          useEquipmentStore.setState({ equipment: importData.equipment });
+        }
+        if (Array.isArray(importData.equipmentCategories)) {
+          useEquipmentCategoryStore.setState({ categories: importData.equipmentCategories });
+        }
+        if (Array.isArray(importData.mealTypes)) {
+          useMealTypesStore.setState({ mealTypes: importData.mealTypes });
+        }
+        if (importData.settings?.theme) {
+          useThemeStore.setState({ theme: importData.settings.theme });
+        }
+      }
+
+      const recordCount =
+        (importData.participants?.length || 0) +
+        (importData.trips?.length || 0) +
+        (importData.products?.length || 0) +
+        (importData.dishes?.length || 0) +
+        (importData.categories?.length || 0) +
+        (importData.equipment?.length || 0) +
+        (importData.equipmentCategories?.length || 0) +
+        (importData.mealTypes?.length || 0);
+
+      toast.success(
+        `Данные успешно импортированы! (${recordCount} записей) Страница будет перезагружена.`,
+        {
+          duration: 4000,
+        }
+      );
 
       // Перезагрузка страницы для чистого применения состояния
       setTimeout(() => {

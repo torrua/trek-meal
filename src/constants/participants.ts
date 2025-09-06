@@ -41,15 +41,18 @@ export const EXPERIENCE_CONFIG = {
     label: 'Новичок',
     icon: Zap,
     colorClassName: 'text-green-500 dark:text-green-300',
+    borderColor: '#10b981', // green-500
   },
   experienced: {
     label: 'Опытный',
     icon: Star,
     colorClassName: 'text-yellow-600 dark:text-yellow-400',
+    borderColor: '#d97706', // yellow-600
   },
   professional: {
     label: 'Профессионал',
     icon: Award,
     colorClassName: 'text-red-600 dark:text-red-400',
+    borderColor: '#dc2626', // red-600
   },
 };

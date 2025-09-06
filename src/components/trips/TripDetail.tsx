@@ -54,14 +54,14 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
   const summary = useMemo(() => {
     if (!trip) return null;
     return calculateTripSummary(trip, products, allParticipants, dishes);
-  }, [trip?.id, products.length, allParticipants.length, dishes.length]);
+  }, [trip, products, allParticipants, dishes]);
 
   // Инициализация открытых секций при смене похода
   React.useEffect(() => {
     if (trip) {
       setOpenSections(['info', 'participants']);
     }
-  }, [trip?.id]);
+  }, [trip]);
 
   const handleToggleSection = useCallback((sectionId: string) => {
     setOpenSections((prev) =>

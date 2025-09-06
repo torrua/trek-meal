@@ -13,8 +13,10 @@ import {
   Trash2,
   Share,
   MapPinPlus,
+  CirclePlus,
 } from 'lucide-react';
 import useParticipantStore from '../stores/useParticipantStore';
+import useEquipmentStore from '../stores/useEquipmentStore';
 import useSearchStore from '../stores/useSearchStore';
 import useTripStore from '../stores/useTripStore';
 import type { Participant, ParticipantData } from '../types';
@@ -34,6 +36,7 @@ import SelectTripModal from '../components/participants/SelectTripModal';
 
 const ParticipantsPage: React.FC = () => {
   const store = useParticipantStore();
+  const { equipment } = useEquipmentStore();
   const { trips } = useTripStore();
   const { searchTerm } = useSearchStore();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -192,6 +195,7 @@ const ParticipantsPage: React.FC = () => {
             const genderInfo = GENDER_CONFIG[p.gender];
             const age = calculateAge(p.birthDate);
             const tripCount = trips.filter((trip) => trip.participants.includes(p.id)).length;
+            const equipmentCount = equipment.filter((eq) => eq.ownerId === p.id).length;
 
             const subtitle = age ? `${age} лет` : p.age === 'child' ? 'Ребенок' : 'Взрослый';
 
@@ -200,7 +204,7 @@ const ParticipantsPage: React.FC = () => {
 
             const details = [
               { icon: MapPin, text: tripCount, title: 'Походы' },
-              { icon: Backpack, text: 0, title: 'Снаряжение' },
+              { icon: Backpack, text: equipmentCount, title: 'Снаряжение' },
             ];
 
             const menuItems: MenuItem[] = [
@@ -237,14 +241,17 @@ const ParticipantsPage: React.FC = () => {
             );
           })}
           {filteredParticipants.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">Участники не найдены</h3>
-              <p>
-                {searchTerm || hasActiveFilters
-                  ? 'Попробуйте изменить критерии поиска.'
-                  : 'Добавьте своего первого участника.'}
-              </p>
+            <div className="text-center py-16 px-6 text-muted-foreground">
+              <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium text-foreground">
+                {searchTerm || hasActiveFilters ? 'Участники не найдены' : 'Участников пока нет'}
+              </h3>
+              {!searchTerm && !hasActiveFilters && (
+                <Button onClick={handleAddNew} className="mt-4">
+                  <CirclePlus className="w-4 h-4 mr-2" />
+                  Добавить первого участника
+                </Button>
+              )}
             </div>
           )}
         </div>

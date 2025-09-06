@@ -278,25 +278,13 @@ const TripsPage: React.FC = () => {
 
           {/* Пустое состояние */}
           {filteredTrips.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <Backpack className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <h3 className="text-lg font-medium mb-2">Походы не найдены</h3>
-              {searchTerm || hasActiveFilters ? (
-                <div className="space-y-3">
-                  <p>Попробуйте изменить критерии поиска.</p>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => {
-                      setFilters({ status: 'all', difficulty: 'all' });
-                      // Очистка поиска должна быть реализована в searchStore
-                    }}
-                  >
-                    Сбросить фильтры
-                  </Button>
-                </div>
-              ) : (
-                <Button onClick={handleAddNew} size="sm" className="mt-3">
+            <div className="text-center py-16 px-6 text-muted-foreground">
+              <Backpack className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium text-foreground">
+                {searchTerm || hasActiveFilters ? 'Походы не найдены' : 'Походов пока нет'}
+              </h3>
+              {!searchTerm && !hasActiveFilters && (
+                <Button onClick={handleAddNew} className="mt-4">
                   <MapPinPlus className="w-4 h-4 mr-2" />
                   Создать первый поход
                 </Button>

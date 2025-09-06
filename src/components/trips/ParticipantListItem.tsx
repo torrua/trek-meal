@@ -20,7 +20,7 @@ const ParticipantListItem: React.FC<ParticipantListItemProps> = ({
   onView,
 }) => {
   const { trips } = useTripStore();
-  const genderInfo = GENDER_CONFIG[participant.gender];
+  const _genderInfo = GENDER_CONFIG[participant.gender]; // Keep for potential future use
   const experienceInfo = EXPERIENCE_CONFIG[participant.experienceLevel];
   const age = calculateAge(participant.birthDate);
   const isChild = participant.age === 'child';
@@ -32,9 +32,9 @@ const ParticipantListItem: React.FC<ParticipantListItemProps> = ({
   return (
     <div
       className={cn(
-        'group relative bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-l-4 px-3 py-2 transition-all duration-200 hover:shadow-sm hover:border-gray-300 dark:hover:border-gray-600',
-        genderInfo.borderClassName
+        'group relative bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-l-4 px-3 py-2 transition-all duration-200 hover:shadow-sm hover:border-gray-300 dark:hover:border-gray-600'
       )}
+      style={{ borderLeftColor: experienceInfo.borderColor }}
       data-testid={`participant-${participant.id}`}
     >
       {/* КОМПАКТНАЯ однострочная информация */}
@@ -85,7 +85,7 @@ const ParticipantListItem: React.FC<ParticipantListItemProps> = ({
               title="Открыть профиль"
               aria-label={`Открыть профиль ${participant.name}`}
             >
-              <ExternalLink className="w-3 h-3 text-gray-600 dark:text-gray-300" />
+              <ExternalLink className="w-4 h-4 text-gray-600 dark:text-gray-300" />
             </button>
             <button
               onClick={(e) => {
@@ -96,7 +96,7 @@ const ParticipantListItem: React.FC<ParticipantListItemProps> = ({
               title="Удалить из похода"
               aria-label={`Удалить ${participant.name} из похода`}
             >
-              <Trash2 className="w-3 h-3 text-red-600 dark:text-red-400" />
+              <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
             </button>
           </div>
         </div>

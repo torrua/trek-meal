@@ -12,13 +12,13 @@ import {
   Menu,
   X,
   Home,
-  Utensils,
   Users,
   MapPin,
   Settings,
   Component,
   Soup,
   Tag,
+  Backpack,
 } from 'lucide-react';
 
 // --- ИЗМЕНЕНИЕ: Новая логическая группировка меню ---
@@ -32,8 +32,8 @@ const navigationRow1 = [
 const navigationRow2 = [
   { path: '/products', label: 'Продукты', icon: Component },
   { path: '/dishes', label: 'Блюда', icon: Soup },
-  { path: '/categories', label: 'Категории', icon: Tag },
-  { path: '/meal-types', label: 'Приемы пищи', icon: Utensils },
+  { path: '/types-and-categories', label: 'Типы и категории', icon: Tag },
+  { path: '/equipment', label: 'Снаряжение', icon: Backpack },
 ];
 
 // Полный список для мобильного меню
@@ -52,9 +52,14 @@ const Layout: React.FC = () => {
   const getPlaceholder = () => {
     if (location.pathname.startsWith('/products')) return 'Поиск по продуктам...';
     if (location.pathname.startsWith('/dishes')) return 'Поиск по блюдам...';
+    if (location.pathname.startsWith('/types-and-categories'))
+      return 'Поиск по типам и категориям...';
     if (location.pathname.startsWith('/categories')) return 'Поиск по категориям...';
     if (location.pathname.startsWith('/participants')) return 'Поиск по участникам...';
     if (location.pathname.startsWith('/trips')) return 'Поиск по походам...';
+    if (location.pathname.startsWith('/equipment-categories'))
+      return 'Поиск по категориям снаряжения...';
+    if (location.pathname.startsWith('/equipment')) return 'Поиск по снаряжению...';
     return 'Поиск недоступен';
   };
 

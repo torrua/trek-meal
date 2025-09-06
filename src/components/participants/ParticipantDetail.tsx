@@ -7,24 +7,26 @@ import {
   Phone,
   Mail,
   Calendar,
-  Trash2,
   Backpack,
   Award,
   Edit,
   MapPinPlus,
+  ExternalLink,
+  Scale,
 } from 'lucide-react';
 import type { Participant, Trip } from '../../types';
 import useTripStore from '../../stores/useTripStore';
-import { formatDate, getEffectiveStatus } from '../../utils/index';
+import useEquipmentStore from '../../stores/useEquipmentStore';
+import useEquipmentCategoryStore from '../../stores/useEquipmentCategoryStore';
+import { formatDate } from '../../utils/index';
 import { EXPERIENCE_CONFIG } from '../../constants/participants';
-import { DIFFICULTY_CONFIG, STATUS_CONFIG } from '../../constants/trips';
 import { useNavigate } from 'react-router-dom';
 import { isFuture, parseISO } from 'date-fns';
 import ConfirmModal from '../../ui/ConfirmModal';
 import DetailPane from '../../ui/DetailPane';
-import CompactCard from '../../ui/CompactCard';
+import TripListItem from './TripListItem';
 import Button from '../../ui/Button';
-import InfoField from '../../ui/InfoField'; // <-- Импортируем новый компонент
+import InfoField from '../../ui/InfoField';
 
 interface ParticipantDetailProps {
   participant: Participant | null;
@@ -42,6 +44,8 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
   onToggleSection,
 }) => {
   const { trips, removeParticipantFromTrip } = useTripStore();
+  const { equipment } = useEquipmentStore();
+  const { categories } = useEquipmentCategoryStore();
   const navigate = useNavigate();
   const [tripToRemove, setTripToRemove] = useState<Trip | null>(null);
 
@@ -49,6 +53,18 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
     () => (participant ? trips.filter((trip) => trip.participants.includes(participant.id)) : []),
     [trips, participant]
   );
+
+  const participantEquipment = useMemo(
+    () => (participant ? equipment.filter((eq) => eq.ownerId === participant.id) : []),
+    [equipment, participant]
+  );
+
+  const formatWeight = (weight: number) => {
+    if (weight < 1000) {
+      return `${weight} г`;
+    }
+    return `${(weight / 1000).toFixed(1)} кг`;
+  };
 
   if (!participant) {
     return null;
@@ -131,26 +147,11 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
         <div className="space-y-2">
           {sortedTrips.length > 0 ? (
             sortedTrips.map((trip) => (
-              <CompactCard
+              <TripListItem
                 key={trip.id}
-                title={trip.name}
-                icon={DIFFICULTY_CONFIG[trip.difficulty].icon}
-                details={`${formatDate(trip.startDate)} - ${trip.destination || 'Без места'}`}
-                onClick={() => navigate(`/trips/${trip.id}`)}
-                borderColor={STATUS_CONFIG[getEffectiveStatus(trip)].color}
-                tag={
-                  isFuture(parseISO(trip.startDate))
-                    ? { text: 'План', color: STATUS_CONFIG.planning.color }
-                    : undefined
-                }
-                menuItems={[
-                  {
-                    label: 'Убрать из похода',
-                    icon: Trash2,
-                    onClick: () => setTripToRemove(trip),
-                    className: 'text-danger',
-                  },
-                ]}
+                trip={trip}
+                onRemove={() => setTripToRemove(trip)}
+                onView={() => navigate(`/trips/${trip.id}`)}
               />
             ))
           ) : (
@@ -164,12 +165,63 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
       title: 'Снаряжение',
       icon: Backpack,
       actionButton: (
-        <Button size="sm" variant="ghost" disabled title="В разработке">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => navigate('/equipment')}
+          title="Перейти к снаряжению"
+        >
           <Backpack className="w-4 h-4" />
         </Button>
       ),
       content: (
-        <p className="text-sm text-center py-4 text-muted-foreground">Раздел в разработке</p>
+        <div className="space-y-2">
+          {participantEquipment.length > 0 ? (
+            participantEquipment.map((equipmentItem) => {
+              const category = categories.find((c) => c.id === equipmentItem.categoryId);
+              return (
+                <div
+                  key={equipmentItem.id}
+                  className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/equipment?selectedId=${equipmentItem.id}`)}
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="flex-shrink-0">
+                      <Backpack className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-gray-900 dark:text-white truncate">
+                          {equipmentItem.name}
+                        </h4>
+                        {category && (
+                          <span
+                            className="flex-shrink-0 px-2 py-0.5 rounded text-xs font-medium text-white"
+                            style={{ backgroundColor: category.color }}
+                          >
+                            {category.emoji} {category.name}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-1">
+                          <Scale className="w-3 h-3" />
+                          <span>{formatWeight(equipmentItem.weight)}</span>
+                        </div>
+                        <span className="capitalize">
+                          {equipmentItem.type === 'personal' ? 'Личное' : 'Общее'}
+                        </span>
+                        {equipmentItem.link && <ExternalLink className="w-3 h-3" />}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-sm text-center py-4 text-muted-foreground">Нет снаряжения</p>
+          )}
+        </div>
       ),
     },
   ];

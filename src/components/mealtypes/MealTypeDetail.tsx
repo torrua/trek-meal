@@ -12,8 +12,26 @@ interface MealTypeDetailProps {
 }
 
 const MealTypeDetail: React.FC<MealTypeDetailProps> = ({ mealType, onEdit }) => {
+  const [openSections, setOpenSections] = React.useState<string[]>(['info']);
+
+  const handleToggleSection = (sectionId: string) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
+  };
+
   if (!mealType) {
-    return null;
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center p-4">
+          <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Utensils className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-2">Выберите прием пищи</h3>
+          <p className="text-muted-foreground">Кликните на карточку для просмотра информации.</p>
+        </div>
+      </div>
+    );
   }
 
   const sections = [
@@ -30,8 +48,11 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({ mealType, onEdit }) => 
   ];
 
   return (
-    // <--- ИСПРАВЛЕНИЕ: Убрали onToggleSection
-    <DetailPane sections={sections} openSections={['info']}>
+    <DetailPane
+      sections={sections}
+      openSections={openSections}
+      onToggleSection={handleToggleSection}
+    >
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">

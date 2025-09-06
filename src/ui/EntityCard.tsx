@@ -22,7 +22,7 @@ interface DetailItem {
 
 interface EntityCardProps {
   title: string;
-  subtitle?: string; // Новое: для возраста участника, даты похода и т.д.
+  subtitle?: React.ReactNode; // Поддержка JSX элементов для сложного содержимого
   icon: React.ElementType;
   iconColor?: string; // Новое: для цветовой кодировки иконок
   details: DetailItem[];
@@ -118,25 +118,21 @@ const EntityCard: React.FC<EntityCardProps> = ({
       <div className="p-4">
         <div className="min-w-0 flex-1 space-y-2">
           {/* Заголовок с подзаголовком - как в ParticipantCard */}
-          <div className="flex items-center gap-2 pr-8">
-            {/* ИСПРАВЛЕНИЕ: Применяем цвет к иконке */}
-            <div className={cn('flex-shrink-0', iconColor || 'text-gray-500 dark:text-gray-400')}>
-              <Icon className="w-4 h-4" />
+          <div className="flex items-center justify-between pr-8 gap-6">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {/* ИСПРАВЛЕНИЕ: Применяем цвет к иконке */}
+              <div className={cn('flex-shrink-0', iconColor || 'text-gray-500 dark:text-gray-400')}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
+              <h3 className="font-semibold text-gray-900 dark:text-white truncate" title={title}>
+                {title}
+              </h3>
             </div>
-            <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
-            <h3 className="font-semibold text-gray-900 dark:text-white truncate" title={title}>
-              {title}
-            </h3>
             {subtitle && (
-              <>
-                <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
-                <p
-                  className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0"
-                  title={subtitle}
-                >
-                  {subtitle}
-                </p>
-              </>
+              <div className="flex items-center gap-1 flex-shrink-0 text-sm text-gray-500 dark:text-gray-400">
+                {subtitle}
+              </div>
             )}
           </div>
 

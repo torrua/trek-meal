@@ -7,6 +7,7 @@ import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
 import Button from '../../ui/Button';
 import Input from '../../ui/Input';
+import Textarea from '../../ui/Textarea';
 import type { Dish, DishData, DishProduct, Product, SubmitDishAction } from '../../types';
 import { toast } from 'react-hot-toast';
 import { X } from 'lucide-react';
@@ -25,6 +26,7 @@ const CUSTOM_WEIGHT_VALUE = -1;
 
 const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCancel }) => {
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [products, setProducts] = useState<DishProduct[]>([]);
   const { products: allProducts } = useProductStore();
   const { dishes } = useDishStore();
@@ -32,6 +34,7 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
   useEffect(() => {
     const initializeState = (sourceDish: Dish, isCloning: boolean) => {
       setName(sourceDish.name + (isCloning ? ' (копия)' : ''));
+      setDescription(sourceDish.description || '');
       setProducts(JSON.parse(JSON.stringify(sourceDish.products)));
     };
 
@@ -45,6 +48,7 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
     }
 
     setName('');
+    setDescription('');
     setProducts([]);
   }, [dish, dishToClone]);
 
@@ -98,7 +102,7 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
       toast.error('Блюдо должно содержать хотя бы один продукт с весом больше нуля.');
       return null;
     }
-    return { name: trimmedName, products: validProducts };
+    return { name: trimmedName, description: description.trim(), products: validProducts };
   };
 
   const handleAction = (action: SubmitDishAction) => {
@@ -117,11 +121,20 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
         required
         autoFocus
       />
+
+      <Textarea
+        label="Описание"
+        name="description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={3}
+        placeholder="Описание блюда, способ приготовления, особенности..."
+      />
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Состав *
         </label>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {products.map((p, index) => {
             const selectedProduct = allProducts.find((prod: Product) => prod.id === p.productId);
             const portionOptions: PortionOption[] =
@@ -134,45 +147,55 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
               portionOptions.find((opt) => opt.value === p.weight) ||
               portionOptions.find((opt) => opt.value === CUSTOM_WEIGHT_VALUE);
             return (
-              <div
-                key={index}
-                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
-              >
-                <ThemedSelect<ProductOption>
-                  className="w-full"
-                  options={productOptions}
-                  value={productOptions.find((opt) => opt.value === p.productId)}
-                  onChange={(opt) => handleProductChange(index, opt)}
-                  placeholder="Выберите продукт..."
-                  menuPortalTarget={document.body}
-                />
-                <div className="flex-shrink-0 flex items-center gap-2 w-full sm:w-auto">
-                  <ThemedSelect<PortionOption>
-                    className="flex-1"
-                    options={portionOptions}
-                    value={currentPortion}
-                    onChange={(opt) => handlePortionChange(index, opt)}
-                    isDisabled={!selectedProduct}
+              <div key={index}>
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                  <ThemedSelect<ProductOption>
+                    className="w-full"
+                    options={productOptions}
+                    value={productOptions.find((opt) => opt.value === p.productId)}
+                    onChange={(opt) => handleProductChange(index, opt)}
+                    placeholder="Выберите продукт..."
                     menuPortalTarget={document.body}
                   />
-                  <Input
-                    type="number"
-                    value={p.weight || ''}
-                    onChange={(e) => handleWeightChange(index, e.target.value)}
-                    required
-                    min="0"
-                    className="w-24 text-center"
-                    placeholder="Вес (г)"
-                  />
-                  <Button
-                    type="button"
-                    variant="danger"
-                    size="icon"
-                    onClick={() => removeProductField(index)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <ThemedSelect<PortionOption>
+                      className="flex-grow"
+                      options={portionOptions}
+                      value={currentPortion}
+                      onChange={(opt) => handlePortionChange(index, opt)}
+                      isDisabled={!selectedProduct}
+                      placeholder="Порция..."
+                      menuPortalTarget={document.body}
+                    />
+                    <Input
+                      type="number"
+                      value={p.weight || ''}
+                      onChange={(e) => handleWeightChange(index, e.target.value)}
+                      required
+                      min="0"
+                      className="w-24 text-center"
+                      containerClassName="w-24 flex-shrink-0"
+                      placeholder="Вес (г)"
+                    />
+                    <Button
+                      type="button"
+                      variant="danger"
+                      size="icon"
+                      onClick={() => removeProductField(index)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
+                {index < products.length - 1 && (
+                  <div className="flex items-center my-4">
+                    <div className="flex-grow h-px bg-gray-200 dark:bg-gray-700"></div>
+                    <span className="px-3 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900">
+                      И
+                    </span>
+                    <div className="flex-grow h-px bg-gray-200 dark:bg-gray-700"></div>
+                  </div>
+                )}
               </div>
             );
           })}

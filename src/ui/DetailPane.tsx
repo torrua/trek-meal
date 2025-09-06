@@ -6,7 +6,7 @@ import { ChevronDown } from 'lucide-react';
 
 interface Section {
   id: string;
-  title: string;
+  title: string | React.ReactNode;
   icon: React.ElementType;
   content: React.ReactNode;
   actionButton?: React.ReactNode;
@@ -52,7 +52,7 @@ const DetailPane: React.FC<DetailPaneProps> = ({
                   {/* Left side: Icon + Title */}
                   <div className="flex items-center gap-3 min-h-[24px] flex-1 min-w-0">
                     <Icon className="w-5 h-5 text-primary flex-shrink-0" />
-                    <span className="font-semibold text-foreground truncate">{title}</span>
+                    <div className="font-semibold text-foreground truncate">{title}</div>
                   </div>
 
                   {/* Right side: Action button + Open/Close button */}

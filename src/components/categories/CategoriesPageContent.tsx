@@ -1,36 +1,38 @@
-// src/pages/CategoriesPage.tsx
+// src/components/categories/CategoriesPageContent.tsx
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CirclePlus, Filter, Package, Edit, Copy, Trash2, Share, Tag } from 'lucide-react';
-import useCategoryStore from '../stores/useCategoryStore';
-import useProductStore from '../stores/useProductStore';
-import useSearchStore from '../stores/useSearchStore';
-import type { Category, CategoryData } from '../types';
-import CategoryForm from '../components/categories/CategoryForm';
-import Modal from '../ui/Modal';
-import Button from '../ui/Button';
-import ConfirmModal from '../ui/ConfirmModal';
-import EntityCard, { MenuItem } from '../ui/EntityCard';
-import CategoryFiltersComponent, {
-  CategoryFilters,
-} from '../components/categories/CategoryFiltersComponent';
-import CategoryDetail from '../components/categories/CategoryDetail';
+import useCategoryStore from '../../stores/useCategoryStore';
+import useProductStore from '../../stores/useProductStore';
+import useSearchStore from '../../stores/useSearchStore';
+import type { Category, CategoryData } from '../../types';
+import CategoryForm from './CategoryForm';
+import Modal from '../../ui/Modal';
+import Button from '../../ui/Button';
+import ConfirmModal from '../../ui/ConfirmModal';
+import EntityCard, { MenuItem } from '../../ui/EntityCard';
+import CategoryDetail from './CategoryDetail';
+import DropdownSelect from '../../ui/DropdownSelect';
 
-const CategoriesPage: React.FC = () => {
+export interface CategoryFilters {
+  hasProducts: 'all' | 'with_products' | 'without_products';
+}
+
+const CategoriesPageContent: React.FC = () => {
   const categoryStore = useCategoryStore();
   const productStore = useProductStore();
   const { searchTerm } = useSearchStore();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [filters, setFilters] = useState<CategoryFilters>({
-    hasProducts: 'all',
-  });
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<CategoryFilters>({
+    hasProducts: 'all',
+  });
 
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
@@ -110,12 +112,15 @@ const CategoriesPage: React.FC = () => {
   );
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
-      {/* Заголовок и кнопки */}
+    <>
+      {/* Filters and actions */}
       <div className="mb-4 sm:mb-6">
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Категории</h1>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          <Button onClick={handleAddNew} variant="primary" size="default">
+            <CirclePlus className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Добавить категорию</span>
+          </Button>
+          <div className="relative">
             <Button
               onClick={() => setShowFilters((s) => !s)}
               variant="secondary"
@@ -128,22 +133,53 @@ const CategoriesPage: React.FC = () => {
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-card" />
               )}
             </Button>
-            <Button onClick={handleAddNew} variant="primary" size="default">
-              <CirclePlus className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Добавить категорию</span>
-            </Button>
+
+            {/* Filter Popup */}
+            {showFilters && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowFilters(false)} />
+                <div className="absolute top-full left-0 mt-2 z-50 bg-card border border-border rounded-lg shadow-lg p-4 min-w-[280px]">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-foreground">Фильтры</h3>
+                      {hasActiveFilters && (
+                        <button
+                          onClick={() => setFilters({ hasProducts: 'all' })}
+                          className="text-xs text-muted-foreground hover:text-danger transition-colors"
+                        >
+                          Сбросить все
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <DropdownSelect
+                        label="Наличие продуктов"
+                        icon={Package}
+                        options={[
+                          { value: 'all', label: 'Все категории' },
+                          { value: 'with_products', label: 'С продуктами' },
+                          { value: 'without_products', label: 'Без продуктов' },
+                        ]}
+                        value={filters.hasProducts}
+                        onChange={(value) =>
+                          setFilters((prev) => ({
+                            ...prev,
+                            hasProducts: value as CategoryFilters['hasProducts'],
+                          }))
+                        }
+                        isActive={filters.hasProducts !== 'all'}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Фильтры */}
-      {showFilters && (
-        <div className="mb-4 sm:mb-6 bg-card rounded-xl border p-3 sm:p-4">
-          <CategoryFiltersComponent filters={filters} onFiltersChange={setFilters} />
-        </div>
-      )}
-
-      {/* Основной контент */}
+      {/* Main content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         <div className="lg:col-span-1 space-y-3">
           {filteredCategories.map((category) => {
@@ -237,7 +273,7 @@ const CategoriesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Модальные окна */}
+      {/* Modals */}
       <Modal
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
@@ -266,8 +302,8 @@ const CategoriesPage: React.FC = () => {
           Все продукты в этой категории будут перемещены в &quote;Без категории&quote;.
         </p>
       </ConfirmModal>
-    </div>
+    </>
   );
 };
 
-export default CategoriesPage;
+export default CategoriesPageContent;

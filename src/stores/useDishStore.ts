@@ -11,6 +11,8 @@ interface DishState {
   addDish: (data: DishData) => Dish | undefined;
   updateDish: (id: number, data: DishData) => void;
   deleteDish: (id: number) => void;
+  removeProductFromDish: (dishId: number, productIndex: number) => void;
+  updateProductInDish: (dishId: number, productIndex: number, newWeight: number) => void;
   isProductInUse: (productId: number) => boolean;
 }
 
@@ -71,6 +73,46 @@ const useDishStore = create<DishState>()(
           }));
           toast.error(`Блюдо "${dishToDelete.name}" удалено.`);
         }
+      },
+
+      removeProductFromDish: (dishId, productIndex) => {
+        const dish = get().dishes.find((d) => d.id === dishId);
+        if (!dish) return;
+
+        const updatedProducts = dish.products.filter((_, index) => index !== productIndex);
+
+        if (updatedProducts.length === 0) {
+          toast.error('Блюдо должно содержать хотя бы один продукт.');
+          return;
+        }
+
+        set((state) => ({
+          dishes: state.dishes.map((d) =>
+            d.id === dishId ? { ...d, products: updatedProducts } : d
+          ),
+        }));
+        toast.success('Продукт удален из блюда.');
+      },
+
+      updateProductInDish: (dishId, productIndex, newWeight) => {
+        if (newWeight <= 0) {
+          toast.error('Вес продукта должен быть больше нуля.');
+          return;
+        }
+
+        set((state) => ({
+          dishes: state.dishes.map((d) =>
+            d.id === dishId
+              ? {
+                  ...d,
+                  products: d.products.map((product, index) =>
+                    index === productIndex ? { ...product, weight: newWeight } : product
+                  ),
+                }
+              : d
+          ),
+        }));
+        toast.success('Вес продукта обновлен.');
       },
 
       isProductInUse: (productId: number) => {

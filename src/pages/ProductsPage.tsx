@@ -1,7 +1,19 @@
 // src/pages/ProductsPage.tsx
 
-import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { CirclePlus, Filter, UploadCloud, Component, Edit, Trash2, Flame, Dna } from 'lucide-react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import {
+  CirclePlus,
+  Filter,
+  UploadCloud,
+  Component,
+  Edit,
+  Trash2,
+  Flame,
+  Zap,
+  Droplet,
+  Wheat,
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import useProductStore from '../stores/useProductStore';
 import useCategoryStore from '../stores/useCategoryStore';
@@ -22,6 +34,7 @@ const ProductsPage: React.FC = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
   const { categories } = useCategoryStore();
   const { searchTerm } = useSearchStore();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [isFormModalOpen, setFormModalOpen] = useState(false);
@@ -33,6 +46,14 @@ const ProductsPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [filters, setFilters] = useState<ProductFilters>({ categoryId: 'all' });
+
+  useEffect(() => {
+    const selectedId = searchParams.get('selectedId');
+    if (selectedId && products.some((p) => p.id === Number(selectedId))) {
+      setActiveId(Number(selectedId));
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, products, setSearchParams]);
 
   const filteredProducts = useMemo(() => {
     return products
@@ -176,13 +197,33 @@ const ProductsPage: React.FC = () => {
                   text: `${product.calories} ккал`,
                   title: 'Калорийность на 100г',
                 },
-                // Добавляем информацию о БЖУ если есть
-                ...(product.proteins || product.fats || product.carbs
+                // Добавляем информацию о белках
+                ...(product.proteins > 0
                   ? [
                       {
-                        icon: Dna,
-                        text: `Б:${product.proteins || 0} Ж:${product.fats || 0} У:${product.carbs || 0}`,
-                        title: 'Белки, жиры, углеводы на 100г',
+                        icon: Zap,
+                        text: `${product.proteins} г`,
+                        title: 'Белки на 100г',
+                      },
+                    ]
+                  : []),
+                // Добавляем информацию о жирах
+                ...(product.fats > 0
+                  ? [
+                      {
+                        icon: Droplet,
+                        text: `${product.fats} г`,
+                        title: 'Жиры на 100г',
+                      },
+                    ]
+                  : []),
+                // Добавляем информацию об углеводах
+                ...(product.carbs > 0
+                  ? [
+                      {
+                        icon: Wheat,
+                        text: `${product.carbs} г`,
+                        title: 'Углеводы на 100г',
                       },
                     ]
                   : []),

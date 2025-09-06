@@ -8,7 +8,9 @@ import {
   Tag,
   Info,
   Edit,
-  Puzzle,
+  Zap,
+  Droplet,
+  Wheat,
   Trash2,
   BarChart,
   PackagePlus,
@@ -20,7 +22,8 @@ import useProductStore from '../../stores/useProductStore';
 import ConfirmModal from '../../ui/ConfirmModal';
 import DetailPane from '../../ui/DetailPane';
 import Button from '../../ui/Button';
-import InfoField from '../../ui/InfoField'; // <-- Импортируем новый компонент
+import InfoField from '../../ui/InfoField';
+import PortionListItem from './PortionListItem';
 
 interface ProductDetailProps {
   product: Product | null;
@@ -97,17 +100,17 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onEdit }) => {
             value={<span className="font-semibold">{product.calories}</span>}
           />
           <InfoField
-            icon={Puzzle}
+            icon={Zap}
             label="Белки"
             value={<span className="font-semibold">{product.proteins} г</span>}
           />
           <InfoField
-            icon={Puzzle}
+            icon={Droplet}
             label="Жиры"
             value={<span className="font-semibold">{product.fats} г</span>}
           />
           <InfoField
-            icon={Puzzle}
+            icon={Wheat}
             label="Углеводы"
             value={<span className="font-semibold">{product.carbs} г</span>}
           />
@@ -126,24 +129,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onEdit }) => {
       content: (
         <div className="space-y-2">
           {product.portions.map((portion, index) => (
-            <div
+            <PortionListItem
               key={index}
-              className="group relative flex justify-between items-center p-3 bg-muted rounded-lg"
-            >
-              <span className="font-medium text-foreground">{portion.name}</span>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-foreground">{portion.weight} г</span>
-                <div className="absolute top-1/2 -translate-y-1/2 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => setPortionToDelete(portion)}
-                    className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-md"
-                    title="Удалить порцию"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </button>
-                </div>
-              </div>
-            </div>
+              portion={portion}
+              onEdit={() => console.log('Edit portion', portion.name)}
+              onDelete={() => setPortionToDelete(portion)}
+            />
           ))}
         </div>
       ),

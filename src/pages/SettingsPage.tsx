@@ -35,12 +35,18 @@ const SettingsPage: React.FC = () => {
               <Database className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">Резервное копирование</h3>
+              <h3 className="text-lg font-semibold text-foreground">
+                Полное резервное копирование
+              </h3>
               <p className="text-muted-foreground mt-1">
-                Сохраните все данные вашего приложения (участников, походы, продукты и т.д.) в один
-                JSON-файл. Вы можете использовать этот файл для переноса данных на другое устройство
-                или для восстановления.
+                Создайте полный снимок всех данных приложения: участники, походы, продукты, блюда,
+                категории продуктов, снаряжение, категории снаряжения, типы приемов пищи и настройки
+                темы. Резервная копия содержит метаданные и статистику для полного восстановления.
               </p>
+              <div className="mt-3 text-sm text-muted-foreground">
+                <span className="font-medium">Включает:</span> все данные + метаданные + статистика
+                записей
+              </div>
             </div>
           </div>
         </div>
@@ -58,7 +64,7 @@ const SettingsPage: React.FC = () => {
           />
           <Button variant="primary" onClick={exportDataToJson} className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
-            Экспортировать в файл
+            Создать полную резервную копию
           </Button>
         </div>
       </div>

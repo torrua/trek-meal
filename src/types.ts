@@ -24,6 +24,7 @@ export interface Participant {
   phone?: string;
   email?: string;
   birthDate?: string; // ISO date string
+  equipmentIds: number[]; // Equipment owned by participant
 }
 export type ParticipantData = Omit<Participant, 'id'>;
 
@@ -57,6 +58,7 @@ export interface DishProduct {
 export interface Dish {
   id: number;
   name: string;
+  description: string;
   products: DishProduct[];
 }
 export type DishData = Omit<Dish, 'id'>;
@@ -96,6 +98,8 @@ export interface Trip {
   participants: number[];
   mealsPerDay: number;
   selectedMeals: SelectedMeals;
+  requiredEquipmentIds: number[]; // Equipment required for this trip
+  assignedEquipment: { [participantId: number]: number[] }; // Equipment assignments per participant
 }
 export type TripData = Omit<Trip, 'id' | 'createdAt' | 'status' | 'selectedMeals'>;
 
@@ -105,4 +109,47 @@ export type SubmitDishAction = 'add_as_new' | 'replace' | 'create_or_update';
 export interface ImportedJsonData {
   products: ProductData[];
   // Можно будет расширять другими ключами в будущем
+}
+
+// --- Снаряжение ---
+export type EquipmentType = 'personal' | 'common';
+
+export interface EquipmentCategory {
+  id: number;
+  name: string;
+  color: string;
+  emoji?: string;
+}
+export type EquipmentCategoryData = Omit<EquipmentCategory, 'id'>;
+
+export interface Equipment {
+  id: number;
+  name: string;
+  description: string;
+  weight: number; // weight in grams
+  type: EquipmentType;
+  categoryId: number | null;
+  ownerId: number | null; // Participant who owns this equipment
+  link?: string; // Optional link to product page, manual, etc.
+}
+export type EquipmentData = Omit<Equipment, 'id'>;
+
+// --- Снаряжение участников ---
+export interface ParticipantEquipment {
+  participantId: number;
+  equipmentId: number;
+  quantity: number;
+}
+
+// --- Снаряжение в походах ---
+export interface TripEquipmentRequirement {
+  equipmentId: number;
+  quantity: number;
+  isRequired: boolean;
+}
+
+export interface TripEquipmentAssignment {
+  participantId: number;
+  equipmentId: number;
+  quantity: number;
 }

@@ -1,22 +1,26 @@
-// src/components/database/categories/CategoryDetail.tsx
+// src/components/equipment/EquipmentCategoryDetail.tsx
 
 import React, { useState } from 'react';
-import { Edit, Package, Tag, Plus } from 'lucide-react';
-import useProductStore from '../../stores/useProductStore';
-import type { Category } from '../../types';
+import { Edit, Backpack, Tag, Plus } from 'lucide-react';
+import useEquipmentStore from '../../stores/useEquipmentStore';
+import type { EquipmentCategory } from '../../types';
 import Button from '../../ui/Button';
 import DetailPane from '../../ui/DetailPane';
-import ProductListItem from '../products/ProductListItem';
+import EquipmentListItem from './EquipmentListItem';
 
-interface CategoryDetailProps {
-  category: Category | null;
+interface EquipmentCategoryDetailProps {
+  category: EquipmentCategory | null;
   onEdit: () => void;
-  onAddProduct?: () => void;
+  onAddEquipment?: () => void;
 }
 
-const CategoryDetail: React.FC<CategoryDetailProps> = ({ category, onEdit, onAddProduct }) => {
-  const { products } = useProductStore();
-  const [openSections, setOpenSections] = useState<string[]>(['products']);
+const EquipmentCategoryDetail: React.FC<EquipmentCategoryDetailProps> = ({
+  category,
+  onEdit,
+  onAddEquipment,
+}) => {
+  const { equipment } = useEquipmentStore();
+  const [openSections, setOpenSections] = useState<string[]>(['equipment']);
 
   const handleToggleSection = (sectionId: string) => {
     setOpenSections((prev) =>
@@ -40,34 +44,34 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({ category, onEdit, onAdd
     );
   }
 
-  const categoryProducts = products.filter((p) => p.categoryId === category.id);
+  const categoryEquipment = equipment.filter((e) => e.categoryId === category.id);
 
   const sections = [
     {
-      id: 'products',
-      title: 'Продукты',
-      icon: Package,
-      actionButton: onAddProduct && (
-        <Button size="sm" variant="ghost" onClick={onAddProduct} title="Добавить продукт">
+      id: 'equipment',
+      title: 'Снаряжение',
+      icon: Backpack,
+      actionButton: onAddEquipment && (
+        <Button size="sm" variant="ghost" onClick={onAddEquipment} title="Добавить снаряжение">
           <Plus className="w-4 h-4" />
         </Button>
       ),
       content: (
         <div className="space-y-2">
-          {categoryProducts.length > 0 ? (
-            categoryProducts.map((product) => (
-              <ProductListItem
-                key={product.id}
-                product={product}
+          {categoryEquipment.length > 0 ? (
+            categoryEquipment.map((equipmentItem) => (
+              <EquipmentListItem
+                key={equipmentItem.id}
+                equipment={equipmentItem}
                 borderColor={category.color}
-                onView={() => console.log('Navigate to product', product.id)}
-                onEdit={() => console.log('Edit product', product.id)}
-                onDelete={() => console.log('Delete product', product.id)}
+                onView={() => console.log('Navigate to equipment', equipmentItem.id)}
+                onEdit={() => console.log('Edit equipment', equipmentItem.id)}
+                onDelete={() => console.log('Delete equipment', equipmentItem.id)}
               />
             ))
           ) : (
             <p className="text-sm text-center py-4 text-muted-foreground">
-              В этой категории пока нет продуктов
+              В этой категории пока нет снаряжения
             </p>
           )}
         </div>
@@ -88,7 +92,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({ category, onEdit, onAdd
           </div>
           <div>
             <h2 className="text-2xl font-bold text-foreground">{category.name}</h2>
-            <p className="text-muted-foreground">{categoryProducts.length} продукт(ов)</p>
+            <p className="text-muted-foreground">{categoryEquipment.length} снаряжения</p>
           </div>
         </div>
         <Button variant="secondary" onClick={onEdit}>
@@ -100,4 +104,4 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({ category, onEdit, onAdd
   );
 };
 
-export default CategoryDetail;
+export default EquipmentCategoryDetail;

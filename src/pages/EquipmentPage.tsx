@@ -13,7 +13,6 @@ import {
   Users,
   ExternalLink,
   Info,
-  Package,
 } from 'lucide-react';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
@@ -281,7 +280,7 @@ const EquipmentPage: React.FC = () => {
                           })()}
                       </div>
                       {selectedEquipment.description && (
-                        <div>
+                        <div className="p-3 bg-muted/50 rounded-lg">
                           <label className="block text-sm font-medium text-muted-foreground mb-2">
                             Описание
                           </label>
@@ -303,39 +302,6 @@ const EquipmentPage: React.FC = () => {
                             Открыть ссылку
                           </a>
                         </div>
-                      )}
-                    </div>
-                  ),
-                },
-                {
-                  id: 'category',
-                  title: 'Категория',
-                  icon: Package,
-                  content: (
-                    <div>
-                      {selectedEquipment.categoryId ? (
-                        (() => {
-                          const category = categories.find(
-                            (c) => c.id === selectedEquipment.categoryId
-                          );
-                          return category ? (
-                            <div
-                              className="p-3 rounded-lg border-l-4"
-                              style={{ borderLeftColor: category.color }}
-                            >
-                              <div className="flex items-center gap-2">
-                                {category.emoji && (
-                                  <span className="text-lg">{category.emoji}</span>
-                                )}
-                                <span className="font-medium text-foreground">{category.name}</span>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="text-muted-foreground">Категория не найдена</p>
-                          );
-                        })()
-                      ) : (
-                        <p className="text-muted-foreground">Категория не назначена</p>
                       )}
                     </div>
                   ),

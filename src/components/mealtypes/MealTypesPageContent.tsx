@@ -12,16 +12,17 @@ import { CirclePlus, Utensils, Edit, Trash2 } from 'lucide-react';
 
 interface MealTypeFormProps {
   mealType: MealType | null;
-  onSubmit: (name: string) => void;
+  onSubmit: (name: string, repeatable: boolean) => void;
   onCancel: () => void;
 }
 
 const MealTypeForm: React.FC<MealTypeFormProps> = ({ mealType, onSubmit, onCancel }) => {
   const [name, setName] = useState(mealType?.name || '');
+  const [repeatable, setRepeatable] = useState(mealType?.repeatable || false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(name);
+    onSubmit(name, repeatable);
   };
 
   return (
@@ -33,6 +34,28 @@ const MealTypeForm: React.FC<MealTypeFormProps> = ({ mealType, onSubmit, onCance
         autoFocus
         required
       />
+      <div className="flex items-center">
+        <label className="flex items-center cursor-pointer">
+          <div className="relative">
+            <input
+              type="checkbox"
+              id="repeatable"
+              checked={repeatable}
+              onChange={(e) => setRepeatable(e.target.checked)}
+              className="sr-only"
+            />
+            <div
+              className={`block w-10 h-6 rounded-full transition-colors ${repeatable ? 'bg-blue-600' : 'bg-gray-300'}`}
+            ></div>
+            <div
+              className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${repeatable ? 'transform translate-x-4' : ''}`}
+            ></div>
+          </div>
+          <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+            Можно добавлять несколько раз в день
+          </span>
+        </label>
+      </div>
       <div className="flex justify-end gap-3 pt-6 border-t border-border">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Отмена
@@ -65,11 +88,11 @@ const MealTypesPageContent: React.FC = () => {
     setFormModalOpen(true);
   }, []);
 
-  const handleFormSubmit = (name: string) => {
+  const handleFormSubmit = (name: string, repeatable: boolean) => {
     if (editingMealType) {
-      updateMealType(editingMealType.id, name);
+      updateMealType(editingMealType.id, name, repeatable);
     } else {
-      addMealType(name);
+      addMealType(name, repeatable);
     }
     setFormModalOpen(false);
   };

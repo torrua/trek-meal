@@ -1,8 +1,8 @@
-// src/components/participants/TripListItem.tsx
+// src/components/dishes/TripListItem.tsx
 
 import React from 'react';
 import cn from 'classnames';
-import { Calendar, MapPin, ExternalLink, Trash2, Users, Backpack } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink } from 'lucide-react';
 import type { Trip } from '../../types';
 import { formatDate, getEffectiveStatus } from '../../utils/index';
 import { DIFFICULTY_CONFIG, STATUS_CONFIG } from '../../constants/trips';
@@ -10,11 +10,10 @@ import { isFuture, parseISO } from 'date-fns';
 
 interface TripListItemProps {
   trip: Trip;
-  onRemove: () => void;
   onView: () => void;
 }
 
-const TripListItem: React.FC<TripListItemProps> = ({ trip, onRemove, onView }) => {
+const TripListItem: React.FC<TripListItemProps> = ({ trip, onView }) => {
   const _difficultyInfo = DIFFICULTY_CONFIG[trip.difficulty];
   const effectiveStatus = getEffectiveStatus(trip);
   const statusConfig = STATUS_CONFIG[effectiveStatus];
@@ -69,36 +68,18 @@ const TripListItem: React.FC<TripListItemProps> = ({ trip, onRemove, onView }) =
           )}
         </div>
 
-        {/* Right section: Date • Participants • Equipment + context menu */}
+        {/* Right section: Date + context menu */}
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-x-1.5 text-sm">
             {trip.startDate && (
-              <>
-                <div
-                  className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"
-                  title="Дата начала"
-                >
-                  <Calendar className="w-4 h-4" />
-                  <span className="font-medium">{formatDate(trip.startDate)}</span>
-                </div>
-                <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
-              </>
+              <div
+                className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"
+                title="Дата начала"
+              >
+                <Calendar className="w-4 h-4" />
+                <span className="font-medium">{formatDate(trip.startDate)}</span>
+              </div>
             )}
-            <div
-              className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"
-              title="Участники"
-            >
-              <Users className="w-4 h-4" />
-              <span className="font-medium">{trip.participants.length}</span>
-            </div>
-            <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
-            <div
-              className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"
-              title="Снаряжение"
-            >
-              <Backpack className="w-4 h-4" />
-              <span className="font-medium">0</span>
-            </div>
           </div>
 
           {/* Context menu buttons */}
@@ -113,17 +94,6 @@ const TripListItem: React.FC<TripListItemProps> = ({ trip, onRemove, onView }) =
               aria-label={`Открыть поход ${trip.name}`}
             >
               <ExternalLink className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
-              className="p-1 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition-colors"
-              title="Убрать из похода"
-              aria-label={`Убрать из похода ${trip.name}`}
-            >
-              <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
             </button>
           </div>
         </div>

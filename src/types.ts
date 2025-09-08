@@ -96,12 +96,16 @@ export interface Trip {
   startDate: string;
   endDate: string;
   participants: number[];
-  mealsPerDay: number;
+  // Flexible meal structure: each day can have different meals
+  dayMeals: { [dayNumber: string]: number[] }; // Array of meal type IDs for each day
   selectedMeals: SelectedMeals;
   requiredEquipmentIds: number[]; // Equipment required for this trip
   assignedEquipment: { [participantId: number]: number[] }; // Equipment assignments per participant
+
+  // Legacy field for backward compatibility - will be calculated from dayMeals
+  mealsPerDay?: number;
 }
-export type TripData = Omit<Trip, 'id' | 'createdAt' | 'status' | 'selectedMeals'>;
+export type TripData = Omit<Trip, 'id' | 'createdAt' | 'status' | 'selectedMeals' | 'dayMeals'>;
 
 export type SubmitDishAction = 'add_as_new' | 'replace' | 'create_or_update';
 

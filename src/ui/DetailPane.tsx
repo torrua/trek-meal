@@ -17,7 +17,7 @@ interface DetailPaneProps {
   children: React.ReactNode;
   sections: Section[];
   openSections: string[];
-  onToggleSection?: (sectionId: string) => void; // <--- ИСПРАВЛЕНИЕ: Делаем необязательным
+  onToggleSection?: (sectionId: string) => void;
   className?: string;
 }
 

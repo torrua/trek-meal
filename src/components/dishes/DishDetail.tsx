@@ -12,15 +12,18 @@ import {
   Zap,
   Droplet,
   Wheat,
+  MapPin,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Dish } from '../../types';
 import useProductStore from '../../stores/useProductStore';
 import useCategoryStore from '../../stores/useCategoryStore';
 import useDishStore from '../../stores/useDishStore';
+import useTripStore from '../../stores/useTripStore';
 import DetailPane from '../../ui/DetailPane';
 import Button from '../../ui/Button';
 import EditPortionModal from './EditPortionModal';
+import TripListItem from './TripListItem';
 
 interface DishDetailProps {
   dish: Dish | null;
@@ -32,12 +35,15 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
   const { products: allProducts } = useProductStore();
   const { categories } = useCategoryStore();
   const { removeProductFromDish, updateProductInDish } = useDishStore();
+  const { getTripsUsingDish } = useTripStore();
 
   const [editingPortionIndex, setEditingPortionIndex] = useState<number | null>(null);
 
   if (!dish) {
     return null;
   }
+
+  const tripsUsingDish = getTripsUsingDish(dish.id);
 
   const totalWeight = dish.products.reduce((sum, p) => sum + p.weight, 0);
 
@@ -95,6 +101,10 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
   const handleOpenProduct = (productId: number) => {
     // Navigate to products page and select the product by passing selectedId as URL parameter
     navigate(`/products?selectedId=${productId}`);
+  };
+
+  const handleViewTrip = (tripId: number) => {
+    navigate(`/trips/${tripId}`);
   };
 
   const sections = [
@@ -189,6 +199,24 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
         </div>
       ),
     },
+    {
+      id: 'trips',
+      title: 'Походы',
+      icon: MapPin,
+      content: (
+        <div className="space-y-2">
+          {tripsUsingDish.length > 0 ? (
+            tripsUsingDish.map((trip) => (
+              <TripListItem key={trip.id} trip={trip} onView={() => handleViewTrip(trip.id)} />
+            ))
+          ) : (
+            <p className="text-sm text-center py-4 text-muted-foreground">
+              Блюдо не используется в походах
+            </p>
+          )}
+        </div>
+      ),
+    },
   ];
 
   const editingProduct =
@@ -201,7 +229,7 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
 
   return (
     <>
-      <DetailPane sections={sections} openSections={['products']}>
+      <DetailPane sections={sections} openSections={['products', 'trips']}>
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-foreground mb-1">{dish.name}</h2>

@@ -137,3 +137,163 @@ export const calculateTripSummary = (
     averageCaloriesPerPersonPerDay,
   };
 };
+
+// Additional nutrition calculation utilities for detailed meal planning
+export interface DayNutritionSummary {
+  totalWeight: number;
+  totalWeightForAllUsers: number;
+  weightPerUser: number;
+  calories: number;
+  proteins: number;
+  fats: number;
+  carbs: number;
+  productCount: number;
+}
+
+export interface MealNutritionSummary {
+  weight: number;
+  weightPerUser: number;
+  calories: number;
+  proteins: number;
+  fats: number;
+  carbs: number;
+  productCount: number;
+}
+
+export const calculateDayNutrition = (
+  trip: Trip | undefined,
+  day: number,
+  allProducts: Product[],
+  allDishes: Dish[]
+): DayNutritionSummary => {
+  const defaultSummary: DayNutritionSummary = {
+    totalWeight: 0,
+    totalWeightForAllUsers: 0,
+    weightPerUser: 0,
+    calories: 0,
+    proteins: 0,
+    fats: 0,
+    carbs: 0,
+    productCount: 0,
+  };
+
+  if (!trip?.dayMeals?.[day.toString()]) return defaultSummary;
+
+  const participantsCount = trip.participants?.length || 1;
+  let totalWeight = 0;
+  let totalCalories = 0;
+  let totalProteins = 0;
+  let totalFats = 0;
+  let totalCarbs = 0;
+  let productCount = 0;
+
+  const processProduct = (productId: number, weight: number) => {
+    const product = allProducts.find((p) => p.id === productId);
+    if (product) {
+      const weightRatio = weight / 100;
+      totalWeight += weight;
+      totalCalories += (product.calories || 0) * weightRatio;
+      totalProteins += (product.proteins || 0) * weightRatio;
+      totalFats += (product.fats || 0) * weightRatio;
+      totalCarbs += (product.carbs || 0) * weightRatio;
+      productCount++;
+    }
+  };
+
+  const dayMeals = trip.dayMeals[day.toString()] || [];
+  dayMeals.forEach((mealTypeId) => {
+    const mealId = `${day}-${mealTypeId}`;
+    const mealItems = trip.selectedMeals?.[mealId] || [];
+
+    mealItems.forEach((item) => {
+      if (item.type === 'product') {
+        processProduct(item.itemId, item.weight);
+      } else if (item.type === 'dish') {
+        const dish = allDishes.find((d) => d.id === item.itemId);
+        if (dish) {
+          dish.products.forEach((dishProduct) => {
+            processProduct(dishProduct.productId, dishProduct.weight);
+          });
+        }
+      }
+    });
+  });
+
+  return {
+    totalWeight: Math.round(totalWeight),
+    totalWeightForAllUsers: Math.round(totalWeight * participantsCount),
+    weightPerUser: Math.round(totalWeight),
+    calories: Math.round(totalCalories),
+    proteins: Math.round(totalProteins),
+    fats: Math.round(totalFats),
+    carbs: Math.round(totalCarbs),
+    productCount,
+  };
+};
+
+export const calculateMealNutrition = (
+  trip: Trip | undefined,
+  day: number,
+  mealTypeId: number,
+  allProducts: Product[],
+  allDishes: Dish[]
+): MealNutritionSummary => {
+  const defaultSummary: MealNutritionSummary = {
+    weight: 0,
+    weightPerUser: 0,
+    calories: 0,
+    proteins: 0,
+    fats: 0,
+    carbs: 0,
+    productCount: 0,
+  };
+
+  if (!trip) return defaultSummary;
+
+  const participantsCount = trip.participants?.length || 1;
+  const mealId = `${day}-${mealTypeId}`;
+  const mealItems = trip.selectedMeals?.[mealId] || [];
+
+  let totalWeight = 0;
+  let totalCalories = 0;
+  let totalProteins = 0;
+  let totalFats = 0;
+  let totalCarbs = 0;
+  let productCount = 0;
+
+  const processProduct = (productId: number, weight: number) => {
+    const product = allProducts.find((p) => p.id === productId);
+    if (product) {
+      const weightRatio = weight / 100;
+      totalWeight += weight;
+      totalCalories += (product.calories || 0) * weightRatio;
+      totalProteins += (product.proteins || 0) * weightRatio;
+      totalFats += (product.fats || 0) * weightRatio;
+      totalCarbs += (product.carbs || 0) * weightRatio;
+      productCount++;
+    }
+  };
+
+  mealItems.forEach((item) => {
+    if (item.type === 'product') {
+      processProduct(item.itemId, item.weight);
+    } else if (item.type === 'dish') {
+      const dish = allDishes.find((d) => d.id === item.itemId);
+      if (dish) {
+        dish.products.forEach((dishProduct) => {
+          processProduct(dishProduct.productId, dishProduct.weight);
+        });
+      }
+    }
+  });
+
+  return {
+    weight: Math.round(totalWeight),
+    weightPerUser: Math.round(totalWeight),
+    calories: Math.round(totalCalories),
+    proteins: Math.round(totalProteins),
+    fats: Math.round(totalFats),
+    carbs: Math.round(totalCarbs),
+    productCount,
+  };
+};

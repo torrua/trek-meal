@@ -1,20 +1,52 @@
-// src/components/trip-planning/TripPlanningPage.tsx
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SingleValue } from 'react-select';
 import ThemedSelect from '../ui/ThemedSelect';
+import DropdownSelect from '../ui/DropdownSelect';
+import DetailPane from '../ui/DetailPane';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
 import useParticipantStore from '../stores/useParticipantStore';
 import useDishStore from '../stores/useDishStore';
 import useCategoryStore from '../stores/useCategoryStore';
-import { calculateTripSummary, getMealName, formatDate } from '../utils';
+import useMealTypesStore from '../stores/useMealTypesStore';
+import { formatDate } from '../utils';
+import { calculateDayNutrition, calculateMealNutrition } from '../utils';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import ConfirmModal from '../ui/ConfirmModal';
 import TripForm from '../components/trips/TripForm';
 import DishForm from '../components/dishes/DishForm';
+import {
+  Calendar,
+  CirclePlus,
+  Utensils,
+  Flame,
+  Zap,
+  Droplet,
+  Wheat,
+  Trash2,
+  Plus,
+  Edit,
+  Scale,
+} from 'lucide-react';
 import type {
   TripData,
   Product,
@@ -30,7 +62,8 @@ type GroupedMealOption = { label: string; options: SelectMealOption[] };
 type CloningState = {
   instanceId: string;
   dish: Dish;
-  mealId: string;
+  day: number;
+  mealTypeId: number;
 } | null;
 
 const DishContents = ({ dish }: { dish: Dish }) => {
@@ -63,6 +96,265 @@ const DishContents = ({ dish }: { dish: Dish }) => {
   );
 };
 
+// Sortable MealSlot component with drag-and-drop
+const SortableMealSlot: React.FC<{
+  id: string;
+  day: number;
+  mealTypeId: number;
+  mealName: string;
+  trip: any;
+  products: Product[];
+  dishes: Dish[];
+  groupedMealOptions: GroupedMealOption[];
+  expandedDishes: Record<string, boolean>;
+  onAddItem: (day: number, mealTypeId: number, option: SingleValue<SelectMealOption>) => void;
+  onRemoveItem: (day: number, mealTypeId: number, instanceId: string) => void;
+  onToggleDish: (instanceId: string) => void;
+  onCloneRequest: (instanceId: string, dish: Dish, day: number, mealTypeId: number) => void;
+  onRemoveMeal: (day: number, mealTypeId: number) => void;
+}> = ({ id, ...props }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <MealSlot {...props} dragHandleProps={{ ...attributes, ...listeners }} />
+    </div>
+  );
+};
+
+// MealSlot component for individual meal management
+const MealSlot: React.FC<{
+  day: number;
+  mealTypeId: number;
+  mealName: string;
+  trip: any;
+  products: Product[];
+  dishes: Dish[];
+  groupedMealOptions: GroupedMealOption[];
+  expandedDishes: Record<string, boolean>;
+  onAddItem: (day: number, mealTypeId: number, option: SingleValue<SelectMealOption>) => void;
+  onRemoveItem: (day: number, mealTypeId: number, instanceId: string) => void;
+  onToggleDish: (instanceId: string) => void;
+  onCloneRequest: (instanceId: string, dish: Dish, day: number, mealTypeId: number) => void;
+  onRemoveMeal: (day: number, mealTypeId: number) => void;
+  dragHandleProps?: any;
+}> = ({
+  day,
+  mealTypeId,
+  mealName,
+  trip,
+  products,
+  dishes,
+  groupedMealOptions,
+  expandedDishes,
+  onAddItem,
+  onRemoveItem,
+  onToggleDish,
+  onCloneRequest,
+  onRemoveMeal,
+  dragHandleProps,
+}) => {
+  const mealId = `${day}-${mealTypeId}`;
+  const selectedItems = (trip.selectedMeals?.[mealId] || []) as MealPlanItem[];
+
+  // Force re-render when dishes change to show newly added dishes immediately
+  const currentDishes = dishes;
+
+  // Calculate meal nutrition
+  const mealNutrition = calculateMealNutrition(trip, day, mealTypeId, products, dishes);
+
+  return (
+    <div className="border rounded-lg p-3 space-y-3 bg-gray-50 dark:bg-gray-700/50">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <div
+              {...dragHandleProps}
+              className="cursor-move touch-none flex items-center gap-2"
+              title="Перетащить прием пищи"
+            >
+              <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zM6 4a1 1 0 011-1h6a1 1 0 011 1v12a1 1 0 01-1 1H7a1 1 0 01-1-1V4zm2 2a1 1 0 100 2h4a1 1 0 100-2H8zm0 4a1 1 0 100 2h4a1 1 0 100-2H8z" />
+              </svg>
+              <Utensils className="w-4 h-4 text-primary" />
+              <h5 className="font-semibold text-gray-900 dark:text-white">{mealName}</h5>
+            </div>
+          </div>
+          {/* Meal nutrition summary */}
+          {mealNutrition.productCount > 0 && (
+            <div className="flex items-center gap-3 text-xs text-muted-foreground ml-6">
+              <div className="flex items-center gap-1" title="Общий вес">
+                <Scale className="w-3 h-3" />
+                <span>{mealNutrition.weight}г</span>
+              </div>
+              <span className="text-gray-300">•</span>
+              <div className="flex items-center gap-1" title="Калорийность">
+                <Flame className="w-3 h-3" />
+                <span>{mealNutrition.calories}</span>
+              </div>
+              <span className="text-gray-300">•</span>
+              <div className="flex items-center gap-1" title="Белки">
+                <Zap className="w-3 h-3" />
+                <span>Б:{mealNutrition.proteins}</span>
+              </div>
+              <div className="flex items-center gap-1" title="Жиры">
+                <Droplet className="w-3 h-3" />
+                <span>Ж:{mealNutrition.fats}</span>
+              </div>
+              <div className="flex items-center gap-1" title="Углеводы">
+                <Wheat className="w-3 h-3" />
+                <span>У:{mealNutrition.carbs}</span>
+              </div>
+            </div>
+          )}
+        </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onRemoveMeal(day, mealTypeId)}
+          className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1 h-8"
+          title="Удалить прием пищи"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <div className="space-y-1">
+        {selectedItems.map((item) => {
+          let content = null;
+          if (item.type === 'dish') {
+            const dish = currentDishes.find((d) => d.id === item.itemId);
+            if (dish) {
+              const totalWeight = dish.products.reduce((sum, p) => sum + p.weight, 0);
+              const isExpanded = expandedDishes[item.instanceId];
+              content = (
+                <div>
+                  <div
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => onToggleDish(item.instanceId)}
+                  >
+                    <span>
+                      ⭐ {dish.name} ({totalWeight} г)
+                    </span>
+                    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => onCloneRequest(item.instanceId, dish, day, mealTypeId)}
+                        className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        title="Редактировать блюдо"
+                      >
+                        <Edit className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => onRemoveItem(day, mealTypeId, item.instanceId)}
+                        className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        title="Удалить блюдо"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                  {isExpanded && <DishContents dish={dish} />}
+                </div>
+              );
+            } else {
+              content = <div className="italic text-muted-foreground">Блюдо не найдено</div>;
+            }
+          } else {
+            const product = products.find((p) => p.id === item.itemId);
+            content = (
+              <div className="flex items-center justify-between">
+                <span>
+                  {product?.name || 'Продукт не найден'} ({item.weight} г)
+                </span>
+                <button
+                  onClick={() => onRemoveItem(day, mealTypeId, item.instanceId)}
+                  className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  title="Удалить продукт"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            );
+          }
+          return (
+            <div
+              key={item.instanceId}
+              className="text-sm p-2 bg-card-foreground/5 dark:bg-card-foreground/10 rounded"
+            >
+              {content}
+            </div>
+          );
+        })}
+      </div>
+
+      <ThemedSelect<SelectMealOption, false, GroupedMealOption>
+        options={groupedMealOptions}
+        onChange={(option) => {
+          if (option) {
+            onAddItem(day, mealTypeId, option);
+          }
+        }}
+        placeholder={
+          groupedMealOptions.length === 0
+            ? 'Сначала создайте продукты или блюда'
+            : 'Добавить продукт или блюдо...'
+        }
+        value={null}
+        isDisabled={groupedMealOptions.length === 0}
+        isClearable={false}
+        formatGroupLabel={(data) => (
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-foreground">{data.label}</span>
+            <span className="text-xs bg-muted text-muted-foreground rounded-full px-1.5">
+              {data.options.length}
+            </span>
+          </div>
+        )}
+        noOptionsMessage={() => 'Нет доступных опций'}
+      />
+
+      {groupedMealOptions.length === 0 && (
+        <div className="text-xs text-muted-foreground mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+          <div className="flex items-start gap-2">
+            <span className="text-yellow-600 dark:text-yellow-400">⚠️</span>
+            <div>
+              <p className="font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                Нет доступных продуктов или блюд
+              </p>
+              <p className="text-yellow-700 dark:text-yellow-300 mb-2">
+                Чтобы добавлять продукты в приемы пищи, сначала создайте их в соответствующих
+                разделах:
+              </p>
+              <div className="flex gap-2">
+                <a
+                  href="/products"
+                  className="inline-flex items-center px-2 py-1 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 rounded hover:bg-yellow-200 dark:hover:bg-yellow-700 transition-colors text-xs font-medium"
+                >
+                  📦 Создать продукты
+                </a>
+                <a
+                  href="/dishes"
+                  className="inline-flex items-center px-2 py-1 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200 rounded hover:bg-yellow-200 dark:hover:bg-yellow-700 transition-colors text-xs font-medium"
+                >
+                  🍽️ Создать блюда
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 function TripPlanningPage() {
   const { tripId } = useParams<{ tripId: string }>();
   const navigate = useNavigate();
@@ -72,18 +364,87 @@ function TripPlanningPage() {
   const [isDishFormOpen, setIsDishFormOpen] = useState(false);
   const [cloningState, setCloningState] = useState<CloningState>(null);
   const [expandedDishes, setExpandedDishes] = useState<Record<string, boolean>>({});
-  const [expandedDays, setExpandedDays] = useState<Record<number, boolean>>({});
+  const [openSections, setOpenSections] = useState<string[]>(['day-1']);
 
   const trip = useTripStore((state) => state.trips.find((t) => t.id === numericTripId));
-  const updateTrip = useTripStore((state) => state.updateTrip);
+
+  const { updateTrip, addMealToDay, removeMealFromDay, reorderMealsInDay } = useTripStore();
   const { products } = useProductStore();
   const { participants } = useParticipantStore();
   const { dishes, addDish } = useDishStore();
+  const { mealTypes } = useMealTypesStore();
 
-  const summary = useMemo(
-    () => calculateTripSummary(trip, products, participants, dishes),
-    [trip, products, participants, dishes]
+  // Handle migration with useMemo to avoid infinite loops
+  const migratedTrip = useMemo(() => {
+    if (trip && !trip.dayMeals) {
+      // Migrate trip if needed
+      const dayMeals: { [dayNumber: string]: number[] } = {};
+      for (let day = 1; day <= trip.days; day++) {
+        const mealCount = trip.mealsPerDay || 3;
+        if (mealCount === 3) {
+          dayMeals[day.toString()] = [1, 2, 3];
+        } else if (mealCount === 4) {
+          dayMeals[day.toString()] = [1, 2, 3, 4];
+        } else if (mealCount === 5) {
+          dayMeals[day.toString()] = [1, 2, 3, 4, 5];
+        } else {
+          dayMeals[day.toString()] = [1, 2, 3];
+        }
+      }
+      const migratedTrip = { ...trip, dayMeals };
+      // Persist the migration
+      updateTrip(trip.id, { dayMeals });
+      return migratedTrip;
+    }
+    return trip;
+  }, [trip, updateTrip]);
+
+  // Helper function to get meal name by ID
+  const getMealNameById = (mealTypeId: number): string => {
+    const mealType = mealTypes.find((mt) => mt.id === mealTypeId);
+    return mealType?.name || `Прием пищи ${mealTypeId}`;
+  };
+
+  // Helper function to generate meal ID for selectedMeals
+  const generateMealId = (day: number, mealTypeId: number): string => {
+    return `${day}-${mealTypeId}`;
+  };
+
+  // Helper function to calculate day summary
+  const calculateDayNutritionLocal = (day: number) => {
+    return calculateDayNutrition(migratedTrip, day, products, dishes);
+  };
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
   );
+
+  // Handle drag end for meal reordering
+  const handleDragEnd = (event: DragEndEvent, day: number) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id && migratedTrip) {
+      const dayKey = day.toString();
+      const dayMeals = [...(migratedTrip.dayMeals?.[dayKey] || [])];
+      const oldIndex = dayMeals.findIndex((_, index) => `meal-${day}-${index}` === active.id);
+      const newIndex = dayMeals.findIndex((_, index) => `meal-${day}-${index}` === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        reorderMealsInDay(migratedTrip.id, day, oldIndex, newIndex);
+      }
+    }
+  };
+
+  // Helper function to handle section toggle
+  const handleToggleSection = (sectionId: string) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
+  };
 
   const groupedMealOptions: GroupedMealOption[] = useMemo(() => {
     const productOptions: SelectMealOption[] = products.map((p: Product) => ({
@@ -98,48 +459,106 @@ function TripPlanningPage() {
     const options = [];
     if (dishOptions.length > 0) options.push({ label: 'Блюда', options: dishOptions });
     if (productOptions.length > 0) options.push({ label: 'Продукты', options: productOptions });
+
     return options;
   }, [products, dishes]);
 
-  const handleMealItemAdd = (mealId: string, selectedOption: SingleValue<SelectMealOption>) => {
-    if (!trip || !selectedOption) return;
+  const handleMealItemAdd = (
+    day: number,
+    mealTypeId: number,
+    selectedOption: SingleValue<SelectMealOption>
+  ) => {
+    if (!migratedTrip) {
+      console.error('No trip found');
+      return;
+    }
+
+    if (!selectedOption) {
+      console.error('No option selected');
+      return;
+    }
+
+    if (!selectedOption.value || typeof selectedOption.value !== 'string') {
+      console.error('Invalid option value:', selectedOption);
+      return;
+    }
 
     const [type, idStr] = selectedOption.value.split('-');
+    if (!type || !idStr) {
+      console.error('Invalid option format:', selectedOption.value);
+      return;
+    }
+
     const itemId = parseInt(idStr, 10);
+    if (isNaN(itemId)) {
+      console.error('Invalid item ID:', idStr);
+      return;
+    }
+
+    const mealId = generateMealId(day, mealTypeId);
 
     let newItem: MealPlanItem;
 
     if (type === 'dish') {
+      const dish = dishes.find((d) => d.id === itemId);
+      if (!dish) {
+        console.error('Dish not found:', itemId);
+        return;
+      }
       newItem = { instanceId: `${Date.now()}`, type: 'dish', itemId };
-    } else {
+    } else if (type === 'product') {
       const product = products.find((p) => p.id === itemId);
+      if (!product) {
+        console.error('Product not found:', itemId);
+        return;
+      }
+
+      // Ensure we have a valid weight
+      let weight = 100; // Default weight
+      if (product.portions && product.portions.length > 0) {
+        weight = product.portions[0].weight || 100;
+      }
+
+      if (weight <= 0) {
+        weight = 100;
+      }
+
       newItem = {
         instanceId: `${Date.now()}`,
         type: 'product',
         itemId,
-        weight: product?.portions?.[0]?.weight || 0,
+        weight: weight,
       };
+    } else {
+      console.error('Unknown item type:', type);
+      return;
     }
 
-    const newSelectedMeals = JSON.parse(JSON.stringify(trip.selectedMeals || {}));
-    if (!newSelectedMeals[mealId]) newSelectedMeals[mealId] = [];
-    newSelectedMeals[mealId].push(newItem);
-    updateTrip(trip.id, { selectedMeals: newSelectedMeals });
+    try {
+      const newSelectedMeals = JSON.parse(JSON.stringify(migratedTrip.selectedMeals || {}));
+      if (!newSelectedMeals[mealId]) newSelectedMeals[mealId] = [];
+      newSelectedMeals[mealId].push(newItem);
+
+      updateTrip(migratedTrip.id, { selectedMeals: newSelectedMeals });
+    } catch (error) {
+      console.error('Error updating trip:', error);
+    }
   };
 
-  const handleMealItemRemove = (mealId: string, instanceId: string) => {
-    if (!trip) return;
-    const newSelectedMeals = JSON.parse(JSON.stringify(trip.selectedMeals || {}));
+  const handleMealItemRemove = (day: number, mealTypeId: number, instanceId: string) => {
+    if (!migratedTrip) return;
+    const mealId = generateMealId(day, mealTypeId);
+    const newSelectedMeals = JSON.parse(JSON.stringify(migratedTrip.selectedMeals || {}));
     if (newSelectedMeals[mealId]) {
       newSelectedMeals[mealId] = newSelectedMeals[mealId].filter(
         (item: MealPlanItem) => item.instanceId !== instanceId
       );
-      updateTrip(trip.id, { selectedMeals: newSelectedMeals });
+      updateTrip(migratedTrip.id, { selectedMeals: newSelectedMeals });
     }
   };
 
-  const handleCloneRequest = (instanceId: string, dish: Dish, mealId: string) => {
-    setCloningState({ instanceId, dish, mealId });
+  const handleCloneRequest = (instanceId: string, dish: Dish, day: number, mealTypeId: number) => {
+    setCloningState({ instanceId, dish, day, mealTypeId });
   };
 
   const handleCloneConfirm = () => {
@@ -150,32 +569,27 @@ function TripPlanningPage() {
 
   const handleCloneSubmit = (newDishData: DishData, action: SubmitDishAction) => {
     const newDish = addDish(newDishData);
-    if (!newDish || !trip || !cloningState) {
+    if (!newDish || !migratedTrip || !cloningState) {
       setIsDishFormOpen(false);
       setCloningState(null);
       return;
     }
 
-    const newSelectedMeals = JSON.parse(JSON.stringify(trip.selectedMeals));
+    const newSelectedMeals = JSON.parse(JSON.stringify(migratedTrip.selectedMeals));
+    const mealId = generateMealId(cloningState.day, cloningState.mealTypeId);
 
     if (action === 'replace') {
-      let itemReplaced = false;
-      for (const mealId in newSelectedMeals) {
+      if (newSelectedMeals[mealId]) {
         const mealItems = newSelectedMeals[mealId] as MealPlanItem[];
         const itemIndex = mealItems.findIndex(
           (item) => item.instanceId === cloningState.instanceId
         );
         if (itemIndex !== -1) {
           mealItems[itemIndex] = { ...mealItems[itemIndex], itemId: newDish.id };
-          itemReplaced = true;
-          break;
+          updateTrip(migratedTrip.id, { selectedMeals: newSelectedMeals });
         }
       }
-      if (itemReplaced) {
-        updateTrip(trip.id, { selectedMeals: newSelectedMeals });
-      }
     } else if (action === 'add_as_new') {
-      const mealId = cloningState.mealId;
       const newItem: MealPlanItem = {
         instanceId: `${Date.now()}`,
         type: 'dish',
@@ -183,7 +597,7 @@ function TripPlanningPage() {
       };
       if (!newSelectedMeals[mealId]) newSelectedMeals[mealId] = [];
       newSelectedMeals[mealId].push(newItem);
-      updateTrip(trip.id, { selectedMeals: newSelectedMeals });
+      updateTrip(migratedTrip.id, { selectedMeals: newSelectedMeals });
     }
 
     setIsDishFormOpen(false);
@@ -194,17 +608,18 @@ function TripPlanningPage() {
     setExpandedDishes((prev) => ({ ...prev, [instanceId]: !prev[instanceId] }));
   };
 
+  // Initialize first day as open
   useEffect(() => {
-    setExpandedDays({ 0: true });
+    setOpenSections(['day-1']);
   }, []);
 
   const handleDetailsUpdate = (formData: TripData) => {
-    if (!trip) return;
-    updateTrip(trip.id, formData);
+    if (!migratedTrip) return;
+    updateTrip(migratedTrip.id, formData);
     setIsEditModalOpen(false);
   };
 
-  if (!trip) {
+  if (!migratedTrip) {
     return (
       <div className="p-6 text-center">
         <h2 className="text-xl font-bold">Поход не найден</h2>
@@ -219,196 +634,149 @@ function TripPlanningPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b">
-        <div>
-          <h2 className="text-2xl font-bold text-primary">{trip.name}</h2>
-          <p className="text-sm text-muted-foreground">
-            {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
-          </p>
-        </div>
-        <div className="flex gap-2 flex-shrink-0">
-          <Button variant="ghost" onClick={() => setIsEditModalOpen(true)}>
-            Редактировать
-          </Button>
-          <Button variant="ghost" onClick={() => navigate('/trips')}>
-            ← К списку походов
-          </Button>
-        </div>
-      </header>
+    <>
+      <div className="p-6 space-y-6">
+        <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b">
+          <div>
+            <h2 className="text-2xl font-bold text-primary">{migratedTrip.name}</h2>
+            <p className="text-sm text-muted-foreground">
+              {formatDate(migratedTrip.startDate)} - {formatDate(migratedTrip.endDate)}
+            </p>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <Button variant="ghost" onClick={() => setIsEditModalOpen(true)}>
+              Редактировать
+            </Button>
+            <Button variant="ghost" onClick={() => navigate('/trips')}>
+              ← К списку походов
+            </Button>
+          </div>
+        </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
-          <h3 className="text-xl font-semibold">План питания</h3>
-          {Array.from({ length: trip.days }).map((_, dayIndex) => (
-            <div key={dayIndex} className="border rounded-lg">
-              <button
-                className="w-full p-3 bg-muted font-bold border-b flex justify-between items-center hover:bg-muted/80 transition-all group"
-                onClick={() =>
-                  setExpandedDays((prev) => ({ ...prev, [dayIndex]: !prev[dayIndex] }))
-                }
-              >
-                <span>День {dayIndex + 1}</span>
-                <svg
-                  className={`w-5 h-5 text-muted-foreground transition-transform duration-200 transform ${
-                    expandedDays[dayIndex] ? 'rotate-180' : ''
-                  } group-hover:text-foreground`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              {expandedDays[dayIndex] && (
-                <div className="divide-y">
-                  {Array.from({ length: trip.mealsPerDay }).map((_, mealIndex) => {
-                    const mealId = `${dayIndex + 1}-${mealIndex + 1}`;
-                    const selectedItems = (trip.selectedMeals?.[mealId] || []) as MealPlanItem[];
+        <div className="max-w-5xl mx-auto">
+          <h3 className="text-xl font-semibold mb-4">План питания</h3>
 
-                    return (
-                      <div key={mealIndex} className="p-3">
-                        <h5 className="font-semibold mb-2">
-                          {getMealName(mealIndex + 1, trip.mealsPerDay)}
-                        </h5>
-                        <div className="space-y-1 mb-2">
-                          {selectedItems.map((item) => {
-                            let content = null;
-                            if (item.type === 'dish') {
-                              const dish = dishes.find((d) => d.id === item.itemId);
-                              if (dish) {
-                                const totalWeight = dish.products.reduce(
-                                  (sum, p) => sum + p.weight,
-                                  0
-                                );
-                                const isExpanded = expandedDishes[item.instanceId];
-                                content = (
-                                  <div>
-                                    <div
-                                      className="flex items-center justify-between cursor-pointer"
-                                      onClick={() => toggleDishExpansion(item.instanceId)}
-                                    >
-                                      <span>
-                                        ⭐ {dish.name} ({totalWeight} г)
-                                      </span>
-                                      <div
-                                        className="flex items-center gap-1"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <button
-                                          onClick={() =>
-                                            handleCloneRequest(item.instanceId, dish, mealId)
-                                          }
-                                          className="text-blue-600 hover:text-blue-800 text-xs"
-                                        >
-                                          [Ред.]
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            handleMealItemRemove(mealId, item.instanceId)
-                                          }
-                                          className="text-red-500 hover:text-red-700 font-bold px-2"
-                                        >
-                                          &times;
-                                        </button>
-                                      </div>
-                                    </div>
-                                    {isExpanded && <DishContents dish={dish} />}
-                                  </div>
-                                );
-                              } else {
-                                content = (
-                                  <div className="italic text-muted-foreground">
-                                    Блюдо не найдено
-                                  </div>
-                                );
-                              }
-                            } else {
-                              const product = products.find((p) => p.id === item.itemId);
-                              content = (
-                                <div className="flex items-center justify-between">
-                                  <span>
-                                    {product?.name || 'Продукт не найден'} ({item.weight} г)
-                                  </span>
-                                  <button
-                                    onClick={() => handleMealItemRemove(mealId, item.instanceId)}
-                                    className="text-red-500 hover:text-red-700 font-bold px-2"
-                                  >
-                                    &times;
-                                  </button>
-                                </div>
-                              );
-                            }
-                            return (
-                              <div
-                                key={item.instanceId}
-                                className="text-sm p-1.5 bg-card-foreground/5 dark:bg-card-foreground/10 rounded"
-                              >
-                                {content}
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <ThemedSelect<SelectMealOption, false, GroupedMealOption>
-                          options={groupedMealOptions}
-                          onChange={(option) => handleMealItemAdd(mealId, option)}
-                          placeholder="Добавить продукт или блюдо..."
-                          value={null}
-                          formatGroupLabel={(data) => (
-                            <div className="flex items-center justify-between">
-                              <span className="font-bold text-foreground">{data.label}</span>
-                              <span className="text-xs bg-muted text-muted-foreground rounded-full px-1.5">
-                                {data.options.length}
-                              </span>
-                            </div>
-                          )}
-                        />
+          {/* DetailPane-based day management */}
+          <DetailPane
+            openSections={openSections}
+            onToggleSection={handleToggleSection}
+            sections={Array.from({ length: migratedTrip.days }).map((_, dayIndex) => {
+              const day = dayIndex + 1;
+              const dayNutrition = calculateDayNutritionLocal(day);
+              const dayMeals = migratedTrip.dayMeals?.[day.toString()] || [];
+              const participantsCount = migratedTrip.participants?.length || 1;
+
+              return {
+                id: `day-${day}`,
+                title: (
+                  <div className="flex items-center justify-between w-full pr-4">
+                    <span>День {day}</span>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <div
+                        className="flex items-center gap-1"
+                        title="Общий вес (все участники) / На человека"
+                      >
+                        <Scale className="w-3 h-3" />
+                        <span>
+                          {dayNutrition.totalWeightForAllUsers}г / {dayNutrition.weightPerUser}г
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="space-y-6">
-          <section>
-            <h3 className="text-xl font-semibold">Сводка</h3>
-            <div className="p-4 mt-2 border rounded-lg bg-card">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <div className="text-xl font-bold text-blue-600">
-                    {summary.tripParticipants.length}
+                      <span className="text-gray-300">•</span>
+                      <div className="flex items-center gap-1" title="Калорийность на человека">
+                        <Flame className="w-3 h-3" />
+                        <span>{dayNutrition.calories} ккал</span>
+                      </div>
+                      <span className="text-gray-300">•</span>
+                      <div className="flex items-center gap-1" title="БЖУ на человека">
+                        <div className="flex items-center gap-0.5">
+                          <Zap className="w-3 h-3" />
+                          <span>Б:{dayNutrition.proteins}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          <Droplet className="w-3 h-3" />
+                          <span>Ж:{dayNutrition.fats}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          <Wheat className="w-3 h-3" />
+                          <span>У:{dayNutrition.carbs}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground uppercase">Участников</div>
-                </div>
-                <div>
-                  <div className="text-xl font-bold text-blue-600">
-                    {(summary.totalWeight / 1000).toFixed(2)}
+                ),
+                icon: Calendar,
+                actionButton: (
+                  <DropdownSelect
+                    label=""
+                    icon={Plus}
+                    options={[
+                      { value: '', label: 'Выберите прием пищи' },
+                      ...mealTypes
+                        .filter((mt) => {
+                          // Keep repeatable meals or meals not yet added to this day
+                          return mt.repeatable || !dayMeals.includes(mt.id);
+                        })
+                        .map((mt) => ({ value: mt.id.toString(), label: mt.name })),
+                    ]}
+                    value=""
+                    onChange={(value) => {
+                      if (value && value !== '' && migratedTrip) {
+                        addMealToDay(migratedTrip.id, day, parseInt(value, 10));
+                      }
+                    }}
+                    placeholder="Добавить прием пищи"
+                  />
+                ),
+                content: (
+                  <div className="space-y-3">
+                    {dayMeals.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Utensils className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p>Добавьте приемы пищи для этого дня</p>
+                      </div>
+                    ) : (
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={(event) => handleDragEnd(event, day)}
+                      >
+                        <SortableContext
+                          items={dayMeals.map((_, index) => `meal-${day}-${index}`)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {dayMeals.map((mealTypeId, index) => (
+                            <SortableMealSlot
+                              key={`meal-${day}-${index}`}
+                              id={`meal-${day}-${index}`}
+                              day={day}
+                              mealTypeId={mealTypeId}
+                              mealName={getMealNameById(mealTypeId)}
+                              trip={migratedTrip}
+                              products={products}
+                              dishes={dishes}
+                              groupedMealOptions={groupedMealOptions}
+                              expandedDishes={expandedDishes}
+                              onAddItem={handleMealItemAdd}
+                              onRemoveItem={handleMealItemRemove}
+                              onToggleDish={toggleDishExpansion}
+                              onCloneRequest={handleCloneRequest}
+                              onRemoveMeal={(day, mealTypeId) => {
+                                if (migratedTrip) {
+                                  removeMealFromDay(migratedTrip.id, day, mealTypeId);
+                                }
+                              }}
+                            />
+                          ))}
+                        </SortableContext>
+                      </DndContext>
+                    )}
                   </div>
-                  <div className="text-xs text-muted-foreground uppercase">Кг еды</div>
-                </div>
-                <div>
-                  <div className="text-xl font-bold text-blue-600">
-                    {summary.averageWeightPerPersonPerDay}
-                  </div>
-                  <div className="text-xs text-muted-foreground uppercase">г/чел/день</div>
-                </div>
-                <div>
-                  <div className="text-xl font-bold text-blue-600">
-                    {summary.averageCaloriesPerPersonPerDay}
-                  </div>
-                  <div className="text-xs text-muted-foreground uppercase">ккал/чел/день</div>
-                </div>
-              </div>
-            </div>
-          </section>
+                ),
+              };
+            })}
+          >
+            <div></div>
+          </DetailPane>
         </div>
       </div>
 
@@ -418,7 +786,7 @@ function TripPlanningPage() {
         title="Редактировать поход"
       >
         <TripForm
-          trip={trip}
+          trip={migratedTrip}
           onSubmit={handleDetailsUpdate}
           onCancel={() => setIsEditModalOpen(false)}
         />
@@ -455,7 +823,7 @@ function TripPlanningPage() {
           }}
         />
       </Modal>
-    </div>
+    </>
   );
 }
 

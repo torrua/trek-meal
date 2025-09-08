@@ -19,7 +19,26 @@ interface DishState {
 const useDishStore = create<DishState>()(
   persist(
     (set, get) => ({
-      dishes: [],
+      dishes: [
+        {
+          id: 1,
+          name: 'Завтрак туриста',
+          description: 'Сытный завтрак с овсянкой и шоколадом',
+          products: [
+            { productId: 1, weight: 50 }, // Овсянка
+            { productId: 3, weight: 25 }, // Шоколад
+          ],
+        },
+        {
+          id: 2,
+          name: 'Мясной обед',
+          description: 'Питательный обед с тушенкой',
+          products: [
+            { productId: 2, weight: 175 }, // Тушенка
+            { productId: 1, weight: 30 }, // Овсянка как гарнир
+          ],
+        },
+      ],
 
       addDish: (data) => {
         const trimmedName = data.name.trim();

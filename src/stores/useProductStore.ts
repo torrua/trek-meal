@@ -19,7 +19,57 @@ interface ProductState {
 const useProductStore = create<ProductState>()(
   persist(
     (set, get) => ({
-      products: [],
+      products: [
+        {
+          id: 1,
+          name: 'Овсяная каша быстрого приготовления',
+          description: 'Классическая овсянка с натуральными добавками',
+          calories: 342,
+          proteins: 12.3,
+          fats: 6.2,
+          carbs: 56.8,
+          isPerishable: false,
+          packaging: 'Пакет 500г',
+          categoryId: 1,
+          portions: [
+            { name: 'Порция', weight: 50 },
+            { name: 'Двойная порция', weight: 100 },
+          ],
+        },
+        {
+          id: 2,
+          name: 'Тушенка говяжья',
+          description: 'Консервированное мясо высшего сорта',
+          calories: 220,
+          proteins: 25.0,
+          fats: 13.0,
+          carbs: 0.0,
+          isPerishable: false,
+          packaging: 'Банка 350г',
+          categoryId: 2,
+          portions: [
+            { name: 'Половина банки', weight: 175 },
+            { name: 'Полная банка', weight: 350 },
+          ],
+        },
+        {
+          id: 3,
+          name: 'Шоколад темный',
+          description: 'Горький шоколад 70% какао',
+          calories: 546,
+          proteins: 6.2,
+          fats: 35.4,
+          carbs: 48.2,
+          isPerishable: false,
+          packaging: 'Плитка 100г',
+          categoryId: 3,
+          portions: [
+            { name: 'Долька', weight: 25 },
+            { name: 'Половина плитки', weight: 50 },
+            { name: 'Целая плитка', weight: 100 },
+          ],
+        },
+      ],
 
       addProduct: (productData) => {
         const newProduct: Product = {
@@ -40,9 +90,9 @@ const useProductStore = create<ProductState>()(
       },
 
       addMultipleProducts: (productsData) => {
-        const newProducts: Product[] = productsData.map((data) => ({
+        const newProducts: Product[] = productsData.map((data, index) => ({
           ...data,
-          id: Date.now() + Math.random(), // Добавляем Math.random для уникальности при быстром добавлении
+          id: Date.now() + index, // Use index instead of Math.random to ensure integer IDs
           calories: Number(data.calories) || 0,
           proteins: Number(data.proteins) || 0,
           fats: Number(data.fats) || 0,

@@ -32,7 +32,7 @@ const PortionListItem: React.FC<PortionListItemProps> = ({ portion, onEdit, onDe
         </div>
 
         {/* Right section: Weight + context menu */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <div className="flex items-center gap-x-1.5 text-sm">
             <div
               className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"

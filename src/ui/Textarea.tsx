@@ -28,11 +28,8 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     ref
   ) => {
     return (
-      <div className={cn('space-y-1.5', containerClassName)}>
-        <label
-          htmlFor={name}
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+      <div className={cn('w-full', containerClassName)}>
+        <label htmlFor={name} className="block text-sm font-medium text-muted-foreground mb-1.5">
           {label}
         </label>
         <textarea
@@ -45,17 +42,14 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           rows={rows}
           disabled={disabled}
           className={cn(
-            'w-full px-4 py-3 bg-white dark:bg-gray-700 border rounded-xl shadow-sm transition-all resize-none text-sm',
-            error
-              ? 'border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500'
-              : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-            disabled ? 'bg-gray-50 dark:bg-gray-800 text-gray-400 cursor-not-allowed' : '',
+            'flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+            error ? 'border-danger focus-visible:ring-danger' : '',
             className
           )}
           {...props}
         />
         {error && (
-          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+          <p className="text-sm text-danger flex items-center gap-1.5 mt-1.5">
             <AlertCircle className="w-4 h-4" />
             {error}
           </p>

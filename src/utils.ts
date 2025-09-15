@@ -1,6 +1,5 @@
 // src/utils.ts
 
-// --- ИЗМЕНЕНИЕ: 'differenceInYears' удален ---
 import { parseISO } from 'date-fns';
 import type { Trip, Product, Participant, Dish, MealPlanItem } from './types';
 

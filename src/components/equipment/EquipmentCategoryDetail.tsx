@@ -6,7 +6,9 @@ import useEquipmentStore from '../../stores/useEquipmentStore';
 import type { EquipmentCategory } from '../../types';
 import Button from '../../ui/Button';
 import DetailPane from '../../ui/DetailPane';
-import EquipmentListItem from './EquipmentListItem';
+import EntityListItem from '../../ui/EntityListItem';
+import { equipmentEntityConfig } from '../../config/entityConfig';
+import { useNavigate } from 'react-router-dom';
 
 interface EquipmentCategoryDetailProps {
   category: EquipmentCategory | null;
@@ -20,12 +22,18 @@ const EquipmentCategoryDetail: React.FC<EquipmentCategoryDetailProps> = ({
   onAddEquipment,
 }) => {
   const { equipment } = useEquipmentStore();
+  const navigate = useNavigate();
   const [openSections, setOpenSections] = useState<string[]>(['equipment']);
 
   const handleToggleSection = (sectionId: string) => {
     setOpenSections((prev) =>
       prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
     );
+  };
+
+  const formatWeight = (weight: number) => {
+    if (weight < 1000) return `${weight} г`;
+    return `${(weight / 1000).toFixed(1)} кг`;
   };
 
   if (!category) {
@@ -49,7 +57,7 @@ const EquipmentCategoryDetail: React.FC<EquipmentCategoryDetailProps> = ({
   const sections = [
     {
       id: 'equipment',
-      title: 'Снаряжение',
+      title: `Снаряжение (${categoryEquipment.length})`,
       icon: Backpack,
       actionButton: onAddEquipment && (
         <Button size="sm" variant="ghost" onClick={onAddEquipment} title="Добавить снаряжение">
@@ -59,16 +67,26 @@ const EquipmentCategoryDetail: React.FC<EquipmentCategoryDetailProps> = ({
       content: (
         <div className="space-y-2">
           {categoryEquipment.length > 0 ? (
-            categoryEquipment.map((equipmentItem) => (
-              <EquipmentListItem
-                key={equipmentItem.id}
-                equipment={equipmentItem}
-                borderColor={category.color}
-                onView={() => console.log('Navigate to equipment', equipmentItem.id)}
-                onEdit={() => console.log('Edit equipment', equipmentItem.id)}
-                onDelete={() => console.log('Delete equipment', equipmentItem.id)}
-              />
-            ))
+            categoryEquipment.map((equipmentItem) => {
+              const listItemConfig = equipmentEntityConfig.views.listItem;
+              const actions = listItemConfig.actions?.({
+                onView: () => navigate(`/equipment?selectedId=${equipmentItem.id}`),
+              });
+
+              return (
+                <EntityListItem
+                  key={equipmentItem.id}
+                  title={listItemConfig.title(equipmentItem)}
+                  icon={equipmentEntityConfig.getIcon(equipmentItem)}
+                  borderColor={equipmentEntityConfig.getBorderColor(equipmentItem, { category })}
+                  details={listItemConfig.details?.(equipmentItem, {
+                    formattedWeight: formatWeight(equipmentItem.weight),
+                  })}
+                  menuItems={actions}
+                  onClick={() => navigate(`/equipment?selectedId=${equipmentItem.id}`)}
+                />
+              );
+            })
           ) : (
             <p className="text-sm text-center py-4 text-muted-foreground">
               В этой категории пока нет снаряжения

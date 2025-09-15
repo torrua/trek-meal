@@ -1,157 +1,205 @@
-// src/utils/index.ts
+// src/utils.ts
 
-import { parseISO, isPast, isFuture } from 'date-fns';
-import type { Trip, Product, Participant, Dish, MealPlanItem, TripStatus } from '../types';
+import { format, parseISO, isAfter, isBefore, startOfDay, isValid } from 'date-fns';
+import { ru } from 'date-fns/locale';
+import type { Trip, Product, Participant, Dish, MealPlanItem } from './types';
 
-export const calculateAge = (birthDateString?: string): number | null => {
-  if (!birthDateString) return null;
+export const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return '...';
   try {
-    const birthDate = parseISO(birthDateString);
-    if (isNaN(birthDate.getTime())) return null;
+    const date = parseISO(dateString);
+    return isValid(date) ? format(date, 'd MMM yyyy', { locale: ru }) : 'Некорректная дата';
+  } catch (error) {
+    return 'Ошибка формата';
+  }
+};
+
+export const getEffectiveStatus = (
+  trip: Pick<Trip, 'status' | 'startDate' | 'endDate'>
+): 'planning' | 'active' | 'completed' => {
+  if (trip.status !== 'planning') {
+    return trip.status;
+  }
+  const today = startOfDay(new Date());
+  const start = parseISO(trip.startDate);
+  const end = parseISO(trip.endDate);
+  if (isBefore(today, start)) {
+    return 'planning';
+  }
+  if (isAfter(today, end)) {
+    return 'completed';
+  }
+  return 'active';
+};
+
+export const calculateAge = (birthDate: string | null | undefined): number | null => {
+  if (!birthDate) return null;
+  try {
+    const birth = new Date(birthDate);
+    if (!isValid(birth)) return null;
     const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDifference = today.getMonth() - birth.getMonth();
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birth.getDate())) {
       age--;
     }
-    return age;
-  } catch (error) {
-    console.error('Invalid date format for age calculation:', birthDateString);
+    return age > 0 ? age : null;
+  } catch {
     return null;
   }
 };
 
-/**
- * Определяет текущий статус похода (планируется, активен, завершен) на основе дат.
- * @param trip - Объект похода.
- * @returns 'planning', 'active', or 'completed'.
- */
-export const getEffectiveStatus = (trip: Trip): TripStatus => {
-  if (!trip.startDate || !trip.endDate) {
-    return 'planning';
-  }
-  try {
-    const start = parseISO(trip.startDate);
-    const end = parseISO(trip.endDate);
-    if (isPast(end)) return 'completed';
-    if (isFuture(start)) return 'planning';
-    return 'active';
-  } catch (e) {
-    return 'planning';
-  }
-};
+const getMealItems = (
+  trip: Trip | null,
+  day: number,
+  mealTypeId: number | null,
+  products: Product[],
+  dishes: Dish[]
+): {
+  items: { product: Product; weight: number }[];
+  productCount: number;
+} => {
+  if (!trip) return { items: [], productCount: 0 };
 
-export const getMealName = (mealNumber: number, totalMeals: number): string => {
-  const names: { [key: number]: string[] } = {
-    3: ['Завтрак', 'Обед', 'Ужин'],
-    4: ['Завтрак', 'Перекус', 'Обед', 'Ужин'],
-    5: ['Завтрак', 'Перекус', 'Обед', 'Полдник', 'Ужин'],
+  const mealId = mealTypeId !== null ? `${day}-${mealTypeId}` : null;
+  const selectedMeals = trip.selectedMeals || {};
+  let productCount = 0;
+
+  const getProductsForMeal = (mealKey: string): { product: Product; weight: number }[] => {
+    const items = selectedMeals[mealKey] || [];
+    productCount += items.length;
+
+    return items.flatMap((item: MealPlanItem) => {
+      if (item.type === 'product') {
+        const product = products.find((p) => p.id === item.itemId);
+        return product ? [{ product, weight: item.weight || 0 }] : [];
+      } else if (item.type === 'dish') {
+        const dish = dishes.find((d) => d.id === item.itemId);
+        if (!dish) return [];
+        return dish.products.flatMap((dishProduct) => {
+          const product = products.find((p) => p.id === dishProduct.productId);
+          return product ? [{ product, weight: dishProduct.weight }] : [];
+        });
+      }
+      return [];
+    });
   };
-  return names[totalMeals]?.[mealNumber - 1] || `Прием пищи ${mealNumber}`;
-};
 
-export const formatDate = (dateString: string): string => {
-  if (!dateString) return 'Не указано';
-  try {
-    const options: Intl.DateTimeFormatOptions = {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    };
-    return new Date(dateString).toLocaleDateString('ru-RU', options);
-  } catch (error) {
-    return 'Неверная дата';
+  if (mealId !== null) {
+    return { items: getProductsForMeal(mealId), productCount };
+  } else {
+    // Если mealTypeId не указан, собираем продукты за весь день
+    const dayMeals = trip.dayMeals?.[day.toString()] || [];
+    const allDayProducts = dayMeals.flatMap((mtId) => {
+      const dayMealId = `${day}-${mtId}`;
+      return getProductsForMeal(dayMealId);
+    });
+    return { items: allDayProducts, productCount };
   }
 };
 
-export const pluralize = (number: number, words: [string, string, string]): string => {
-  const cases = [2, 0, 1, 1, 1, 2];
-  const num = Math.abs(number);
-  return words[num % 100 > 4 && num % 100 < 20 ? 2 : cases[Math.min(num % 10, 5)]];
+const calculateNutritionForItems = (
+  items: { product: Product; weight: number }[]
+): {
+  weight: number;
+  calories: number;
+  proteins: number;
+  fats: number;
+  carbs: number;
+} => {
+  return items.reduce(
+    (acc, { product, weight }) => {
+      const ratio = weight / 100;
+      acc.weight += weight;
+      acc.calories += (product.calories || 0) * ratio;
+      acc.proteins += (product.proteins || 0) * ratio;
+      acc.fats += (product.fats || 0) * ratio;
+      acc.carbs += (product.carbs || 0) * ratio;
+      return acc;
+    },
+    { weight: 0, calories: 0, proteins: 0, fats: 0, carbs: 0 }
+  );
 };
 
-interface TripSummary {
-  totalWeight: number;
-  totalNutrition: { calories: number; proteins: number; fats: number; carbs: number };
-  tripParticipants: Participant[];
-  perishableProducts: string[];
-  averageWeightPerPersonPerDay: number;
-  averageCaloriesPerPersonPerDay: number;
-}
+export const calculateMealNutrition = (
+  trip: Trip | null,
+  day: number,
+  mealTypeId: number,
+  products: Product[],
+  dishes: Dish[]
+) => {
+  const { items, productCount } = getMealItems(trip, day, mealTypeId, products, dishes);
+  const nutrition = calculateNutritionForItems(items);
+  return {
+    weight: Math.round(nutrition.weight),
+    calories: Math.round(nutrition.calories),
+    proteins: Math.round(nutrition.proteins),
+    fats: Math.round(nutrition.fats),
+    carbs: Math.round(nutrition.carbs),
+    productCount,
+  };
+};
+
+export const calculateDayNutrition = (
+  trip: Trip | null,
+  day: number,
+  products: Product[],
+  dishes: Dish[]
+) => {
+  const { items } = getMealItems(trip, day, null, products, dishes);
+  const nutrition = calculateNutritionForItems(items);
+  const participantsCount = trip?.participants?.length || 1;
+  const totalWeightForAllUsers = Math.round(nutrition.weight);
+  const weightPerUser =
+    participantsCount > 0 ? Math.round(nutrition.weight / participantsCount) : 0;
+
+  return {
+    totalWeightForAllUsers,
+    weightPerUser,
+    calories: participantsCount > 0 ? Math.round(nutrition.calories / participantsCount) : 0,
+    proteins: participantsCount > 0 ? Math.round(nutrition.proteins / participantsCount) : 0,
+    fats: participantsCount > 0 ? Math.round(nutrition.fats / participantsCount) : 0,
+    carbs: participantsCount > 0 ? Math.round(nutrition.carbs / participantsCount) : 0,
+  };
+};
 
 export const calculateTripSummary = (
-  trip: Trip | undefined,
-  allProducts: Product[],
-  allParticipants: Participant[] = [],
-  allDishes: Dish[] = []
-): TripSummary => {
-  const defaultSummary: TripSummary = {
-    totalWeight: 0,
-    totalNutrition: { calories: 0, proteins: 0, fats: 0, carbs: 0 },
-    tripParticipants: [],
-    perishableProducts: [],
-    averageWeightPerPersonPerDay: 0,
-    averageCaloriesPerPersonPerDay: 0,
-  };
-  if (!trip || !allProducts || trip.days < 1) {
-    return defaultSummary;
+  trip: Trip | null,
+  products: Product[],
+  participants: Participant[],
+  dishes: Dish[]
+) => {
+  if (!trip)
+    return {
+      totalWeight: 0,
+      totalCalories: 0,
+      averageWeightPerPersonPerDay: 0,
+      averageCaloriesPerPersonPerDay: 0,
+    };
+
+  const totalNutrition = { weight: 0, calories: 0, proteins: 0, fats: 0, carbs: 0 };
+  for (let day = 1; day <= trip.days; day++) {
+    const { items } = getMealItems(trip, day, null, products, dishes);
+    const dayNutrition = calculateNutritionForItems(items);
+    totalNutrition.weight += dayNutrition.weight;
+    totalNutrition.calories += dayNutrition.calories;
   }
 
   const participantsCount = trip.participants?.length || 1;
-  const daysCount = trip.days;
-
-  let totalWeightForOnePerson = 0;
-  const totalNutritionForOnePerson = { calories: 0, proteins: 0, fats: 0, carbs: 0 };
-  const perishable = new Set<string>();
-
-  const processProduct = (productId: number, weight: number) => {
-    const product = allProducts.find((p) => p.id === productId);
-    if (product) {
-      const weightRatio = weight / 100;
-      totalWeightForOnePerson += weight;
-      totalNutritionForOnePerson.calories += (product.calories || 0) * weightRatio;
-      totalNutritionForOnePerson.proteins += (product.proteins || 0) * weightRatio;
-      totalNutritionForOnePerson.fats += (product.fats || 0) * weightRatio;
-      totalNutritionForOnePerson.carbs += (product.carbs || 0) * weightRatio;
-      if (product.isPerishable) {
-        perishable.add(product.name);
-      }
-    }
-  };
-
-  Object.values(trip.selectedMeals).forEach((mealItems) => {
-    (mealItems as MealPlanItem[]).forEach((item) => {
-      if (item.type === 'product') {
-        processProduct(item.itemId, item.weight);
-      } else if (item.type === 'dish') {
-        const dish = allDishes.find((d) => d.id === item.itemId);
-        dish?.products.forEach((dishProduct) => {
-          processProduct(dishProduct.productId, dishProduct.weight);
-        });
-      }
-    });
-  });
-
-  const totalWeight = totalWeightForOnePerson * participantsCount;
-  const totalNutrition = {
-    calories: Math.round(totalNutritionForOnePerson.calories * participantsCount),
-    proteins: Math.round(totalNutritionForOnePerson.proteins * participantsCount),
-    fats: Math.round(totalNutritionForOnePerson.fats * participantsCount),
-    carbs: Math.round(totalNutritionForOnePerson.carbs * participantsCount),
-  };
+  const totalDays = trip.days || 1;
 
   const averageWeightPerPersonPerDay =
-    daysCount > 0 ? Math.round(totalWeightForOnePerson / daysCount) : 0;
+    participantsCount > 0 && totalDays > 0
+      ? Math.round(totalNutrition.weight / participantsCount / totalDays)
+      : 0;
   const averageCaloriesPerPersonPerDay =
-    daysCount > 0 ? Math.round(totalNutritionForOnePerson.calories / daysCount) : 0;
-
-  const tripParticipants = allParticipants.filter((p) => trip.participants?.includes(p.id));
+    participantsCount > 0 && totalDays > 0
+      ? Math.round(totalNutrition.calories / participantsCount / totalDays)
+      : 0;
 
   return {
-    totalWeight,
-    totalNutrition,
-    tripParticipants,
-    perishableProducts: Array.from(perishable),
+    totalWeight: totalNutrition.weight,
+    totalCalories: totalNutrition.calories,
     averageWeightPerPersonPerDay,
     averageCaloriesPerPersonPerDay,
   };

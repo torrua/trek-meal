@@ -2,24 +2,13 @@
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import {
-  CirclePlus,
-  Filter,
-  UploadCloud,
-  Component,
-  Edit,
-  Trash2,
-  Flame,
-  Zap,
-  Droplet,
-  Wheat,
-} from 'lucide-react';
+import { CirclePlus, Filter, UploadCloud, Component } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import useProductStore from '../stores/useProductStore';
 import useCategoryStore from '../stores/useCategoryStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Product, ProductData, ImportedJsonData, Category } from '../types';
-import EntityCard, { MenuItem } from '../ui/EntityCard';
+import EntityCard from '../ui/EntityCard';
 import ProductDetail from '../components/products/ProductDetail';
 import ProductForm from '../components/products/ProductForm';
 import Modal from '../ui/Modal';
@@ -29,6 +18,7 @@ import ImportProductsModal from '../components/products/ImportProductsModal';
 import ProductFiltersComponent, {
   ProductFilters,
 } from '../components/products/ProductFiltersComponent';
+import { productEntityConfig } from '../config/entityConfig';
 
 const ProductsPage: React.FC = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
@@ -190,71 +180,24 @@ const ProductsPage: React.FC = () => {
           ) : (
             filteredProducts.map((product) => {
               const category = categories.find((c: Category) => c.id === product.categoryId);
-
-              const details = [
-                {
-                  icon: Flame,
-                  text: `${product.calories} ккал`,
-                  title: 'Калорийность на 100г',
-                },
-                // Добавляем информацию о белках
-                ...(product.proteins > 0
-                  ? [
-                      {
-                        icon: Zap,
-                        text: `${product.proteins} г`,
-                        title: 'Белки на 100г',
-                      },
-                    ]
-                  : []),
-                // Добавляем информацию о жирах
-                ...(product.fats > 0
-                  ? [
-                      {
-                        icon: Droplet,
-                        text: `${product.fats} г`,
-                        title: 'Жиры на 100г',
-                      },
-                    ]
-                  : []),
-                // Добавляем информацию об углеводах
-                ...(product.carbs > 0
-                  ? [
-                      {
-                        icon: Wheat,
-                        text: `${product.carbs} г`,
-                        title: 'Углеводы на 100г',
-                      },
-                    ]
-                  : []),
-              ];
-
-              const menuItems: MenuItem[] = [
-                {
-                  label: 'Редактировать',
-                  icon: Edit,
-                  onClick: () => handleEdit(product),
-                },
-                {
-                  label: 'Удалить',
-                  icon: Trash2,
-                  onClick: () => handleRequestDelete(product),
-                  className:
-                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
-                },
-              ];
+              const cardConfig = productEntityConfig.views.card;
+              const actions = productEntityConfig.getActions({
+                onEdit: () => handleEdit(product),
+                onDelete: () => handleRequestDelete(product),
+              });
 
               return (
                 <EntityCard
                   key={product.id}
-                  title={product.name}
-                  icon={Component}
-                  iconColor={category?.color ? 'text-current' : 'text-gray-500'}
-                  details={details}
-                  menuItems={menuItems}
+                  title={cardConfig.title(product)}
+                  subtitle={cardConfig.subtitle?.(product, { category })}
+                  icon={productEntityConfig.getIcon(product)}
+                  iconColor={productEntityConfig.getIconColor?.(product, { category })}
+                  details={cardConfig.details(product)}
+                  menuItems={actions}
                   isSelected={activeId === product.id}
                   onSelect={() => setActiveId(product.id)}
-                  borderColor={category?.color}
+                  borderColor={productEntityConfig.getBorderColor(product, { category })}
                 />
               );
             })

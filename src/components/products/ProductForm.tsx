@@ -1,4 +1,4 @@
-// src/components/database/products/ProductForm.tsx
+// src/components/products/ProductForm.tsx
 
 import React, { useState, useEffect } from 'react';
 import { Tag, Trash2 } from 'lucide-react';

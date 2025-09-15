@@ -31,19 +31,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     return (
-      <div className={cn('space-y-1.5', containerClassName)}>
+      <div className={cn('w-full', containerClassName)}>
         {label && (
-          <label
-            htmlFor={name}
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
+          <label htmlFor={name} className="block text-sm font-medium text-muted-foreground mb-1.5">
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-danger ml-1">*</span>}
           </label>
         )}
         <div className="relative">
           {Icon && (
-            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           )}
           <input
             id={name}
@@ -55,19 +52,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             placeholder={placeholder}
             disabled={disabled}
             className={cn(
-              'w-full px-4 py-3 bg-white dark:bg-gray-700 border rounded-xl shadow-sm transition-all text-sm',
-              Icon ? 'pl-11' : 'px-4',
-              error
-                ? 'border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500'
-                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-              disabled ? 'bg-gray-50 dark:bg-gray-800 text-gray-400 cursor-not-allowed' : '',
+              'flex h-10 w-full rounded-md border border-input bg-background py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+              Icon ? 'pl-10 pr-4' : 'px-4',
+              error ? 'border-danger focus-visible:ring-danger' : '',
               className
             )}
             {...props}
           />
         </div>
         {error && (
-          <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+          <p className="text-sm text-danger flex items-center gap-1.5 mt-1.5">
             <AlertCircle className="w-4 h-4" />
             {error}
           </p>

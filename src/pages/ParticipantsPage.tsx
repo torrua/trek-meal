@@ -2,19 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import {
-  Users,
-  UserRoundPlus,
-  Filter,
-  MapPin,
-  Backpack,
-  Edit,
-  Copy,
-  Trash2,
-  Share,
-  MapPinPlus,
-  CirclePlus,
-} from 'lucide-react';
+import { Users, UserRoundPlus, Filter, CirclePlus } from 'lucide-react';
 import useParticipantStore from '../stores/useParticipantStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useSearchStore from '../stores/useSearchStore';
@@ -28,11 +16,10 @@ import ParticipantForm from '../components/participants/ParticipantForm';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
-import EntityCard, { MenuItem } from '../ui/EntityCard';
+import EntityCard from '../ui/EntityCard';
 import { exportParticipantToJson } from '../utils/backup';
-import { calculateAge } from '../utils';
-import { EXPERIENCE_CONFIG, GENDER_CONFIG } from '../constants/participants';
 import SelectTripModal from '../components/participants/SelectTripModal';
+import { participantEntityConfig } from '../config/entityConfig';
 
 const ParticipantsPage: React.FC = () => {
   const store = useParticipantStore();
@@ -123,7 +110,7 @@ const ParticipantsPage: React.FC = () => {
     [editingParticipant, store]
   );
 
-  const handleClone = useCallback((id: number) => store.cloneParticipant(id), [store]);
+  const handleClone = useCallback((p: Participant) => store.cloneParticipant(p.id), [store]);
   const handleRequestDelete = useCallback((p: Participant) => setParticipantToDelete(p), []);
   const handleConfirmDelete = useCallback(() => {
     if (participantToDelete) {
@@ -133,8 +120,8 @@ const ParticipantsPage: React.FC = () => {
     }
   }, [participantToDelete, activeId, store]);
 
-  const handleAddToTrip = useCallback((participantId?: number) => {
-    if (participantId) setActiveId(participantId);
+  const handleAddToTrip = useCallback((p: Participant) => {
+    setActiveId(p.id);
     setSelectTripModalOpen(true);
   }, []);
 
@@ -191,52 +178,30 @@ const ParticipantsPage: React.FC = () => {
         {/* Список участников */}
         <div className="lg:col-span-1 space-y-3">
           {filteredParticipants.map((p) => {
-            const experienceInfo = EXPERIENCE_CONFIG[p.experienceLevel];
-            const genderInfo = GENDER_CONFIG[p.gender];
-            const age = calculateAge(p.birthDate);
             const tripCount = trips.filter((trip) => trip.participants.includes(p.id)).length;
             const equipmentCount = equipment.filter((eq) => eq.ownerId === p.id).length;
 
-            const subtitle = age ? `${age} лет` : p.age === 'child' ? 'Ребенок' : 'Взрослый';
-
-            // Use gender color for border (male/female)
-            const genderBorderColor = genderInfo.color;
-
-            const details = [
-              { icon: MapPin, text: tripCount, title: 'Походы' },
-              { icon: Backpack, text: equipmentCount, title: 'Снаряжение' },
-            ];
-
-            const menuItems: MenuItem[] = [
-              { label: 'Редактировать', icon: Edit, onClick: () => handleEdit(p) },
-              {
-                label: 'Добавить в поход',
-                icon: MapPinPlus,
-                onClick: () => handleAddToTrip(p.id),
-              },
-              { label: 'Клонировать', icon: Copy, onClick: () => handleClone(p.id) },
-              { label: 'Экспорт', icon: Share, onClick: () => exportParticipantToJson(p) },
-              {
-                label: 'Удалить',
-                icon: Trash2,
-                onClick: () => handleRequestDelete(p),
-                className:
-                  'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
-              },
-            ];
+            const cardConfig = participantEntityConfig.views.card;
+            const actions = participantEntityConfig.getActions({
+              onEdit: () => handleEdit(p),
+              onAddToTrip: () => handleAddToTrip(p),
+              onClone: () => handleClone(p),
+              onExport: () => exportParticipantToJson(p),
+              onDelete: () => handleRequestDelete(p),
+            });
 
             return (
               <EntityCard
                 key={p.id}
-                title={p.name}
-                subtitle={subtitle}
-                icon={experienceInfo.icon}
-                iconColor={experienceInfo.colorClassName}
-                details={details}
+                title={cardConfig.title(p)}
+                subtitle={cardConfig.subtitle && cardConfig.subtitle(p)}
+                icon={participantEntityConfig.getIcon(p)}
+                iconColor={participantEntityConfig.getIconColor?.(p)}
+                details={cardConfig.details(p, { tripCount, equipmentCount })}
                 isSelected={activeId === p.id}
                 onSelect={() => setActiveId(p.id)}
-                borderColor={genderBorderColor}
-                menuItems={menuItems}
+                borderColor={participantEntityConfig.getBorderColor(p)}
+                menuItems={actions}
               />
             );
           })}
@@ -260,7 +225,7 @@ const ParticipantsPage: React.FC = () => {
           {selectedParticipant ? (
             <ParticipantDetail
               participant={selectedParticipant}
-              onAddToTrip={() => handleAddToTrip()}
+              onAddToTrip={() => selectedParticipant && handleAddToTrip(selectedParticipant)}
               onEdit={() => selectedParticipant && handleEdit(selectedParticipant)}
               openSections={openSections}
               onToggleSection={handleToggleSection}

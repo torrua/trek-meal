@@ -30,55 +30,54 @@ const DetailPane: React.FC<DetailPaneProps> = ({
 }) => {
   return (
     <div
-      className={cn(
-        'h-full flex flex-col bg-card rounded-2xl border border-border overflow-hidden',
-        className
-      )}
+      className={cn('h-full flex flex-col bg-card rounded-lg border overflow-hidden', className)}
     >
-      <div className="flex-shrink-0 p-6 border-b border-border">{children}</div>
+      <div className="flex-shrink-0 p-6 border-b">{children}</div>
       <div className="flex-1 min-h-0 overflow-hidden">
         <div className="h-full overflow-y-auto custom-scrollbar">
           {sections.map(({ id, title, icon: Icon, content, actionButton }) => {
             const isOpen = openSections.includes(id);
             return (
-              <div key={id} className="border-b border-border last:border-b-0">
+              <div key={id} className="border-b last:border-b-0">
                 <div
                   className={cn(
-                    'w-full flex justify-between items-center px-4 py-3 transition-colors cursor-pointer',
-                    'bg-muted/50 hover:bg-muted/70'
+                    'w-full flex justify-between items-center px-6 py-3 transition-colors cursor-pointer hover:bg-muted/50'
                   )}
                   onClick={() => onToggleSection?.(id)}
                 >
-                  {/* Left side: Icon + Title */}
                   <div className="flex items-center gap-3 min-h-[24px] flex-1 min-w-0">
-                    <Icon className="w-5 h-5 text-primary flex-shrink-0" />
+                    <Icon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                     <div className="font-semibold text-foreground truncate">{title}</div>
                   </div>
 
-                  {/* Right side: Action button + Open/Close button */}
                   <div className="flex items-center gap-2 flex-shrink-0 min-h-[24px]">
                     {actionButton && <div onClick={(e) => e.stopPropagation()}>{actionButton}</div>}
 
                     {onToggleSection && (
-                      <div className="p-1" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        className="p-1 text-muted-foreground hover:text-foreground"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleSection(id);
+                        }}
+                      >
                         <ChevronDown
-                          className={cn(
-                            'w-5 h-5 text-muted-foreground transition-transform duration-200',
-                            { 'rotate-180': isOpen }
-                          )}
+                          className={cn('w-5 h-5 transition-transform duration-200', {
+                            'rotate-180': isOpen,
+                          })}
                         />
-                      </div>
+                      </button>
                     )}
                   </div>
                 </div>
                 <div
                   className={cn(
-                    'grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-in-out',
+                    'grid overflow-hidden transition-all duration-300 ease-in-out',
                     isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
                   )}
                 >
                   <div className="min-h-0">
-                    <div className="p-4">{content}</div>
+                    <div className="px-6 pb-6 pt-2">{content}</div>
                   </div>
                 </div>
               </div>

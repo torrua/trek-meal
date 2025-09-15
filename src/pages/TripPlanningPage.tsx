@@ -1,3 +1,5 @@
+// src/pages/TripPlanningPage.tsx
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SingleValue } from 'react-select';
@@ -22,7 +24,6 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
-import useParticipantStore from '../stores/useParticipantStore';
 import useDishStore from '../stores/useDishStore';
 import useCategoryStore from '../stores/useCategoryStore';
 import useMealTypesStore from '../stores/useMealTypesStore';
@@ -46,6 +47,7 @@ import {
   Scale,
 } from 'lucide-react';
 import type {
+  Trip,
   TripData,
   Product,
   Dish,
@@ -94,13 +96,19 @@ const DishContents = ({ dish }: { dish: Dish }) => {
   );
 };
 
-// Sortable MealSlot component with drag-and-drop
+// Типизация для dragHandleProps
+type DragHandleProps = Record<string, unknown> & {
+  'aria-describedby': string;
+  role: string;
+  tabIndex: number;
+};
+
 const SortableMealSlot: React.FC<{
   id: string;
   day: number;
   mealTypeId: number;
   mealName: string;
-  trip: any;
+  trip: Trip;
   products: Product[];
   dishes: Dish[];
   groupedMealOptions: GroupedMealOption[];
@@ -128,12 +136,11 @@ const SortableMealSlot: React.FC<{
   );
 };
 
-// MealSlot component for individual meal management
 const MealSlot: React.FC<{
   day: number;
   mealTypeId: number;
   mealName: string;
-  trip: any;
+  trip: Trip;
   products: Product[];
   dishes: Dish[];
   groupedMealOptions: GroupedMealOption[];
@@ -143,7 +150,7 @@ const MealSlot: React.FC<{
   onToggleDish: (instanceId: string) => void;
   onCloneRequest: (instanceId: string, dish: Dish, day: number, mealTypeId: number) => void;
   onRemoveMeal: (day: number, mealTypeId: number) => void;
-  dragHandleProps?: any;
+  dragHandleProps?: DragHandleProps;
 }> = ({
   day,
   mealTypeId,
@@ -162,11 +169,7 @@ const MealSlot: React.FC<{
 }) => {
   const mealId = `${day}-${mealTypeId}`;
   const selectedItems = (trip.selectedMeals?.[mealId] || []) as MealPlanItem[];
-
-  // Force re-render when dishes change to show newly added dishes immediately
   const currentDishes = dishes;
-
-  // Calculate meal nutrition
   const mealNutrition = calculateMealNutrition(trip, day, mealTypeId, products, dishes);
 
   return (
@@ -186,7 +189,6 @@ const MealSlot: React.FC<{
               <h5 className="font-semibold text-gray-900 dark:text-white">{mealName}</h5>
             </div>
           </div>
-          {/* Meal nutrition summary */}
           {mealNutrition.productCount > 0 && (
             <div className="flex items-center gap-3 text-xs text-muted-foreground ml-6">
               <div className="flex items-center gap-1" title="Общий вес">
@@ -368,14 +370,11 @@ function TripPlanningPage() {
 
   const { updateTrip, addMealToDay, removeMealFromDay, reorderMealsInDay } = useTripStore();
   const { products } = useProductStore();
-  const { participants } = useParticipantStore();
   const { dishes, addDish } = useDishStore();
   const { mealTypes } = useMealTypesStore();
 
-  // Handle migration with useMemo to avoid infinite loops
   const migratedTrip = useMemo(() => {
     if (trip && !trip.dayMeals) {
-      // Migrate trip if needed
       const dayMeals: { [dayNumber: string]: number[] } = {};
       for (let day = 1; day <= trip.days; day++) {
         const mealCount = trip.mealsPerDay || 3;
@@ -389,31 +388,26 @@ function TripPlanningPage() {
           dayMeals[day.toString()] = [1, 2, 3];
         }
       }
-      const migratedTrip = { ...trip, dayMeals };
-      // Persist the migration
+      const newTrip = { ...trip, dayMeals };
       updateTrip(trip.id, { dayMeals });
-      return migratedTrip;
+      return newTrip;
     }
     return trip;
   }, [trip, updateTrip]);
 
-  // Helper function to get meal name by ID
   const getMealNameById = (mealTypeId: number): string => {
     const mealType = mealTypes.find((mt) => mt.id === mealTypeId);
     return mealType?.name || `Прием пищи ${mealTypeId}`;
   };
 
-  // Helper function to generate meal ID for selectedMeals
   const generateMealId = (day: number, mealTypeId: number): string => {
     return `${day}-${mealTypeId}`;
   };
 
-  // Helper function to calculate day summary
   const calculateDayNutritionLocal = (day: number) => {
     return calculateDayNutrition(migratedTrip, day, products, dishes);
   };
 
-  // Drag and drop sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -421,7 +415,6 @@ function TripPlanningPage() {
     })
   );
 
-  // Handle drag end for meal reordering
   const handleDragEnd = (event: DragEndEvent, day: number) => {
     const { active, over } = event;
 
@@ -437,7 +430,6 @@ function TripPlanningPage() {
     }
   };
 
-  // Helper function to handle section toggle
   const handleToggleSection = (sectionId: string) => {
     setOpenSections((prev) =>
       prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
@@ -466,81 +458,38 @@ function TripPlanningPage() {
     mealTypeId: number,
     selectedOption: SingleValue<SelectMealOption>
   ) => {
-    if (!migratedTrip) {
-      console.error('No trip found');
+    if (!migratedTrip || !selectedOption || typeof selectedOption.value !== 'string') {
       return;
     }
-
-    if (!selectedOption) {
-      console.error('No option selected');
-      return;
-    }
-
-    if (!selectedOption.value || typeof selectedOption.value !== 'string') {
-      console.error('Invalid option value:', selectedOption);
-      return;
-    }
-
     const [type, idStr] = selectedOption.value.split('-');
-    if (!type || !idStr) {
-      console.error('Invalid option format:', selectedOption.value);
-      return;
-    }
+    if (!type || !idStr) return;
 
     const itemId = parseInt(idStr, 10);
-    if (isNaN(itemId)) {
-      console.error('Invalid item ID:', idStr);
-      return;
-    }
+    if (isNaN(itemId)) return;
 
     const mealId = generateMealId(day, mealTypeId);
-
     let newItem: MealPlanItem;
 
     if (type === 'dish') {
       const dish = dishes.find((d) => d.id === itemId);
-      if (!dish) {
-        console.error('Dish not found:', itemId);
-        return;
-      }
+      if (!dish) return;
       newItem = { instanceId: `${Date.now()}`, type: 'dish', itemId };
     } else if (type === 'product') {
       const product = products.find((p) => p.id === itemId);
-      if (!product) {
-        console.error('Product not found:', itemId);
-        return;
-      }
-
-      // Ensure we have a valid weight
-      let weight = 100; // Default weight
+      if (!product) return;
+      let weight = 100;
       if (product.portions && product.portions.length > 0) {
         weight = product.portions[0].weight || 100;
       }
-
-      if (weight <= 0) {
-        weight = 100;
-      }
-
-      newItem = {
-        instanceId: `${Date.now()}`,
-        type: 'product',
-        itemId,
-        weight: weight,
-      };
+      newItem = { instanceId: `${Date.now()}`, type: 'product', itemId, weight };
     } else {
-      console.error('Unknown item type:', type);
       return;
     }
 
-    try {
-      const newSelectedMeals = JSON.parse(JSON.stringify(migratedTrip.selectedMeals || {}));
-      if (!newSelectedMeals[mealId]) newSelectedMeals[mealId] = [];
-      newSelectedMeals[mealId].push(newItem);
-
-      updateTrip(migratedTrip.id, { selectedMeals: newSelectedMeals });
-    } catch (error) {
-      console.error('Error updating trip:', error);
-    }
+    const newSelectedMeals = JSON.parse(JSON.stringify(migratedTrip.selectedMeals || {}));
+    if (!newSelectedMeals[mealId]) newSelectedMeals[mealId] = [];
+    newSelectedMeals[mealId].push(newItem);
+    updateTrip(migratedTrip.id, { selectedMeals: newSelectedMeals });
   };
 
   const handleMealItemRemove = (day: number, mealTypeId: number, instanceId: string) => {
@@ -560,9 +509,7 @@ function TripPlanningPage() {
   };
 
   const handleCloneConfirm = () => {
-    if (cloningState) {
-      setIsDishFormOpen(true);
-    }
+    if (cloningState) setIsDishFormOpen(true);
   };
 
   const handleCloneSubmit = (newDishData: DishData, action: SubmitDishAction) => {
@@ -606,7 +553,6 @@ function TripPlanningPage() {
     setExpandedDishes((prev) => ({ ...prev, [instanceId]: !prev[instanceId] }));
   };
 
-  // Initialize first day as open
   useEffect(() => {
     setOpenSections(['day-1']);
   }, []);
@@ -653,8 +599,6 @@ function TripPlanningPage() {
 
         <div className="max-w-5xl mx-auto">
           <h3 className="text-xl font-semibold mb-4">План питания</h3>
-
-          {/* DetailPane-based day management */}
           <DetailPane
             openSections={openSections}
             onToggleSection={handleToggleSection}
@@ -662,7 +606,6 @@ function TripPlanningPage() {
               const day = dayIndex + 1;
               const dayNutrition = calculateDayNutritionLocal(day);
               const dayMeals = migratedTrip.dayMeals?.[day.toString()] || [];
-              const participantsCount = migratedTrip.participants?.length || 1;
 
               return {
                 id: `day-${day}`,
@@ -710,10 +653,7 @@ function TripPlanningPage() {
                     options={[
                       { value: '', label: 'Выберите прием пищи' },
                       ...mealTypes
-                        .filter((mt) => {
-                          // Keep repeatable meals or meals not yet added to this day
-                          return mt.repeatable || !dayMeals.includes(mt.id);
-                        })
+                        .filter((mt) => mt.repeatable || !dayMeals.includes(mt.id))
                         .map((mt) => ({ value: mt.id.toString(), label: mt.name })),
                     ]}
                     value=""
@@ -758,10 +698,8 @@ function TripPlanningPage() {
                               onRemoveItem={handleMealItemRemove}
                               onToggleDish={toggleDishExpansion}
                               onCloneRequest={handleCloneRequest}
-                              onRemoveMeal={(day, mealTypeId) => {
-                                if (migratedTrip) {
-                                  removeMealFromDay(migratedTrip.id, day, mealTypeId);
-                                }
+                              onRemoveMeal={(d, mId) => {
+                                if (migratedTrip) removeMealFromDay(migratedTrip.id, d, mId);
                               }}
                             />
                           ))}

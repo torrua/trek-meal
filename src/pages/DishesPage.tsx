@@ -1,24 +1,25 @@
 // src/pages/DishesPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { CirclePlus, Soup, Edit, Trash2 } from 'lucide-react';
+import { CirclePlus, Soup } from 'lucide-react';
 import useDishStore from '../stores/useDishStore';
 import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Dish, DishData, SubmitDishAction } from '../types';
-import EntityCard, { MenuItem } from '../ui/EntityCard';
+import EntityCard from '../ui/EntityCard';
 import DishDetail from '../components/dishes/DishDetail';
 import DishForm from '../components/dishes/DishForm';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import { toast } from 'react-hot-toast';
+import { dishEntityConfig } from '../config/entityConfig';
 
 const DishesPage: React.FC = () => {
   const { dishes, addDish, updateDish, deleteDish } = useDishStore();
   const { isDishInUse } = useTripStore();
-  const { products } = useProductStore();
+  const { products: allProducts } = useProductStore();
   const { searchTerm } = useSearchStore();
 
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -27,10 +28,12 @@ const DishesPage: React.FC = () => {
   const [dishToDelete, setDishToDelete] = useState<Dish | null>(null);
 
   const filteredDishes = useMemo(() => {
-    return dishes.filter(
-      (dish) =>
-        !searchTerm.trim() || dish.name.toLowerCase().includes(searchTerm.trim().toLowerCase())
-    );
+    return dishes
+      .filter(
+        (dish) =>
+          !searchTerm.trim() || dish.name.toLowerCase().includes(searchTerm.trim().toLowerCase())
+      )
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [dishes, searchTerm]);
 
   const selectedDish = useMemo(
@@ -51,10 +54,9 @@ const DishesPage: React.FC = () => {
   const handleRequestDelete = useCallback(
     (dish: Dish) => {
       if (isDishInUse(dish.id)) {
-        toast.error(
-          'Это блюдо используется в одном или нескольких походах. Сначала удалите его из раскладок.',
-          { duration: 5000 }
-        );
+        toast.error('Это блюдо используется в походах. Сначала удалите его из раскладок.', {
+          duration: 5000,
+        });
       } else {
         setDishToDelete(dish);
       }
@@ -80,6 +82,32 @@ const DishesPage: React.FC = () => {
     }
     setFormModalOpen(false);
     setEditingDish(null);
+  };
+
+  // Helper function to calculate dish nutrition for the card
+  const calculateDishNutrition = (dish: Dish) => {
+    const nutrition = { calories: 0, proteins: 0, fats: 0, carbs: 0 }; // ИСПРАВЛЕНИЕ: let -> const
+    let totalWeight = 0;
+    dish.products.forEach((dishProduct) => {
+      const product = allProducts.find((p) => p.id === dishProduct.productId);
+      if (product) {
+        const ratio = dishProduct.weight / 100;
+        nutrition.calories += (product.calories || 0) * ratio;
+        nutrition.proteins += (product.proteins || 0) * ratio;
+        nutrition.fats += (product.fats || 0) * ratio;
+        nutrition.carbs += (product.carbs || 0) * ratio;
+        totalWeight += dishProduct.weight;
+      }
+    });
+    return {
+      nutrition: {
+        calories: Math.round(nutrition.calories),
+        proteins: Math.round(nutrition.proteins),
+        fats: Math.round(nutrition.fats),
+        carbs: Math.round(nutrition.carbs),
+      },
+      totalWeight,
+    };
   };
 
   return (
@@ -113,35 +141,25 @@ const DishesPage: React.FC = () => {
             </div>
           ) : (
             filteredDishes.map((dish) => {
-              const totalWeight = dish.products.reduce((sum, p) => {
-                const product = products.find((prod) => prod.id === p.productId);
-                return sum + (product ? p.weight : 0);
-              }, 0);
-
-              const subtitle = `${dish.products.length} комп. / ${totalWeight} г`;
-
-              const menuItems: MenuItem[] = [
-                { label: 'Редактировать', icon: Edit, onClick: () => handleEdit(dish) },
-                {
-                  label: 'Удалить',
-                  icon: Trash2,
-                  onClick: () => handleRequestDelete(dish),
-                  className:
-                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
-                },
-              ];
+              const { nutrition, totalWeight } = calculateDishNutrition(dish);
+              const cardConfig = dishEntityConfig.views.card;
+              const actions = dishEntityConfig.getActions({
+                onEdit: () => handleEdit(dish),
+                onDelete: () => handleRequestDelete(dish),
+              });
 
               return (
                 <EntityCard
                   key={dish.id}
-                  title={dish.name}
-                  subtitle={subtitle}
-                  icon={Soup}
-                  iconColor="text-gray-500"
-                  details={[]} // Детали уже отображены в subtitle
+                  title={cardConfig.title(dish)}
+                  subtitle={cardConfig.subtitle?.(dish, { totalWeight })}
+                  icon={dishEntityConfig.getIcon(dish)}
+                  iconColor={dishEntityConfig.getIconColor?.(dish)}
+                  details={cardConfig.details(dish, { nutrition, totalWeight })}
                   isSelected={activeId === dish.id}
                   onSelect={() => setActiveId(dish.id)}
-                  menuItems={menuItems}
+                  borderColor={dishEntityConfig.getBorderColor(dish)}
+                  menuItems={actions}
                 />
               );
             })

@@ -1,19 +1,7 @@
 // src/components/dishes/DishDetail.tsx
 
 import React, { useState } from 'react';
-import {
-  Edit,
-  Soup,
-  Package,
-  Scale,
-  ExternalLink,
-  Trash2,
-  Flame,
-  Zap,
-  Droplet,
-  Wheat,
-  MapPin,
-} from 'lucide-react';
+import { Edit, Soup, Flame, Zap, Droplet, Wheat, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Dish } from '../../types';
 import useProductStore from '../../stores/useProductStore';
@@ -23,7 +11,8 @@ import useTripStore from '../../stores/useTripStore';
 import DetailPane from '../../ui/DetailPane';
 import Button from '../../ui/Button';
 import EditPortionModal from './EditPortionModal';
-import TripListItem from './TripListItem';
+import EntityListItem from '../../ui/EntityListItem';
+import { tripEntityConfig, productEntityConfig } from '../../config/entityConfig';
 
 interface DishDetailProps {
   dish: Dish | null;
@@ -44,27 +33,23 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
   }
 
   const tripsUsingDish = getTripsUsingDish(dish.id);
-
   const totalWeight = dish.products.reduce((sum, p) => sum + p.weight, 0);
 
-  // Calculate nutritional values for the dish
   const calculateDishNutrition = () => {
-    let totalCalories = 0;
-    let totalProteins = 0;
-    let totalFats = 0;
-    let totalCarbs = 0;
-
+    let totalCalories = 0,
+      totalProteins = 0,
+      totalFats = 0,
+      totalCarbs = 0;
     dish.products.forEach((dishProduct) => {
       const product = allProducts.find((p) => p.id === dishProduct.productId);
       if (product) {
-        const weightRatio = dishProduct.weight / 100; // Nutrition values are per 100g
+        const weightRatio = dishProduct.weight / 100;
         totalCalories += (product.calories || 0) * weightRatio;
         totalProteins += (product.proteins || 0) * weightRatio;
         totalFats += (product.fats || 0) * weightRatio;
         totalCarbs += (product.carbs || 0) * weightRatio;
       }
     });
-
     return {
       calories: Math.round(totalCalories),
       proteins: Math.round(totalProteins),
@@ -76,10 +61,6 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
   const nutrition = calculateDishNutrition();
 
   const handleDeleteProduct = (productIndex: number) => {
-    if (dish.products.length === 1) {
-      // This check is also in the store, but we show it here for immediate feedback
-      return;
-    }
     removeProductFromDish(dish.id, productIndex);
   };
 
@@ -99,7 +80,6 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
   };
 
   const handleOpenProduct = (productId: number) => {
-    // Navigate to products page and select the product by passing selectedId as URL parameter
     navigate(`/products?selectedId=${productId}`);
   };
 
@@ -116,84 +96,31 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
         <div className="space-y-3">
           {dish.products.map((p, index) => {
             const product = allProducts.find((ap) => ap.id === p.productId);
-            const category = product ? categories.find((c) => c.id === product.categoryId) : null;
-            const borderColor = category ? category.color : '#6b7280';
+            if (!product) return null;
+
+            const category = categories.find((c) => c.id === product.categoryId);
+            const listItemConfig = productEntityConfig.views.listItem;
+            const allActions = listItemConfig.actions?.({
+              onView: () => handleOpenProduct(product.id),
+              onEditPortion: () => handleEditPortion(index),
+              onRemove: () => handleDeleteProduct(index),
+            });
+
+            // Не даем удалить последний продукт
+            const actions =
+              dish.products.length > 1
+                ? allActions
+                : allActions.filter((a: any) => a.label !== 'Удалить продукт из блюда');
 
             return (
-              <div
+              <EntityListItem
                 key={index}
-                className="group relative bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-l-4 px-3 py-2 transition-all duration-200 hover:shadow-sm hover:border-gray-300 dark:hover:border-gray-600"
-                style={{ borderLeftColor: borderColor }}
-                data-testid={`dish-product-${index}`}
-              >
-                {/* One-line layout with justify-between */}
-                <div className="flex items-center justify-between">
-                  {/* Left section: Package • Product Name */}
-                  <div className="flex items-center gap-x-1.5 text-sm min-w-0">
-                    <div title="Продукт">
-                      <Package className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                    </div>
-                    <span className="text-gray-400 dark:text-gray-500 text-xs select-none">•</span>
-                    <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                      {product?.name || 'Неизвестный продукт'}
-                    </h3>
-                  </div>
-
-                  {/* Right section: Weight + context menu */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-x-1.5 text-sm">
-                      <div
-                        className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"
-                        title="Вес продукта"
-                      >
-                        <Scale className="w-4 h-4" />
-                        <span className="font-medium">{p.weight} г</span>
-                      </div>
-                    </div>
-
-                    {/* Context menu buttons */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (product) {
-                            handleOpenProduct(product.id);
-                          }
-                        }}
-                        className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
-                        title="Открыть продукт"
-                        aria-label={`Открыть продукт ${product?.name || ''}`}
-                      >
-                        <ExternalLink className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditPortion(index);
-                        }}
-                        className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
-                        title="Редактировать порцию"
-                        aria-label={`Редактировать порцию ${product?.name || ''}`}
-                      >
-                        <Edit className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                      </button>
-                      {dish.products.length > 1 && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteProduct(index);
-                          }}
-                          className="p-1 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition-colors"
-                          title="Удалить продукт из блюда"
-                          aria-label={`Удалить ${product?.name || 'продукт'} из блюда`}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+                title={listItemConfig.title(product)}
+                icon={productEntityConfig.getIcon(product)}
+                borderColor={productEntityConfig.getBorderColor(product, { category })}
+                details={listItemConfig.details?.(product, { dishProduct: p })}
+                menuItems={actions}
+              />
             );
           })}
         </div>
@@ -206,9 +133,26 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
       content: (
         <div className="space-y-2">
           {tripsUsingDish.length > 0 ? (
-            tripsUsingDish.map((trip) => (
-              <TripListItem key={trip.id} trip={trip} onView={() => handleViewTrip(trip.id)} />
-            ))
+            tripsUsingDish.map((trip) => {
+              const listItemConfig = tripEntityConfig.views.listItem;
+              const actions = listItemConfig
+                .actions?.({
+                  onView: () => handleViewTrip(trip.id),
+                })
+                .filter((a: any) => a.label === 'Открыть поход');
+
+              return (
+                <EntityListItem
+                  key={trip.id}
+                  title={listItemConfig.title(trip)}
+                  icon={tripEntityConfig.getIcon(trip)}
+                  borderColor={tripEntityConfig.getBorderColor(trip)}
+                  details={listItemConfig.details?.(trip)}
+                  menuItems={actions}
+                  onClick={() => handleViewTrip(trip.id)}
+                />
+              );
+            })
           ) : (
             <p className="text-sm text-center py-4 text-muted-foreground">
               Блюдо не используется в походах

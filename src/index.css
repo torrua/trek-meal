@@ -6,41 +6,41 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --danger: 0 62.8% 30.6%;
-    --danger-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --destructive: 0 84.2% 60.2%;
-  }
-
-  [data-theme='light'] {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
+    /* Светлая тема в стиле Notion */
+    --background: 240 0% 100%; /* White */
+    --foreground: 240 10% 3.9%; /* Almost Black */
+    --card: 240 0% 100%;
     --card-foreground: 240 10% 3.9%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --primary: 222.2 47.4% 11.2%;
+    --muted: 240 4.8% 95.9%; /* Light Gray */
+    --muted-foreground: 240 3.8% 46.1%; /* Medium Gray */
+    --primary: 221 83% 53%; /* Notion Blue */
     --primary-foreground: 210 40% 98%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
-    --danger: 0 84.2% 60.2%;
+    --danger: 0 72% 51%; /* Red */
     --danger-foreground: 210 40% 98%;
-    --border: 240 5.9% 90%;
+    --border: 240 5.9% 90%; /* Light Gray Border */
     --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
+    --ring: 221 83% 53%; /* Notion Blue for focus rings */
+  }
+
+  .dark {
+    /* Темная тема в стиле Notion */
+    --background: 224 71% 4%; /* Very Dark Gray/Blue */
+    --foreground: 210 40% 98%; /* Almost White */
+    --card: 224 71% 4%;
+    --card-foreground: 210 40% 98%;
+    --muted: 223 47% 11%; /* Dark Gray */
+    --muted-foreground: 215 20% 65%; /* Medium Gray */
+    --primary: 217 91% 60%; /* Notion Blue (Dark) */
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 223 47% 11%;
+    --secondary-foreground: 210 40% 98%;
+    --danger: 0 63% 31%;
+    --danger-foreground: 210 40% 98%;
+    --border: 215 28% 17%; /* Dark Gray Border */
+    --input: 215 28% 17%;
+    --ring: 217 91% 60%;
   }
 }
 
@@ -49,7 +49,10 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
   }
 }
 
@@ -72,7 +75,7 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: hsl(var(--muted-foreground));
   border-radius: 8px;
-  border: 2px solid hsl(var(--card));
+  border: 2px solid hsl(var(--background));
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {

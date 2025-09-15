@@ -129,10 +129,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onEdit }) => {
         <div className="space-y-2">
           {product.portions.map((portion, index) => (
             <PortionListItem
-              key={index}
+              key={index} // ИСПРАВЛЕНИЕ: Добавлен key
               portion={portion}
-              onEdit={() => console.log('Edit portion', portion.name)}
+              onEdit={onEdit}
               onDelete={() => setPortionToDelete(portion)}
+              canDelete={product.portions.length > 1}
             />
           ))}
         </div>

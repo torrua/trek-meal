@@ -23,12 +23,13 @@ import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
 import { calculateTripSummary } from '../../utils';
 import { DIFFICULTY_CONFIG } from '../../constants/trips';
-import ParticipantListItem from './ParticipantListItem';
 import ConfirmModal from '../../ui/ConfirmModal';
 import useTripStore from '../../stores/useTripStore';
 import DetailPane from '../../ui/DetailPane';
 import Button from '../../ui/Button';
 import InfoField from '../../ui/InfoField';
+import EntityListItem from '../../ui/EntityListItem';
+import { participantEntityConfig } from '../../config/entityConfig';
 
 interface TripDetailProps {
   trip: Trip | null;
@@ -45,7 +46,6 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
   const [openSections, setOpenSections] = useState<string[]>(['info', 'participants']);
   const [participantToRemove, setParticipantToRemove] = useState<Participant | null>(null);
 
-  // Мемоизация для производительности
   const tripParticipants = useMemo(
     () => allParticipants.filter((p) => trip?.participants.includes(p.id)),
     [allParticipants, trip?.participants]
@@ -56,7 +56,6 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
     return calculateTripSummary(trip, products, allParticipants, dishes);
   }, [trip, products, allParticipants, dishes]);
 
-  // Инициализация открытых секций при смене похода
   React.useEffect(() => {
     if (trip) {
       setOpenSections(['info', 'participants']);
@@ -128,7 +127,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
             />
             <InfoField
               icon={Gauge}
-              iconClassName={difficultyInfo.colorClassName} // ИСПРАВЛЕНИЕ: Добавляем цвет иконке
+              iconClassName={difficultyInfo.colorClassName}
               label="Сложность"
               value={
                 <span className={cn(difficultyInfo.colorClassName)}>{difficultyInfo.label}</span>
@@ -156,7 +155,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
           variant="ghost"
           onClick={onAddParticipant}
           title="Добавить участника"
-          disabled={tripParticipants.length >= 20} // Ограничение на количество участников
+          disabled={tripParticipants.length >= 20}
         >
           <UserRoundPlus className="w-4 h-4" />
         </Button>
@@ -164,14 +163,25 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
       content: (
         <div className="space-y-2">
           {tripParticipants.length > 0 ? (
-            tripParticipants.map((p: Participant) => (
-              <ParticipantListItem
-                key={p.id}
-                participant={p}
-                onRemove={() => handleRequestRemove(p)}
-                onView={() => handleNavigateToParticipant(p.id)}
-              />
-            ))
+            tripParticipants.map((p: Participant) => {
+              const listItemConfig = participantEntityConfig.views.listItem;
+              const actions = listItemConfig.actions?.({
+                onView: () => handleNavigateToParticipant(p.id),
+                onRemove: () => handleRequestRemove(p),
+              });
+
+              return (
+                <EntityListItem
+                  key={p.id}
+                  title={listItemConfig.title(p)}
+                  icon={participantEntityConfig.getIcon(p)}
+                  borderColor={participantEntityConfig.getBorderColor(p)}
+                  details={listItemConfig.details?.(p)}
+                  menuItems={actions}
+                  onClick={() => handleNavigateToParticipant(p.id)}
+                />
+              );
+            })
           ) : (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-3">

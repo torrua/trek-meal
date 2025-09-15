@@ -1,21 +1,32 @@
-// src/components/database/categories/CategoryDetail.tsx
+// src/components/categories/CategoryDetail.tsx
 
 import React, { useState } from 'react';
 import { Edit, Package, Tag, Plus } from 'lucide-react';
 import useProductStore from '../../stores/useProductStore';
-import type { Category } from '../../types';
+import type { Category, Product } from '../../types';
 import Button from '../../ui/Button';
 import DetailPane from '../../ui/DetailPane';
-import ProductListItem from '../products/ProductListItem';
+import EntityListItem from '../../ui/EntityListItem';
+import { productEntityConfig } from '../../config/entityConfig';
+import { useNavigate } from 'react-router-dom';
 
 interface CategoryDetailProps {
   category: Category | null;
   onEdit: () => void;
   onAddProduct?: () => void;
+  onEditProduct: (product: Product) => void;
+  onDeleteProduct: (product: Product) => void;
 }
 
-const CategoryDetail: React.FC<CategoryDetailProps> = ({ category, onEdit, onAddProduct }) => {
+const CategoryDetail: React.FC<CategoryDetailProps> = ({
+  category,
+  onEdit,
+  onAddProduct,
+  onEditProduct,
+  onDeleteProduct,
+}) => {
   const { products } = useProductStore();
+  const navigate = useNavigate();
   const [openSections, setOpenSections] = useState<string[]>(['products']);
 
   const handleToggleSection = (sectionId: string) => {
@@ -45,7 +56,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({ category, onEdit, onAdd
   const sections = [
     {
       id: 'products',
-      title: 'Продукты',
+      title: `Продукты (${categoryProducts.length})`,
       icon: Package,
       actionButton: onAddProduct && (
         <Button size="sm" variant="ghost" onClick={onAddProduct} title="Добавить продукт">
@@ -55,16 +66,24 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({ category, onEdit, onAdd
       content: (
         <div className="space-y-2">
           {categoryProducts.length > 0 ? (
-            categoryProducts.map((product) => (
-              <ProductListItem
-                key={product.id}
-                product={product}
-                borderColor={category.color}
-                onView={() => console.log('Navigate to product', product.id)}
-                onEdit={() => console.log('Edit product', product.id)}
-                onDelete={() => console.log('Delete product', product.id)}
-              />
-            ))
+            categoryProducts.map((product) => {
+              const listItemConfig = productEntityConfig.views.listItem;
+              const actions = productEntityConfig.getActions({
+                onEdit: () => onEditProduct(product),
+                onDelete: () => onDeleteProduct(product),
+              });
+
+              return (
+                <EntityListItem
+                  key={product.id}
+                  title={listItemConfig.title(product)}
+                  icon={productEntityConfig.getIcon(product)}
+                  borderColor={productEntityConfig.getBorderColor(product, { category })}
+                  menuItems={actions}
+                  onClick={() => navigate(`/products?selectedId=${product.id}`)}
+                />
+              );
+            })
           ) : (
             <p className="text-sm text-center py-4 text-muted-foreground">
               В этой категории пока нет продуктов

@@ -2,24 +2,13 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import {
-  CirclePlus,
-  Filter,
-  Backpack,
-  Edit,
-  Trash2,
-  Scale,
-  User,
-  Users,
-  ExternalLink,
-  Info,
-} from 'lucide-react';
+import { CirclePlus, Filter, Backpack, Info } from 'lucide-react';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useParticipantStore from '../stores/useParticipantStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Equipment, EquipmentData, EquipmentCategory, Participant } from '../types';
-import EntityCard, { MenuItem } from '../ui/EntityCard';
+import EntityCard from '../ui/EntityCard';
 import EquipmentForm from '../components/equipment/EquipmentForm';
 import EquipmentFiltersComponent, {
   EquipmentFilters,
@@ -29,6 +18,8 @@ import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import DetailPane from '../ui/DetailPane';
 import InfoField from '../ui/InfoField';
+import { equipmentEntityConfig } from '../config/entityConfig';
+import { Edit, ExternalLink, Scale, User, Users } from 'lucide-react';
 
 const EquipmentPage: React.FC = () => {
   const { equipment, addEquipment, updateEquipment, deleteEquipment } = useEquipmentStore();
@@ -152,7 +143,6 @@ const EquipmentPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters */}
       {showFilters && (
         <div className="mb-4 sm:mb-6 bg-card rounded-xl border p-3 sm:p-4">
           <EquipmentFiltersComponent filters={filters} onFiltersChange={setFilters} />
@@ -181,55 +171,29 @@ const EquipmentPage: React.FC = () => {
               );
               const owner = participants.find((p: Participant) => p.id === equipmentItem.ownerId);
 
-              const details = [
-                {
-                  icon: Scale,
-                  text: formatWeight(equipmentItem.weight),
-                  title: 'Вес',
-                },
-                {
-                  icon: equipmentItem.type === 'personal' ? User : Users,
-                  text: equipmentItem.type === 'personal' ? 'Личное' : 'Общее',
-                  title: 'Тип снаряжения',
-                },
-              ];
-
-              // Add owner info if exists
-              if (owner) {
-                details.push({
-                  icon: User,
-                  text: owner.name,
-                  title: 'Владелец',
-                });
-              }
-
-              const menuItems: MenuItem[] = [
-                {
-                  label: 'Редактировать',
-                  icon: Edit,
-                  onClick: () => handleEdit(equipmentItem),
-                },
-                {
-                  label: 'Удалить',
-                  icon: Trash2,
-                  onClick: () => handleRequestDelete(equipmentItem),
-                  className:
-                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20',
-                },
-              ];
+              const cardConfig = equipmentEntityConfig.views.card;
+              const actions = equipmentEntityConfig.getActions({
+                onEdit: () => handleEdit(equipmentItem),
+                onDelete: () => handleRequestDelete(equipmentItem),
+              });
+              const context = {
+                category,
+                owner,
+                formattedWeight: formatWeight(equipmentItem.weight),
+              };
 
               return (
                 <EntityCard
                   key={equipmentItem.id}
-                  title={equipmentItem.name}
-                  subtitle={category?.name}
-                  icon={Backpack}
-                  iconColor={category?.color}
-                  details={details}
-                  menuItems={menuItems}
+                  title={cardConfig.title(equipmentItem)}
+                  subtitle={cardConfig.subtitle?.(equipmentItem, context)}
+                  icon={equipmentEntityConfig.getIcon(equipmentItem)}
+                  iconColor={equipmentEntityConfig.getIconColor?.(equipmentItem, context)}
+                  details={cardConfig.details(equipmentItem, context)}
+                  menuItems={actions}
                   isSelected={activeId === equipmentItem.id}
                   onSelect={() => setActiveId(equipmentItem.id)}
-                  borderColor={category?.color}
+                  borderColor={equipmentEntityConfig.getBorderColor(equipmentItem, context)}
                   data-testid={`equipment-card-${equipmentItem.id}`}
                 />
               );
@@ -345,7 +309,6 @@ const EquipmentPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Equipment Form Modal */}
       <Modal
         isOpen={isFormModalOpen}
         onClose={() => setFormModalOpen(false)}
@@ -359,7 +322,6 @@ const EquipmentPage: React.FC = () => {
         />
       </Modal>
 
-      {/* Delete confirmation */}
       <ConfirmModal
         isOpen={!!equipmentToDelete}
         onClose={() => setEquipmentToDelete(null)}

@@ -11,8 +11,6 @@ import {
   Award,
   Edit,
   MapPinPlus,
-  ExternalLink,
-  Scale,
 } from 'lucide-react';
 import type { Participant, Trip } from '../../types';
 import useTripStore from '../../stores/useTripStore';
@@ -24,9 +22,10 @@ import { useNavigate } from 'react-router-dom';
 import { isFuture, parseISO } from 'date-fns';
 import ConfirmModal from '../../ui/ConfirmModal';
 import DetailPane from '../../ui/DetailPane';
-import TripListItem from './TripListItem';
 import Button from '../../ui/Button';
 import InfoField from '../../ui/InfoField';
+import EntityListItem from '../../ui/EntityListItem';
+import { tripEntityConfig, equipmentEntityConfig } from '../../config/entityConfig';
 
 interface ParticipantDetailProps {
   participant: Participant | null;
@@ -103,7 +102,6 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
       ),
       content: (
         <div className="space-y-4">
-          {/* --- ИЗМЕНЕНИЕ: Используем новый компонент InfoField --- */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <InfoField
               icon={Award}
@@ -146,14 +144,25 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
       content: (
         <div className="space-y-2">
           {sortedTrips.length > 0 ? (
-            sortedTrips.map((trip) => (
-              <TripListItem
-                key={trip.id}
-                trip={trip}
-                onRemove={() => setTripToRemove(trip)}
-                onView={() => navigate(`/trips/${trip.id}`)}
-              />
-            ))
+            sortedTrips.map((trip) => {
+              const listItemConfig = tripEntityConfig.views.listItem;
+              const actions = listItemConfig.actions?.({
+                onView: () => navigate(`/trips/${trip.id}`),
+                onRemove: () => setTripToRemove(trip),
+              });
+
+              return (
+                <EntityListItem
+                  key={trip.id}
+                  title={listItemConfig.title(trip)}
+                  icon={tripEntityConfig.getIcon(trip)}
+                  borderColor={tripEntityConfig.getBorderColor(trip)}
+                  details={listItemConfig.details?.(trip)}
+                  menuItems={actions}
+                  onClick={() => navigate(`/trips/${trip.id}`)}
+                />
+              );
+            })
           ) : (
             <p className="text-sm text-center py-4 text-muted-foreground">Нет походов</p>
           )}
@@ -179,43 +188,23 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
           {participantEquipment.length > 0 ? (
             participantEquipment.map((equipmentItem) => {
               const category = categories.find((c) => c.id === equipmentItem.categoryId);
+              const listItemConfig = equipmentEntityConfig.views.listItem;
+              const actions = listItemConfig.actions?.({
+                onView: () => navigate(`/equipment?selectedId=${equipmentItem.id}`),
+              });
+
               return (
-                <div
+                <EntityListItem
                   key={equipmentItem.id}
-                  className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                  title={listItemConfig.title(equipmentItem)}
+                  icon={equipmentEntityConfig.getIcon(equipmentItem)}
+                  borderColor={equipmentEntityConfig.getBorderColor(equipmentItem, { category })}
+                  details={listItemConfig.details?.(equipmentItem, {
+                    formattedWeight: formatWeight(equipmentItem.weight),
+                  })}
+                  menuItems={actions}
                   onClick={() => navigate(`/equipment?selectedId=${equipmentItem.id}`)}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="flex-shrink-0">
-                      <Backpack className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium text-gray-900 dark:text-white truncate">
-                          {equipmentItem.name}
-                        </h4>
-                        {category && (
-                          <span
-                            className="flex-shrink-0 px-2 py-0.5 rounded text-xs font-medium text-white"
-                            style={{ backgroundColor: category.color }}
-                          >
-                            {category.emoji} {category.name}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-                        <div className="flex items-center gap-1">
-                          <Scale className="w-3 h-3" />
-                          <span>{formatWeight(equipmentItem.weight)}</span>
-                        </div>
-                        <span className="capitalize">
-                          {equipmentItem.type === 'personal' ? 'Личное' : 'Общее'}
-                        </span>
-                        {equipmentItem.link && <ExternalLink className="w-3 h-3" />}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                />
               );
             })
           ) : (

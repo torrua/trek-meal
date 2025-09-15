@@ -11,12 +11,12 @@ const buttonVariants = cva(
       variant: {
         primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
         danger: 'bg-danger text-danger-foreground hover:bg-danger/90',
-        secondary: 'bg-secondary text-secondary-foreground border border-input hover:bg-muted',
-        ghost: 'p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-muted',
+        ghost: 'hover:bg-muted hover:text-secondary-foreground',
       },
       size: {
         default: 'h-10 px-4 py-2',
-        sm: 'h-8 rounded px-2',
+        sm: 'h-9 rounded-md px-3',
         lg: 'h-11 rounded-md px-8',
         icon: 'h-10 w-10',
       },

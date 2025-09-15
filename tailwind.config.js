@@ -2,7 +2,7 @@
 
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: ['selector', '[data-theme="dark"]'],
+  darkMode: 'class', // Используем class-based dark mode
   content: [
     './index.html',
     './src/**/*.{js,jsx,ts,tsx}',
@@ -35,6 +35,20 @@ export default {
           DEFAULT: 'hsl(var(--danger))',
           foreground: 'hsl(var(--danger-foreground))',
         },
+      },
+      borderRadius: {
+        lg: `0.5rem`,
+        md: `calc(0.5rem - 2px)`,
+        sm: `calc(0.5rem - 4px)`,
+      },
+      keyframes: {
+        'fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(-10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fade-in 0.2s ease-out',
       },
     },
   },

@@ -14,6 +14,7 @@ export interface MenuItem {
 }
 
 interface DetailItem {
+  key: string;
   icon: React.ElementType;
   text: string | number;
   title?: string;
@@ -124,7 +125,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
             {details.length > 0 && (
               <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                 {details.map((detail, index) => (
-                  <React.Fragment key={index}>
+                  <React.Fragment key={detail.key}>
                     {index > 0 && (
                       <span className="text-muted-foreground/50 text-xs select-none">•</span>
                     )}

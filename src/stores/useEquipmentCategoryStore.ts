@@ -3,12 +3,23 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
-import useEquipmentStore from './useEquipmentStore';
-import type { EquipmentCategory, EquipmentCategoryData } from '../types';
+
+export interface EquipmentCategory {
+  id: number;
+  name: string;
+  color: string;
+  iconName: string;
+}
+
+export interface EquipmentCategoryData {
+  name: string;
+  color: string;
+  iconName: string;
+}
 
 interface EquipmentCategoryState {
   categories: EquipmentCategory[];
-  addCategory: (data: EquipmentCategoryData) => EquipmentCategory;
+  addCategory: (data: EquipmentCategoryData) => void;
   updateCategory: (id: number, data: EquipmentCategoryData) => void;
   deleteCategory: (id: number) => void;
 }
@@ -17,79 +28,39 @@ const useEquipmentCategoryStore = create<EquipmentCategoryState>()(
   persist(
     (set, get) => ({
       categories: [
-        { id: 1, name: 'Палатки и тенты', color: '#ef4444', emoji: '⛺' },
-        { id: 2, name: 'Спальные системы', color: '#3b82f6', emoji: '🛌' },
-        { id: 3, name: 'Кухонное оборудование', color: '#f59e0b', emoji: '🍳' },
-        { id: 4, name: 'Одежда и обувь', color: '#22c55e', emoji: '👕' },
-        { id: 5, name: 'Инструменты и навигация', color: '#8b5cf6', emoji: '🧭' },
-        { id: 6, name: 'Безопасность и медицина', color: '#ec4899', emoji: '⛑️' },
+        { id: 1, name: 'Палатки и тенты', color: '#22c55e', iconName: 'Tent' },
+        { id: 2, name: 'Рюкзаки и сумки', color: '#3b82f6', iconName: 'Backpack' },
+        { id: 3, name: 'Спальники и коврики', color: '#8b5cf6', iconName: 'BedDouble' },
+        { id: 4, name: 'Кухня', color: '#f97316', iconName: 'UtensilsCrossed' },
+        { id: 5, name: 'Одежда и обувь', color: '#ec4899', iconName: 'Shirt' },
+        { id: 6, name: 'Навигация', color: '#06b6d4', iconName: 'Compass' },
+        { id: 7, name: 'Инструменты', color: '#ef4444', iconName: 'Shield' },
+        { id: 8, name: 'Личное', color: '#eab308', iconName: 'User' },
       ],
-
-      addCategory: (categoryData) => {
-        const trimmedName = categoryData.name.trim();
-        if (!trimmedName) {
-          toast.error('Название категории не может быть пустым.');
-          throw new Error('Empty category name');
-        }
-
-        const isDuplicate = get().categories.some(
-          (c) => c.name.trim().toLowerCase() === trimmedName.toLowerCase()
-        );
-
-        if (isDuplicate) {
-          toast.error(`Категория с названием "${trimmedName}" уже существует.`);
-          throw new Error('Duplicate category name');
-        }
-
-        const newCategory = {
-          ...categoryData,
-          name: trimmedName,
-          id: Date.now(),
-        };
+      addCategory: (data: EquipmentCategoryData) => {
+        const newCategory = { id: Date.now(), ...data };
         set((state) => ({ categories: [...state.categories, newCategory] }));
-        toast.success(`Категория снаряжения "${newCategory.name}" добавлена.`);
-        return newCategory;
+        toast.success(`Категория "${data.name}" добавлена.`);
       },
-
-      updateCategory: (id, updatedData) => {
-        const trimmedName = updatedData.name.trim();
-        if (!trimmedName) {
-          toast.error('Название категории не может быть пустым.');
-          return;
-        }
-
-        // Check for duplicates (excluding current category)
-        const isDuplicate = get().categories.some(
-          (c) => c.id !== id && c.name.trim().toLowerCase() === trimmedName.toLowerCase()
-        );
-
-        if (isDuplicate) {
-          toast.error(`Категория с названием "${trimmedName}" уже существует.`);
-          return;
-        }
-
+      updateCategory: (id: number, data: EquipmentCategoryData) => {
         set((state) => ({
-          categories: state.categories.map((c) =>
-            c.id === id ? { ...c, ...updatedData, name: trimmedName } : c
-          ),
+          categories: state.categories.map((c) => (c.id === id ? { ...c, ...data } : c)),
         }));
-        toast.success(`Категория снаряжения "${trimmedName}" обновлена.`);
+        toast.success(`Категория "${data.name}" обновлена.`);
       },
-
-      deleteCategory: (id) => {
-        const categoryToDelete = get().categories.find((c) => c.id === id);
-        if (!categoryToDelete) return;
-
-        // Remove category from all equipment that use it
-        useEquipmentStore.getState().removeCategoryFromEquipment(id);
-
+      deleteCategory: (id: number) => {
+        const categoryName = get().categories.find((c) => c.id === id)?.name;
         set((state) => ({
           categories: state.categories.filter((c) => c.id !== id),
         }));
-        toast.error(`Категория снаряжения "${categoryToDelete.name}" удалена.`);
+        if (categoryName) {
+          toast.success(`Категория "${categoryName}" удалена.`);
+        }
       },
     }),
-    { name: 'trek-meal-equipment-categories' }
+    {
+      name: 'equipment-category-storage',
+    }
   )
 );
 

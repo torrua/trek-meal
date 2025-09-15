@@ -5,6 +5,7 @@ import { Palette, Backpack } from 'lucide-react';
 import type { EquipmentCategoryData } from '../../types';
 import Input from '../../ui/Input';
 import Button from '../../ui/Button';
+import DynamicIcon from '../../ui/DynamicIcon';
 
 interface EquipmentCategoryFormProps {
   category: EquipmentCategoryData | null;
@@ -38,34 +39,34 @@ const EquipmentCategoryForm: React.FC<EquipmentCategoryFormProps> = ({
 }) => {
   const [name, setName] = useState(category?.name || '');
   const [color, setColor] = useState(category?.color || '#8b5cf6');
-  const [emoji, setEmoji] = useState(category?.emoji || '');
+  const [iconName, setIconName] = useState(category?.iconName || 'Backpack');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onSubmit({ name: name.trim(), color, emoji });
+      onSubmit({ name: name.trim(), color, iconName });
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="p-1 space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
           Предпросмотр
         </label>
-        <div className="p-4 rounded-xl border-2" style={{ borderColor: color }}>
+        <div className="p-4 rounded-lg border-2" style={{ borderColor: color }}>
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl"
+              className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0 text-white"
               style={{ backgroundColor: color }}
             >
-              {emoji || '?'}
+              <DynamicIcon name={iconName} className="w-6 h-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                {name || 'Название категории снаряжения'}
+              <h3 className="font-semibold text-foreground truncate">
+                {name || 'Название категории'}
               </h3>
-              <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Backpack className="w-4 h-4" />
                 <span>0 снаряжения</span>
               </div>
@@ -74,40 +75,34 @@ const EquipmentCategoryForm: React.FC<EquipmentCategoryFormProps> = ({
         </div>
       </div>
 
-      {/* Full-width title field for better usability */}
-      <Input
-        label="Название категории *"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-        autoFocus
-        placeholder="Например, Палатки и тенты"
-      />
-
-      {/* Emoji field in separate row */}
-      <div className="flex justify-center">
+      <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 items-center">
         <Input
-          label="Эмодзи"
-          value={emoji}
-          onChange={(e) => setEmoji(e.target.value)}
-          placeholder="⛺"
-          maxLength={2}
-          containerClassName="w-24"
-          className="text-center text-xl"
+          label="Иконка"
+          value={iconName}
+          onChange={(e) => setIconName(e.target.value)}
+          placeholder="Напр. Tent"
+          containerClassName="w-32"
+          className="text-center"
+        />
+        <Input
+          label="Название категории *"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          autoFocus
+          placeholder="Например, Палатки и тенты"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Цвет
-        </label>
+        <label className="block text-sm font-medium text-muted-foreground mb-2">Цвет</label>
         <div className="grid grid-cols-8 gap-2">
           {PRESET_COLORS.map((presetColor) => (
             <button
               key={presetColor}
               type="button"
-              className={`w-full h-8 rounded-full transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                color === presetColor ? 'ring-2 ring-blue-500 ring-offset-2 scale-110' : ''
+              className={`w-full h-8 rounded-full transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
+                color === presetColor ? 'ring-2 ring-primary ring-offset-2 scale-110' : ''
               }`}
               style={{ backgroundColor: presetColor }}
               onClick={() => setColor(presetColor)}
@@ -116,7 +111,7 @@ const EquipmentCategoryForm: React.FC<EquipmentCategoryFormProps> = ({
           ))}
         </div>
         <div className="flex items-center gap-3 mt-3">
-          <Palette className="w-5 h-5 text-gray-400" />
+          <Palette className="w-5 h-5 text-muted-foreground" />
           <input
             type="color"
             value={color}
@@ -126,7 +121,7 @@ const EquipmentCategoryForm: React.FC<EquipmentCategoryFormProps> = ({
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex justify-end gap-3 pt-6 border-t">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Отмена
         </Button>

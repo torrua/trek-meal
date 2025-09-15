@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import useSearchStore from '../../stores/useSearchStore';
 import ThemeSwitcher from './ThemeSwitcher';
 import Input from '../../ui/Input';
+import Button from '../../ui/Button';
 import {
   Search,
   Menu,
@@ -20,7 +21,6 @@ import {
   Tag,
   Backpack,
 } from 'lucide-react';
-import Button from 'ui/Button';
 
 const mainNavigation = [
   { path: '/', label: 'Главная', icon: Home },
@@ -76,7 +76,6 @@ const Layout: React.FC = () => {
       <header className="bg-card/80 backdrop-blur-lg border-b sticky top-0 z-50">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
-            {/* Left side */}
             <div className="flex items-center gap-4">
               <NavLink to="/" className="flex items-center gap-2 flex-shrink-0">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -84,7 +83,6 @@ const Layout: React.FC = () => {
                 </div>
                 <h1 className="text-lg font-bold text-foreground hidden sm:block">Trek Meal</h1>
               </NavLink>
-              {/* Desktop Nav */}
               <nav className="hidden lg:flex items-center gap-1 border-l pl-4">
                 {mainNavigation.map((item) => (
                   <NavLink key={item.path} to={item.path} className={navLinkClasses} end>
@@ -101,8 +99,6 @@ const Layout: React.FC = () => {
                 ))}
               </nav>
             </div>
-
-            {/* Right side */}
             <div className="flex items-center gap-2">
               <div className="w-48">
                 <Input
@@ -115,11 +111,9 @@ const Layout: React.FC = () => {
                 />
               </div>
               <nav className="hidden lg:flex items-center gap-1 border-l pl-2 ml-2">
-                {settingsNavigation.map((item) => (
-                  <NavLink key={item.path} to={item.path} className={navLinkClasses} end>
-                    <item.icon className="w-4 h-4" />
-                  </NavLink>
-                ))}
+                <NavLink to="/settings" className={navLinkClasses}>
+                  <Settings className="w-4 h-4" />
+                </NavLink>
                 <ThemeSwitcher />
               </nav>
               <div className="lg:hidden">
@@ -131,15 +125,13 @@ const Layout: React.FC = () => {
           </div>
         </div>
       </header>
-
-      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="lg:hidden">
           <div
             className="fixed inset-0 bg-black/20 z-40"
             onClick={() => setIsMenuOpen(false)}
           ></div>
-          <div className="fixed top-16 right-4 w-64 bg-card border rounded-lg shadow-xl z-50 p-4">
+          <div className="fixed top-20 right-4 w-64 bg-card border rounded-lg shadow-xl z-50 p-4 animate-fade-in">
             <nav className="flex flex-col gap-1">
               {mobileNavigation.map((item) => (
                 <NavLink key={item.path} to={item.path} className={navLinkClasses} end>
@@ -154,12 +146,10 @@ const Layout: React.FC = () => {
           </div>
         </div>
       )}
-
       <main>
         <Outlet />
       </main>
     </div>
   );
 };
-
 export default Layout;

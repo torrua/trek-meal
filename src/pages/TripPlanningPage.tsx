@@ -14,7 +14,6 @@ import {
   DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
@@ -36,7 +35,6 @@ import TripForm from '../components/trips/TripForm';
 import DishForm from '../components/dishes/DishForm';
 import {
   Calendar,
-  CirclePlus,
   Utensils,
   Flame,
   Zap,

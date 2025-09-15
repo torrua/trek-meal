@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CirclePlus, Filter, UploadCloud, Component } from 'lucide-react';
+import { CirclePlus, Filter, UploadCloud, Component, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import useProductStore from '../stores/useProductStore';
 import useCategoryStore from '../stores/useCategoryStore';
@@ -30,12 +30,13 @@ const ProductsPage: React.FC = () => {
   const [isFormModalOpen, setFormModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
   const [isImportModalOpen, setImportModalOpen] = useState(false);
   const [fileContent, setFileContent] = useState<ImportedJsonData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const filterPopupRef = useRef<HTMLDivElement>(null);
 
-  const [filters, setFilters] = useState<ProductFilters>({ categoryId: 'all' });
+  const [filters, setFilters] = useState<ProductFilters>({ categoryIds: [] });
 
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
@@ -45,15 +46,33 @@ const ProductsPage: React.FC = () => {
     }
   }, [searchParams, products, setSearchParams]);
 
+  // Close filter popup when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterPopupRef.current && !filterPopupRef.current.contains(event.target as Node)) {
+        setIsFilterPopupOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const filteredProducts = useMemo(() => {
     return products
       .filter((p) => {
+        // Фильтрация по категориям
         const categoryMatch =
-          filters.categoryId === 'all' || String(p.categoryId) === filters.categoryId;
+          filters.categoryIds.length === 0 ||
+          (p.categoryId && filters.categoryIds.includes(String(p.categoryId)));
+
         const searchMatch =
           !searchTerm.trim() ||
           p.name.toLowerCase().includes(searchTerm.trim().toLowerCase()) ||
           p.description?.toLowerCase().includes(searchTerm.trim().toLowerCase());
+
         return categoryMatch && searchMatch;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -113,7 +132,7 @@ const ProductsPage: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const hasActiveFilters = useMemo(() => filters.categoryId !== 'all', [filters]);
+  const hasActiveFilters = useMemo(() => filters.categoryIds.length > 0, [filters]);
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
@@ -126,20 +145,42 @@ const ProductsPage: React.FC = () => {
       />
       <div className="mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Продукты</h1>
+          <h1 className="text-2xl font-bold text-foreground dark:text-white">Продукты</h1>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button
-              variant="secondary"
-              size="icon"
-              onClick={() => setShowFilters((prev) => !prev)}
-              title="Фильтр"
-              className="relative"
-            >
-              <Filter className="w-4 h-4" />
-              {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-card" />
+            <div className="relative">
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
+                title="Фильтр"
+                className="relative"
+              >
+                <Filter className="w-4 h-4" />
+                {hasActiveFilters && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border-2 border-card" />
+                )}
+              </Button>
+
+              {/* Filter Popup */}
+              {isFilterPopupOpen && (
+                <div
+                  ref={filterPopupRef}
+                  className="absolute right-0 top-full mt-2 z-50 bg-card rounded-notion-lg border border-border shadow-notion-lg p-4 w-80"
+                >
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-notion-sm font-semibold text-foreground">Фильтры</h3>
+                    <button
+                      onClick={() => setIsFilterPopupOpen(false)}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <ProductFiltersComponent filters={filters} onFiltersChange={setFilters} />
+                </div>
               )}
-            </Button>
+            </div>
+
             <Button
               variant="secondary"
               size="icon"
@@ -156,18 +197,12 @@ const ProductsPage: React.FC = () => {
         </div>
       </div>
 
-      {showFilters && (
-        <div className="mb-4 sm:mb-6 bg-card rounded-xl border p-3 sm:p-4">
-          <ProductFiltersComponent filters={filters} onFiltersChange={setFilters} />
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         <div className="lg:col-span-1 space-y-3">
           {filteredProducts.length === 0 ? (
             <div className="text-center py-16 px-6 text-muted-foreground">
               <Component className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium text-foreground">
+              <h3 className="text-notion-lg font-medium text-foreground">
                 {searchTerm || hasActiveFilters ? 'Продукты не найдены' : 'Продуктов пока нет'}
               </h3>
               {!searchTerm && !hasActiveFilters && (
@@ -216,7 +251,9 @@ const ProductsPage: React.FC = () => {
                 <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Component className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">Выберите продукт</h3>
+                <h3 className="text-notion-lg font-medium text-foreground mb-2">
+                  Выберите продукт
+                </h3>
                 <p className="text-muted-foreground">
                   Кликните на карточку для просмотра подробной информации.
                 </p>

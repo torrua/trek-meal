@@ -107,11 +107,11 @@ const ProductsContent: React.FC<ProductsContentProps> = ({ setAddHandler, showFi
             />
           </div>
         )}
-        <div className="h-[calc(100vh-360px)] min-h-[400px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+        <div className="h-[calc(100vh-360px)] min-h-[400px] overflow-y-auto pr-2 space-y-3 notion-scrollbar">
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-16 px-6 text-gray-500">
+            <div className="text-center py-16 px-6 text-muted-foreground">
               <Component className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium text-foreground">
+              <h3 className="text-notion-lg font-medium text-foreground">
                 {searchTerm || filterCategory.value !== 'all'
                   ? 'Продукты не найдены'
                   : 'Продуктов пока нет'}

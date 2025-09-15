@@ -122,7 +122,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
       />
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-notion-sm font-medium text-foreground mb-2">
           Пищевая ценность (на 100г)
         </label>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -161,26 +161,21 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
         </div>
       </div>
 
-      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-3 p-3 bg-muted rounded-notion-md border border-border">
         <input
           id="isPerishable"
           name="isPerishable"
           type="checkbox"
           checked={formData.isPerishable}
           onChange={handleChange}
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          className="h-4 w-4 rounded-notion-sm border-border text-primary focus:ring-primary"
         />
-        <label
-          htmlFor="isPerishable"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label htmlFor="isPerishable" className="text-notion-sm font-medium text-foreground">
           Скоропортящийся продукт
         </label>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Порции *
-        </label>
+        <label className="block text-notion-sm font-medium text-foreground mb-2">Порции *</label>
         <div className="space-y-3">
           {formData.portions.map((portion, index) => (
             <div key={index} className="flex items-center gap-2">
@@ -216,7 +211,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           + Добавить порцию
         </Button>
       </div>
-      <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex justify-end gap-3 pt-6 border-t border-border">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Отмена
         </Button>

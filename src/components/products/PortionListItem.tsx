@@ -20,22 +20,22 @@ const PortionListItem: React.FC<PortionListItemProps> = ({
   return (
     <div
       className={cn(
-        'group relative bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-l-4 px-3 py-2 transition-all duration-200 hover:shadow-sm hover:border-gray-300 dark:hover:border-gray-600'
+        'group relative bg-muted dark:bg-dark-tertiary rounded-notion-md border border-l-4 px-3 py-2 transition-all duration-200 hover:shadow-notion-sm hover:border-border/50 dark:hover:border-dark-border'
       )}
-      style={{ borderLeftColor: '#6b7280' }} // gray-500 neutral border
+      style={{ borderLeftColor: 'var(--notion-blue)' }}
       data-testid={`portion-${portion.name}`}
     >
       <div className="flex items-center justify-between">
         {/* Левая часть: Иконка и Название */}
-        <div className="flex items-center gap-x-2 text-sm min-w-0">
-          <Package className="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-          <h3 className="font-semibold text-gray-900 dark:text-white truncate">{portion.name}</h3>
+        <div className="flex items-center gap-x-2 text-notion-sm min-w-0">
+          <Package className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+          <h3 className="font-medium text-foreground dark:text-white truncate">{portion.name}</h3>
         </div>
 
         {/* Правая часть: Вес и кнопки действий */}
         <div className="flex items-center gap-4">
           <div
-            className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
+            className="flex items-center gap-1.5 text-notion-sm text-muted-foreground"
             title="Вес порции"
           >
             <Scale className="w-4 h-4" />
@@ -48,11 +48,11 @@ const PortionListItem: React.FC<PortionListItemProps> = ({
                 e.stopPropagation();
                 onEdit();
               }}
-              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+              className="p-1 hover:bg-muted-foreground/10 rounded-notion-sm transition-colors"
               title="Редактировать порцию"
               aria-label={`Редактировать порцию ${portion.name}`}
             >
-              <Edit className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+              <Edit className="w-4 h-4 text-muted-foreground" />
             </button>
             {canDelete && (
               <button
@@ -60,11 +60,11 @@ const PortionListItem: React.FC<PortionListItemProps> = ({
                   e.stopPropagation();
                   onDelete();
                 }}
-                className="p-1 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition-colors"
+                className="p-1 hover:bg-danger/10 rounded-notion-sm transition-colors"
                 title="Удалить порцию"
                 aria-label={`Удалить порцию ${portion.name}`}
               >
-                <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                <Trash2 className="w-4 h-4 text-danger" />
               </button>
             )}
           </div>

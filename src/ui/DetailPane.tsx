@@ -30,15 +30,18 @@ const DetailPane: React.FC<DetailPaneProps> = ({
 }) => {
   return (
     <div
-      className={cn('h-full flex flex-col bg-card rounded-lg border overflow-hidden', className)}
+      className={cn(
+        'h-full flex flex-col bg-card rounded-notion-lg border border-border overflow-hidden',
+        className
+      )}
     >
-      <div className="flex-shrink-0 p-6 border-b">{children}</div>
+      <div className="flex-shrink-0 p-6 border-b border-border">{children}</div>
       <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="h-full overflow-y-auto custom-scrollbar">
+        <div className="h-full overflow-y-auto notion-scrollbar">
           {sections.map(({ id, title, icon: Icon, content, actionButton }) => {
             const isOpen = openSections.includes(id);
             return (
-              <div key={id} className="border-b last:border-b-0">
+              <div key={id} className="border-b border-border last:border-b-0">
                 <div
                   className={cn(
                     'w-full flex justify-between items-center px-6 py-3 transition-colors cursor-pointer hover:bg-muted/50'

@@ -5,32 +5,31 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer base {
   :root {
     /* Notion Light Theme */
     --background: 0 0% 100%;
     --foreground: 20 6% 21%;
-    
+
     --card: 0 0% 100%;
     --card-foreground: 20 6% 21%;
-    
+
     --muted: 30 8% 97%;
     --muted-foreground: 20 4% 47%;
-    
+
     --primary: 207 73% 52%;
     --primary-foreground: 0 0% 100%;
-    
+
     --secondary: 30 8% 96%;
     --secondary-foreground: 20 6% 21%;
-    
+
     --danger: 0 61% 64%;
     --danger-foreground: 0 0% 100%;
-    
+
     --border: 20 5% 90%;
     --input: 20 5% 90%;
     --ring: 207 73% 52%;
-    
+
     /* Custom Notion properties */
     --notion-hover: rgba(55, 53, 47, 0.03);
     --notion-selected: rgba(35, 131, 226, 0.08);
@@ -42,26 +41,26 @@
     /* Notion Dark Theme */
     --background: 0 0% 10%;
     --foreground: 0 0% 95%;
-    
+
     --card: 0 0% 10%;
     --card-foreground: 0 0% 95%;
-    
+
     --muted: 0 0% 13%;
     --muted-foreground: 0 0% 60%;
-    
+
     --primary: 207 73% 52%;
     --primary-foreground: 0 0% 10%;
-    
+
     --secondary: 0 0% 18%;
     --secondary-foreground: 0 0% 95%;
-    
+
     --danger: 0 63% 31%;
     --danger-foreground: 0 0% 95%;
-    
+
     --border: 0 0% 15%;
     --input: 0 0% 15%;
     --ring: 207 73% 52%;
-    
+
     --notion-hover: rgba(255, 255, 255, 0.055);
     --notion-selected: rgba(35, 131, 226, 0.15);
   }
@@ -71,15 +70,22 @@
   * {
     @apply border-border;
   }
-  
+
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: 'rlig' 1, 'calt' 1;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply tracking-tight;
   }
 }
@@ -92,22 +98,22 @@
     @apply transition-all duration-100 ease-out;
     @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
   }
-  
+
   .notion-button-primary {
     @apply bg-primary text-primary-foreground;
     @apply hover:bg-primary/90;
   }
-  
+
   .notion-button-secondary {
     @apply bg-secondary text-secondary-foreground border border-border;
     @apply hover:bg-muted;
   }
-  
+
   .notion-button-ghost {
     @apply text-muted-foreground;
     @apply hover:bg-muted hover:text-foreground;
   }
-  
+
   /* Notion-style card */
   .notion-card {
     @apply bg-card rounded-notion-md border border-border;
@@ -115,7 +121,7 @@
     @apply transition-all duration-100 ease-out;
     @apply hover:shadow-notion-md;
   }
-  
+
   /* Notion-style input */
   .notion-input {
     @apply w-full px-3 py-2;
@@ -125,7 +131,7 @@
     @apply transition-all duration-100 ease-out;
     @apply focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10;
   }
-  
+
   /* Notion-style navigation item */
   .notion-nav-item {
     @apply flex items-center gap-2 px-2.5 py-1.5;
@@ -133,17 +139,17 @@
     @apply text-muted-foreground transition-all duration-100;
     @apply hover:bg-muted hover:text-foreground;
   }
-  
+
   .notion-nav-item.active {
     @apply bg-primary/10 text-primary;
   }
-  
+
   /* Notion-style tag */
   .notion-tag {
     @apply inline-flex items-center gap-1 px-2 py-0.5;
     @apply rounded-notion-sm text-notion-xs font-medium;
   }
-  
+
   /* Notion-style empty state */
   .notion-empty {
     @apply text-center py-notion-2xl px-notion-lg;
@@ -158,20 +164,20 @@
     scrollbar-width: thin;
     scrollbar-color: theme('colors.muted.foreground') transparent;
   }
-  
+
   .notion-scrollbar::-webkit-scrollbar {
     @apply w-2 h-2;
   }
-  
+
   .notion-scrollbar::-webkit-scrollbar-track {
     @apply bg-transparent rounded-full;
   }
-  
+
   .notion-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-muted-foreground/20 rounded-full;
     @apply hover:bg-muted-foreground/30;
   }
-  
+
   /* Text selection color */
   ::selection {
     @apply bg-primary/20 text-foreground;

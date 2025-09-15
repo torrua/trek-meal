@@ -24,7 +24,7 @@ const InfoField: React.FC<InfoFieldProps> = ({
 }) => (
   <div
     className={cn(
-      'p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600',
+      'p-3 bg-muted dark:bg-dark-tertiary rounded-notion-md border border-border dark:border-dark-border',
       className
     )}
     data-testid={testId}
@@ -34,8 +34,10 @@ const InfoField: React.FC<InfoFieldProps> = ({
         <Icon className="w-4 h-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <div className={cn('text-sm font-medium mt-0.5', valueClassName || 'text-foreground')}>
+        <p className="text-notion-sm text-muted-foreground">{label}</p>
+        <div
+          className={cn('text-notion-sm font-medium mt-0.5', valueClassName || 'text-foreground')}
+        >
           {value}
         </div>
       </div>

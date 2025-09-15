@@ -78,8 +78,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onEdit }) => {
             )}
           </div>
           {product.description && (
-            <div className="p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+            <div className="p-4 bg-muted/50 rounded-notion-md">
+              <p className="text-notion-sm text-muted-foreground whitespace-pre-wrap">
                 {product.description}
               </p>
             </div>
@@ -129,7 +129,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onEdit }) => {
         <div className="space-y-2">
           {product.portions.map((portion, index) => (
             <PortionListItem
-              key={index} // ИСПРАВЛЕНИЕ: Добавлен key
+              key={index}
               portion={portion}
               onEdit={onEdit}
               onDelete={() => setPortionToDelete(portion)}
@@ -148,13 +148,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onEdit }) => {
         openSections={openSections}
         onToggleSection={handleToggleSection}
       >
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-muted rounded-notion-md flex items-center justify-center flex-shrink-0">
               <Component className="w-5 h-5 text-muted-foreground" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-foreground">{product.name}</h2>
+              <h2 className="text-2xl font-bold text-foreground dark:text-white">{product.name}</h2>
               <p className="text-muted-foreground">{category?.name || 'Без категории'}</p>
             </div>
           </div>

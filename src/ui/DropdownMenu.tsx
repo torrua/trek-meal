@@ -22,8 +22,8 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ trigger, children }) => {
       const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
       setPosition({
-        top: rect.bottom + scrollTop + 8, // 8px отступ от кнопки
-        left: rect.right + scrollLeft - 192, // 192px = w-48 (ширина меню)
+        top: rect.bottom + scrollTop + 8,
+        left: rect.right + scrollLeft - 192,
       });
     }
   }, []);
@@ -82,7 +82,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ trigger, children }) => {
     <div
       ref={menuRef}
       className={cn(
-        'fixed w-48 origin-top-right rounded-xl bg-white dark:bg-gray-800 shadow-xl ring-1 ring-gray-200 dark:ring-gray-700 focus:outline-none z-[9999]',
+        'fixed w-48 origin-top-right rounded-notion-lg bg-card shadow-notion-lg ring-1 ring-border focus:outline-none z-[9999]',
         'animate-fade-in'
       )}
       style={{
@@ -93,16 +93,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ trigger, children }) => {
       aria-orientation="vertical"
     >
       <div className="p-1" role="none" onClick={() => setIsOpen(false)}>
-        {React.Children.map(children, (child) => {
-          if (React.isValidElement(child)) {
-            const childElement = child as React.ReactElement<{ className?: string }>;
-            return React.cloneElement(childElement, {
-              ...childElement.props,
-              className: cn(childElement.props.className, 'rounded-md'),
-            });
-          }
-          return child;
-        })}
+        {children}
       </div>
     </div>
   ) : null;

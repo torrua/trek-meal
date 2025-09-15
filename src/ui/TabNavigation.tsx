@@ -24,7 +24,7 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
   className,
 }) => {
   return (
-    <nav className={cn('flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg', className)}>
+    <nav className={cn('flex space-x-1 bg-muted p-1 rounded-notion-md', className)}>
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -34,10 +34,10 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap',
+              'flex items-center gap-2 px-4 py-2 rounded-notion-sm text-notion-sm font-medium transition-all duration-200 whitespace-nowrap',
               isActive
-                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                ? 'bg-card text-foreground shadow-notion-sm'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             )}
             aria-selected={isActive}
             role="tab"
@@ -47,10 +47,10 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
             {tab.count !== undefined && (
               <span
                 className={cn(
-                  'px-2 py-0.5 rounded-full text-xs',
+                  'px-2 py-0.5 rounded-full text-notion-xs',
                   isActive
-                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                    : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300'
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-muted-foreground/10 text-muted-foreground'
                 )}
               >
                 {tab.count}

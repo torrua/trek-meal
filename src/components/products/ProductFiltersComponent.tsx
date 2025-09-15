@@ -1,18 +1,25 @@
 // src/components/products/ProductFiltersComponent.tsx
 
 import React from 'react';
-import { Tag, RotateCcw } from 'lucide-react';
+import { Tag, RotateCcw, X } from 'lucide-react';
 import useCategoryStore from '../../stores/useCategoryStore';
 import type { Category } from '../../types';
-import DropdownSelect from '../../ui/DropdownSelect';
+import ThemedSelect from '../../ui/ThemedSelect';
 
 export interface ProductFilters {
-  categoryId: string; // 'all' or a category ID
+  categoryIds: string[];
 }
 
 interface ProductFiltersComponentProps {
   filters: ProductFilters;
   onFiltersChange: (filters: ProductFilters) => void;
+}
+
+interface CategoryOption {
+  value: string;
+  label: string;
+  emoji?: string;
+  color?: string;
 }
 
 const ProductFiltersComponent: React.FC<ProductFiltersComponentProps> = ({
@@ -21,51 +28,81 @@ const ProductFiltersComponent: React.FC<ProductFiltersComponentProps> = ({
 }) => {
   const { categories } = useCategoryStore();
 
-  const categoryOptions = [
-    { value: 'all', label: 'Все категории' },
-    ...categories.map((cat: Category) => ({
-      value: String(cat.id),
-      label: cat.name,
-      icon: () => <span className="text-lg">{cat.emoji}</span>,
-    })),
-  ];
+  const categoryOptions: CategoryOption[] = categories.map((cat: Category) => ({
+    value: String(cat.id),
+    label: cat.name,
+    emoji: cat.emoji,
+    color: cat.color,
+  }));
 
-  const handleFilterChange = (filterKey: keyof ProductFilters, value: string) => {
-    onFiltersChange({ ...filters, [filterKey]: value });
+  const handleCategoryChange = (selectedOptions: any) => {
+    // selectedOptions будет null если ничего не выбрано
+    const selectedIds = selectedOptions ? selectedOptions.map((opt: any) => opt.value) : [];
+    onFiltersChange({ categoryIds: selectedIds });
   };
 
   const handleReset = () => {
-    onFiltersChange({ categoryId: 'all' });
+    onFiltersChange({ categoryIds: [] });
   };
 
-  const hasActiveFilters = Object.values(filters).some((value) => value !== 'all');
+  const hasActiveFilters = filters.categoryIds.length > 0;
+
+  // Форматируем выбранные значения для Select
+  const selectedValues = categoryOptions.filter((opt) => filters.categoryIds.includes(opt.value));
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <span className="text-sm font-medium text-foreground">Фильтры</span>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Tag className="w-4 h-4 text-muted-foreground" />
+          <span className="text-notion-sm font-medium text-foreground">Категории</span>
+        </div>
         {hasActiveFilters && (
           <button
             onClick={handleReset}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-danger transition-colors self-start sm:self-auto"
+            className="flex items-center gap-1 text-notion-xs text-muted-foreground hover:text-danger transition-colors"
+            title="Сбросить фильтры"
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>Сбросить все</span>
+            <RotateCcw className="w-3 h-3" />
+            <span>Сбросить</span>
           </button>
         )}
       </div>
 
-      {/* --- ИЗМЕНЕНИЕ: Используем Flexbox вместо Grid --- */}
-      <div className="flex flex-wrap items-center gap-4">
-        <DropdownSelect
-          label="Категория"
-          icon={Tag}
-          options={categoryOptions}
-          value={filters.categoryId}
-          onChange={(value) => handleFilterChange('categoryId', value)}
-          isActive={filters.categoryId !== 'all'}
-        />
-      </div>
+      <ThemedSelect
+        isMulti
+        options={categoryOptions}
+        value={selectedValues}
+        onChange={handleCategoryChange}
+        placeholder="Выберите категории..."
+        closeMenuOnSelect={false}
+        hideSelectedOptions={false}
+        isClearable={false}
+      />
+
+      {/* Отображение выбранных фильтров чипами */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {selectedValues.map((option) => (
+            <div
+              key={option.value}
+              className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-notion-sm text-notion-xs"
+            >
+              {option.emoji && <span>{option.emoji}</span>}
+              <span>{option.label}</span>
+              <button
+                onClick={() => {
+                  const newCategoryIds = filters.categoryIds.filter((id) => id !== option.value);
+                  onFiltersChange({ categoryIds: newCategoryIds });
+                }}
+                className="text-primary hover:text-danger"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -48,20 +48,20 @@ const EntityCard: React.FC<EntityCardProps> = ({
   className,
   'data-testid': testId,
 }) => {
-  const effectiveBorderColor = borderColor || 'hsl(var(--border))';
+  const effectiveBorderColor = borderColor || 'var(--border)';
 
   return (
     <div
       data-testid={testId}
       onClick={onSelect}
       className={cn(
-        'group relative bg-card rounded-lg border transition-colors duration-200 cursor-pointer',
+        'group relative bg-card rounded-notion-md border transition-colors duration-200 cursor-pointer',
         'border-l-4',
         isSelected ? 'bg-muted border-primary' : 'hover:bg-muted/50',
         className
       )}
       style={{
-        borderLeftColor: isSelected ? 'hsl(var(--primary))' : effectiveBorderColor,
+        borderLeftColor: isSelected ? 'var(--primary)' : effectiveBorderColor,
       }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -78,7 +78,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
         <DropdownMenu
           trigger={
             <button
-              className="p-1.5 bg-card rounded-md hover:bg-muted text-muted-foreground"
+              className="p-1.5 bg-card rounded-notion-sm hover:bg-muted text-muted-foreground"
               aria-label="Открыть меню действий"
             >
               <MoreVertical className="w-4 h-4" />
@@ -96,10 +96,10 @@ const EntityCard: React.FC<EntityCardProps> = ({
               }}
               disabled={item.disabled}
               className={cn(
-                'w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors flex items-center gap-2',
+                'w-full px-3 py-2 text-left text-notion-sm hover:bg-muted transition-colors flex items-center gap-2',
                 item.disabled
                   ? 'text-muted-foreground/50 cursor-not-allowed'
-                  : item.className || 'text-card-foreground'
+                  : item.className || 'text-foreground'
               )}
               aria-label={item.label}
             >
@@ -116,18 +116,18 @@ const EntityCard: React.FC<EntityCardProps> = ({
             <div className={cn('flex-shrink-0', iconColor || 'text-muted-foreground')}>
               <Icon className="w-4 h-4" />
             </div>
-            <h3 className="font-semibold text-card-foreground truncate" title={title}>
+            <h3 className="font-semibold text-foreground truncate" title={title}>
               {title}
             </h3>
           </div>
 
           <div className="flex items-center justify-between">
             {details.length > 0 && (
-              <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+              <div className="flex items-center gap-3 text-notion-sm text-muted-foreground flex-wrap">
                 {details.map((detail, index) => (
                   <React.Fragment key={detail.key}>
                     {index > 0 && (
-                      <span className="text-muted-foreground/50 text-xs select-none">•</span>
+                      <span className="text-muted-foreground/50 text-notion-xs select-none">•</span>
                     )}
                     <div
                       className={cn('flex items-center gap-1.5', detail.className)}
@@ -142,7 +142,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
             )}
 
             {subtitle && (
-              <div className="flex items-center gap-1 flex-shrink-0 text-sm text-muted-foreground ml-auto">
+              <div className="flex items-center gap-1 flex-shrink-0 text-notion-sm text-muted-foreground ml-auto">
                 {subtitle}
               </div>
             )}

@@ -13,7 +13,7 @@ interface ConfirmModalProps {
   confirmText?: string;
   cancelText?: string;
   variant?: 'primary' | 'danger' | 'secondary';
-  isLoading?: boolean; // Добавлено свойство
+  isLoading?: boolean;
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -25,13 +25,13 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   confirmText = 'Подтвердить',
   cancelText = 'Отмена',
   variant = 'primary',
-  isLoading = false, // Значение по умолчанию
+  isLoading = false,
 }) => {
   if (!isOpen) return null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
-      <div className="text-sm text-muted-foreground">{children}</div>
+      <div className="text-notion-sm text-muted-foreground">{children}</div>
       <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-border">
         <Button variant="ghost" onClick={onClose} disabled={isLoading}>
           {cancelText}

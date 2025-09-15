@@ -26,7 +26,7 @@ interface DropdownSelectProps {
 
 const DropdownSelect: React.FC<DropdownSelectProps> = ({
   label,
-  options = [], // ИСПРАВЛЕНИЕ: Значение по умолчанию
+  options = [],
   value,
   onChange,
   icon: Icon,
@@ -60,11 +60,9 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
           break;
         case 'ArrowDown':
           event.preventDefault();
-          // Логика навигации по опциям
           break;
         case 'ArrowUp':
           event.preventDefault();
-          // Логика навигации по опциям
           break;
       }
     },
@@ -99,7 +97,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
 
   return (
     <div className={cn('space-y-1.5', containerClassName)} ref={dropdownRef} data-testid={testId}>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+      <label className="block text-notion-sm font-medium text-foreground">{label}</label>
       <div className="relative inline-block text-left">
         <button
           ref={triggerRef}
@@ -113,11 +111,11 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             }
           }}
           className={cn(
-            'flex items-center justify-between px-4 py-3 rounded-xl border transition-all hover:shadow-sm text-left shadow-sm min-w-[220px] focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'flex items-center justify-between px-4 py-3 rounded-notion-md border transition-all hover:shadow-notion-sm text-left shadow-notion-sm min-w-[220px] focus:outline-none focus:ring-2 focus:ring-ring',
             isActive
-              ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700'
-              : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500',
-            disabled ? 'bg-gray-50 dark:bg-gray-800 text-gray-400 cursor-not-allowed' : ''
+              ? 'bg-primary/10 border-primary/20'
+              : 'bg-card border-border hover:border-border/70',
+            disabled ? 'bg-muted text-muted-foreground cursor-not-allowed' : ''
           )}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
@@ -125,13 +123,16 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
         >
           <div className="flex items-center gap-3 min-w-0">
             <Icon
-              className={cn('w-5 h-5 flex-shrink-0', isActive ? 'text-blue-500' : 'text-gray-400')}
+              className={cn(
+                'w-5 h-5 flex-shrink-0',
+                isActive ? 'text-primary' : 'text-muted-foreground'
+              )}
             />
             <span
               className={cn(
-                'text-sm font-medium truncate',
-                isActive ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300',
-                !selectedOption ? 'text-gray-400' : ''
+                'text-notion-sm font-medium truncate',
+                isActive ? 'text-primary' : 'text-foreground',
+                !selectedOption ? 'text-muted-foreground' : ''
               )}
             >
               {selectedOption ? selectedOption.label : placeholder || label}
@@ -139,7 +140,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
           </div>
           <ChevronDown
             className={cn(
-              'w-5 h-5 transition-transform flex-shrink-0 text-gray-400',
+              'w-5 h-5 transition-transform flex-shrink-0 text-muted-foreground',
               isOpen ? 'rotate-180' : ''
             )}
           />
@@ -147,7 +148,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
         {isOpen && options.length > 0 && (
           <div
             style={{ minWidth: `${minMenuWidth}px` }}
-            className="absolute z-50 top-full left-0 mt-2 w-max max-w-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-2 animate-fade-in"
+            className="absolute z-50 top-full left-0 mt-2 w-max max-w-xs bg-card border border-border rounded-notion-md shadow-notion-lg py-2 animate-fade-in"
             role="listbox"
             aria-label={label}
           >
@@ -158,12 +159,12 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
                 onClick={() => handleOptionSelect(option.value)}
                 disabled={option.disabled}
                 className={cn(
-                  'w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-3',
+                  'w-full px-4 py-2.5 text-left text-notion-sm hover:bg-muted transition-colors flex items-center gap-3',
                   value === option.value
-                    ? 'font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30'
+                    ? 'font-semibold text-primary bg-primary/10'
                     : option.disabled
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : 'text-gray-700 dark:text-gray-300'
+                      ? 'text-muted-foreground cursor-not-allowed'
+                      : 'text-foreground'
                 )}
                 role="option"
                 aria-selected={value === option.value}
@@ -175,15 +176,17 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
                 )}
                 <div className="flex-1 truncate">{option.label}</div>
                 {value === option.value && (
-                  <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 ml-auto" />
+                  <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 ml-auto" />
                 )}
               </button>
             ))}
           </div>
         )}
         {isOpen && options.length === 0 && (
-          <div className="absolute z-50 top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-4">
-            <p className="text-sm text-gray-500 text-center px-4">Нет доступных опций</p>
+          <div className="absolute z-50 top-full left-0 mt-2 w-full bg-card border border-border rounded-notion-md shadow-notion-lg py-4">
+            <p className="text-notion-sm text-muted-foreground text-center px-4">
+              Нет доступных опций
+            </p>
           </div>
         )}
       </div>

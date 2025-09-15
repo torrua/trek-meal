@@ -14,33 +14,37 @@ const datePickerStyles = `
   }
   .react-datepicker {
     font-family: inherit;
-    border-radius: 0.75rem;
+    border-radius: var(--notion-radius-md);
     border-color: var(--datepicker-border);
     background-color: var(--datepicker-bg);
+    box-shadow: var(--notion-shadow-lg);
   }
   .react-datepicker__header {
     background-color: var(--datepicker-header-bg);
     border-bottom-color: var(--datepicker-border);
+    border-top-left-radius: var(--notion-radius-md);
+    border-top-right-radius: var(--notion-radius-md);
   }
   .react-datepicker__current-month, .react-datepicker-time__header, .react-datepicker-year-header, .react-datepicker__day-name {
     color: var(--datepicker-text);
+    font-weight: 500;
   }
   .react-datepicker__day {
     color: var(--datepicker-text);
   }
   .react-datepicker__day:hover {
     background-color: var(--datepicker-hover-bg);
-    border-radius: 9999px;
+    border-radius: var(--notion-radius-sm);
   }
   .react-datepicker__day--selected, .react-datepicker__day--in-selecting-range, .react-datepicker__day--in-range {
-    background-color: #1d4ed8;
-    color: white;
-    border-radius: 9999px;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: var(--notion-radius-sm);
   }
   .react-datepicker__day--keyboard-selected {
-    background-color: #3b82f6;
-    color: white;
-    border-radius: 9999px;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: var(--notion-radius-sm);
   }
   .react-datepicker__triangle {
     display: none;
@@ -50,7 +54,6 @@ const datePickerStyles = `
   }
 `;
 
-// --- ИЗМЕНЕНИЕ: Типизация пропсов уточнена ---
 interface CustomInputProps {
   value?: string;
   onClick?: () => void;
@@ -59,18 +62,10 @@ interface CustomInputProps {
 
 const CustomDateInput = forwardRef<HTMLInputElement, CustomInputProps>(
   ({ value, onClick, onChange }, ref) => (
-    <Input
-      onClick={onClick}
-      ref={ref}
-      value={value}
-      icon={Calendar}
-      readOnly // Предотвращаем ручной ввод
-      onChange={onChange} // Нужно для работы isClearable
-    />
+    <Input onClick={onClick} ref={ref} value={value} icon={Calendar} readOnly onChange={onChange} />
   )
 );
 
-// --- ИЗМЕНЕНИЕ: Добавлено displayName ---
 CustomDateInput.displayName = 'CustomDateInput';
 
 const ThemedDatePicker: React.FC<ReactDatePickerProps> = (props) => {
@@ -79,11 +74,11 @@ const ThemedDatePicker: React.FC<ReactDatePickerProps> = (props) => {
 
   const themeVariables = `
     :root {
-      --datepicker-bg: ${isDark ? '#1f2937' : '#ffffff'};
-      --datepicker-border: ${isDark ? '#4b5563' : '#d1d5db'};
-      --datepicker-text: ${isDark ? '#f9fafb' : '#111827'};
-      --datepicker-header-bg: ${isDark ? '#374151' : '#f3f4f6'};
-      --datepicker-hover-bg: ${isDark ? '#4b5563' : '#e5e7eb'};
+      --datepicker-bg: ${isDark ? 'var(--dark-secondary)' : 'var(--card)'};
+      --datepicker-border: ${isDark ? 'var(--dark-border)' : 'var(--border)'};
+      --datepicker-text: ${isDark ? 'var(--text-primary)' : 'var(--foreground)'};
+      --datepicker-header-bg: ${isDark ? 'var(--dark-tertiary)' : 'var(--muted)'};
+      --datepicker-hover-bg: ${isDark ? 'var(--dark-border)' : 'var(--muted)'};
     }
   `;
 

@@ -22,15 +22,6 @@ type StagedProduct = ProductData & { originalCategoryId?: number | null };
 
 const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
   isOpen,
-  /**
-   * Modal window for importing products from a file.
-   *
-   * @param {boolean} isOpen - Is modal window open.
-   * @param {() => void} onClose - Callback for closing modal window.
-   * @param {any} fileContent - Content of the file to be imported.
-   *
-   * @returns {JSX.Element} - Modal window component.
-   */
   onClose,
   fileContent,
 }) => {
@@ -99,17 +90,17 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Импорт продуктов" size="xl">
       <div className="space-y-6">
-        <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg flex items-center gap-3">
-          <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
-          <p className="text-green-800 dark:text-green-200">
+        <div className="p-4 bg-success/10 border border-success/20 rounded-notion-md flex items-center gap-3">
+          <CheckCircle className="w-6 h-6 text-success" />
+          <p className="text-success-foreground">
             Найдено <strong>{totalProductsInFile}</strong> продуктов. Готово к импорту:{' '}
             <strong>{stagedProducts.length}</strong>.
           </p>
         </div>
         {duplicatesCount > 0 && (
-          <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg flex items-center gap-3">
-            <Info className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-            <p className="text-amber-800 dark:text-amber-200">
+          <div className="p-4 bg-warning/10 border border-warning/20 rounded-notion-md flex items-center gap-3">
+            <Info className="w-6 h-6 text-warning" />
+            <p className="text-warning-foreground">
               <strong>{duplicatesCount}</strong> продуктов уже существуют в вашей базе и будут
               пропущены.
             </p>
@@ -117,11 +108,11 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
         )}
 
         <div className="space-y-4">
-          <h3 className="font-semibold text-lg flex items-center gap-2">
-            <PackagePlus className="w-5 h-5 text-amber-500" />
+          <h3 className="font-semibold text-notion-lg flex items-center gap-2">
+            <PackagePlus className="w-5 h-5 text-warning" />
             Порция по умолчанию
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-notion-sm text-muted-foreground">
             Эта порция будет добавлена ко всем импортируемым продуктам.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -141,11 +132,11 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
           </div>
         </div>
 
-        <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+        <div className="space-y-2 max-h-64 overflow-y-auto notion-scrollbar pr-2">
           {stagedProducts.map((product, index) => (
             <div
               key={index}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center p-2 rounded-lg bg-muted"
+              className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center p-2 rounded-notion-md bg-muted"
             >
               <span className="font-medium truncate">{product.name}</span>
               <ThemedSelect
@@ -162,7 +153,7 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
           ))}
         </div>
       </div>
-      <div className="flex justify-end gap-3 pt-6 mt-6 border-t">
+      <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-border">
         <Button variant="secondary" onClick={onClose}>
           Отмена
         </Button>

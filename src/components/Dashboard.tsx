@@ -1,4 +1,4 @@
-// src/components/Dashboard.tsx
+// src/components/Dashboard.tsx - Notion-inspired redesign
 
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -12,17 +12,31 @@ import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import ProductForm from './products/ProductForm';
 import type { Trip, Product, ProductData, Category } from '../types';
+import { MapPin, Package, Users, Calendar, TrendingUp, ChevronRight, Plus } from 'lucide-react';
 
-// Карточка для статистики
-const StatCard = ({ value, label }: { value: number | string; label: string }) => (
-  <div className="p-4 bg-secondary border border-primary rounded-lg text-center shadow-sm">
-    <div className="text-3xl font-bold text-blue-600">{value}</div>
-    <div className="text-sm font-medium text-muted-foreground mt-1">{label}</div>
+// Notion-style Stat Card
+const NotionStatCard = ({
+  value,
+  label,
+  icon: Icon,
+}: {
+  value: number | string;
+  label: string;
+  icon?: React.ElementType;
+}) => (
+  <div className="group bg-white dark:bg-dark-secondary rounded-notion-md border border-border dark:border-dark-border p-notion-md transition-all duration-200 hover:shadow-notion-md hover:-translate-y-0.5 cursor-pointer">
+    <div className="flex items-center justify-between mb-2">
+      {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+      <span className="text-notion-xs font-medium text-muted-foreground uppercase tracking-wider">
+        {label}
+      </span>
+    </div>
+    <div className="text-2xl font-bold text-foreground dark:text-white">{value}</div>
   </div>
 );
 
-// --- НОВЫЙ КОМПОНЕНТ: Компактная карточка продукта для дашборда ---
-const ProductMiniCard = ({
+// Notion-style Product Mini Card
+const NotionProductCard = ({
   product,
   onEdit,
 }: {
@@ -34,26 +48,156 @@ const ProductMiniCard = ({
 
   return (
     <div
-      className="p-3 bg-secondary border rounded-lg shadow-sm flex justify-between items-center cursor-pointer transition-shadow hover:shadow-md"
+      className="group bg-muted dark:bg-dark-tertiary rounded-notion-md p-notion-md 
+                 transition-all duration-200 hover:bg-background dark:hover:bg-dark-secondary 
+                 hover:shadow-notion-sm hover:translate-x-1 cursor-pointer border border-transparent 
+                 hover:border-border dark:hover:border-dark-border"
       onClick={() => onEdit(product)}
     >
-      <div>
-        <h4 className="font-bold text-primary text-sm">{product.name}</h4>
-        <p className="text-xs text-muted-foreground">
-          {product.calories} ккал, {product.proteins}б / {product.fats}ж / {product.carbs}у
-        </p>
+      <div className="flex justify-between items-center">
+        <div className="min-w-0 flex-1">
+          <h4 className="font-semibold text-notion-sm text-foreground dark:text-white truncate">
+            {product.name}
+          </h4>
+          <p className="text-notion-xs text-muted-foreground mt-0.5">
+            {product.calories} ккал • {product.proteins}б / {product.fats}ж / {product.carbs}у
+          </p>
+        </div>
+        {category && (
+          <span
+            className="ml-3 px-2 py-1 text-notion-xs font-medium rounded-notion-sm flex-shrink-0"
+            style={{
+              backgroundColor: `${category.color}15`,
+              color: category.color,
+            }}
+          >
+            {category.emoji} {category.name}
+          </span>
+        )}
       </div>
-      {category && (
-        <span
-          className="px-2 py-0.5 text-xs font-medium text-white rounded-full flex-shrink-0"
-          style={{ backgroundColor: category.color }}
-        >
-          {category.emoji} {category.name}
-        </span>
-      )}
     </div>
   );
 };
+
+// Notion-style Trip Card
+const NotionTripCard = ({
+  trip,
+  summary,
+  onClick,
+}: {
+  trip: Trip;
+  summary: any;
+  onClick: () => void;
+}) => {
+  const statusColors = {
+    planning: 'bg-primary/10 text-primary dark:bg-primary/20',
+    completed: 'bg-success/10 text-success dark:bg-success/20',
+    cancelled: 'bg-danger/10 text-danger dark:bg-danger/20',
+  };
+
+  return (
+    <div
+      onClick={onClick}
+      className="bg-white dark:bg-dark-secondary rounded-notion-lg border border-border 
+                 dark:border-dark-border p-notion-lg transition-all duration-200 
+                 hover:shadow-notion-md hover:border-primary/20 cursor-pointer group"
+    >
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-muted-foreground" />
+          <h4 className="font-semibold text-notion-base text-foreground dark:text-white">
+            {trip.name}
+          </h4>
+        </div>
+        <span
+          className={`px-2 py-1 rounded-notion-sm text-notion-xs font-medium ${statusColors[trip.status]}`}
+        >
+          {trip.status === 'planning'
+            ? 'Планируется'
+            : trip.status === 'completed'
+              ? 'Завершен'
+              : 'Отменен'}
+        </span>
+      </div>
+
+      <div className="text-notion-xs text-muted-foreground mb-3">
+        {new Date(trip.createdAt).toLocaleDateString('ru-RU', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })}
+      </div>
+
+      <div className="grid grid-cols-4 gap-3">
+        <div className="text-center">
+          <div className="text-notion-lg font-semibold text-foreground dark:text-white">
+            {trip.days}
+          </div>
+          <div className="text-notion-xs text-muted-foreground">дней</div>
+        </div>
+        <div className="text-center">
+          <div className="text-notion-lg font-semibold text-foreground dark:text-white">
+            {trip.participants.length}
+          </div>
+          <div className="text-notion-xs text-muted-foreground">чел.</div>
+        </div>
+        <div className="text-center">
+          <div className="text-notion-lg font-semibold text-foreground dark:text-white">
+            {(summary.totalWeight / 1000).toFixed(1)}
+          </div>
+          <div className="text-notion-xs text-muted-foreground">кг</div>
+        </div>
+        <div className="text-center">
+          <div className="text-notion-lg font-semibold text-foreground dark:text-white">
+            {summary.averageCaloriesPerPersonPerDay}
+          </div>
+          <div className="text-notion-xs text-muted-foreground">ккал</div>
+        </div>
+      </div>
+
+      <div
+        className="mt-3 pt-3 border-t border-border dark:border-dark-border 
+                      flex items-center justify-end text-notion-xs text-muted-foreground 
+                      group-hover:text-primary transition-colors"
+      >
+        Открыть детали
+        <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
+      </div>
+    </div>
+  );
+};
+
+// Empty State Component
+const NotionEmptyState = ({
+  title,
+  description,
+  actionLabel,
+  onAction,
+}: {
+  title: string;
+  description: string;
+  actionLabel: string;
+  onAction: () => void;
+}) => (
+  <div
+    className="bg-muted dark:bg-dark-tertiary rounded-notion-lg border-2 border-dashed 
+                  border-border dark:border-dark-border p-notion-2xl text-center"
+  >
+    <div className="max-w-sm mx-auto">
+      <h3 className="text-notion-lg font-semibold text-foreground dark:text-white mb-2">{title}</h3>
+      <p className="text-notion-sm text-muted-foreground mb-4">{description}</p>
+      <button
+        onClick={onAction}
+        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white 
+                   rounded-notion-md font-medium text-notion-sm transition-all 
+                   hover:bg-primary/90 hover:shadow-notion-md"
+      >
+        <Plus className="w-4 h-4" />
+        {actionLabel}
+      </button>
+    </div>
+  </div>
+);
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -62,7 +206,6 @@ function Dashboard() {
   const { participants } = useParticipantStore();
   const { dishes } = useDishStore();
 
-  // --- НОВЫЙ КОД: Состояние для модального окна редактирования продукта ---
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
@@ -77,16 +220,17 @@ function Dashboard() {
   );
 
   const recentProducts = useMemo(() => [...products].reverse().slice(0, 5), [products]);
+
   const planningCount = useMemo(
     () => trips.filter((t: Trip) => t.status === 'planning').length,
     [trips]
   );
+
   const completedCount = useMemo(
     () => trips.filter((t: Trip) => t.status === 'completed').length,
     [trips]
   );
 
-  // --- НОВЫЙ КОД: Обработчики для модального окна ---
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
     setIsProductModalOpen(true);
@@ -96,127 +240,125 @@ function Dashboard() {
     if (editingProduct) {
       updateProduct(editingProduct.id, formData);
     } else {
-      addProduct(formData); // На случай, если решим добавить кнопку "Создать" на дашборд
+      addProduct(formData);
     }
     setIsProductModalOpen(false);
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold text-primary mb-6 pb-4 border-b">Обзор</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        <StatCard value={trips.length} label="Всего походов" />
-        <StatCard value={products.length} label="Продуктов в базе" />
-        <StatCard value={participants.length} label="Участников" />
-        <StatCard value={planningCount} label="Планируется" />
-        <StatCard value={completedCount} label="Завершено" />
+    <div className="min-h-screen bg-background dark:bg-dark-background">
+      <div className="max-w-7xl mx-auto px-notion-lg py-notion-2xl">
+        {/* Page Header */}
+        <div className="mb-notion-xl">
+          <h1 className="text-3xl font-bold text-foreground dark:text-white tracking-tight">
+            Обзор
+          </h1>
+          <p className="text-notion-base text-muted-foreground mt-1">
+            Управляйте походами, продуктами и участниками
+          </p>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-notion-md mb-notion-2xl">
+          <NotionStatCard value={trips.length} label="Всего походов" icon={MapPin} />
+          <NotionStatCard value={products.length} label="Продуктов" icon={Package} />
+          <NotionStatCard value={participants.length} label="Участников" icon={Users} />
+          <NotionStatCard value={planningCount} label="Планируется" icon={Calendar} />
+          <NotionStatCard value={completedCount} label="Завершено" icon={TrendingUp} />
+        </div>
+
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-notion-xl">
+          {/* Recent Trips Section */}
+          <section>
+            <div className="flex items-center justify-between mb-notion-lg">
+              <h2 className="text-notion-xl font-semibold text-foreground dark:text-white">
+                Последние походы
+              </h2>
+              <button
+                onClick={() => navigate('/trips')}
+                className="text-notion-sm text-muted-foreground hover:text-primary 
+                           transition-colors flex items-center gap-1"
+              >
+                Все походы
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-notion-md">
+              {recentTrips.length > 0 ? (
+                recentTrips.map((trip) => {
+                  const summary = calculateTripSummary(trip, products, participants, dishes);
+                  return (
+                    <NotionTripCard
+                      key={trip.id}
+                      trip={trip}
+                      summary={summary}
+                      onClick={() => navigate(`/trips/${trip.id}`)}
+                    />
+                  );
+                })
+              ) : (
+                <NotionEmptyState
+                  title="Нет походов"
+                  description="Создайте свой первый поход, чтобы начать планирование"
+                  actionLabel="Создать поход"
+                  onAction={() => navigate('/trips')}
+                />
+              )}
+            </div>
+          </section>
+
+          {/* Recent Products Section */}
+          <section>
+            <div className="flex items-center justify-between mb-notion-lg">
+              <h2 className="text-notion-xl font-semibold text-foreground dark:text-white">
+                Недавние продукты
+              </h2>
+              <button
+                onClick={() => navigate('/products')}
+                className="text-notion-sm text-muted-foreground hover:text-primary 
+                           transition-colors flex items-center gap-1"
+              >
+                Все продукты
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {recentProducts.length > 0 ? (
+                recentProducts.map((product: Product) => (
+                  <NotionProductCard
+                    key={product.id}
+                    product={product}
+                    onEdit={handleEditProduct}
+                  />
+                ))
+              ) : (
+                <NotionEmptyState
+                  title="База продуктов пуста"
+                  description="Добавьте продукты для планирования питания в походах"
+                  actionLabel="Добавить продукт"
+                  onAction={() => navigate('/products')}
+                />
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* Product Edit Modal */}
+        <Modal
+          isOpen={isProductModalOpen}
+          onClose={() => setIsProductModalOpen(false)}
+          title="Редактировать продукт"
+        >
+          <ProductForm
+            product={editingProduct}
+            onSubmit={handleProductFormSubmit}
+            onCancel={() => setIsProductModalOpen(false)}
+          />
+        </Modal>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <section>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-primary">Последние походы</h3>
-            <Button variant="ghost" onClick={() => navigate('/trips')}>
-              Все походы
-            </Button>
-          </div>
-          <div className="space-y-3">
-            {recentTrips.length > 0 ? (
-              recentTrips.map((trip) => {
-                const summary = calculateTripSummary(trip, products, participants, dishes);
-                return (
-                  <div
-                    key={trip.id}
-                    onClick={() => navigate(`/trips/${trip.id}`)}
-                    className="p-4 bg-secondary border rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex justify-between">
-                      <h4 className="font-bold text-primary">{trip.name}</h4>
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {new Date(trip.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2 mt-3 text-center text-sm">
-                      <div>
-                        <strong className="block text-blue-600">{trip.days}</strong>
-                        <span className="text-xs text-muted-foreground">дней</span>
-                      </div>
-                      <div>
-                        <strong className="block text-blue-600">{trip.participants.length}</strong>
-                        <span className="text-xs text-muted-foreground">чел.</span>
-                      </div>
-                      <div>
-                        <strong className="block text-blue-600">
-                          {(summary.totalWeight / 1000).toFixed(1)}
-                        </strong>
-                        <span className="text-xs text-muted-foreground">кг</span>
-                      </div>
-                      <div>
-                        <strong className="block text-blue-600">
-                          {summary.averageCaloriesPerPersonPerDay}
-                        </strong>
-                        <span className="text-xs text-muted-foreground">ккал/день</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-12 px-6 bg-muted rounded-lg">
-                <h3 className="text-lg font-medium-foreground text-secondary">
-                  Пока нет ни одного похода
-                </h3>
-                <p className="text-muted-foreground mt-2 mb-4">
-                  Создайте свой первый поход, чтобы он появился здесь.
-                </p>
-                <Button variant="primary" onClick={() => navigate('/trips')}>
-                  К поxoдам
-                </Button>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold text-primary">Недавно добавленные продукты</h3>
-            <Button variant="ghost" onClick={() => navigate('/products')}>
-              Все продукты
-            </Button>
-          </div>
-          {/* --- ИЗМЕНЕНИЕ: Используем ProductMiniCard --- */}
-          <div className="space-y-2">
-            {recentProducts.length > 0 ? (
-              recentProducts.map((product: Product) => (
-                <ProductMiniCard key={product.id} product={product} onEdit={handleEditProduct} />
-              ))
-            ) : (
-              <div className="text-center py-12 px-6 bg-muted rounded-lg">
-                <h3 className="text-lg font-medium text-secondary">База продуктов пуста</h3>
-                <p className="text-muted-foreground mt-2 mb-4">
-                  Добавьте продукты, чтобы они отображались здесь.
-                </p>
-                <Button variant="primary" onClick={() => navigate('/products')}>
-                  К продуктам
-                </Button>
-              </div>
-            )}
-          </div>
-        </section>
-      </div>
-
-      {/* --- НОВЫЙ КОД: Модальное окно для быстрого редактирования --- */}
-      <Modal
-        isOpen={isProductModalOpen}
-        onClose={() => setIsProductModalOpen(false)}
-        title="Редактировать продукт"
-      >
-        <ProductForm
-          product={editingProduct}
-          onSubmit={handleProductFormSubmit}
-          onCancel={() => setIsProductModalOpen(false)}
-        />
-      </Modal>
     </div>
   );
 }

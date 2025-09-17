@@ -2,7 +2,7 @@
 
 import React from 'react';
 import cn from 'classnames';
-import { MoreVertical } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import DropdownMenu from './DropdownMenu';
 
 export interface MenuItem {
@@ -48,20 +48,28 @@ const EntityCard: React.FC<EntityCardProps> = ({
   className,
   'data-testid': testId,
 }) => {
-  const effectiveBorderColor = borderColor || 'var(--border)';
-
   return (
     <div
       data-testid={testId}
       onClick={onSelect}
       className={cn(
-        'group relative bg-card rounded-notion-md border transition-colors duration-200 cursor-pointer',
+        // Base Notion-style card
+        'group relative bg-card rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden',
+        'hover:notion-shadow hover:-translate-y-0.5',
+        'notion-focus-ring',
+
+        // Selection states with Notion-style colors
+        isSelected
+          ? 'border-primary/30 bg-primary/5 notion-shadow'
+          : 'border notion-border-subtle hover:border-border/80',
+
+        // Left border accent (Notion-style)
         'border-l-4',
-        isSelected ? 'bg-muted border-primary' : 'hover:bg-muted/50',
+
         className
       )}
       style={{
-        borderLeftColor: isSelected ? 'var(--primary)' : effectiveBorderColor,
+        borderLeftColor: isSelected ? 'rgb(var(--primary))' : borderColor || 'rgb(var(--border))',
       }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -74,14 +82,20 @@ const EntityCard: React.FC<EntityCardProps> = ({
       aria-pressed={isSelected}
       aria-label={`Выбрать ${title}`}
     >
-      <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+      {/* Notion-style floating menu button */}
+      <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 focus-within:opacity-100">
         <DropdownMenu
           trigger={
             <button
-              className="p-1.5 bg-card rounded-notion-sm hover:bg-muted text-muted-foreground"
+              className={cn(
+                'p-1.5 bg-card/80 backdrop-blur-sm rounded-lg border notion-border-subtle',
+                'hover:bg-muted/80 text-muted-foreground hover:text-foreground',
+                'notion-shadow-sm hover:notion-shadow transition-all duration-200',
+                'notion-focus-ring'
+              )}
               aria-label="Открыть меню действий"
             >
-              <MoreVertical className="w-4 h-4" />
+              <MoreHorizontal className="w-4 h-4" />
             </button>
           }
         >
@@ -96,59 +110,75 @@ const EntityCard: React.FC<EntityCardProps> = ({
               }}
               disabled={item.disabled}
               className={cn(
-                'w-full px-3 py-2 text-left text-notion-sm hover:bg-muted transition-colors flex items-center gap-2',
+                'w-full px-3 py-2 text-left text-sm transition-all duration-150 flex items-center gap-3 rounded-md',
+                'notion-bg-hover',
                 item.disabled
                   ? 'text-muted-foreground/50 cursor-not-allowed'
-                  : item.className || 'text-foreground'
+                  : item.className || 'text-card-foreground hover:text-foreground'
               )}
               aria-label={item.label}
             >
-              <item.icon className="w-4 h-4" />
-              <span>{item.label}</span>
+              <item.icon className="w-4 h-4 flex-shrink-0" />
+              <span className="font-medium">{item.label}</span>
             </button>
           ))}
         </DropdownMenu>
       </div>
 
-      <div className="p-4">
-        <div className="min-w-0 flex-1 space-y-3">
-          <div className="flex items-center gap-2 pr-8">
-            <div className={cn('flex-shrink-0', iconColor || 'text-muted-foreground')}>
+      {/* Card Content */}
+      <div className="p-5">
+        <div className="space-y-4">
+          {/* Header with icon and title */}
+          <div className="flex items-start gap-3 pr-8">
+            <div
+              className={cn(
+                'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center',
+                'bg-muted/50 border notion-border-subtle',
+                iconColor || 'text-muted-foreground'
+              )}
+            >
               <Icon className="w-4 h-4" />
             </div>
-            <h3 className="font-semibold text-foreground truncate" title={title}>
-              {title}
-            </h3>
+
+            <div className="min-w-0 flex-1 space-y-1">
+              <h3
+                className="font-semibold text-foreground text-base leading-tight truncate"
+                title={title}
+              >
+                {title}
+              </h3>
+              {subtitle && (
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  {subtitle}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            {details.length > 0 && (
-              <div className="flex items-center gap-3 text-notion-sm text-muted-foreground flex-wrap">
-                {details.map((detail, index) => (
-                  <React.Fragment key={detail.key}>
-                    {index > 0 && (
-                      <span className="text-muted-foreground/50 text-notion-xs select-none">•</span>
-                    )}
-                    <div
-                      className={cn('flex items-center gap-1.5', detail.className)}
-                      title={detail.title}
-                    >
-                      <detail.icon className="w-4 h-4 flex-shrink-0" />
-                      {detail.text && <span className="font-medium">{detail.text}</span>}
-                    </div>
-                  </React.Fragment>
-                ))}
-              </div>
-            )}
-
-            {subtitle && (
-              <div className="flex items-center gap-1 flex-shrink-0 text-notion-sm text-muted-foreground ml-auto">
-                {subtitle}
-              </div>
-            )}
-          </div>
+          {/* Details with Notion-style spacing */}
+          {details.length > 0 && (
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              {details.map((detail) => (
+                <div
+                  key={detail.key}
+                  className={cn('flex items-center gap-2 min-w-0', detail.className)}
+                  title={detail.title}
+                >
+                  <detail.icon className="w-4 h-4 flex-shrink-0 opacity-70" />
+                  <span className="font-medium text-foreground/80 truncate">{detail.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Notion-style selection indicator */}
+      {isSelected && (
+        <div className="absolute bottom-3 right-3">
+          <div className="w-2 h-2 bg-primary rounded-full notion-shadow-sm"></div>
+        </div>
+      )}
     </div>
   );
 };

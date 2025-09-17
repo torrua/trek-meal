@@ -1,7 +1,18 @@
 // src/components/participants/ParticipantForm.tsx
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { User, Phone, Mail, Calendar, Save, AlertCircle, X, Users, Award } from 'lucide-react';
+import {
+  User,
+  Phone,
+  Mail,
+  Calendar,
+  Save,
+  AlertCircle,
+  X,
+  Users,
+  Award,
+  FileText,
+} from 'lucide-react';
 import type { Participant, ParticipantData } from '../../types';
 import Button from '../../ui/Button';
 import Input from '../../ui/Input';
@@ -42,7 +53,6 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
   );
 
   useEffect(() => {
-    // --- ИЗМЕНЕНИЕ: Явно указываем тип для нового участника ---
     const dataToSet = participant
       ? { ...participant }
       : ({
@@ -58,6 +68,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
 
     if ('id' in dataToSet) {
       const { id: _id, ...formDataWithoutId } = dataToSet as Participant;
+      setFormData(formDataWithoutId);
       setFormData(formDataWithoutId);
       setInitialData(formDataWithoutId);
     } else {
@@ -138,29 +149,33 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
     formData.name.trim().length > 0 && Object.keys(errors).every((key) => !errors[key]);
 
   return (
-    <>
-      <form onSubmit={handleSubmit} className="p-1 space-y-6">
+    <div className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Basic Information Section */}
         <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+          <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
+            <User className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">
               Основная информация
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="md:col-span-2">
-                <Input
-                  label="Полное имя"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  error={errors.name}
-                  required
-                  placeholder="Введите полное имя"
-                  icon={User}
-                  disabled={isLoading}
-                  autoFocus
-                />
-              </div>
+          </div>
 
+          <div className="space-y-6">
+            <Input
+              label="Полное имя"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              error={errors.name}
+              required
+              placeholder="Введите полное имя"
+              icon={User}
+              disabled={isLoading}
+              autoFocus
+              className="text-base font-medium"
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <DropdownSelect
                 label="Пол"
                 icon={Users}
@@ -185,17 +200,6 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
                 disabled={isLoading}
               />
 
-              <Input
-                label="Дата рождения"
-                name="birthDate"
-                type="date"
-                value={formData.birthDate}
-                onChange={handleChange}
-                error={errors.birthDate}
-                icon={Calendar}
-                disabled={isLoading}
-              />
-
               <DropdownSelect
                 label="Уровень опыта"
                 icon={Award}
@@ -209,84 +213,94 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
                 disabled={isLoading}
               />
             </div>
-          </div>
 
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-              Контактная информация
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label="Телефон"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleChange}
-                error={errors.phone}
-                placeholder="+7 (999) 123-45-67"
-                icon={Phone}
-                disabled={isLoading}
-              />
-
-              <Input
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                error={errors.email}
-                placeholder="example@email.com"
-                icon={Mail}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-              Дополнительная информация
-            </h3>
-            <Textarea
-              label="Заметки"
-              name="notes"
-              value={formData.notes}
+            <Input
+              label="Дата рождения"
+              name="birthDate"
+              type="date"
+              value={formData.birthDate}
               onChange={handleChange}
-              error={errors.notes}
-              placeholder="Аллергии, медицинские особенности, предпочтения, особые требования..."
-              rows={4}
+              error={errors.birthDate}
+              icon={Calendar}
               disabled={isLoading}
             />
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleCancel}
+        {/* Contact Information Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
+            <Phone className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">
+              Контактная информация
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input
+              label="Телефон"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+              error={errors.phone}
+              placeholder="+7 (999) 123-45-67"
+              icon={Phone}
+              disabled={isLoading}
+            />
+
+            <Input
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              error={errors.email}
+              placeholder="example@email.com"
+              icon={Mail}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+
+        {/* Additional Information Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
+            <FileText className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">
+              Дополнительная информация
+            </h3>
+          </div>
+
+          <Textarea
+            label="Заметки"
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+            error={errors.notes}
+            placeholder="Аллергии, медицинские особенности, предпочтения, особые требования..."
+            rows={4}
             disabled={isLoading}
-            className="flex items-center gap-2"
-          >
-            <X className="w-4 h-4" />
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 pt-6 border-t notion-border-subtle">
+          <Button type="button" variant="ghost" onClick={handleCancel} disabled={isLoading}>
+            <X className="w-4 h-4 mr-2" />
             Отмена
           </Button>
-          <Button
-            type="submit"
-            disabled={!isFormValid || isLoading}
-            className="flex items-center gap-2"
-          >
-            <Save className="w-4 h-4" />
-            {isLoading
-              ? 'Сохранение...'
-              : participant
-                ? 'Сохранить изменения'
-                : 'Добавить участника'}
+          <Button type="submit" disabled={!isFormValid || isLoading} loading={isLoading}>
+            <Save className="w-4 h-4 mr-2" />
+            {participant ? 'Сохранить изменения' : 'Добавить участника'}
           </Button>
         </div>
 
+        {/* Unsaved Changes Warning */}
         {isDirty && !isLoading && (
-          <div className="flex items-center justify-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
-            <AlertCircle className="w-4 h-4" />У вас есть несохраненные изменения
+          <div className="flex items-center justify-center gap-3 text-sm text-warning bg-warning/10 p-4 rounded-xl border border-warning/20">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span className="font-medium">У вас есть несохраненные изменения</span>
           </div>
         )}
       </form>
@@ -300,9 +314,9 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
         confirmText="Уйти"
         cancelText="Остаться"
       >
-        <p>Вы уверены, что хотите уйти? Все несохраненные изменения будут потеряны.</p>
+        Вы уверены, что хотите уйти? Все несохраненные изменения будут потеряны.
       </ConfirmModal>
-    </>
+    </div>
   );
 };
 

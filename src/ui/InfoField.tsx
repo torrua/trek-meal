@@ -10,6 +10,7 @@ interface InfoFieldProps {
   value: React.ReactNode;
   valueClassName?: string;
   className?: string;
+  variant?: 'default' | 'compact';
   'data-testid'?: string;
 }
 
@@ -20,23 +21,46 @@ const InfoField: React.FC<InfoFieldProps> = ({
   value,
   valueClassName,
   className,
+  variant = 'default',
   'data-testid': testId,
 }) => (
   <div
     className={cn(
-      'p-3 bg-muted dark:bg-dark-tertiary rounded-notion-md border border-border dark:border-dark-border',
+      'rounded-xl border notion-border-subtle transition-all duration-200 notion-bg-hover bg-card',
+      'hover:border-border hover:notion-shadow-sm',
+      variant === 'default' ? 'p-4' : 'p-3',
       className
     )}
     data-testid={testId}
   >
     <div className="flex items-start gap-3">
-      <div className={cn('text-muted-foreground mt-0.5 flex-shrink-0', iconClassName)}>
-        <Icon className="w-4 h-4" />
+      {/* Icon container with Notion-style background */}
+      <div
+        className={cn(
+          'flex-shrink-0 rounded-lg flex items-center justify-center border notion-border-subtle',
+          variant === 'default' ? 'w-8 h-8 bg-muted/50' : 'w-6 h-6 bg-muted/30',
+          iconClassName || 'text-muted-foreground'
+        )}
+      >
+        <Icon className={cn(variant === 'default' ? 'w-4 h-4' : 'w-3.5 h-3.5')} />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-notion-sm text-muted-foreground">{label}</p>
+
+      {/* Content */}
+      <div className="min-w-0 flex-1 space-y-1">
+        <p
+          className={cn(
+            'font-medium text-muted-foreground tracking-tight',
+            variant === 'default' ? 'text-sm' : 'text-xs'
+          )}
+        >
+          {label}
+        </p>
         <div
-          className={cn('text-notion-sm font-medium mt-0.5', valueClassName || 'text-foreground')}
+          className={cn(
+            'font-semibold tracking-tight',
+            variant === 'default' ? 'text-base' : 'text-sm',
+            valueClassName || 'text-foreground'
+          )}
         >
           {value}
         </div>

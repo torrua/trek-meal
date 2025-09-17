@@ -31,56 +31,84 @@ const DetailPane: React.FC<DetailPaneProps> = ({
   return (
     <div
       className={cn(
-        'h-full flex flex-col bg-card rounded-notion-lg border border-border overflow-hidden',
+        'h-full flex flex-col bg-card rounded-2xl border notion-border-subtle overflow-hidden notion-shadow-sm',
         className
       )}
     >
-      <div className="flex-shrink-0 p-6 border-b border-border">{children}</div>
+      {/* Header section with Notion-style padding */}
+      <div className="flex-shrink-0 p-8 border-b notion-border-subtle bg-card">{children}</div>
+
+      {/* Scrollable sections */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <div className="h-full overflow-y-auto notion-scrollbar">
           {sections.map(({ id, title, icon: Icon, content, actionButton }) => {
             const isOpen = openSections.includes(id);
+
             return (
-              <div key={id} className="border-b border-border last:border-b-0">
+              <div key={id} className="border-b notion-border-subtle last:border-b-0">
+                {/* Section header */}
                 <div
                   className={cn(
-                    'w-full flex justify-between items-center px-6 py-3 transition-colors cursor-pointer hover:bg-muted/50'
+                    'w-full flex justify-between items-center px-8 py-5 transition-all duration-200',
+                    'notion-bg-hover',
+                    onToggleSection && 'cursor-pointer',
+                    isOpen && 'bg-muted/30'
                   )}
                   onClick={() => onToggleSection?.(id)}
                 >
-                  <div className="flex items-center gap-3 min-h-[24px] flex-1 min-w-0">
-                    <Icon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                    <div className="font-semibold text-foreground truncate">{title}</div>
+                  <div className="flex items-center gap-4 min-h-[24px] flex-1 min-w-0">
+                    <div
+                      className={cn(
+                        'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                        'bg-muted/50 border notion-border-subtle',
+                        isOpen
+                          ? 'text-primary bg-primary/10 border-primary/20'
+                          : 'text-muted-foreground'
+                      )}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="font-semibold text-foreground truncate text-base tracking-tight">
+                      {title}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-shrink-0 min-h-[24px]">
+                  {/* Action buttons area */}
+                  <div className="flex items-center gap-3 flex-shrink-0 min-h-[24px]">
                     {actionButton && <div onClick={(e) => e.stopPropagation()}>{actionButton}</div>}
 
                     {onToggleSection && (
                       <button
-                        className="p-1 text-muted-foreground hover:text-foreground"
+                        className={cn(
+                          'p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-all duration-200',
+                          'hover:bg-muted/60 notion-focus-ring'
+                        )}
                         onClick={(e) => {
                           e.stopPropagation();
                           onToggleSection(id);
                         }}
+                        aria-label={isOpen ? 'Свернуть раздел' : 'Развернуть раздел'}
                       >
                         <ChevronDown
-                          className={cn('w-5 h-5 transition-transform duration-200', {
-                            'rotate-180': isOpen,
-                          })}
+                          className={cn(
+                            'w-5 h-5 transition-transform duration-300 ease-out',
+                            isOpen && 'rotate-180'
+                          )}
                         />
                       </button>
                     )}
                   </div>
                 </div>
+
+                {/* Collapsible content with Notion-style animation */}
                 <div
                   className={cn(
-                    'grid overflow-hidden transition-all duration-300 ease-in-out',
+                    'grid transition-all duration-300 ease-out overflow-hidden',
                     isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
                   )}
                 >
                   <div className="min-h-0">
-                    <div className="px-6 pb-6 pt-2">{content}</div>
+                    <div className="px-8 pb-8 pt-2">{content}</div>
                   </div>
                 </div>
               </div>

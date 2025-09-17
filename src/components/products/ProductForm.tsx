@@ -1,7 +1,7 @@
 // src/components/products/ProductForm.tsx
 
 import React, { useState, useEffect } from 'react';
-import { Tag, Trash2 } from 'lucide-react';
+import { Tag, Trash2, Plus, Component, Scale, Flame } from 'lucide-react';
 import useCategoryStore from '../../stores/useCategoryStore';
 import Button from '../../ui/Button';
 import { toast } from 'react-hot-toast';
@@ -89,137 +89,192 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     ...categories.map((cat: Category) => ({
       value: String(cat.id),
       label: cat.name,
-      icon: () => <span className="text-lg">{cat.emoji}</span>,
     })),
   ];
 
   return (
-    <form onSubmit={handleSubmit} className="p-1 space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
-          label="Название *"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          autoFocus
-        />
-        <DropdownSelect
-          label="Категория"
-          icon={Tag}
-          value={String(formData.categoryId || '')}
-          onChange={(value) => handleSelectChange('categoryId', value)}
-          options={categoryOptions}
-        />
-      </div>
+    <div className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Basic Information Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
+            <Component className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">
+              Основная информация
+            </h3>
+          </div>
 
-      <Textarea
-        label="Описание"
-        name="description"
-        value={formData.description}
-        onChange={handleChange}
-        rows={2}
-      />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input
+              label="Название продукта"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              autoFocus
+              placeholder="Например, Гречневая крупа"
+              className="text-base font-medium"
+            />
 
-      <div>
-        <label className="block text-notion-sm font-medium text-foreground mb-2">
-          Пищевая ценность (на 100г)
-        </label>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Input
-            label="Калории"
-            name="calories"
-            type="number"
-            value={formData.calories}
+            <DropdownSelect
+              label="Категория"
+              icon={Tag}
+              value={String(formData.categoryId || '')}
+              onChange={(value) => handleSelectChange('categoryId', value)}
+              options={categoryOptions}
+            />
+          </div>
+
+          <Textarea
+            label="Описание"
+            name="description"
+            value={formData.description}
             onChange={handleChange}
-            min="0"
-          />
-          <Input
-            label="Белки"
-            name="proteins"
-            type="number"
-            value={formData.proteins}
-            onChange={handleChange}
-            min="0"
-          />
-          <Input
-            label="Жиры"
-            name="fats"
-            type="number"
-            value={formData.fats}
-            onChange={handleChange}
-            min="0"
-          />
-          <Input
-            label="Углеводы"
-            name="carbs"
-            type="number"
-            value={formData.carbs}
-            onChange={handleChange}
-            min="0"
+            rows={3}
+            placeholder="Краткое описание продукта, особенности приготовления..."
           />
         </div>
-      </div>
 
-      <div className="flex items-center gap-3 p-3 bg-muted rounded-notion-md border border-border">
-        <input
-          id="isPerishable"
-          name="isPerishable"
-          type="checkbox"
-          checked={formData.isPerishable}
-          onChange={handleChange}
-          className="h-4 w-4 rounded-notion-sm border-border text-primary focus:ring-primary"
-        />
-        <label htmlFor="isPerishable" className="text-notion-sm font-medium text-foreground">
-          Скоропортящийся продукт
-        </label>
-      </div>
-      <div>
-        <label className="block text-notion-sm font-medium text-foreground mb-2">Порции *</label>
-        <div className="space-y-3">
-          {formData.portions.map((portion, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <Input
-                type="text"
-                placeholder="Название (напр. 'Малая')"
-                value={portion.name}
-                onChange={(e) => handlePortionChange(index, 'name', e.target.value)}
-                containerClassName="flex-grow"
+        {/* Nutritional Information Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
+            <Flame className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">
+              Пищевая ценность (на 100г)
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Input
+              label="Калории (ккал)"
+              name="calories"
+              type="number"
+              value={formData.calories}
+              onChange={handleChange}
+              min="0"
+              placeholder="0"
+            />
+            <Input
+              label="Белки (г)"
+              name="proteins"
+              type="number"
+              value={formData.proteins}
+              onChange={handleChange}
+              min="0"
+              placeholder="0"
+            />
+            <Input
+              label="Жиры (г)"
+              name="fats"
+              type="number"
+              value={formData.fats}
+              onChange={handleChange}
+              min="0"
+              placeholder="0"
+            />
+            <Input
+              label="Углеводы (г)"
+              name="carbs"
+              type="number"
+              value={formData.carbs}
+              onChange={handleChange}
+              min="0"
+              placeholder="0"
+            />
+          </div>
+        </div>
+
+        {/* Product Properties Section */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border notion-border-subtle">
+            <div className="flex items-center gap-3">
+              <input
+                id="isPerishable"
+                name="isPerishable"
+                type="checkbox"
+                checked={formData.isPerishable}
+                onChange={handleChange}
+                className="w-4 h-4 rounded border notion-border-subtle text-primary focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
               />
-              <Input
-                type="number"
-                placeholder="Вес (г)"
-                value={portion.weight}
-                onChange={(e) => handlePortionChange(index, 'weight', e.target.value)}
-                required
-                min="0"
-                containerClassName="w-32 flex-shrink-0"
-              />
-              <Button
-                type="button"
-                variant="danger"
-                size="icon"
-                onClick={() => removePortion(index)}
-                disabled={formData.portions.length <= 1}
+              <label
+                htmlFor="isPerishable"
+                className="text-sm font-medium text-foreground cursor-pointer"
               >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+                Скоропортящийся продукт
+              </label>
             </div>
-          ))}
+            <div className="text-xs text-muted-foreground">Требует особых условий хранения</div>
+          </div>
         </div>
-        <Button type="button" variant="ghost" onClick={addPortion} className="mt-3">
-          + Добавить порцию
-        </Button>
-      </div>
-      <div className="flex justify-end gap-3 pt-6 border-t border-border">
-        <Button type="button" variant="secondary" onClick={onCancel}>
-          Отмена
-        </Button>
-        <Button type="submit" variant="primary">
-          {product ? 'Сохранить' : 'Добавить'}
-        </Button>
-      </div>
-    </form>
+
+        {/* Portions Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
+            <Scale className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">Порции</h3>
+          </div>
+
+          <div className="space-y-4">
+            {formData.portions.map((portion, index) => (
+              <div
+                key={index}
+                className="flex items-end gap-3 p-4 bg-muted/20 rounded-xl border notion-border-subtle"
+              >
+                <Input
+                  label="Название порции"
+                  type="text"
+                  placeholder="Например, 'Малая', 'Большая'"
+                  value={portion.name}
+                  onChange={(e) => handlePortionChange(index, 'name', e.target.value)}
+                  containerClassName="flex-1"
+                />
+                <Input
+                  label="Вес (г)"
+                  type="number"
+                  placeholder="0"
+                  value={portion.weight}
+                  onChange={(e) => handlePortionChange(index, 'weight', e.target.value)}
+                  required
+                  min="0"
+                  containerClassName="w-32 flex-shrink-0"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removePortion(index)}
+                  disabled={formData.portions.length <= 1}
+                  className="text-danger hover:bg-danger/10"
+                  title="Удалить порцию"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={addPortion}
+            className="w-full border-2 border-dashed notion-border-subtle hover:border-primary hover:bg-primary/5"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Добавить порцию
+          </Button>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 pt-6 border-t notion-border-subtle">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Отмена
+          </Button>
+          <Button type="submit" variant="primary">
+            {product ? 'Сохранить' : 'Добавить'}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 

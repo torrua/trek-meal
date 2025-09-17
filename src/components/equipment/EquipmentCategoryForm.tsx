@@ -49,24 +49,28 @@ const EquipmentCategoryForm: React.FC<EquipmentCategoryFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-1 space-y-6">
+    <div className="space-y-8">
+      {/* Preview Section */}
       <div>
-        <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-          Предпросмотр
+        <label className="block text-sm font-medium text-foreground mb-3 tracking-tight">
+          Предварительный просмотр
         </label>
-        <div className="p-4 rounded-lg border-2" style={{ borderColor: color }}>
-          <div className="flex items-center gap-3">
+        <div
+          className="p-6 rounded-2xl border-2 bg-card transition-all duration-200"
+          style={{ borderColor: color }}
+        >
+          <div className="flex items-center gap-4">
             <div
-              className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0 text-white"
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white notion-shadow-sm"
               style={{ backgroundColor: color }}
             >
               <DynamicIcon name={iconName} className="w-6 h-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-foreground truncate">
+              <h3 className="font-semibold text-foreground text-lg tracking-tight truncate">
                 {name || 'Название категории'}
               </h3>
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                 <Backpack className="w-4 h-4" />
                 <span>0 снаряжения</span>
               </div>
@@ -75,62 +79,89 @@ const EquipmentCategoryForm: React.FC<EquipmentCategoryFormProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 items-center">
-        <Input
-          label="Иконка"
-          value={iconName}
-          onChange={(e) => setIconName(e.target.value)}
-          placeholder="Напр. Tent"
-          containerClassName="w-32"
-          className="text-center"
-        />
-        <Input
-          label="Название категории *"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          autoFocus
-          placeholder="Например, Палатки и тенты"
-        />
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Name and Icon Section */}
+        <div className="space-y-6">
+          <Input
+            label="Название категории"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            autoFocus
+            placeholder="Например, Палатки и тенты"
+            className="text-base"
+          />
 
-      <div>
-        <label className="block text-sm font-medium text-muted-foreground mb-2">Цвет</label>
-        <div className="grid grid-cols-8 gap-2">
-          {PRESET_COLORS.map((presetColor) => (
-            <button
-              key={presetColor}
-              type="button"
-              className={`w-full h-8 rounded-full transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${
-                color === presetColor ? 'ring-2 ring-primary ring-offset-2 scale-110' : ''
-              }`}
-              style={{ backgroundColor: presetColor }}
-              onClick={() => setColor(presetColor)}
-              title={presetColor}
-            />
-          ))}
-        </div>
-        <div className="flex items-center gap-3 mt-3">
-          <Palette className="w-5 h-5 text-muted-foreground" />
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="w-full h-10 border-none p-0 bg-transparent rounded-lg"
+          <Input
+            label="Иконка (Lucide)"
+            value={iconName}
+            onChange={(e) => setIconName(e.target.value)}
+            placeholder="Например, Tent"
+            className="text-center font-mono text-sm"
           />
         </div>
-      </div>
 
-      <div className="flex justify-end gap-3 pt-6 border-t">
-        <Button type="button" variant="secondary" onClick={onCancel}>
-          Отмена
-        </Button>
-        <Button type="submit">
-          <Backpack className="w-4 h-4 mr-2" />
-          {category ? 'Сохранить' : 'Добавить'}
-        </Button>
-      </div>
-    </form>
+        {/* Color Selection */}
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-foreground tracking-tight">
+            Цвет категории
+          </label>
+
+          {/* Preset Colors Grid */}
+          <div className="grid grid-cols-8 gap-3">
+            {PRESET_COLORS.map((presetColor) => (
+              <button
+                key={presetColor}
+                type="button"
+                className={`aspect-square rounded-xl transition-all duration-200 hover:scale-110 notion-focus-ring ${
+                  color === presetColor
+                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 notion-shadow'
+                    : 'hover:notion-shadow-sm'
+                }`}
+                style={{ backgroundColor: presetColor }}
+                onClick={() => setColor(presetColor)}
+                title={presetColor}
+                aria-label={`Выбрать цвет ${presetColor}`}
+              />
+            ))}
+          </div>
+
+          {/* Custom Color Picker */}
+          <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl border notion-border-subtle">
+            <div className="flex items-center gap-3">
+              <Palette className="w-5 h-5 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Свой цвет:</span>
+            </div>
+            <div className="flex-1 flex items-center gap-3">
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="w-10 h-10 rounded-lg border notion-border-subtle cursor-pointer notion-focus-ring"
+              />
+              <input
+                type="text"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="flex-1 px-3 py-2 text-sm bg-background border notion-border-subtle rounded-lg notion-focus-ring font-mono"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 pt-6 border-t notion-border-subtle">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Отмена
+          </Button>
+          <Button type="submit" variant="primary">
+            <Backpack className="w-4 h-4 mr-2" />
+            {category ? 'Сохранить' : 'Добавить'}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 

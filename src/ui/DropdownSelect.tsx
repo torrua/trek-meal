@@ -1,7 +1,7 @@
 // src/ui/DropdownSelect.tsx
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 import cn from 'classnames';
 
 interface DropdownOption {
@@ -60,9 +60,11 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
           break;
         case 'ArrowDown':
           event.preventDefault();
+          // Navigate to next option
           break;
         case 'ArrowUp':
           event.preventDefault();
+          // Navigate to previous option
           break;
       }
     },
@@ -96,9 +98,10 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
   }, [isOpen]);
 
   return (
-    <div className={cn('space-y-1.5', containerClassName)} ref={dropdownRef} data-testid={testId}>
-      <label className="block text-notion-sm font-medium text-foreground">{label}</label>
-      <div className="relative inline-block text-left">
+    <div className={cn('space-y-2', containerClassName)} ref={dropdownRef} data-testid={testId}>
+      <label className="block text-sm font-medium text-foreground tracking-tight">{label}</label>
+
+      <div className="relative">
         <button
           ref={triggerRef}
           type="button"
@@ -111,82 +114,108 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             }
           }}
           className={cn(
-            'flex items-center justify-between px-4 py-3 rounded-notion-md border transition-all hover:shadow-notion-sm text-left shadow-notion-sm min-w-[220px] focus:outline-none focus:ring-2 focus:ring-ring',
+            // Base Notion-style button
+            'flex items-center justify-between w-full px-4 py-3 text-left rounded-lg border transition-all duration-200',
+            'notion-focus-ring notion-shadow-sm hover:notion-shadow',
+            'min-w-[220px]',
+
+            // Active/inactive states
             isActive
-              ? 'bg-primary/10 border-primary/20'
-              : 'bg-card border-border hover:border-border/70',
-            disabled ? 'bg-muted text-muted-foreground cursor-not-allowed' : ''
+              ? 'bg-primary/5 border-primary/30 text-primary'
+              : 'bg-card border notion-border-subtle hover:border-border text-foreground',
+
+            // Disabled state
+            disabled && 'bg-muted/50 text-muted-foreground cursor-not-allowed opacity-60',
+
+            // Open state
+            isOpen && 'border-primary/50 ring-2 ring-primary/20'
           )}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
           aria-label={`${label}: ${selectedOption?.label || placeholder || 'Не выбрано'}`}
         >
-          <div className="flex items-center gap-3 min-w-0">
-            <Icon
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            {/* Icon with Notion-style background */}
+            <div
               className={cn(
-                'w-5 h-5 flex-shrink-0',
-                isActive ? 'text-primary' : 'text-muted-foreground'
-              )}
-            />
-            <span
-              className={cn(
-                'text-notion-sm font-medium truncate',
-                isActive ? 'text-primary' : 'text-foreground',
-                !selectedOption ? 'text-muted-foreground' : ''
+                'flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center',
+                'bg-muted/50 border notion-border-subtle',
+                isActive ? 'bg-primary/10 border-primary/20 text-primary' : 'text-muted-foreground'
               )}
             >
-              {selectedOption ? selectedOption.label : placeholder || label}
+              <Icon className="w-3.5 h-3.5" />
+            </div>
+
+            <span
+              className={cn(
+                'text-sm font-medium truncate',
+                !selectedOption && 'text-muted-foreground'
+              )}
+            >
+              {selectedOption ? selectedOption.label : placeholder || 'Выберите опцию'}
             </span>
           </div>
+
           <ChevronDown
             className={cn(
-              'w-5 h-5 transition-transform flex-shrink-0 text-muted-foreground',
-              isOpen ? 'rotate-180' : ''
+              'w-4 h-4 transition-transform duration-200 flex-shrink-0 text-muted-foreground ml-2',
+              isOpen && 'rotate-180'
             )}
           />
         </button>
-        {isOpen && options.length > 0 && (
+
+        {/* Dropdown Menu */}
+        {isOpen && (
           <div
             style={{ minWidth: `${minMenuWidth}px` }}
-            className="absolute z-50 top-full left-0 mt-2 w-max max-w-xs bg-card border border-border rounded-notion-md shadow-notion-lg py-2 animate-fade-in"
+            className={cn(
+              'absolute z-50 top-full left-0 mt-2 w-max max-w-xs',
+              'bg-card border notion-border-subtle rounded-xl notion-shadow-lg',
+              'py-2 overflow-hidden notion-scale-in'
+            )}
             role="listbox"
             aria-label={label}
           >
-            {options.map((option) => (
-              <button
-                type="button"
-                key={option.value}
-                onClick={() => handleOptionSelect(option.value)}
-                disabled={option.disabled}
-                className={cn(
-                  'w-full px-4 py-2.5 text-left text-notion-sm hover:bg-muted transition-colors flex items-center gap-3',
-                  value === option.value
-                    ? 'font-semibold text-primary bg-primary/10'
-                    : option.disabled
-                      ? 'text-muted-foreground cursor-not-allowed'
-                      : 'text-foreground'
-                )}
-                role="option"
-                aria-selected={value === option.value}
-              >
-                {option.icon ? (
-                  <option.icon className="w-4 h-4 flex-shrink-0" />
-                ) : (
-                  <span className="w-4" />
-                )}
-                <div className="flex-1 truncate">{option.label}</div>
-                {value === option.value && (
-                  <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 ml-auto" />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-        {isOpen && options.length === 0 && (
-          <div className="absolute z-50 top-full left-0 mt-2 w-full bg-card border border-border rounded-notion-md shadow-notion-lg py-4">
-            <p className="text-notion-sm text-muted-foreground text-center px-4">
-              Нет доступных опций
-            </p>
+            {options.length > 0 ? (
+              options.map((option) => (
+                <button
+                  type="button"
+                  key={option.value}
+                  onClick={() => handleOptionSelect(option.value)}
+                  disabled={option.disabled}
+                  className={cn(
+                    'w-full px-4 py-2.5 text-left text-sm transition-all duration-150 flex items-center gap-3',
+                    'notion-bg-hover',
+                    value === option.value && 'bg-primary/10 text-primary font-semibold',
+                    option.disabled && 'text-muted-foreground/50 cursor-not-allowed',
+                    !option.disabled &&
+                      !value === option.value &&
+                      'text-foreground hover:text-foreground'
+                  )}
+                  role="option"
+                  aria-selected={value === option.value}
+                >
+                  {/* Option icon */}
+                  {option.icon ? (
+                    <option.icon className="w-4 h-4 flex-shrink-0" />
+                  ) : (
+                    <div className="w-4 h-4 flex-shrink-0" />
+                  )}
+
+                  {/* Option label */}
+                  <div className="flex-1 truncate font-medium">{option.label}</div>
+
+                  {/* Selected indicator */}
+                  {value === option.value && (
+                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                  )}
+                </button>
+              ))
+            ) : (
+              <div className="px-4 py-6 text-center">
+                <p className="text-sm text-muted-foreground">Нет доступных опций</p>
+              </div>
+            )}
           </div>
         )}
       </div>

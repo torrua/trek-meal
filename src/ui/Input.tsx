@@ -1,6 +1,4 @@
-// ============================================
-// src/ui/Input.tsx - Notion-style input
-// ============================================
+// src/ui/Input.tsx
 
 import React from 'react';
 import cn from 'classnames';
@@ -11,7 +9,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   icon?: React.ComponentType<{ className?: string }>;
   containerClassName?: string;
-  hint?: string;
+  variant?: 'default' | 'ghost';
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -29,20 +27,22 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       disabled = false,
       containerClassName,
       className,
-      hint,
+      variant = 'default',
       ...props
     },
     ref
   ) => {
+    const inputId = name || `input-${Math.random().toString(36).substr(2, 9)}`;
+
     return (
-      <div className={cn('w-full', containerClassName)}>
+      <div className={cn('w-full space-y-2', containerClassName)}>
         {label && (
           <label
-            htmlFor={name}
-            className="block text-notion-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5"
+            htmlFor={inputId}
+            className="block text-sm font-medium text-foreground tracking-tight"
           >
             {label}
-            {required && <span className="text-danger ml-0.5">*</span>}
+            {required && <span className="text-danger ml-1">*</span>}
           </label>
         )}
 
@@ -52,7 +52,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
 
           <input
-            id={name}
+            id={inputId}
             ref={ref}
             type={type}
             name={name}
@@ -61,28 +61,39 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             placeholder={placeholder}
             disabled={disabled}
             className={cn(
-              'w-full h-9 bg-white dark:bg-dark-tertiary',
-              'border border-border dark:border-dark-border rounded-notion-md',
-              'text-notion-sm text-foreground dark:text-white placeholder:text-muted-foreground/60',
-              'transition-all duration-100',
-              'focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10',
-              'hover:border-border/70 dark:hover:border-dark-borderMedium',
-              'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border',
-              Icon ? 'pl-9 pr-3' : 'px-3',
-              error && 'border-danger focus:ring-danger/10',
+              // Base styles - Notion-inspired
+              'flex w-full text-sm transition-all duration-200 notion-focus-ring',
+              'placeholder:text-muted-foreground text-foreground bg-transparent',
+              'disabled:cursor-not-allowed disabled:opacity-50',
+
+              // Variant styles
+              variant === 'default' && [
+                'h-10 rounded-lg border notion-border-subtle bg-background px-4 py-2',
+                'hover:border-border focus:border-primary/50 focus:bg-background',
+                'focus:ring-2 focus:ring-primary/20',
+                error && 'border-danger focus:border-danger focus:ring-danger/20',
+              ],
+
+              variant === 'ghost' && [
+                'h-9 rounded-md px-3 py-2 border-0 bg-muted/30',
+                'hover:bg-muted/50 focus:bg-muted/70',
+                'focus:ring-1 focus:ring-primary/30',
+              ],
+
+              // Icon padding
+              Icon ? 'pl-10' : '',
+
               className
             )}
             {...props}
           />
         </div>
 
-        {hint && !error && <p className="text-notion-xs text-muted-foreground mt-1.5">{hint}</p>}
-
         {error && (
-          <p className="text-notion-xs text-danger flex items-center gap-1 mt-1.5">
-            <AlertCircle className="w-3 h-3" />
-            {error}
-          </p>
+          <div className="flex items-center gap-2 text-sm text-danger">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
         )}
       </div>
     );
@@ -90,3 +101,5 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 );
 
 Input.displayName = 'Input';
+
+export default Input;

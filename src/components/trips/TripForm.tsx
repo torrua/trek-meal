@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import 'react-datepicker/dist/react-datepicker.css';
 import { formatISO, parseISO, isBefore, startOfDay } from 'date-fns';
-import { AlertCircle, X, Save, Calendar } from 'lucide-react';
+import { AlertCircle, X, Save, Calendar, MapPin } from 'lucide-react';
 import { useTripDates } from '../../hooks/useTripDates';
 import Button from '../../ui/Button';
 import ThemedDatePicker from '../../ui/ThemedDatePicker';
@@ -82,7 +82,7 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
   const validateForm = useCallback((): FormErrors => {
     const newErrors: FormErrors = {};
 
-    // Валидация названия
+    // Validation logic remains the same
     if (!formData.name.trim()) {
       newErrors.name = 'Пожалуйста, укажите название похода';
     } else if (formData.name.trim().length < 2) {
@@ -91,26 +91,22 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
       newErrors.name = 'Название не должно превышать 100 символов';
     }
 
-    // Валидация места назначения
     if (formData.destination && formData.destination.length > 50) {
       newErrors.destination = 'Название места не должно превышать 50 символов';
     }
 
-    // Валидация длительности
     if (days < 1) {
       newErrors.days = 'Длительность должна быть не менее 1 дня';
     } else if (days > 365) {
       newErrors.days = 'Длительность не должна превышать 365 дней';
     }
 
-    // Валидация приемов пищи
     if (formData.mealsPerDay < 1) {
       newErrors.mealsPerDay = 'Минимум 1 прием пищи в день';
     } else if (formData.mealsPerDay > 10) {
       newErrors.mealsPerDay = 'Максимум 10 приемов пищи в день';
     }
 
-    // Валидация дат
     if (dateRange[0] && dateRange[1]) {
       const today = startOfDay(new Date());
       if (!trip && isBefore(dateRange[0], today)) {
@@ -127,8 +123,6 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
   const handleFieldChange = useCallback(
     (field: keyof TripData, value: string | number) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
-
-      // Очищаем ошибки для изменившегося поля
       if (errors[field as keyof FormErrors]) {
         setErrors((prev) => ({ ...prev, [field]: undefined }));
       }
@@ -156,12 +150,9 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
       const validationErrors = validateForm();
       if (Object.keys(validationErrors).length > 0) {
         setErrors(validationErrors);
-
-        // Прокручиваем к первой ошибке
         const firstErrorField = Object.keys(validationErrors)[0];
         const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
         errorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
         return;
       }
 
@@ -180,7 +171,6 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
         await onSubmit(finalFormData);
       } catch (error) {
         console.error('Form submission error:', error);
-        // Ошибка будет обработана в родительском компоненте через toast
       } finally {
         setIsSubmitting(false);
       }
@@ -197,139 +187,155 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
   const hasErrors = Object.keys(errors).length > 0;
 
   return (
-    <>
-      <form onSubmit={handleSubmit} className="p-1 space-y-6" noValidate>
-        {/* Основная информация */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Input
-            label="Название похода *"
-            name="name"
-            type="text"
-            value={formData.name}
-            onChange={(e) => handleFieldChange('name', e.target.value)}
-            error={errors.name}
-            autoFocus
-            required
-            maxLength={100}
-            placeholder="Например, Восхождение на Эльбрус"
-          />
-          <Input
-            label="Место (регион)"
-            name="destination"
-            type="text"
-            value={formData.destination}
-            onChange={(e) => handleFieldChange('destination', e.target.value)}
-            error={errors.destination}
-            placeholder="Например, Кавказ"
-            maxLength={50}
-          />
-        </div>
-
-        {/* Описание */}
-        <Textarea
-          label="Описание"
-          name="description"
-          value={formData.description}
-          onChange={(e) => handleFieldChange('description', e.target.value)}
-          rows={3}
-          maxLength={500}
-          placeholder="Краткое описание маршрута, особенности, требования..."
-        />
-
-        {/* Даты */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Даты похода
-          </label>
-          <div className="relative">
-            <ThemedDatePicker
-              selectsRange
-              startDate={dateRange[0]}
-              endDate={dateRange[1]}
-              onChange={handleDateRangeChange}
-              isClearable={true}
-              monthsShown={1}
-              wrapperClassName="w-full"
-              placeholderText="Выберите даты похода"
-              dateFormat="dd.MM.yyyy"
-              minDate={!trip ? new Date() : undefined} // Только для новых походов
-            />
-            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+    <div className="space-y-8">
+      <form onSubmit={handleSubmit} noValidate className="space-y-8">
+        {/* Basic Information Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
+            <MapPin className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">
+              Основная информация
+            </h3>
           </div>
-          {(errors.startDate || errors.endDate) && (
-            <div className="mt-1 text-sm text-red-600 dark:text-red-400">
-              {errors.startDate || errors.endDate}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <Input
+                label="Название похода"
+                name="name"
+                type="text"
+                value={formData.name}
+                onChange={(e) => handleFieldChange('name', e.target.value)}
+                error={errors.name}
+                autoFocus
+                required
+                maxLength={100}
+                placeholder="Например, Восхождение на Эльбрус"
+                className="text-base font-medium"
+              />
             </div>
-          )}
+
+            <Input
+              label="Место (регион)"
+              name="destination"
+              type="text"
+              value={formData.destination}
+              onChange={(e) => handleFieldChange('destination', e.target.value)}
+              error={errors.destination}
+              placeholder="Например, Кавказ"
+              maxLength={50}
+            />
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2 tracking-tight">
+                Сложность
+              </label>
+              <ThemedSelect
+                value={difficultyOptions.find((opt) => opt.value === formData.difficulty)}
+                onChange={(option) => option && handleFieldChange('difficulty', option.value)}
+                options={difficultyOptions}
+                menuPortalTarget={document.body}
+                placeholder="Выберите сложность"
+                isSearchable={false}
+              />
+            </div>
+          </div>
+
+          <Textarea
+            label="Описание"
+            name="description"
+            value={formData.description}
+            onChange={(e) => handleFieldChange('description', e.target.value)}
+            rows={3}
+            maxLength={500}
+            placeholder="Краткое описание маршрута, особенности, требования..."
+          />
         </div>
 
-        {/* Параметры */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Input
-            label="Длительность (дни) *"
-            name="days"
-            type="number"
-            min="1"
-            max="365"
-            value={days}
-            onChange={(e) => handleDaysChange(Number(e.target.value))}
-            error={errors.days}
-            required
-          />
-
-          <Input
-            label="Приемов пищи в день *"
-            name="mealsPerDay"
-            type="number"
-            min="1"
-            max="10"
-            value={formData.mealsPerDay}
-            onChange={(e) => handleFieldChange('mealsPerDay', Number(e.target.value))}
-            error={errors.mealsPerDay}
-            required
-          />
+        {/* Dates Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
+            <Calendar className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">
+              Даты и параметры
+            </h3>
+          </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Сложность *
+            <label className="block text-sm font-medium text-foreground mb-2 tracking-tight">
+              Даты похода
             </label>
-            <ThemedSelect
-              value={difficultyOptions.find((opt) => opt.value === formData.difficulty)}
-              onChange={(option) => option && handleFieldChange('difficulty', option.value)}
-              options={difficultyOptions}
-              menuPortalTarget={document.body}
-              placeholder="Выберите сложность"
-              isSearchable={false}
+            <div className="relative">
+              <ThemedDatePicker
+                selectsRange
+                startDate={dateRange[0]}
+                endDate={dateRange[1]}
+                onChange={handleDateRangeChange}
+                isClearable={true}
+                monthsShown={1}
+                wrapperClassName="w-full"
+                placeholderText="Выберите даты похода"
+                dateFormat="dd.MM.yyyy"
+                minDate={!trip ? new Date() : undefined}
+              />
+            </div>
+            {(errors.startDate || errors.endDate) && (
+              <p className="mt-2 text-sm text-danger flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                {errors.startDate || errors.endDate}
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Input
+              label="Длительность (дни)"
+              name="days"
+              type="number"
+              min="1"
+              max="365"
+              value={days}
+              onChange={(e) => handleDaysChange(Number(e.target.value))}
+              error={errors.days}
+              required
+            />
+
+            <Input
+              label="Приемов пищи в день"
+              name="mealsPerDay"
+              type="number"
+              min="1"
+              max="10"
+              value={formData.mealsPerDay}
+              onChange={(e) => handleFieldChange('mealsPerDay', Number(e.target.value))}
+              error={errors.mealsPerDay}
+              required
             />
           </div>
         </div>
 
-        {/* Кнопки */}
-        <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <Button type="button" variant="secondary" onClick={handleCancel} disabled={isSubmitting}>
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 pt-6 border-t notion-border-subtle">
+          <Button type="button" variant="ghost" onClick={handleCancel} disabled={isSubmitting}>
             <X className="w-4 h-4 mr-2" />
             Отмена
           </Button>
-          <Button type="submit" variant="primary" disabled={isSubmitting || hasErrors}>
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                {trip ? 'Сохранение...' : 'Создание...'}
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                {trip ? 'Сохранить изменения' : 'Создать поход'}
-              </>
-            )}
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isSubmitting || hasErrors}
+            loading={isSubmitting}
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {trip ? 'Сохранить изменения' : 'Создать поход'}
           </Button>
         </div>
 
-        {/* Предупреждение о несохраненных изменениях */}
-        {isDirty && (
-          <div className="flex items-center justify-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+        {/* Unsaved Changes Warning */}
+        {isDirty && !isSubmitting && (
+          <div className="flex items-center justify-center gap-3 text-sm text-warning bg-warning/10 p-4 rounded-xl border border-warning/20">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>У вас есть несохраненные изменения</span>
+            <span className="font-medium">У вас есть несохраненные изменения</span>
           </div>
         )}
       </form>
@@ -343,9 +349,9 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
         confirmText="Закрыть без сохранения"
         cancelText="Продолжить редактирование"
       >
-        <p>Вы уверены, что хотите закрыть форму? Все несохраненные изменения будут потеряны.</p>
+        Вы уверены, что хотите закрыть форму? Все несохраненные изменения будут потеряны.
       </ConfirmModal>
-    </>
+    </div>
   );
 };
 

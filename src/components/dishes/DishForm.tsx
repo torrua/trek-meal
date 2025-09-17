@@ -10,7 +10,7 @@ import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import type { Dish, DishData, DishProduct, Product, SubmitDishAction } from '../../types';
 import { toast } from 'react-hot-toast';
-import { X } from 'lucide-react';
+import { X, Plus, Soup, Component, Scale, ChefHat } from 'lucide-react';
 
 interface DishFormProps {
   dish: Dish | null;
@@ -112,117 +112,181 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
     }
   };
 
-  return (
-    <div className="p-1 space-y-6">
-      <Input
-        label="Название блюда *"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        required
-        autoFocus
-      />
+  const getTotalWeight = () => {
+    return products.reduce((total, p) => total + (p.weight || 0), 0);
+  };
 
-      <Textarea
-        label="Описание"
-        name="description"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        rows={3}
-        placeholder="Описание блюда, способ приготовления, особенности..."
-      />
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Состав *
-        </label>
-        <div className="space-y-4">
-          {products.map((p, index) => {
-            const selectedProduct = allProducts.find((prod: Product) => prod.id === p.productId);
-            const portionOptions: PortionOption[] =
-              selectedProduct?.portions.map((portion) => ({
-                value: portion.weight,
-                label: `${portion.name} (${portion.weight} г)`,
-              })) || [];
-            portionOptions.push({ value: CUSTOM_WEIGHT_VALUE, label: 'Свой вес...' });
-            const currentPortion =
-              portionOptions.find((opt) => opt.value === p.weight) ||
-              portionOptions.find((opt) => opt.value === CUSTOM_WEIGHT_VALUE);
-            return (
-              <div key={index}>
-                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
-                  <ThemedSelect<ProductOption>
-                    className="w-full"
-                    options={productOptions}
-                    value={productOptions.find((opt) => opt.value === p.productId)}
-                    onChange={(opt) => handleProductChange(index, opt)}
-                    placeholder="Выберите продукт..."
-                    menuPortalTarget={document.body}
-                  />
-                  <div className="flex items-center gap-2">
-                    <ThemedSelect<PortionOption>
-                      className="flex-grow"
-                      options={portionOptions}
-                      value={currentPortion}
-                      onChange={(opt) => handlePortionChange(index, opt)}
-                      isDisabled={!selectedProduct}
-                      placeholder="Порция..."
+  const getProductCount = () => {
+    return products.filter((p) => p.productId > 0).length;
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="space-y-8">
+        {/* Basic Information Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
+            <Soup className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">
+              Основная информация
+            </h3>
+          </div>
+
+          <Input
+            label="Название блюда"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            autoFocus
+            placeholder="Например, Плов туристический"
+            className="text-base font-medium"
+          />
+
+          <Textarea
+            label="Описание"
+            name="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            placeholder="Описание блюда, способ приготовления, особенности..."
+          />
+        </div>
+
+        {/* Recipe Summary */}
+        {(getProductCount() > 0 || getTotalWeight() > 0) && (
+          <div className="p-4 bg-primary/5 rounded-xl border border-primary/20">
+            <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <Component className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Продуктов:</span>
+                <span className="font-semibold text-primary">{getProductCount()}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Scale className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Общий вес:</span>
+                <span className="font-semibold text-primary">{getTotalWeight()} г</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Ingredients Section */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between pb-3 border-b notion-border-subtle">
+            <div className="flex items-center gap-3">
+              <ChefHat className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-semibold text-foreground tracking-tight">Состав блюда</h3>
+            </div>
+            {products.length === 0 && (
+              <span className="text-sm text-muted-foreground">Добавьте продукты для рецепта</span>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            {products.map((p, index) => {
+              const selectedProduct = allProducts.find((prod: Product) => prod.id === p.productId);
+              const portionOptions: PortionOption[] =
+                selectedProduct?.portions.map((portion) => ({
+                  value: portion.weight,
+                  label: `${portion.name} (${portion.weight} г)`,
+                })) || [];
+              portionOptions.push({ value: CUSTOM_WEIGHT_VALUE, label: 'Свой вес...' });
+
+              const currentPortion =
+                portionOptions.find((opt) => opt.value === p.weight) ||
+                portionOptions.find((opt) => opt.value === CUSTOM_WEIGHT_VALUE);
+
+              return (
+                <div key={index} className="p-5 bg-muted/20 rounded-xl border notion-border-subtle">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Продукт {index + 1}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => removeProductField(index)}
+                        className="text-muted-foreground hover:text-danger hover:bg-danger/10"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <ThemedSelect<ProductOption>
+                      options={productOptions}
+                      value={productOptions.find((opt) => opt.value === p.productId)}
+                      onChange={(opt) => handleProductChange(index, opt)}
+                      placeholder="Выберите продукт..."
                       menuPortalTarget={document.body}
+                      isSearchable
                     />
-                    <Input
-                      type="number"
-                      value={p.weight || ''}
-                      onChange={(e) => handleWeightChange(index, e.target.value)}
-                      required
-                      min="0"
-                      className="w-24 text-center"
-                      containerClassName="w-24 flex-shrink-0"
-                      placeholder="Вес (г)"
-                    />
-                    <Button
-                      type="button"
-                      variant="danger"
-                      size="icon"
-                      onClick={() => removeProductField(index)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="md:col-span-2">
+                        <ThemedSelect<PortionOption>
+                          options={portionOptions}
+                          value={currentPortion}
+                          onChange={(opt) => handlePortionChange(index, opt)}
+                          isDisabled={!selectedProduct}
+                          placeholder="Выберите порцию..."
+                          menuPortalTarget={document.body}
+                        />
+                      </div>
+
+                      <Input
+                        type="number"
+                        value={p.weight || ''}
+                        onChange={(e) => handleWeightChange(index, e.target.value)}
+                        required
+                        min="0"
+                        placeholder="Вес (г)"
+                        icon={Scale}
+                      />
+                    </div>
                   </div>
                 </div>
-                {index < products.length - 1 && (
-                  <div className="flex items-center my-4">
-                    <div className="flex-grow h-px bg-gray-200 dark:bg-gray-700"></div>
-                    <span className="px-3 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900">
-                      И
-                    </span>
-                    <div className="flex-grow h-px bg-gray-200 dark:bg-gray-700"></div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        <Button type="button" variant="ghost" onClick={addProductField} className="mt-3">
-          + Добавить продукт
-        </Button>
-      </div>
+              );
+            })}
+          </div>
 
-      <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <Button type="button" variant="secondary" onClick={onCancel}>
-          Отмена
-        </Button>
-        {dishToClone ? (
-          <>
-            <Button type="button" variant="secondary" onClick={() => handleAction('add_as_new')}>
-              Добавить как новое
-            </Button>
-            <Button type="button" variant="primary" onClick={() => handleAction('replace')}>
-              Заменить в раскладке
-            </Button>
-          </>
-        ) : (
-          <Button type="button" variant="primary" onClick={() => handleAction('create_or_update')}>
-            {dish ? 'Сохранить' : 'Создать'}
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={addProductField}
+            className="w-full border-2 border-dashed notion-border-subtle hover:border-primary hover:bg-primary/5 py-4"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Добавить продукт
           </Button>
-        )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 pt-6 border-t notion-border-subtle">
+          <Button type="button" variant="ghost" onClick={onCancel}>
+            Отмена
+          </Button>
+          {dishToClone ? (
+            <>
+              <Button type="button" variant="secondary" onClick={() => handleAction('add_as_new')}>
+                Добавить как новое
+              </Button>
+              <Button type="button" variant="primary" onClick={() => handleAction('replace')}>
+                Заменить в раскладке
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => handleAction('create_or_update')}
+            >
+              <Soup className="w-4 h-4 mr-2" />
+              {dish ? 'Сохранить' : 'Создать'}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

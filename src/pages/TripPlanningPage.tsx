@@ -14,6 +14,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -38,9 +40,6 @@ import {
   Calendar,
   Utensils,
   Flame,
-  Zap,
-  Droplet,
-  Wheat,
   Trash2,
   Plus,
   Edit,
@@ -141,7 +140,7 @@ const SortableMealSlot: React.FC<{
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.6 : 1,
+    opacity: isDragging ? 0 : 1,
     zIndex: isDragging ? 10 : 'auto',
   };
 
@@ -393,6 +392,7 @@ function TripPlanningPage() {
   const [cloningState, setCloningState] = useState<CloningState>(null);
   const [expandedDishes, setExpandedDishes] = useState<Record<string, boolean>>({});
   const [openSections, setOpenSections] = useState<string[]>(['day-1']);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   const trip = useTripStore((state) => state.trips.find((t) => t.id === numericTripId));
 
@@ -447,19 +447,32 @@ function TripPlanningPage() {
     })
   );
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent, day: number) => {
+    setActiveDragId(null);
     const { active, over } = event;
 
-    if (over && active.id !== over.id && migratedTrip) {
-      const dayKey = day.toString();
-      const dayMeals = [...(migratedTrip.dayMeals?.[dayKey] || [])];
-      const oldIndex = dayMeals.findIndex((_, index) => `meal-${day}-${index}` === active.id);
-      const newIndex = dayMeals.findIndex((_, index) => `meal-${day}-${index}` === over.id);
-
-      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-        reorderMealsInDay(migratedTrip.id, day, oldIndex, newIndex);
-      }
+    if (!trip || !over || active.id === over.id) {
+      return;
     }
+
+    const oldIndex = (trip.dayMeals[day] || []).findIndex(
+      (id) => generateMealId(day, id) === active.id
+    );
+    const newIndex = (trip.dayMeals[day] || []).findIndex(
+      (id) => generateMealId(day, id) === over.id
+    );
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      reorderMealsInDay(trip.id, day, oldIndex, newIndex);
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveDragId(null);
   };
 
   const handleToggleSection = (sectionId: string) => {
@@ -533,6 +546,12 @@ function TripPlanningPage() {
         (item: MealPlanItem) => item.instanceId !== instanceId
       );
       updateTrip(migratedTrip.id, { selectedMeals: newSelectedMeals });
+    }
+  };
+
+  const handleRemoveMeal = (day: number, mealTypeId: number) => {
+    if (migratedTrip) {
+      removeMealFromDay(migratedTrip.id, day, mealTypeId);
     }
   };
 
@@ -718,16 +737,18 @@ function TripPlanningPage() {
                     <DndContext
                       sensors={sensors}
                       collisionDetection={closestCenter}
-                      onDragEnd={(event) => handleDragEnd(event, day)}
+                      onDragStart={handleDragStart}
+                      onDragEnd={(e) => handleDragEnd(e, day)}
+                      onDragCancel={handleDragCancel}
                     >
                       <SortableContext
-                        items={dayMeals.map((_, index) => `meal-${day}-${index}`)}
+                        items={dayMeals.map((mealTypeId) => generateMealId(day, mealTypeId))}
                         strategy={verticalListSortingStrategy}
                       >
-                        {dayMeals.map((mealTypeId, index) => (
+                        {dayMeals.map((mealTypeId) => (
                           <SortableMealSlot
-                            key={`meal-${day}-${index}`}
-                            id={`meal-${day}-${index}`}
+                            key={generateMealId(day, mealTypeId)}
+                            id={generateMealId(day, mealTypeId)}
                             day={day}
                             mealTypeId={mealTypeId}
                             mealName={getMealNameById(mealTypeId)}
@@ -740,12 +761,29 @@ function TripPlanningPage() {
                             onRemoveItem={handleMealItemRemove}
                             onToggleDish={toggleDishExpansion}
                             onCloneRequest={handleCloneRequest}
-                            onRemoveMeal={(d, mId) => {
-                              if (migratedTrip) removeMealFromDay(migratedTrip.id, d, mId);
-                            }}
+                            onRemoveMeal={handleRemoveMeal}
                           />
                         ))}
                       </SortableContext>
+                      <DragOverlay>
+                        {activeDragId && migratedTrip ? (
+                          <MealSlot
+                            day={Number(activeDragId.split('-')[0])}
+                            mealTypeId={Number(activeDragId.split('-')[1])}
+                            mealName={getMealNameById(Number(activeDragId.split('-')[1]))}
+                            trip={migratedTrip}
+                            products={products}
+                            dishes={dishes}
+                            groupedMealOptions={groupedMealOptions}
+                            expandedDishes={expandedDishes}
+                            onAddItem={handleMealItemAdd}
+                            onRemoveItem={handleMealItemRemove}
+                            onToggleDish={toggleDishExpansion}
+                            onCloneRequest={handleCloneRequest}
+                            onRemoveMeal={handleRemoveMeal}
+                          />
+                        ) : null}
+                      </DragOverlay>
                     </DndContext>
                   )}
                 </div>

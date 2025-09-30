@@ -54,14 +54,13 @@ const EntityCard: React.FC<EntityCardProps> = ({
       onClick={onSelect}
       className={cn(
         // Base Notion-style card
-        'group relative bg-card rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden',
+        'group relative bg-card rounded-xl transition-all duration-200 cursor-pointer overflow-hidden',
         'hover:notion-shadow hover:-translate-y-0.5',
         'notion-focus-ring',
+        'ring-1 ring-transparent hover:ring-border',
 
         // Selection states with Notion-style colors
-        isSelected
-          ? 'border-primary/30 bg-primary/5 notion-shadow'
-          : 'border notion-border-subtle hover:border-border/80',
+        isSelected ? 'ring-primary/30 bg-primary/5 notion-shadow' : 'border notion-border-subtle',
 
         // Left border accent (Notion-style)
         'border-l-4',

@@ -2,18 +2,23 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CirclePlus, Filter, Backpack, Edit, Copy, Trash2, Tag } from 'lucide-react';
+import { CirclePlus, Filter, Backpack, Edit, Copy, Trash2, Share, Tag } from 'lucide-react';
 import useEquipmentCategoryStore from '../../stores/useEquipmentCategoryStore';
 import useEquipmentStore from '../../stores/useEquipmentStore';
 import useSearchStore from '../../stores/useSearchStore';
 import type { EquipmentCategory, EquipmentCategoryData } from '../../types';
-import EntityCard, { MenuItem } from '../../ui/EntityCard';
+import EquipmentCategoryForm from './EquipmentCategoryForm';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/ConfirmModal';
+import EntityCard, { MenuItem } from '../../ui/EntityCard';
 import EquipmentCategoryDetail from './EquipmentCategoryDetail';
-import EquipmentCategoryForm from './EquipmentCategoryForm';
 import DropdownSelect from '../../ui/DropdownSelect';
+import DynamicIcon from '../../ui/DynamicIcon';
+
+export interface EquipmentCategoryFilters {
+  hasEquipment: 'all' | 'with_equipment' | 'without_equipment';
+}
 
 const EquipmentCategoriesPageContent: React.FC = () => {
   const categoryStore = useEquipmentCategoryStore();
@@ -26,7 +31,7 @@ const EquipmentCategoriesPageContent: React.FC = () => {
   const [editingCategory, setEditingCategory] = useState<EquipmentCategory | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<EquipmentCategory | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<{ hasEquipment: string }>({
+  const [filters, setFilters] = useState<EquipmentCategoryFilters>({
     hasEquipment: 'all',
   });
 
@@ -90,11 +95,7 @@ const EquipmentCategoriesPageContent: React.FC = () => {
   const handleClone = useCallback(
     (category: EquipmentCategory) => {
       const { id: _id, ...categoryData } = category;
-      const clonedData = {
-        ...categoryData,
-        name: `${categoryData.name} (Копия)`,
-      };
-      categoryStore.addCategory(clonedData);
+      categoryStore.addCategory(categoryData);
     },
     [categoryStore]
   );
@@ -160,12 +161,15 @@ const EquipmentCategoriesPageContent: React.FC = () => {
                         icon={Backpack}
                         options={[
                           { value: 'all', label: 'Все категории' },
-                          { value: 'with_equipment', label: 'С снаряжением' },
+                          { value: 'with_equipment', label: 'Со снаряжением' },
                           { value: 'without_equipment', label: 'Без снаряжения' },
                         ]}
                         value={filters.hasEquipment}
                         onChange={(value) =>
-                          setFilters((prev) => ({ ...prev, hasEquipment: value }))
+                          setFilters((prev) => ({
+                            ...prev,
+                            hasEquipment: value as EquipmentCategoryFilters['hasEquipment'],
+                          }))
                         }
                         isActive={filters.hasEquipment !== 'all'}
                       />
@@ -181,9 +185,58 @@ const EquipmentCategoriesPageContent: React.FC = () => {
       {/* Main content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         <div className="lg:col-span-1 space-y-3">
-          {filteredCategories.length === 0 ? (
+          {filteredCategories.map((category) => {
+            const equipmentCount = equipmentStore.equipment.filter(
+              (p) => p.categoryId === category.id
+            ).length;
+
+            const menuItems: MenuItem[] = [
+              {
+                label: 'Редактировать',
+                icon: Edit,
+                onClick: () => handleEdit(category),
+              },
+              {
+                label: 'Клонировать',
+                icon: Copy,
+                onClick: () => handleClone(category),
+              },
+              {
+                label: 'Экспорт',
+                icon: Share,
+                onClick: () => console.log('Export category', category),
+              },
+              {
+                label: 'Удалить',
+                icon: Trash2,
+                onClick: () => handleRequestDelete(category),
+                className:
+                  'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
+              },
+            ];
+
+            return (
+              <EntityCard
+                key={category.id}
+                title={category.name}
+                subtitle={
+                  <div className="flex items-center gap-1">
+                    <Backpack className="w-4 h-4" />
+                    <span>{equipmentCount}</span>
+                  </div>
+                }
+                icon={() => <DynamicIcon name={category.iconName} />}
+                details={[]} // Empty for true one-line layout
+                isSelected={activeId === category.id}
+                onSelect={() => setActiveId(category.id)}
+                borderColor={category.color}
+                menuItems={menuItems}
+              />
+            );
+          })}
+          {filteredCategories.length === 0 && (
             <div className="text-center py-16 px-6 text-muted-foreground">
-              <Tag className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <Backpack className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-medium text-foreground">
                 {searchTerm || hasActiveFilters ? 'Категории не найдены' : 'Категорий пока нет'}
               </h3>
@@ -194,65 +247,20 @@ const EquipmentCategoriesPageContent: React.FC = () => {
                 </Button>
               )}
             </div>
-          ) : (
-            filteredCategories.map((category) => {
-              const equipmentCount = equipmentStore.equipment.filter(
-                (e) => e.categoryId === category.id
-              ).length;
-
-              const menuItems: MenuItem[] = [
-                {
-                  label: 'Редактировать',
-                  icon: Edit,
-                  onClick: () => handleEdit(category),
-                },
-                {
-                  label: 'Клонировать',
-                  icon: Copy,
-                  onClick: () => handleClone(category),
-                },
-                {
-                  label: 'Удалить',
-                  icon: Trash2,
-                  onClick: () => handleRequestDelete(category),
-                  className:
-                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
-                },
-              ];
-
-              return (
-                <EntityCard
-                  key={category.id}
-                  title={category.name}
-                  subtitle={
-                    <div className="flex items-center gap-1">
-                      <Backpack className="w-4 h-4" />
-                      <span>{equipmentCount}</span>
-                    </div>
-                  }
-                  icon={() => (
-                    <span className="text-base w-4 h-4 flex items-center justify-center">
-                      {category.emoji}
-                    </span>
-                  )}
-                  details={[]} // Empty for true one-line layout
-                  isSelected={activeId === category.id}
-                  onSelect={() => setActiveId(category.id)}
-                  borderColor={category.color}
-                  menuItems={menuItems}
-                  data-testid={`equipment-category-card-${category.id}`}
-                />
-              );
-            })
           )}
         </div>
 
-        {/* Detail panel */}
         <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
           {selectedCategory ? (
             <EquipmentCategoryDetail
               category={selectedCategory}
               onEdit={() => selectedCategory && handleEdit(selectedCategory)}
+              onEditEquipment={() => {
+                /* no-op */
+              }}
+              onDeleteEquipment={() => {
+                /* no-op */
+              }}
             />
           ) : (
             <div className="h-full flex items-center justify-center">
@@ -262,7 +270,7 @@ const EquipmentCategoriesPageContent: React.FC = () => {
                 </div>
                 <h3 className="text-lg font-medium text-foreground mb-2">Выберите категорию</h3>
                 <p className="text-muted-foreground">
-                  Выберите категорию из списка, чтобы увидеть подробную информацию
+                  Кликните на карточку для просмотра подробной информации.
                 </p>
               </div>
             </div>
@@ -270,13 +278,11 @@ const EquipmentCategoriesPageContent: React.FC = () => {
         </div>
       </div>
 
-      {/* Equipment Category Form Modal - placeholder for now */}
+      {/* Modals */}
       <Modal
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
-        title={
-          editingCategory ? 'Редактировать категорию снаряжения' : 'Добавить категорию снаряжения'
-        }
+        title={editingCategory ? 'Редактирование категории' : 'Новая категория'}
       >
         <EquipmentCategoryForm
           category={editingCategory}
@@ -285,18 +291,21 @@ const EquipmentCategoriesPageContent: React.FC = () => {
         />
       </Modal>
 
-      {/* Delete confirmation */}
       <ConfirmModal
         isOpen={!!categoryToDelete}
         onClose={() => setCategoryToDelete(null)}
         onConfirm={handleConfirmDelete}
-        title="Удалить категорию снаряжения"
+        title="Подтверждение"
         variant="danger"
         confirmText="Удалить"
-        cancelText="Отмена"
       >
-        Вы уверены, что хотите удалить категорию &quot;{categoryToDelete?.name}&quot;? Снаряжение в
-        этой категории будет перемещено в &quot;Без категории&quot;.
+        <p>
+          Вы уверены, что хотите удалить категорию{' '}
+          <span className="font-bold">{categoryToDelete?.name}</span>?
+        </p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Все снаряжение в этой категории будет перемещено в &quote;Без категории&quote;.
+        </p>
       </ConfirmModal>
     </>
   );

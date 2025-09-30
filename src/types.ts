@@ -122,7 +122,7 @@ export interface EquipmentCategory {
   id: number;
   name: string;
   color: string;
-  emoji?: string;
+  iconName: string;
 }
 export type EquipmentCategoryData = Omit<EquipmentCategory, 'id'>;
 

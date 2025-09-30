@@ -249,7 +249,6 @@ export const calculateMealNutrition = (
 
   if (!trip) return defaultSummary;
 
-  const participantsCount = trip.participants?.length || 1;
   const mealId = `${day}-${mealTypeId}`;
   const mealItems = trip.selectedMeals?.[mealId] || [];
 

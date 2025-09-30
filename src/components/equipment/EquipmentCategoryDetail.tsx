@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Edit, Backpack, Tag, Plus } from 'lucide-react';
 import useEquipmentStore from '../../stores/useEquipmentStore';
-import type { EquipmentCategory } from '../../types';
+import type { Equipment, EquipmentCategory } from '../../types';
 import Button from '../../ui/Button';
 import DetailPane from '../../ui/DetailPane';
 import EntityListItem from '../../ui/EntityListItem';
@@ -15,12 +15,16 @@ interface EquipmentCategoryDetailProps {
   category: EquipmentCategory | null;
   onEdit: () => void;
   onAddEquipment?: () => void;
+  onEditEquipment: (equipment: Equipment) => void;
+  onDeleteEquipment: (equipment: Equipment) => void;
 }
 
 const EquipmentCategoryDetail: React.FC<EquipmentCategoryDetailProps> = ({
   category,
   onEdit,
   onAddEquipment,
+  onEditEquipment,
+  onDeleteEquipment,
 }) => {
   const { equipment } = useEquipmentStore();
   const navigate = useNavigate();
@@ -30,11 +34,6 @@ const EquipmentCategoryDetail: React.FC<EquipmentCategoryDetailProps> = ({
     setOpenSections((prev) =>
       prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
     );
-  };
-
-  const formatWeight = (weight: number) => {
-    if (weight < 1000) return `${weight} г`;
-    return `${(weight / 1000).toFixed(1)} кг`;
   };
 
   if (!category) {
@@ -70,8 +69,9 @@ const EquipmentCategoryDetail: React.FC<EquipmentCategoryDetailProps> = ({
           {categoryEquipment.length > 0 ? (
             categoryEquipment.map((equipmentItem) => {
               const listItemConfig = equipmentEntityConfig.views.listItem;
-              const actions = listItemConfig.actions?.({
-                onView: () => navigate(`/equipment?selectedId=${equipmentItem.id}`),
+              const actions = equipmentEntityConfig.getActions({
+                onEdit: () => onEditEquipment(equipmentItem),
+                onDelete: () => onDeleteEquipment(equipmentItem),
               });
 
               return (
@@ -80,9 +80,6 @@ const EquipmentCategoryDetail: React.FC<EquipmentCategoryDetailProps> = ({
                   title={listItemConfig.title(equipmentItem)}
                   icon={equipmentEntityConfig.getIcon(equipmentItem)}
                   borderColor={equipmentEntityConfig.getBorderColor(equipmentItem, { category })}
-                  details={listItemConfig.details?.(equipmentItem, {
-                    formattedWeight: formatWeight(equipmentItem.weight),
-                  })}
                   menuItems={actions}
                   onClick={() => navigate(`/equipment?selectedId=${equipmentItem.id}`)}
                 />
@@ -111,7 +108,7 @@ const EquipmentCategoryDetail: React.FC<EquipmentCategoryDetailProps> = ({
           </div>
           <div>
             <h2 className="text-2xl font-bold text-foreground">{category.name}</h2>
-            <p className="text-muted-foreground">{categoryEquipment.length} снаряжения</p>
+            <p className="text-muted-foreground">{categoryEquipment.length} предмет(ов)</p>
           </div>
         </div>
         <Button variant="secondary" onClick={onEdit}>

@@ -200,11 +200,10 @@ export const calculateDayNutrition = (
   };
 
   const dayMeals = trip.dayMeals[day.toString()] || [];
-  dayMeals.forEach((mealTypeId) => {
-    const mealId = `${day}-${mealTypeId}`;
-    const mealItems = trip.selectedMeals?.[mealId] || [];
+  dayMeals.forEach((mealInstance) => {
+    const mealItems = trip.selectedMeals?.[mealInstance.instanceId] || [];
 
-    mealItems.forEach((item) => {
+    (mealItems as MealPlanItem[]).forEach((item) => {
       if (item.type === 'product') {
         processProduct(item.itemId, item.weight);
       } else if (item.type === 'dish') {
@@ -232,8 +231,7 @@ export const calculateDayNutrition = (
 
 export const calculateMealNutrition = (
   trip: Trip | undefined,
-  day: number,
-  mealTypeId: number,
+  mealInstanceId: string,
   allProducts: Product[],
   allDishes: Dish[]
 ): MealNutritionSummary => {
@@ -249,8 +247,7 @@ export const calculateMealNutrition = (
 
   if (!trip) return defaultSummary;
 
-  const mealId = `${day}-${mealTypeId}`;
-  const mealItems = trip.selectedMeals?.[mealId] || [];
+  const mealItems = trip.selectedMeals?.[mealInstanceId] || [];
 
   let totalWeight = 0;
   let totalCalories = 0;
@@ -272,7 +269,7 @@ export const calculateMealNutrition = (
     }
   };
 
-  mealItems.forEach((item) => {
+  (mealItems as MealPlanItem[]).forEach((item) => {
     if (item.type === 'product') {
       processProduct(item.itemId, item.weight);
     } else if (item.type === 'dish') {

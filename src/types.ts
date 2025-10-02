@@ -97,7 +97,7 @@ export interface Trip {
   endDate: string;
   participants: number[];
   // Flexible meal structure: each day can have different meals
-  dayMeals: { [dayNumber: string]: number[] }; // Array of meal type IDs for each day
+  dayMeals: { [dayNumber: string]: MealInstance[] }; // Array of meal instances for each day
   selectedMeals: SelectedMeals;
   requiredEquipmentIds: number[]; // Equipment required for this trip
   assignedEquipment: { [participantId: number]: number[] }; // Equipment assignments per participant
@@ -108,6 +108,29 @@ export interface Trip {
 export type TripData = Omit<Trip, 'id' | 'createdAt' | 'status' | 'selectedMeals' | 'dayMeals'>;
 
 export type SubmitDishAction = 'add_as_new' | 'replace' | 'create_or_update';
+
+// --- НОВЫЙ ТИП: Экземпляр приема пищи ---
+export interface MealInstance {
+  instanceId: string;
+  title: string;
+  description?: string;
+}
+
+export interface Meal {
+  id: number;
+  name: string;
+  description?: string;
+  items: MealPlanItem[];
+}
+
+export type MealData = Omit<Meal, 'id'>;
+
+export interface MealType {
+  id: number;
+  name: string;
+  description?: string;
+  defaultValues: MealData;
+}
 
 // --- НОВЫЙ ТИП: Для импортируемых файлов ---
 export interface ImportedJsonData {

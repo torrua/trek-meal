@@ -9,35 +9,33 @@ import DetailPane from '../ui/DetailPane';
 import {
   DndContext,
   closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
   useSensors,
+  useSensor,
+  PointerSensor,
+  KeyboardSensor,
   DragEndEvent,
-  DragOverlay,
   DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
-  SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  SortableContext,
 } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
 import useDishStore from '../stores/useDishStore';
+import { useMealStore } from '../stores/useMealStore';
 import useCategoryStore from '../stores/useCategoryStore';
-import useMealTypesStore from '../stores/useMealTypesStore';
-import { formatDate } from '../utils';
-import { calculateDayNutrition, calculateMealNutrition } from '../utils';
+import { calculateDayNutrition, calculateMealNutrition, formatDate } from '../utils';
+import TripForm from '../components/trips/TripForm';
+import DishForm from '../components/dishes/DishForm';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import ConfirmModal from '../ui/ConfirmModal';
-import TripForm from '../components/trips/TripForm';
-import DishForm from '../components/dishes/DishForm';
 import {
-  Calendar,
   Utensils,
   Flame,
   Trash2,
@@ -51,6 +49,8 @@ import {
   ChefHat,
   Component,
   MapPin,
+  Pencil,
+  CalendarDays,
 } from 'lucide-react';
 import type {
   Trip,
@@ -61,7 +61,10 @@ import type {
   MealPlanItem,
   Category,
   SubmitDishAction,
+  MealInstance,
 } from '../types';
+import Input from '../ui/Input';
+import Textarea from '../ui/Textarea';
 
 type SelectMealOption = { value: string; label: string };
 type GroupedMealOption = { label: string; options: SelectMealOption[] };
@@ -69,7 +72,11 @@ type CloningState = {
   instanceId: string;
   dish: Dish;
   day: number;
-  mealTypeId: number;
+} | null;
+
+type EditMealState = {
+  day: number;
+  meal: MealInstance;
 } | null;
 
 const DishContents = ({ dish }: { dish: Dish }) => {
@@ -116,18 +123,18 @@ type DragHandleProps = Record<string, unknown> & {
 const SortableMealSlot: React.FC<{
   id: string;
   day: number;
-  mealTypeId: number;
-  mealName: string;
+  meal: MealInstance;
   trip: Trip;
   products: Product[];
   dishes: Dish[];
   groupedMealOptions: GroupedMealOption[];
   expandedDishes: Record<string, boolean>;
-  onAddItem: (day: number, mealTypeId: number, option: SingleValue<SelectMealOption>) => void;
-  onRemoveItem: (day: number, mealTypeId: number, instanceId: string) => void;
+  onAddItem: (day: number, mealInstanceId: string, option: SingleValue<SelectMealOption>) => void;
+  onRemoveItem: (mealInstanceId: string, instanceId: string) => void;
   onToggleDish: (instanceId: string) => void;
-  onCloneRequest: (instanceId: string, dish: Dish, day: number, mealTypeId: number) => void;
-  onRemoveMeal: (day: number, mealTypeId: number) => void;
+  onCloneRequest: (instanceId: string, dish: Dish, day: number) => void;
+  onRemoveMeal: (day: number, instanceId: string) => void;
+  onEditMeal: (day: number, meal: MealInstance) => void;
 }> = ({ id, ...props }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
@@ -153,23 +160,22 @@ const SortableMealSlot: React.FC<{
 
 const MealSlot: React.FC<{
   day: number;
-  mealTypeId: number;
-  mealName: string;
+  meal: MealInstance;
   trip: Trip;
   products: Product[];
   dishes: Dish[];
   groupedMealOptions: GroupedMealOption[];
   expandedDishes: Record<string, boolean>;
-  onAddItem: (day: number, mealTypeId: number, option: SingleValue<SelectMealOption>) => void;
-  onRemoveItem: (day: number, mealTypeId: number, instanceId: string) => void;
+  onAddItem: (day: number, mealInstanceId: string, option: SingleValue<SelectMealOption>) => void;
+  onRemoveItem: (mealInstanceId: string, instanceId: string) => void;
   onToggleDish: (instanceId: string) => void;
-  onCloneRequest: (instanceId: string, dish: Dish, day: number, mealTypeId: number) => void;
-  onRemoveMeal: (day: number, mealTypeId: number) => void;
+  onCloneRequest: (instanceId: string, dish: Dish, day: number) => void;
+  onRemoveMeal: (day: number, instanceId: string) => void;
+  onEditMeal: (day: number, meal: MealInstance) => void;
   dragHandleProps?: DragHandleProps;
 }> = ({
   day,
-  mealTypeId,
-  mealName,
+  meal,
   trip,
   products,
   dishes,
@@ -180,12 +186,12 @@ const MealSlot: React.FC<{
   onToggleDish,
   onCloneRequest,
   onRemoveMeal,
+  onEditMeal,
   dragHandleProps,
 }) => {
-  const mealId = `${day}-${mealTypeId}`;
-  const selectedItems = (trip.selectedMeals?.[mealId] || []) as MealPlanItem[];
+  const selectedItems = (trip.selectedMeals?.[meal.instanceId] || []) as MealPlanItem[];
   const currentDishes = dishes;
-  const mealNutrition = calculateMealNutrition(trip, day, mealTypeId, products, dishes);
+  const mealNutrition = calculateMealNutrition(trip, meal.instanceId, products, dishes);
 
   return (
     <div className="bg-card rounded-xl border notion-border-subtle p-4 space-y-3 hover:notion-shadow-sm transition-all duration-200">
@@ -206,8 +212,11 @@ const MealSlot: React.FC<{
 
           <div className="min-w-0 flex-1">
             <h5 className="font-medium text-foreground text-sm tracking-tight truncate">
-              {mealName}
+              {meal.title}
             </h5>
+            {meal.description && (
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">{meal.description}</p>
+            )}
             {mealNutrition.productCount > 0 && (
               <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-0.5">
                 <div className="flex items-center gap-1">
@@ -228,15 +237,26 @@ const MealSlot: React.FC<{
           </div>
         </div>
 
-        <Button
-          size="icon-sm"
-          variant="ghost"
-          onClick={() => onRemoveMeal(day, mealTypeId)}
-          className="text-muted-foreground hover:text-danger hover:bg-danger/10 flex-shrink-0"
-          title="Удалить прием пищи"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => onEditMeal(day, meal)}
+            className="text-muted-foreground hover:text-primary hover:bg-primary/10 flex-shrink-0"
+            title="Редактировать прием пищи"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            onClick={() => onRemoveMeal(day, meal.instanceId)}
+            className="text-muted-foreground hover:text-danger hover:bg-danger/10 flex-shrink-0"
+            title="Удалить прием пищи"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </div>
 
       {/* Meal Items */}
@@ -267,14 +287,14 @@ const MealSlot: React.FC<{
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button
-                        onClick={() => onCloneRequest(item.instanceId, dish, day, mealTypeId)}
+                        onClick={() => onCloneRequest(item.instanceId, dish, day)}
                         className="p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
                         title="Редактировать блюдо"
                       >
                         <Edit className="w-3 h-3" />
                       </button>
                       <button
-                        onClick={() => onRemoveItem(day, mealTypeId, item.instanceId)}
+                        onClick={() => onRemoveItem(meal.instanceId, item.instanceId)}
                         className="p-1 rounded text-muted-foreground hover:text-danger hover:bg-danger/10 transition-all duration-200"
                         title="Удалить блюдо"
                       >
@@ -306,7 +326,7 @@ const MealSlot: React.FC<{
                     </span>
                   </div>
                   <button
-                    onClick={() => onRemoveItem(day, mealTypeId, item.instanceId)}
+                    onClick={() => onRemoveItem(meal.instanceId, item.instanceId)}
                     className="p-1 rounded text-muted-foreground hover:text-danger hover:bg-danger/10 transition-all duration-200 flex-shrink-0"
                     title="Удалить продукт"
                   >
@@ -326,7 +346,7 @@ const MealSlot: React.FC<{
           options={groupedMealOptions}
           onChange={(option) => {
             if (option) {
-              onAddItem(day, mealTypeId, option);
+              onAddItem(day, meal.instanceId, option);
             }
           }}
           placeholder={
@@ -389,51 +409,29 @@ function TripPlanningPage() {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDishFormOpen, setIsDishFormOpen] = useState(false);
+  const [editingMeal, setEditingMeal] = useState<EditMealState>(null);
   const [cloningState, setCloningState] = useState<CloningState>(null);
   const [expandedDishes, setExpandedDishes] = useState<Record<string, boolean>>({});
   const [openSections, setOpenSections] = useState<string[]>(['day-1']);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
-  const trip = useTripStore((state) => state.trips.find((t) => t.id === numericTripId));
+  const {
+    getMigratedTrips,
+    updateTrip,
+    addMealToDay,
+    removeMealFromDay,
+    reorderMealsInDay,
+    updateMealInstance,
+  } = useTripStore();
+  const migratedTrips = getMigratedTrips();
+  const trip = migratedTrips.find((t) => t.id === numericTripId);
 
-  const { updateTrip, addMealToDay, removeMealFromDay, reorderMealsInDay } = useTripStore();
   const { products } = useProductStore();
   const { dishes, addDish } = useDishStore();
-  const { mealTypes } = useMealTypesStore();
-
-  const migratedTrip = useMemo(() => {
-    if (trip && !trip.dayMeals) {
-      const dayMeals: { [dayNumber: string]: number[] } = {};
-      for (let day = 1; day <= trip.days; day++) {
-        const mealCount = trip.mealsPerDay || 3;
-        if (mealCount === 3) {
-          dayMeals[day.toString()] = [1, 2, 3];
-        } else if (mealCount === 4) {
-          dayMeals[day.toString()] = [1, 2, 3, 4];
-        } else if (mealCount === 5) {
-          dayMeals[day.toString()] = [1, 2, 3, 4, 5];
-        } else {
-          dayMeals[day.toString()] = [1, 2, 3];
-        }
-      }
-      const newTrip = { ...trip, dayMeals };
-      updateTrip(trip.id, { dayMeals });
-      return newTrip;
-    }
-    return trip;
-  }, [trip, updateTrip]);
-
-  const getMealNameById = (mealTypeId: number): string => {
-    const mealType = mealTypes.find((mt) => mt.id === mealTypeId);
-    return mealType?.name || `Прием пищи ${mealTypeId}`;
-  };
-
-  const generateMealId = (day: number, mealTypeId: number): string => {
-    return `${day}-${mealTypeId}`;
-  };
+  const { meals: mealTemplates } = useMealStore();
 
   const calculateDayNutritionLocal = (day: number) => {
-    return calculateDayNutrition(migratedTrip, day, products, dishes);
+    return calculateDayNutrition(trip, day, products, dishes);
   };
 
   const sensors = useSensors(
@@ -459,12 +457,9 @@ function TripPlanningPage() {
       return;
     }
 
-    const oldIndex = (trip.dayMeals[day] || []).findIndex(
-      (id) => generateMealId(day, id) === active.id
-    );
-    const newIndex = (trip.dayMeals[day] || []).findIndex(
-      (id) => generateMealId(day, id) === over.id
-    );
+    const dayMeals = trip.dayMeals[day] || [];
+    const oldIndex = dayMeals.findIndex((m) => m.instanceId === active.id);
+    const newIndex = dayMeals.findIndex((m) => m.instanceId === over.id);
 
     if (oldIndex !== -1 && newIndex !== -1) {
       reorderMealsInDay(trip.id, day, oldIndex, newIndex);
@@ -500,10 +495,10 @@ function TripPlanningPage() {
 
   const handleMealItemAdd = (
     day: number,
-    mealTypeId: number,
+    mealInstanceId: string,
     selectedOption: SingleValue<SelectMealOption>
   ) => {
-    if (!migratedTrip || !selectedOption || typeof selectedOption.value !== 'string') {
+    if (!trip || !selectedOption || typeof selectedOption.value !== 'string') {
       return;
     }
     const [type, idStr] = selectedOption.value.split('-');
@@ -512,7 +507,6 @@ function TripPlanningPage() {
     const itemId = parseInt(idStr, 10);
     if (isNaN(itemId)) return;
 
-    const mealId = generateMealId(day, mealTypeId);
     let newItem: MealPlanItem;
 
     if (type === 'dish') {
@@ -531,32 +525,45 @@ function TripPlanningPage() {
       return;
     }
 
-    const newSelectedMeals = JSON.parse(JSON.stringify(migratedTrip.selectedMeals || {}));
-    if (!newSelectedMeals[mealId]) newSelectedMeals[mealId] = [];
-    newSelectedMeals[mealId].push(newItem);
-    updateTrip(migratedTrip.id, { selectedMeals: newSelectedMeals });
+    const newSelectedMeals = JSON.parse(JSON.stringify(trip.selectedMeals || {}));
+    if (!newSelectedMeals[mealInstanceId]) newSelectedMeals[mealInstanceId] = [];
+    newSelectedMeals[mealInstanceId].push(newItem);
+    updateTrip(trip.id, { selectedMeals: newSelectedMeals });
   };
 
-  const handleMealItemRemove = (day: number, mealTypeId: number, instanceId: string) => {
-    if (!migratedTrip) return;
-    const mealId = generateMealId(day, mealTypeId);
-    const newSelectedMeals = JSON.parse(JSON.stringify(migratedTrip.selectedMeals || {}));
-    if (newSelectedMeals[mealId]) {
-      newSelectedMeals[mealId] = newSelectedMeals[mealId].filter(
+  const handleMealItemRemove = (mealInstanceId: string, instanceId: string) => {
+    if (!trip) return;
+    const newSelectedMeals = JSON.parse(JSON.stringify(trip.selectedMeals || {}));
+    if (newSelectedMeals[mealInstanceId]) {
+      newSelectedMeals[mealInstanceId] = newSelectedMeals[mealInstanceId].filter(
         (item: MealPlanItem) => item.instanceId !== instanceId
       );
-      updateTrip(migratedTrip.id, { selectedMeals: newSelectedMeals });
+      updateTrip(trip.id, { selectedMeals: newSelectedMeals });
     }
   };
 
-  const handleRemoveMeal = (day: number, mealTypeId: number) => {
-    if (migratedTrip) {
-      removeMealFromDay(migratedTrip.id, day, mealTypeId);
+  const handleRemoveMeal = (day: number, instanceId: string) => {
+    if (trip) {
+      removeMealFromDay(trip.id, day, instanceId);
     }
   };
 
-  const handleCloneRequest = (instanceId: string, dish: Dish, day: number, mealTypeId: number) => {
-    setCloningState({ instanceId, dish, day, mealTypeId });
+  const handleEditMeal = (day: number, meal: MealInstance) => {
+    setEditingMeal({ day, meal });
+  };
+
+  const handleUpdateMeal = (title: string, description: string) => {
+    if (editingMeal && trip) {
+      updateMealInstance(trip.id, editingMeal.day, editingMeal.meal.instanceId, {
+        title,
+        description,
+      });
+      setEditingMeal(null);
+    }
+  };
+
+  const handleCloneRequest = (instanceId: string, dish: Dish, day: number) => {
+    setCloningState({ instanceId, dish, day });
   };
 
   const handleCloneConfirm = () => {
@@ -565,14 +572,32 @@ function TripPlanningPage() {
 
   const handleCloneSubmit = (newDishData: DishData, action: SubmitDishAction) => {
     const newDish = addDish(newDishData);
-    if (!newDish || !migratedTrip || !cloningState) {
+    if (!newDish || !trip || !cloningState) {
       setIsDishFormOpen(false);
       setCloningState(null);
       return;
     }
 
-    const newSelectedMeals = JSON.parse(JSON.stringify(migratedTrip.selectedMeals));
-    const mealId = generateMealId(cloningState.day, cloningState.mealTypeId);
+    const newSelectedMeals = JSON.parse(JSON.stringify(trip.selectedMeals));
+
+    // Find the meal instance that contains the item being cloned
+    let mealInstance: MealInstance | undefined;
+    let mealId: string | undefined;
+
+    for (const dayKey in trip.dayMeals) {
+      const dayMeals = trip.dayMeals[dayKey];
+      for (const mi of dayMeals) {
+        const items = newSelectedMeals[mi.instanceId] || [];
+        if (items.some((item: MealPlanItem) => item.instanceId === cloningState.instanceId)) {
+          mealInstance = mi;
+          mealId = mi.instanceId;
+          break;
+        }
+      }
+      if (mealInstance) break;
+    }
+
+    if (!mealInstance || !mealId) return;
 
     if (action === 'replace') {
       if (newSelectedMeals[mealId]) {
@@ -582,7 +607,7 @@ function TripPlanningPage() {
         );
         if (itemIndex !== -1) {
           mealItems[itemIndex] = { ...mealItems[itemIndex], itemId: newDish.id };
-          updateTrip(migratedTrip.id, { selectedMeals: newSelectedMeals });
+          updateTrip(trip.id, { selectedMeals: newSelectedMeals });
         }
       }
     } else if (action === 'add_as_new') {
@@ -593,7 +618,7 @@ function TripPlanningPage() {
       };
       if (!newSelectedMeals[mealId]) newSelectedMeals[mealId] = [];
       newSelectedMeals[mealId].push(newItem);
-      updateTrip(migratedTrip.id, { selectedMeals: newSelectedMeals });
+      updateTrip(trip.id, { selectedMeals: newSelectedMeals });
     }
 
     setIsDishFormOpen(false);
@@ -609,12 +634,12 @@ function TripPlanningPage() {
   }, []);
 
   const handleDetailsUpdate = (formData: TripData) => {
-    if (!migratedTrip) return;
-    updateTrip(migratedTrip.id, formData);
+    if (!trip) return;
+    updateTrip(trip.id, formData);
     setIsEditModalOpen(false);
   };
 
-  if (!migratedTrip) {
+  if (!trip) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="text-center max-w-md">
@@ -643,15 +668,13 @@ function TripPlanningPage() {
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row justify-between lg:items-start gap-4 pb-6 border-b notion-border-subtle">
             <div className="space-y-1">
-              <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-                {migratedTrip.name}
-              </h1>
+              <h1 className="text-2xl font-semibold text-foreground tracking-tight">{trip.name}</h1>
               <p className="text-sm text-muted-foreground">
-                {formatDate(migratedTrip.startDate)} — {formatDate(migratedTrip.endDate)}
+                {formatDate(trip.startDate)} — {formatDate(trip.endDate)}
               </p>
-              {migratedTrip.description && (
+              {trip.description && (
                 <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl mt-1">
-                  {migratedTrip.description}
+                  {trip.description}
                 </p>
               )}
             </div>
@@ -672,65 +695,52 @@ function TripPlanningPage() {
         <DetailPane
           openSections={openSections}
           onToggleSection={handleToggleSection}
-          sections={Array.from({ length: migratedTrip.days }).map((_, dayIndex) => {
+          sections={Array.from({ length: trip.days }).map((_, dayIndex) => {
             const day = dayIndex + 1;
             const dayNutrition = calculateDayNutritionLocal(day);
-            const dayMeals = migratedTrip.dayMeals?.[day.toString()] || [];
+            const dayMeals = trip.dayMeals?.[day.toString()] || [];
+
+            const titleNode = (
+              <div className="flex items-baseline gap-3">
+                <span>{`День ${day}`}</span>
+                <span className="text-xs font-normal text-muted-foreground tracking-normal">
+                  {`К: ${dayNutrition.calories}, В: ${dayNutrition.totalWeightForAllUsers} г`}
+                </span>
+              </div>
+            );
 
             return {
               id: `day-${day}`,
-              title: (
-                <div className="flex items-center justify-between w-full pr-4">
-                  <span className="font-semibold">День {day}</span>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2" title="Общий вес / На человека">
-                      <Scale className="w-3.5 h-3.5" />
-                      <span className="font-medium">
-                        {dayNutrition.totalWeightForAllUsers}г / {dayNutrition.weightPerUser}г
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2" title="Калорийность на человека">
-                      <Flame className="w-3.5 h-3.5" />
-                      <span className="font-medium">{dayNutrition.calories} ккал</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-[10px]">
-                      <span>Б:{dayNutrition.proteins}</span>
-                      <span>Ж:{dayNutrition.fats}</span>
-                      <span>У:{dayNutrition.carbs}</span>
-                    </div>
-                  </div>
-                </div>
-              ),
-              icon: Calendar,
-              actionButton: (
-                <DropdownSelect
-                  label=""
-                  icon={Plus}
-                  options={[
-                    { value: '', label: 'Выберите прием пищи' },
-                    ...mealTypes
-                      .filter((mt) => mt.repeatable || !dayMeals.includes(mt.id))
-                      .map((mt) => ({ value: mt.id.toString(), label: mt.name })),
-                  ]}
-                  value=""
-                  onChange={(value) => {
-                    if (value && value !== '' && migratedTrip) {
-                      addMealToDay(migratedTrip.id, day, parseInt(value, 10));
-                    }
-                  }}
-                  placeholder="Добавить прием пищи"
-                />
-              ),
+              title: titleNode,
+              icon: CalendarDays,
               content: (
                 <div className="space-y-4">
+                  <DropdownSelect
+                    label="Добавить прием пищи"
+                    icon={Plus}
+                    options={mealTemplates.map((template) => ({
+                      value: template.id.toString(),
+                      label: template.name,
+                    }))}
+                    value=""
+                    onChange={(value) => {
+                      if (value && trip) {
+                        const selectedTemplate = mealTemplates.find(
+                          (t) => t.id === parseInt(value, 10)
+                        );
+                        if (selectedTemplate) {
+                          addMealToDay(trip.id, day, selectedTemplate);
+                        }
+                      }
+                    }}
+                    placeholder="Добавить готовый прием пищи"
+                  />
+
                   {dayMeals.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-muted/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <Utensils className="w-8 h-8 text-muted-foreground/50" />
-                      </div>
-                      <h4 className="font-medium text-foreground mb-2">Нет приемов пищи</h4>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Добавьте приемы пищи для планирования рациона на этот день
+                    <div className="text-center py-8 px-4 border-2 border-dashed notion-border-strong rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        В этом дне еще нет приемов пищи. Используйте кнопку выше, чтобы добавить
+                        готовый шаблон.
                       </p>
                     </div>
                   ) : (
@@ -742,17 +752,16 @@ function TripPlanningPage() {
                       onDragCancel={handleDragCancel}
                     >
                       <SortableContext
-                        items={dayMeals.map((mealTypeId) => generateMealId(day, mealTypeId))}
+                        items={dayMeals.map((m) => m.instanceId)}
                         strategy={verticalListSortingStrategy}
                       >
-                        {dayMeals.map((mealTypeId) => (
+                        {dayMeals.map((meal) => (
                           <SortableMealSlot
-                            key={generateMealId(day, mealTypeId)}
-                            id={generateMealId(day, mealTypeId)}
+                            key={meal.instanceId}
+                            id={meal.instanceId}
                             day={day}
-                            mealTypeId={mealTypeId}
-                            mealName={getMealNameById(mealTypeId)}
-                            trip={migratedTrip}
+                            meal={meal}
+                            trip={trip}
                             products={products}
                             dishes={dishes}
                             groupedMealOptions={groupedMealOptions}
@@ -762,27 +771,36 @@ function TripPlanningPage() {
                             onToggleDish={toggleDishExpansion}
                             onCloneRequest={handleCloneRequest}
                             onRemoveMeal={handleRemoveMeal}
+                            onEditMeal={handleEditMeal}
                           />
                         ))}
                       </SortableContext>
                       <DragOverlay>
-                        {activeDragId && migratedTrip ? (
-                          <MealSlot
-                            day={Number(activeDragId.split('-')[0])}
-                            mealTypeId={Number(activeDragId.split('-')[1])}
-                            mealName={getMealNameById(Number(activeDragId.split('-')[1]))}
-                            trip={migratedTrip}
-                            products={products}
-                            dishes={dishes}
-                            groupedMealOptions={groupedMealOptions}
-                            expandedDishes={expandedDishes}
-                            onAddItem={handleMealItemAdd}
-                            onRemoveItem={handleMealItemRemove}
-                            onToggleDish={toggleDishExpansion}
-                            onCloneRequest={handleCloneRequest}
-                            onRemoveMeal={handleRemoveMeal}
-                          />
-                        ) : null}
+                        {activeDragId &&
+                          trip &&
+                          (() => {
+                            const activeMeal = Object.values(trip.dayMeals)
+                              .flat()
+                              .find((m) => m.instanceId === activeDragId);
+                            if (!activeMeal) return null;
+                            return (
+                              <MealSlot
+                                day={day}
+                                meal={activeMeal}
+                                trip={trip}
+                                products={products}
+                                dishes={dishes}
+                                groupedMealOptions={groupedMealOptions}
+                                expandedDishes={expandedDishes}
+                                onAddItem={handleMealItemAdd}
+                                onRemoveItem={handleMealItemRemove}
+                                onToggleDish={toggleDishExpansion}
+                                onCloneRequest={handleCloneRequest}
+                                onRemoveMeal={handleRemoveMeal}
+                                onEditMeal={handleEditMeal}
+                              />
+                            );
+                          })()}
                       </DragOverlay>
                     </DndContext>
                   )}
@@ -817,10 +835,25 @@ function TripPlanningPage() {
         size="xl"
       >
         <TripForm
-          trip={migratedTrip}
+          trip={trip}
           onSubmit={handleDetailsUpdate}
           onCancel={() => setIsEditModalOpen(false)}
         />
+      </Modal>
+
+      {/* Edit Meal Modal */}
+      <Modal
+        isOpen={!!editingMeal}
+        onClose={() => setEditingMeal(null)}
+        title="Редактировать прием пищи"
+      >
+        {editingMeal && (
+          <EditMealForm
+            meal={editingMeal.meal}
+            onSubmit={(title, description) => handleUpdateMeal(title, description)}
+            onCancel={() => setEditingMeal(null)}
+          />
+        )}
       </Modal>
 
       {/* Clone Confirmation Modal */}
@@ -871,3 +904,49 @@ function TripPlanningPage() {
 }
 
 export default TripPlanningPage;
+
+const EditMealForm: React.FC<{
+  meal: MealInstance;
+  onSubmit: (title: string, description: string) => void;
+  onCancel: () => void;
+}> = ({ meal, onSubmit, onCancel }) => {
+  const [title, setTitle] = React.useState(meal.title || '');
+  const [description, setDescription] = React.useState(meal.description || '');
+
+  React.useEffect(() => {
+    setTitle(meal.title || '');
+    setDescription(meal.description || '');
+  }, [meal]);
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit(title, description);
+      }}
+      className="p-1 space-y-4"
+    >
+      <Input
+        label="Название"
+        name="title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+        autoFocus
+      />
+      <Textarea
+        label="Описание"
+        name="description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={3}
+      />
+      <div className="flex justify-end gap-3 pt-4 border-t border-border">
+        <Button type="button" variant="secondary" onClick={onCancel}>
+          Отмена
+        </Button>
+        <Button type="submit">Сохранить</Button>
+      </div>
+    </form>
+  );
+};

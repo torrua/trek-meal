@@ -9,9 +9,9 @@ import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useMealTypesStore from '../stores/useMealTypesStore';
 
 // Import existing page content components (we'll extract the main content from existing pages)
-import CategoriesPageContent from './../components/categories/CategoriesPageContent';
-import EquipmentCategoriesPageContent from './../components/equipment/EquipmentCategoriesPageContent';
-import MealTypesPageContent from './../components/mealtypes/MealTypesPageContent';
+import CategoriesPageContent from '../components/categories/CategoriesPageContent';
+import EquipmentCategoriesPageContent from '../components/equipment/EquipmentCategoriesPageContent';
+import MealTypesPage from './MealTypesPage';
 
 const TypesAndCategoriesPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -49,7 +49,7 @@ const TypesAndCategoriesPage: React.FC = () => {
         id: 'meal-types',
         label: 'Приемы пищи',
         icon: Utensils,
-        count: mealTypes.length,
+        content: <MealTypesPage />,
       },
     ],
     [productCategories.length, equipmentCategories.length, mealTypes.length]
@@ -70,7 +70,7 @@ const TypesAndCategoriesPage: React.FC = () => {
       case 'equipment-categories':
         return <EquipmentCategoriesPageContent />;
       case 'meal-types':
-        return <MealTypesPageContent />;
+        return <MealTypesPage />;
       default:
         return <CategoriesPageContent />;
     }

@@ -217,10 +217,12 @@ const TripsPage: React.FC = () => {
                 : statusConfig.icon === Route
                   ? '#9333ea' // purple-600
                   : '#4b5563'; // gray-600
+
             const details = [
               {
+                key: 'status',
                 icon: statusConfig.icon,
-                text: '',
+                text: statusConfig.label,
                 title: statusConfig.label,
                 className:
                   statusConfig.icon === Clock
@@ -229,13 +231,54 @@ const TripsPage: React.FC = () => {
                       ? 'text-purple-600 dark:text-purple-400'
                       : 'text-gray-600 dark:text-gray-400',
               },
-              { icon: Users, text: trip.participants.length, title: 'Участники' },
+              {
+                key: 'participants',
+                icon: Users,
+                text: trip.participants.length,
+                title: 'Участники',
+              },
               ...(trip.destination
-                ? [{ icon: MapPin, text: trip.destination, title: 'Место' }]
+                ? [{ key: 'destination', icon: MapPin, text: trip.destination, title: 'Место' }]
                 : []),
               ...(trip.startDate
-                ? [{ icon: Calendar, text: formatDate(trip.startDate), title: 'Дата' }]
+                ? [{ key: 'date', icon: Calendar, text: formatDate(trip.startDate), title: 'Дата' }]
                 : []),
+            ];
+
+            const menuItems = [
+              {
+                label: 'Редактировать',
+                icon: Edit,
+                onClick: (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  handleEdit(trip);
+                },
+              },
+              {
+                label: 'Клонировать',
+                icon: Copy,
+                onClick: (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  handleClone(trip);
+                },
+              },
+              {
+                label: 'Экспорт',
+                icon: Share,
+                onClick: (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  handleExport(trip);
+                },
+              },
+              {
+                label: 'Удалить',
+                icon: Trash2,
+                onClick: (e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  handleRequestDelete(trip);
+                },
+                className: 'text-danger',
+              },
             ];
 
             return (
@@ -243,35 +286,12 @@ const TripsPage: React.FC = () => {
                 key={trip.id}
                 title={trip.name}
                 icon={difficultyConfig.icon}
-                iconColor={difficultyConfig.colorClassName} // ИСПРАВЛЕНИЕ: Добавляем цвет иконки
+                iconColor={difficultyConfig.colorClassName}
                 details={details}
+                menuItems={menuItems}
                 isSelected={activeId === trip.id}
                 onSelect={() => handleSelectTrip(trip.id)}
                 borderColor={statusBorderColor}
-                data-testid={`trip-card-${trip.id}`}
-                menuItems={[
-                  {
-                    label: 'Редактировать',
-                    icon: Edit,
-                    onClick: () => handleEdit(trip),
-                  },
-                  {
-                    label: 'Клонировать',
-                    icon: Copy,
-                    onClick: () => handleClone(trip),
-                  },
-                  {
-                    label: 'Экспорт',
-                    icon: Share,
-                    onClick: () => handleExport(trip),
-                  },
-                  {
-                    label: 'Удалить',
-                    icon: Trash2,
-                    onClick: () => handleRequestDelete(trip),
-                    className: 'text-red-600 dark:text-red-400',
-                  },
-                ]}
               />
             );
           })}

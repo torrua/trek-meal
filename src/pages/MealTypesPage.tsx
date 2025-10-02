@@ -7,21 +7,21 @@ import Input from '../ui/Input';
 import ConfirmModal from '../ui/ConfirmModal';
 import Modal from '../ui/Modal';
 import EntityCard, { MenuItem } from '../ui/EntityCard';
-import MealTypeDetail from '../components/mealtypes/MealTypeDetail';
-import { CirclePlus, Utensils, Edit, Trash2 } from 'lucide-react';
+import { CirclePlus, Utensils, Edit, Trash2, Repeat } from 'lucide-react';
 
 interface MealTypeFormProps {
   mealType: MealType | null;
-  onSubmit: (name: string) => void;
+  onSubmit: (name: string, repeatable: boolean) => void;
   onCancel: () => void;
 }
 
 const MealTypeForm: React.FC<MealTypeFormProps> = ({ mealType, onSubmit, onCancel }) => {
   const [name, setName] = useState(mealType?.name || '');
+  const [repeatable, setRepeatable] = useState(mealType?.repeatable || false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(name);
+    onSubmit(name, repeatable);
   };
 
   return (
@@ -33,6 +33,32 @@ const MealTypeForm: React.FC<MealTypeFormProps> = ({ mealType, onSubmit, onCance
         autoFocus
         required
       />
+      <div className="flex items-center">
+        <label className="flex items-center cursor-pointer">
+          <div className="relative">
+            <input
+              type="checkbox"
+              id="repeatable"
+              checked={repeatable}
+              onChange={(e) => setRepeatable(e.target.checked)}
+              className="sr-only"
+            />
+            <div
+              className={`block w-10 h-6 rounded-full transition-colors ${
+                repeatable ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+              }`}
+            ></div>
+            <div
+              className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                repeatable ? 'transform translate-x-4' : ''
+              }`}
+            ></div>
+          </div>
+          <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+            Можно добавлять несколько раз в день
+          </span>
+        </label>
+      </div>
       <div className="flex justify-end gap-3 pt-6 border-t border-border">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Отмена
@@ -43,12 +69,39 @@ const MealTypeForm: React.FC<MealTypeFormProps> = ({ mealType, onSubmit, onCance
   );
 };
 
+// MealTypeDetail компонент перенесён сюда, чтобы не было ошибок импорта
+const MealTypeDetail: React.FC<{ mealType: MealType; onEdit: () => void }> = ({
+  mealType,
+  onEdit,
+}) => (
+  <div className="p-6">
+    <div className="flex items-center gap-3 mb-4">
+      <Utensils className="w-8 h-8 text-primary" />
+      <h2 className="text-2xl font-bold text-foreground">{mealType.name}</h2>
+    </div>
+    <div className="mb-4">
+      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-muted-foreground text-sm">
+        <Repeat className="w-4 h-4" />
+        {mealType.repeatable ? 'Можно добавлять несколько раз в день' : 'Один раз в день'}
+      </span>
+    </div>
+    <Button variant="secondary" onClick={onEdit}>
+      <Edit className="w-4 h-4 mr-2" />
+      Редактировать
+    </Button>
+  </div>
+);
+
 const MealTypesPage: React.FC = () => {
   const { mealTypes, addMealType, updateMealType, deleteMealType } = useMealTypesStore();
   const [activeId, setActiveId] = useState<number | null>(null);
   const [isFormModalOpen, setFormModalOpen] = useState(false);
   const [editingMealType, setEditingMealType] = useState<MealType | null>(null);
   const [typeToDelete, setTypeToDelete] = useState<MealType | null>(null);
+
+  const sortedMealTypes = useMemo(() => {
+    return [...mealTypes].sort((a, b) => a.name.localeCompare(b.name));
+  }, [mealTypes]);
 
   const selectedMealType = useMemo(
     () => mealTypes.find((mt) => mt.id === activeId) || null,
@@ -65,11 +118,11 @@ const MealTypesPage: React.FC = () => {
     setFormModalOpen(true);
   }, []);
 
-  const handleFormSubmit = (name: string) => {
+  const handleFormSubmit = (name: string, repeatable: boolean) => {
     if (editingMealType) {
-      updateMealType(editingMealType.id, name);
+      updateMealType(editingMealType.id, name, repeatable);
     } else {
-      addMealType(name);
+      addMealType(name, repeatable);
     }
     setFormModalOpen(false);
   };
@@ -87,57 +140,50 @@ const MealTypesPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <>
       <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Приемы пищи</h1>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Button variant="primary" onClick={handleAddNew}>
-              <CirclePlus className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Добавить прием пищи</span>
-            </Button>
-          </div>
-        </div>
+        <Button variant="primary" onClick={handleAddNew}>
+          <CirclePlus className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Добавить прием пищи</span>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         <div className="lg:col-span-1 space-y-3">
-          {mealTypes.length === 0 ? (
-            <div className="text-center py-16 px-6 text-muted-foreground">
-              <Utensils className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium text-foreground">Приемов пищи пока нет</h3>
-              <Button onClick={handleAddNew} className="mt-4">
-                <CirclePlus className="w-4 h-4 mr-2" />
-                Добавить первый
-              </Button>
-            </div>
-          ) : (
-            mealTypes.map((mt) => {
-              const menuItems: MenuItem[] = [
-                { label: 'Редактировать', icon: Edit, onClick: () => handleEdit(mt) },
-                {
-                  label: 'Удалить',
-                  icon: Trash2,
-                  onClick: () => handleDeleteRequest(mt),
-                  className:
-                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
-                },
-              ];
+          {sortedMealTypes.map((mealType) => {
+            const menuItems: MenuItem[] = [
+              {
+                label: 'Редактировать',
+                icon: Edit,
+                onClick: () => handleEdit(mealType),
+              },
+              {
+                label: 'Удалить',
+                icon: Trash2,
+                onClick: () => handleDeleteRequest(mealType),
+                className:
+                  'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
+              },
+            ];
 
-              return (
-                <EntityCard
-                  key={mt.id}
-                  title={mt.name}
-                  icon={Utensils}
-                  iconColor="text-gray-500"
-                  details={[]} // У приемов пищи нет дополнительных деталей
-                  isSelected={activeId === mt.id}
-                  onSelect={() => setActiveId(mt.id)}
-                  menuItems={menuItems}
-                />
-              );
-            })
-          )}
+            return (
+              <EntityCard
+                key={mealType.id}
+                title={mealType.name}
+                icon={Utensils}
+                details={[
+                  {
+                    key: 'repeatable',
+                    icon: Repeat,
+                    text: mealType.repeatable ? 'Повторяемый' : 'Один раз в день',
+                  },
+                ]}
+                isSelected={activeId === mealType.id}
+                onSelect={() => setActiveId(mealType.id)}
+                menuItems={menuItems}
+              />
+            );
+          })}
         </div>
 
         <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
@@ -154,7 +200,7 @@ const MealTypesPage: React.FC = () => {
                 </div>
                 <h3 className="text-lg font-medium text-foreground mb-2">Выберите прием пищи</h3>
                 <p className="text-muted-foreground">
-                  Кликните на карточку для просмотра информации.
+                  Кликните на карточку для просмотра подробной информации.
                 </p>
               </div>
             </div>
@@ -165,7 +211,7 @@ const MealTypesPage: React.FC = () => {
       <Modal
         isOpen={isFormModalOpen}
         onClose={() => setFormModalOpen(false)}
-        title={editingMealType ? 'Редактировать прием пищи' : 'Новый прием пищи'}
+        title={editingMealType ? 'Редактировать прием пищи' : 'Добавить прием пищи'}
       >
         <MealTypeForm
           mealType={editingMealType}
@@ -178,14 +224,13 @@ const MealTypesPage: React.FC = () => {
         isOpen={!!typeToDelete}
         onClose={() => setTypeToDelete(null)}
         onConfirm={handleDeleteConfirm}
-        title="Удалить прием пищи?"
+        title="Удалить прием пищи"
         variant="danger"
+        confirmText="Удалить"
       >
-        <p>
-          Вы уверены, что хотите удалить <span className="font-bold">{typeToDelete?.name}</span>?
-        </p>
+        Вы уверены, что хотите удалить прием пищи &quot;{typeToDelete?.name}&quot;?
       </ConfirmModal>
-    </div>
+    </>
   );
 };
 

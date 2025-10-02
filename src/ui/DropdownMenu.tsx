@@ -4,16 +4,24 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import cn from 'classnames';
 
+export interface MenuItem {
+  label: string;
+  icon: React.ElementType;
+  onClick: (e: React.MouseEvent) => void;
+  className?: string;
+  disabled?: boolean;
+}
+
 interface DropdownMenuProps {
   trigger: React.ReactNode;
-  children: React.ReactNode;
+  items: MenuItem[];
   align?: 'start' | 'end';
   side?: 'bottom' | 'top';
 }
 
 const DropdownMenu: React.FC<DropdownMenuProps> = ({
   trigger,
-  children,
+  items,
   align = 'end',
   side = 'bottom',
 }) => {
@@ -76,19 +84,18 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
     }
   }, []);
 
-  const handleEscape = useCallback(
-    (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isOpen) {
-        setIsOpen(false);
-        // Return focus to trigger
-        if (triggerRef.current) {
-          const button = triggerRef.current.querySelector('button');
-          button?.focus();
-        }
-      }
-    },
-    [isOpen]
-  );
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      setIsOpen(false);
+    }
+  }, []);
+
+  const handleItemClick = (item: MenuItem) => (e: React.MouseEvent) => {
+    if (!item.disabled) {
+      item.onClick(e);
+      setIsOpen(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -96,23 +103,23 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
       setTimeout(calculatePosition, 0);
 
       document.addEventListener('mousedown', handleOutsideClick);
-      document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleKeyDown);
       window.addEventListener('scroll', calculatePosition, true);
       window.addEventListener('resize', calculatePosition);
     } else {
       document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('scroll', calculatePosition, true);
       window.removeEventListener('resize', calculatePosition);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('scroll', calculatePosition, true);
       window.removeEventListener('resize', calculatePosition);
     };
-  }, [isOpen, handleOutsideClick, handleEscape, calculatePosition]);
+  }, [isOpen, handleOutsideClick, handleKeyDown, calculatePosition]);
 
   const handleTriggerClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -137,30 +144,29 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   const menu = isOpen ? (
     <div
       ref={menuRef}
-      className={cn(
-        'fixed min-w-48 origin-top-right rounded-xl bg-card border notion-border-subtle notion-shadow-lg z-[9999]',
-        'notion-scale-in',
-        'overflow-hidden'
-      )}
-      style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-      }}
+      className="fixed z-50 bg-popover text-popover-foreground rounded-lg shadow-lg border notion-border-subtle p-1 min-w-[180px] animate-in fade-in-0 zoom-in-95"
+      style={{ top: position.top, left: position.left }}
       role="menu"
       aria-orientation="vertical"
+      aria-labelledby="menu-button"
     >
-      <div className="py-2" role="none" onClick={() => setIsOpen(false)}>
-        {React.Children.map(children, (child) => {
-          if (React.isValidElement(child)) {
-            const childElement = child as React.ReactElement<{ className?: string }>;
-            return React.cloneElement(childElement, {
-              ...childElement.props,
-              className: cn(childElement.props.className),
-            });
-          }
-          return child;
-        })}
-      </div>
+      {items.map((item, index) => (
+        <button
+          key={index}
+          onClick={handleItemClick(item)}
+          disabled={item.disabled}
+          className={cn(
+            'w-full text-left flex items-center gap-2 px-2.5 py-1.5 text-sm rounded-md transition-colors',
+            'hover:bg-muted focus:bg-muted focus:outline-none',
+            'disabled:opacity-50 disabled:pointer-events-none',
+            item.className
+          )}
+          role="menuitem"
+        >
+          <item.icon className="w-4 h-4 text-muted-foreground" />
+          <span>{item.label}</span>
+        </button>
+      ))}
     </div>
   ) : null;
 

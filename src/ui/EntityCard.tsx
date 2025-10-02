@@ -1,6 +1,5 @@
-// src/ui/EntityCard.tsx
-
 import React from 'react';
+import { Link } from 'react-router-dom';
 import cn from 'classnames';
 import { MoreHorizontal } from 'lucide-react';
 import DropdownMenu from './DropdownMenu';
@@ -8,7 +7,7 @@ import DropdownMenu from './DropdownMenu';
 export interface MenuItem {
   label: string;
   icon: React.ElementType;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
   className?: string;
   disabled?: boolean;
 }
@@ -26,13 +25,15 @@ interface EntityCardProps {
   subtitle?: React.ReactNode;
   icon: React.ElementType;
   iconColor?: string;
-  details: DetailItem[];
-  menuItems: MenuItem[];
-  isSelected: boolean;
-  onSelect: () => void;
+  details?: DetailItem[];
+  menuItems?: MenuItem[];
+  isSelected?: boolean;
+  onSelect?: () => void;
   borderColor?: string;
   className?: string;
   'data-testid'?: string;
+  linkTo?: string;
+  description?: string;
 }
 
 const EntityCard: React.FC<EntityCardProps> = ({
@@ -47,137 +48,98 @@ const EntityCard: React.FC<EntityCardProps> = ({
   borderColor,
   className,
   'data-testid': testId,
+  linkTo,
+  description,
 }) => {
+  const cardContent = (
+    <>
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={cn(
+              'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+              iconColor ? `bg-${iconColor}/10` : 'bg-primary/10'
+            )}
+          >
+            <Icon className={cn('w-5 h-5', iconColor ? `text-${iconColor}` : 'text-primary')} />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-foreground truncate" title={title}>
+              {title}
+            </h3>
+            {subtitle && <div className="text-xs text-muted-foreground mt-0.5">{subtitle}</div>}
+            {description && (
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">{description}</p>
+            )}
+          </div>
+        </div>
+        {menuItems && menuItems.length > 0 && (
+          <DropdownMenu
+            items={menuItems}
+            trigger={
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            }
+          />
+        )}
+      </div>
+      {details && details.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-border/50">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+            {details.map((item) => (
+              <div key={item.key} className="flex items-center gap-1.5" title={item.title}>
+                <item.icon className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                <dt className="sr-only">{item.key}</dt>
+                <dd className={cn('text-foreground truncate', item.className)}>{item.text}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+    </>
+  );
+
+  const cardClasses = cn(
+    'block p-3 rounded-xl border-2 transition-all duration-200 notion-border-semitransparent',
+    'hover:notion-shadow-sm hover:border-primary/50',
+    {
+      'border-primary bg-primary/5 hover:bg-primary/10': isSelected,
+      'bg-card border-transparent': !isSelected,
+    },
+    borderColor,
+    className
+  );
+
+  if (linkTo) {
+    return (
+      <Link to={linkTo} className={cardClasses} data-testid={testId}>
+        {cardContent}
+      </Link>
+    );
+  }
+
   return (
     <div
-      data-testid={testId}
+      className={cardClasses}
       onClick={onSelect}
-      className={cn(
-        // Base Notion-style card
-        'group relative bg-card rounded-xl transition-all duration-200 cursor-pointer overflow-hidden',
-        'hover:notion-shadow hover:-translate-y-0.5',
-        'notion-focus-ring',
-        'ring-1 ring-transparent hover:ring-border',
-
-        // Selection states with Notion-style colors
-        isSelected ? 'ring-primary/30 bg-primary/5 notion-shadow' : 'border notion-border-subtle',
-
-        // Left border accent (Notion-style)
-        'border-l-4',
-
-        className
-      )}
-      style={{
-        borderLeftColor: isSelected ? 'rgb(var(--primary))' : borderColor || 'rgb(var(--border))',
-      }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onSelect();
+          onSelect?.();
         }
       }}
-      tabIndex={0}
       role="button"
+      tabIndex={onSelect ? 0 : -1}
       aria-pressed={isSelected}
-      aria-label={`Выбрать ${title}`}
+      data-testid={testId}
     >
-      {/* Notion-style floating menu button */}
-      <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 focus-within:opacity-100">
-        <DropdownMenu
-          trigger={
-            <button
-              className={cn(
-                'p-1.5 bg-card/80 backdrop-blur-sm rounded-lg border notion-border-subtle',
-                'hover:bg-muted/80 text-muted-foreground hover:text-foreground',
-                'notion-shadow-sm hover:notion-shadow transition-all duration-200',
-                'notion-focus-ring'
-              )}
-              aria-label="Открыть меню действий"
-            >
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
-          }
-        >
-          {menuItems.map((item) => (
-            <button
-              key={item.label}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!item.disabled) {
-                  item.onClick();
-                }
-              }}
-              disabled={item.disabled}
-              className={cn(
-                'w-full px-3 py-2 text-left text-sm transition-all duration-150 flex items-center gap-3 rounded-md',
-                'notion-bg-hover',
-                item.disabled
-                  ? 'text-muted-foreground/50 cursor-not-allowed'
-                  : item.className || 'text-card-foreground hover:text-foreground'
-              )}
-              aria-label={item.label}
-            >
-              <item.icon className="w-4 h-4 flex-shrink-0" />
-              <span className="font-medium">{item.label}</span>
-            </button>
-          ))}
-        </DropdownMenu>
-      </div>
-
-      {/* Card Content */}
-      <div className="p-5">
-        <div className="space-y-4">
-          {/* Header with icon and title */}
-          <div className="flex items-start gap-3 pr-8">
-            <div
-              className={cn(
-                'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center',
-                'bg-muted/50 border notion-border-subtle',
-                iconColor || 'text-muted-foreground'
-              )}
-            >
-              <Icon className="w-4 h-4" />
-            </div>
-
-            <div className="min-w-0 flex-1 space-y-1">
-              <h3
-                className="font-semibold text-foreground text-base leading-tight truncate"
-                title={title}
-              >
-                {title}
-              </h3>
-              {subtitle && (
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  {subtitle}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Details with Notion-style spacing */}
-          {details.length > 0 && (
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              {details.map((detail) => (
-                <div
-                  key={detail.key}
-                  className={cn('flex items-center gap-2 min-w-0', detail.className)}
-                  title={detail.title}
-                >
-                  <detail.icon className="w-4 h-4 flex-shrink-0 opacity-70" />
-                  <span className="font-medium text-foreground/80 truncate">{detail.text}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Notion-style selection indicator */}
-      {isSelected && (
-        <div className="absolute bottom-3 right-3">
-          <div className="w-2 h-2 bg-primary rounded-full notion-shadow-sm"></div>
-        </div>
-      )}
+      {cardContent}
     </div>
   );
 };

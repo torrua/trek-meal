@@ -24,6 +24,7 @@ const dbNavigation = [
   { path: '/products', label: 'Продукты', icon: Component },
   { path: '/dishes', label: 'Блюда', icon: Soup },
   { path: '/equipment', label: 'Снаряжение', icon: Backpack },
+  { path: '/meals', label: 'Приемы пищи', icon: Utensils },
 ];
 
 const categoriesNavigation = [

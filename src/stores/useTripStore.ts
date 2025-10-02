@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import { arrayMove } from '@dnd-kit/sortable';
-import type { Trip, TripData, MealPlanItem } from '../types';
+import type { Trip, TripData, MealPlanItem, MealInstance, Meal } from '../types';
 import useMealTypesStore from './useMealTypesStore';
 
 interface TripState {
@@ -18,9 +18,14 @@ interface TripState {
   addParticipantsToTrip: (tripId: number, participantIds: number[]) => void;
   removeParticipantFromTrip: (tripId: number, participantId: number) => void;
   // New meal management functions
-  addMealToDay: (tripId: number, day: number, mealTypeId: number) => void;
-  removeMealFromDay: (tripId: number, day: number, mealTypeId: number) => void;
-  updateDayMeals: (tripId: number, day: number, mealTypeIds: number[]) => void;
+  addMealToDay: (tripId: number, day: number, meal: Meal) => void;
+  removeMealFromDay: (tripId: number, day: number, instanceId: string) => void;
+  updateMealInstance: (
+    tripId: number,
+    day: number,
+    instanceId: string,
+    data: Partial<Omit<MealInstance, 'mealTypeId' | 'instanceId'>>
+  ) => void;
   reorderMealsInDay: (tripId: number, day: number, fromIndex: number, toIndex: number) => void;
   // Migration helper
   getMigratedTrips: () => Trip[];
@@ -74,11 +79,21 @@ const useTripStore = create<TripState>()(
       },
 
       addTrip: (tripData) => {
-        // Initialize dayMeals with default meal structure if not provided
-        const defaultDayMeals: { [dayNumber: string]: number[] } = {};
+        // Initialize dayMeals with default meal structure
+        const defaultDayMeals: { [dayNumber: string]: MealInstance[] } = {};
+        const { mealTypes } = useMealTypesStore.getState();
+
         for (let day = 1; day <= tripData.days; day++) {
           // Default to standard 3 meals per day (IDs 1, 2, 3 from meal types store)
-          defaultDayMeals[day.toString()] = [1, 2, 3]; // Завтрак, Обед, Ужин
+          const defaultMealTypes = [1, 2, 3]; // Завтрак, Обед, Ужин
+          defaultDayMeals[day.toString()] = defaultMealTypes.map((mealTypeId) => {
+            const mealType = mealTypes.find((mt) => mt.id === mealTypeId);
+            return {
+              instanceId: `${day}-${mealTypeId}-${Date.now()}-${Math.random()}`,
+              mealTypeId,
+              title: mealType?.name || `Прием пищи ${mealTypeId}`,
+            };
+          });
         }
 
         const newTrip: Trip = {
@@ -146,7 +161,7 @@ const useTripStore = create<TripState>()(
       },
 
       // New meal management functions
-      addMealToDay: (tripId, day, mealTypeId) => {
+      addMealToDay: (tripId, day, meal) => {
         const trip = get().trips.find((t) => t.id === tripId);
         if (!trip) {
           toast.error('Поход не найден.');
@@ -154,15 +169,22 @@ const useTripStore = create<TripState>()(
         }
 
         const dayKey = day.toString();
-        const currentMeals = trip.dayMeals[dayKey] || [];
-
-        // Check if meal type is repeatable or not already added
-        const { mealTypes } = useMealTypesStore.getState();
-        const mealType = mealTypes.find((mt) => mt.id === mealTypeId);
-        if (!mealType?.repeatable && currentMeals.includes(mealTypeId)) {
-          toast.error('Этот прием пищи уже добавлен в день.');
-          return;
+        if (!trip.dayMeals) {
+          trip.dayMeals = {};
         }
+        if (!trip.dayMeals[dayKey]) {
+          trip.dayMeals[dayKey] = [];
+        }
+        const currentMeals = trip.dayMeals[dayKey];
+
+        const newMealInstance: MealInstance = {
+          instanceId: `${day}-${meal.id}-${Date.now()}-${Math.random()}`,
+          title: meal.name,
+          description: meal.description,
+        };
+
+        const newSelectedMeals = { ...trip.selectedMeals };
+        newSelectedMeals[newMealInstance.instanceId] = meal.items;
 
         set((state) => ({
           trips: state.trips.map((t) =>
@@ -171,16 +193,17 @@ const useTripStore = create<TripState>()(
                   ...t,
                   dayMeals: {
                     ...t.dayMeals,
-                    [dayKey]: [...currentMeals, mealTypeId],
+                    [dayKey]: [...currentMeals, newMealInstance],
                   },
+                  selectedMeals: newSelectedMeals,
                 }
               : t
           ),
         }));
-        toast.success('Прием пищи добавлен.');
+        toast.success(`"${meal.name}" добавлен в день ${day}.`);
       },
 
-      removeMealFromDay: (tripId, day, mealTypeId) => {
+      removeMealFromDay: (tripId, day, instanceId) => {
         const trip = get().trips.find((t) => t.id === tripId);
         if (!trip) {
           toast.error('Поход не найден.');
@@ -189,10 +212,13 @@ const useTripStore = create<TripState>()(
 
         const dayKey = day.toString();
         const currentMeals = trip.dayMeals[dayKey] || [];
+        const mealToRemove = currentMeals.find((m) => m.instanceId === instanceId);
+
+        if (!mealToRemove) return;
 
         // Remove associated meal plan items when removing a meal
         const updatedSelectedMeals = { ...trip.selectedMeals };
-        const mealId = `${day}-${mealTypeId}`;
+        const mealId = mealToRemove.instanceId; // Use instanceId as the key
         if (updatedSelectedMeals[mealId]) {
           delete updatedSelectedMeals[mealId];
         }
@@ -204,48 +230,55 @@ const useTripStore = create<TripState>()(
                   ...t,
                   dayMeals: {
                     ...t.dayMeals,
-                    [dayKey]: currentMeals.filter((id) => id !== mealTypeId),
+                    [dayKey]: currentMeals.filter((meal) => meal.instanceId !== instanceId),
                   },
                   selectedMeals: updatedSelectedMeals,
                 }
               : t
           ),
         }));
-        toast.success('Прием пищи удален.');
+        toast.success(`"${mealToRemove.title}" удален.`);
       },
 
-      updateDayMeals: (tripId, day, mealTypeIds) => {
-        const trip = get().trips.find((t) => t.id === tripId);
-        if (!trip) {
-          toast.error('Поход не найден.');
-          return;
-        }
-
-        const dayKey = day.toString();
+      updateMealInstance: (tripId, day, instanceId, data) => {
         set((state) => ({
-          trips: state.trips.map((t) =>
-            t.id === tripId
-              ? {
-                  ...t,
-                  dayMeals: {
-                    ...t.dayMeals,
-                    [dayKey]: mealTypeIds,
-                  },
-                }
-              : t
-          ),
+          trips: state.trips.map((trip) => {
+            if (trip.id !== tripId) return trip;
+
+            const dayKey = day.toString();
+            const dayMeals = trip.dayMeals[dayKey] || [];
+            const updatedDayMeals = dayMeals.map((meal) =>
+              meal.instanceId === instanceId ? { ...meal, ...data } : meal
+            );
+
+            return {
+              ...trip,
+              dayMeals: {
+                ...trip.dayMeals,
+                [dayKey]: updatedDayMeals,
+              },
+            };
+          }),
         }));
+        toast.success('Прием пищи обновлен.');
       },
 
       reorderMealsInDay: (tripId, day, fromIndex, toIndex) => {
         const trip = get().trips.find((t) => t.id === tripId);
-        if (!trip) {
-          toast.error('Поход не найден.');
-          return;
-        }
+        if (!trip) return;
 
         const dayKey = day.toString();
         const currentMeals = trip.dayMeals[dayKey] || [];
+
+        if (
+          fromIndex < 0 ||
+          fromIndex >= currentMeals.length ||
+          toIndex < 0 ||
+          toIndex >= currentMeals.length
+        ) {
+          return;
+        }
+
         const reorderedMeals = arrayMove(currentMeals, fromIndex, toIndex);
 
         set((state) => ({
@@ -263,33 +296,46 @@ const useTripStore = create<TripState>()(
         }));
       },
 
-      // Migration helper to ensure all trips have dayMeals
+      // Migration helper
       getMigratedTrips: () => {
         const { trips } = get();
+        // No longer need mealTypes for this migration
+        // const { mealTypes } = useMealTypesStore.getState();
+
         return trips.map((trip) => {
-          if (!trip.dayMeals) {
-            const dayMeals: { [dayNumber: string]: number[] } = {};
-            for (let day = 1; day <= trip.days; day++) {
-              // Default to standard meals based on mealsPerDay
-              const mealCount = trip.mealsPerDay || 3;
-              if (mealCount === 3) {
-                dayMeals[day.toString()] = [1, 2, 3]; // Завтрак, Обед, Ужин
-              } else if (mealCount === 4) {
-                dayMeals[day.toString()] = [1, 2, 3, 4]; // Add snack
-              } else if (mealCount === 5) {
-                dayMeals[day.toString()] = [1, 2, 3, 4, 5]; // Full set
-              } else {
-                // Default to basic 3 meals
-                dayMeals[day.toString()] = [1, 2, 3];
-              }
+          // Check if migration is needed based on old structure
+          if (
+            trip.dayMeals &&
+            Object.values(trip.dayMeals).length > 0 &&
+            Object.values(trip.dayMeals).some(
+              (day) => day.length > 0 && typeof (day[0] as any)?.mealTypeId !== 'undefined'
+            )
+          ) {
+            const newDayMeals: { [dayNumber: string]: MealInstance[] } = {};
+            const oldDayMeals = trip.dayMeals || {};
+            const newSelectedMeals = { ...trip.selectedMeals };
+
+            for (const dayStr in oldDayMeals) {
+              const oldDayMealInstances = oldDayMeals[dayStr] as any[];
+              newDayMeals[dayStr] = oldDayMealInstances.map((oldInstance) => {
+                const newInstance: MealInstance = {
+                  instanceId: oldInstance.instanceId,
+                  title: oldInstance.title,
+                  description: oldInstance.description,
+                };
+                // We don't need to migrate selectedMeals as the instanceId should be stable
+                return newInstance;
+              });
             }
-            return { ...trip, dayMeals };
+            return { ...trip, dayMeals: newDayMeals, selectedMeals: newSelectedMeals };
           }
           return trip;
         });
       },
     }),
-    { name: 'trek-meal-trips' }
+    {
+      name: 'trip-storage',
+    }
   )
 );
 

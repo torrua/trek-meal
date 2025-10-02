@@ -1,0 +1,2580 @@
+{
+  "_metadata": {
+    "version": "2.0.0",
+    "createdAt": "2025-09-17T21:17:52.309Z",
+    "appVersion": "Trek Meal Pro",
+    "totalRecords": 103,
+    "breakdown": {
+      "participants": 6,
+      "trips": 5,
+      "products": 48,
+      "dishes": 1,
+      "categories": 27,
+      "equipment": 5,
+      "equipmentCategories": 6,
+      "mealTypes": 5
+    }
+  },
+  "data": {
+    "participants": [
+      {
+        "name": "Злата",
+        "gender": "female",
+        "age": "adult",
+        "notes": "",
+        "experienceLevel": "experienced",
+        "phone": "",
+        "email": "",
+        "birthDate": "",
+        "id": 1756363780696
+      },
+      {
+        "name": "Петра",
+        "gender": "female",
+        "age": "child",
+        "notes": "",
+        "experienceLevel": "beginner",
+        "phone": "",
+        "email": "",
+        "birthDate": "",
+        "id": 1756363997837
+      },
+      {
+        "name": "Иван",
+        "gender": "male",
+        "age": "adult",
+        "notes": "Не любит орехи",
+        "experienceLevel": "professional",
+        "phone": "+79013579113",
+        "email": "iv@mail.ru",
+        "birthDate": "1999-09-09",
+        "id": 1756372022346
+      },
+      {
+        "name": "Александра Петрова",
+        "gender": "female",
+        "age": "adult",
+        "notes": "Не любит орехи и мёд",
+        "experienceLevel": "professional",
+        "phone": "+79013579145",
+        "email": "ap@mail.ru",
+        "birthDate": "2000-09-09",
+        "id": 1756389014262
+      },
+      {
+        "name": "Тёма",
+        "gender": "male",
+        "age": "adult",
+        "experienceLevel": "beginner",
+        "phone": "",
+        "email": "",
+        "birthDate": "",
+        "notes": "",
+        "id": 1756811778835
+      },
+      {
+        "name": "Олег",
+        "gender": "male",
+        "age": "adult",
+        "experienceLevel": "beginner",
+        "phone": "",
+        "email": "",
+        "birthDate": "1981-01-07",
+        "notes": "",
+        "id": 1757276319488
+      }
+    ],
+    "trips": [
+      {
+        "name": "Эльбрус 2025",
+        "description": "",
+        "destination": "КБР",
+        "difficulty": "easy",
+        "days": 5,
+        "mealsPerDay": 3,
+        "participants": [
+          1756363997837,
+          1756372022346
+        ],
+        "startDate": "2025-09-06",
+        "endDate": "2025-09-10",
+        "id": 1756363730156,
+        "createdAt": "2025-08-28T06:48:50.156Z",
+        "status": "planning",
+        "selectedMeals": {},
+        "effectiveStatus": "planning"
+      },
+      {
+        "name": "Безенги",
+        "description": "",
+        "destination": "КБР",
+        "difficulty": "medium",
+        "days": 3,
+        "mealsPerDay": 3,
+        "participants": [
+          1756363997837,
+          1756372022346
+        ],
+        "startDate": "2025-08-31",
+        "endDate": "2025-09-02",
+        "id": 1756373638069,
+        "createdAt": "2025-08-28T09:33:58.069Z",
+        "status": "planning",
+        "selectedMeals": {}
+      },
+      {
+        "name": "Большой Тхач",
+        "description": "",
+        "destination": "Адыгея",
+        "difficulty": "easy",
+        "days": 3,
+        "mealsPerDay": 3,
+        "participants": [
+          1756372022346
+        ],
+        "startDate": "",
+        "endDate": "",
+        "id": 1756373668167,
+        "createdAt": "2025-08-28T09:34:28.167Z",
+        "status": "planning",
+        "selectedMeals": {}
+      },
+      {
+        "name": "Казбек",
+        "description": "",
+        "destination": "Грузия",
+        "difficulty": "hard",
+        "days": 3,
+        "mealsPerDay": 3,
+        "participants": [
+          1756372022346
+        ],
+        "startDate": "",
+        "endDate": "",
+        "id": 1756373964704,
+        "createdAt": "2025-08-28T09:39:24.704Z",
+        "status": "planning",
+        "selectedMeals": {
+          "1-1": []
+        },
+        "dayMeals": {
+          "1": [
+            1,
+            2,
+            3
+          ],
+          "2": [
+            1,
+            2,
+            3
+          ],
+          "3": [
+            1,
+            2,
+            3
+          ]
+        }
+      },
+      {
+        "name": "Килиманджаро",
+        "description": "",
+        "destination": "",
+        "difficulty": "hard",
+        "days": 1,
+        "mealsPerDay": 3,
+        "startDate": "",
+        "endDate": "",
+        "participants": [],
+        "id": 1757276281383,
+        "createdAt": "2025-09-07T20:18:01.383Z",
+        "status": "planning",
+        "selectedMeals": {},
+        "dayMeals": {
+          "1": []
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "Амарант",
+        "description": "",
+        "calories": 371,
+        "proteins": 13.6,
+        "fats": 7,
+        "carbs": 69,
+        "isPerishable": false,
+        "packaging": "",
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785644,
+        "categoryId": 2
+      },
+      {
+        "name": "Амарантовые отруби Di&Di с гречей",
+        "description": "",
+        "calories": 345,
+        "proteins": 19,
+        "fats": 5.5,
+        "carbs": 55,
+        "isPerishable": false,
+        "packaging": "",
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785646,
+        "categoryId": 4
+      },
+      {
+        "name": "Амарантовые отруби Di&Di с ламинарией",
+        "description": "",
+        "calories": 311,
+        "proteins": 20.4,
+        "fats": 5.1,
+        "carbs": 37,
+        "isPerishable": false,
+        "packaging": "",
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785647,
+        "categoryId": 2
+      },
+      {
+        "name": "Амарантовые отруби Di&Di с топинамбуром",
+        "description": "",
+        "calories": 345,
+        "proteins": 19,
+        "fats": 5.5,
+        "carbs": 55,
+        "isPerishable": false,
+        "packaging": "",
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785648,
+        "categoryId": 3
+      },
+      {
+        "name": "Булгур",
+        "description": "",
+        "calories": 342,
+        "proteins": 12.3,
+        "fats": 1.3,
+        "carbs": 57.6,
+        "isPerishable": false,
+        "packaging": "",
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785649,
+        "categoryId": null
+      },
+      {
+        "name": "Булгур Yelli с белыми грибами",
+        "description": "",
+        "calories": 330,
+        "proteins": 14,
+        "fats": 2,
+        "carbs": 64,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785650
+      },
+      {
+        "name": "Булгур Готово! с овощами",
+        "description": "",
+        "calories": 330,
+        "proteins": 13,
+        "fats": 1.5,
+        "carbs": 67,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785651
+      },
+      {
+        "name": "Булгур Мистраль",
+        "description": "",
+        "calories": 343,
+        "proteins": 14.2,
+        "fats": 1.1,
+        "carbs": 73.4,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785652
+      },
+      {
+        "name": "Булгур приготовленный",
+        "description": "",
+        "calories": 83,
+        "proteins": 3.1,
+        "fats": 0.2,
+        "carbs": 14.1,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785653
+      },
+      {
+        "name": "Гарнир Националь бурый рис, киноа и семена льна",
+        "description": "",
+        "calories": 385,
+        "proteins": 9.3,
+        "fats": 8.2,
+        "carbs": 68.6,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785654
+      },
+      {
+        "name": "Гарнир Националь рис, киноа, тыква",
+        "description": "",
+        "calories": 389,
+        "proteins": 10.6,
+        "fats": 8.6,
+        "carbs": 67.3,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785655
+      },
+      {
+        "name": "Горох Makfa дробленый в пакетиках",
+        "description": "",
+        "calories": 299,
+        "proteins": 23,
+        "fats": 1.5,
+        "carbs": 48.1,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785656
+      },
+      {
+        "name": "Горох Makfa колотый",
+        "description": "",
+        "calories": 299,
+        "proteins": 23,
+        "fats": 1.5,
+        "carbs": 48.1,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785657
+      },
+      {
+        "name": "Горох Агро-Альянс колотый",
+        "description": "",
+        "calories": 350,
+        "proteins": 23,
+        "fats": 1,
+        "carbs": 62,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785658
+      },
+      {
+        "name": "Горох маш Ярмарка Платинум",
+        "description": "",
+        "calories": 312,
+        "proteins": 23.5,
+        "fats": 2,
+        "carbs": 50,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785659
+      },
+      {
+        "name": "Горох Мистраль Айдахо",
+        "description": "",
+        "calories": 317,
+        "proteins": 20.8,
+        "fats": 1.4,
+        "carbs": 55.2,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785660
+      },
+      {
+        "name": "Горох Мистраль Орегон",
+        "description": "",
+        "calories": 327,
+        "proteins": 20,
+        "fats": 1.5,
+        "carbs": 66.4,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785661
+      },
+      {
+        "name": "Горох Пассим колотый",
+        "description": "",
+        "calories": 299,
+        "proteins": 23,
+        "fats": 1.6,
+        "carbs": 48.1,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785662
+      },
+      {
+        "name": "Горох Увелка колотый",
+        "description": "",
+        "calories": 360,
+        "proteins": 20,
+        "fats": 2,
+        "carbs": 67,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785663
+      },
+      {
+        "name": "Готовый завтрак Nestle Kosmostars звездочки и галактики медовые",
+        "description": "",
+        "calories": 400,
+        "proteins": 7.2,
+        "fats": 5,
+        "carbs": 76.2,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785664
+      },
+      {
+        "name": "Гречка Yelli с белыми грибами",
+        "description": "",
+        "calories": 290,
+        "proteins": 13,
+        "fats": 3.5,
+        "carbs": 52,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785665
+      },
+      {
+        "name": "Гречка зелёная вареная",
+        "description": "",
+        "calories": 110,
+        "proteins": 4,
+        "fats": 1,
+        "carbs": 21,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785666
+      },
+      {
+        "name": "Гречка зелёная для проращивания",
+        "description": "",
+        "calories": 295,
+        "proteins": 10.8,
+        "fats": 3.2,
+        "carbs": 54.4,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785667
+      },
+      {
+        "name": "Гречневая каша вязкая на воде",
+        "description": "",
+        "calories": 90,
+        "proteins": 3.2,
+        "fats": 0.8,
+        "carbs": 17.1,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785668
+      },
+      {
+        "name": "Гречневая каша из крупы ядрица",
+        "description": "",
+        "calories": 101,
+        "proteins": 3,
+        "fats": 3.4,
+        "carbs": 14.6,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785669
+      },
+      {
+        "name": "Гречневая каша на молоке",
+        "description": "",
+        "calories": 118,
+        "proteins": 4.2,
+        "fats": 2.3,
+        "carbs": 21.6,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785670
+      },
+      {
+        "name": "Гречневая каша с маслом",
+        "description": "",
+        "calories": 132,
+        "proteins": 4.5,
+        "fats": 2.3,
+        "carbs": 25,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785671
+      },
+      {
+        "name": "Гречневая крупа (продел)",
+        "description": "",
+        "calories": 306,
+        "proteins": 9.5,
+        "fats": 2.3,
+        "carbs": 65.9,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785672
+      },
+      {
+        "name": "Гречневая крупа (ядрица)",
+        "description": "",
+        "calories": 313,
+        "proteins": 12.6,
+        "fats": 3.3,
+        "carbs": 62.1,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785673
+      },
+      {
+        "name": "Гречневая крупа (ядрица) зелёная",
+        "description": "",
+        "calories": 296,
+        "proteins": 10.8,
+        "fats": 3.2,
+        "carbs": 56,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785674
+      },
+      {
+        "name": "Гречневая крупа Makfa Экстра в пакетиках",
+        "description": "",
+        "calories": 310,
+        "proteins": 13,
+        "fats": 3.5,
+        "carbs": 57,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785675
+      },
+      {
+        "name": "Гречневая крупа Агро-Альянс Элитная",
+        "description": "",
+        "calories": 350,
+        "proteins": 13,
+        "fats": 3,
+        "carbs": 68,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785676
+      },
+      {
+        "name": "Гречневая крупа Мистраль зеленая",
+        "description": "",
+        "calories": 328,
+        "proteins": 13.4,
+        "fats": 3,
+        "carbs": 68,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785677
+      },
+      {
+        "name": "Гречневая крупа Мистраль ядрица",
+        "description": "",
+        "calories": 353,
+        "proteins": 13.6,
+        "fats": 3.3,
+        "carbs": 65,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785678
+      },
+      {
+        "name": "Гречневая крупа Пассим Алтайская",
+        "description": "",
+        "calories": 329,
+        "proteins": 12.6,
+        "fats": 2.6,
+        "carbs": 68,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785679
+      },
+      {
+        "name": "Гречневая манка Гарнец безглютеновая",
+        "description": "",
+        "calories": 350,
+        "proteins": 12.5,
+        "fats": 2.5,
+        "carbs": 70,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785680
+      },
+      {
+        "name": "Гречневые хлопья",
+        "description": "",
+        "calories": 330,
+        "proteins": 9,
+        "fats": 2.4,
+        "carbs": 67,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785681
+      },
+      {
+        "name": "Гречневые хлопья Makfa",
+        "description": "",
+        "calories": 375,
+        "proteins": 8,
+        "fats": 3,
+        "carbs": 79,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785682
+      },
+      {
+        "name": "Гречневые хлопья Myllyn Paras",
+        "description": "",
+        "calories": 340,
+        "proteins": 13,
+        "fats": 1.7,
+        "carbs": 67.5,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785683
+      },
+      {
+        "name": "Гречневые хлопья Myllyn Paras для каши",
+        "description": "",
+        "calories": 340,
+        "proteins": 13,
+        "fats": 1.7,
+        "carbs": 67.5,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785684
+      },
+      {
+        "name": "Гречневые хлопья Агро-Альянс",
+        "description": "",
+        "calories": 370,
+        "proteins": 11,
+        "fats": 2,
+        "carbs": 74,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785685
+      },
+      {
+        "name": "Гречневые хлопья Алтайская сказка",
+        "description": "",
+        "calories": 346,
+        "proteins": 12.8,
+        "fats": 3.4,
+        "carbs": 66.1,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785686
+      },
+      {
+        "name": "Гречневые хлопья Мистраль",
+        "description": "",
+        "calories": 345,
+        "proteins": 12.6,
+        "fats": 2.3,
+        "carbs": 59,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785687
+      },
+      {
+        "name": "Гречневые хлопья Пассим",
+        "description": "",
+        "calories": 322,
+        "proteins": 9.5,
+        "fats": 2.3,
+        "carbs": 65.8,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785688
+      },
+      {
+        "name": "Каша 4-х зерновая Myllyn Paras",
+        "description": "",
+        "calories": 320,
+        "proteins": 11.4,
+        "fats": 2.8,
+        "carbs": 61.1,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785689
+      },
+      {
+        "name": "Каша 7 злаков Маtti",
+        "description": "",
+        "calories": 320,
+        "proteins": 12,
+        "fats": 5,
+        "carbs": 56,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785690
+      },
+      {
+        "name": "Каша Yelli из поленты с абрикосом",
+        "description": "",
+        "calories": 352,
+        "proteins": 7.5,
+        "fats": 3,
+        "carbs": 74,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785691
+      },
+      {
+        "name": "Киноа",
+        "description": "",
+        "calories": 368,
+        "proteins": 14.1,
+        "fats": 6.1,
+        "carbs": 57.2,
+        "isPerishable": false,
+        "packaging": "",
+        "categoryId": 1,
+        "portions": [
+          {
+            "name": "Стандартная",
+            "weight": 100
+          }
+        ],
+        "id": 1757276785692
+      }
+    ],
+    "dishes": [
+      {
+        "name": "Гречка с Булгуром",
+        "description": "",
+        "products": [
+          {
+            "productId": 1757276785673,
+            "weight": 80
+          },
+          {
+            "productId": 1757276785652,
+            "weight": 50
+          }
+        ],
+        "id": 1757276843588
+      }
+    ],
+    "categories": [
+      {
+        "id": 1,
+        "name": "Крупы и макароны",
+        "color": "#f59e0b",
+        "emoji": "🌾"
+      },
+      {
+        "id": 2,
+        "name": "Мясо и сублиматы",
+        "color": "#ef4444",
+        "emoji": "🥩"
+      },
+      {
+        "id": 3,
+        "name": "Сладкое и снеки",
+        "color": "#a855f7",
+        "emoji": "🍫"
+      },
+      {
+        "id": 4,
+        "name": "Грибы",
+        "color": "#a16207",
+        "emoji": "🍄"
+      },
+      {
+        "id": 5,
+        "name": "Колбасные изделия",
+        "color": "#f43f5e",
+        "emoji": "🌭"
+      },
+      {
+        "id": 6,
+        "name": "Крупы и каши",
+        "color": "#f97316",
+        "emoji": "🥣"
+      },
+      {
+        "id": 7,
+        "name": "Масла и жиры",
+        "color": "#eab308",
+        "emoji": "🧈"
+      },
+      {
+        "id": 8,
+        "name": "Молочные продукты",
+        "color": "#38bdf8",
+        "emoji": "🥛"
+      },
+      {
+        "id": 9,
+        "name": "Мука и мучные изделия",
+        "color": "#d4a97f",
+        "emoji": "🍞"
+      },
+      {
+        "id": 10,
+        "name": "Мясные продукты",
+        "color": "#dc2626",
+        "emoji": "🍖"
+      },
+      {
+        "id": 11,
+        "name": "Овощи и зелень",
+        "color": "#22c55e",
+        "emoji": "🥦"
+      },
+      {
+        "id": 12,
+        "name": "Орехи и сухофрукты",
+        "color": "#854d0e",
+        "emoji": "🥜"
+      },
+      {
+        "id": 13,
+        "name": "Рыба и морепродукты",
+        "color": "#3b82f6",
+        "emoji": "🐟"
+      },
+      {
+        "id": 14,
+        "name": "Снэки",
+        "color": "#a855f7",
+        "emoji": "🥨"
+      },
+      {
+        "id": 15,
+        "name": "Сыры и творог",
+        "color": "#facc15",
+        "emoji": "🧀"
+      },
+      {
+        "id": 16,
+        "name": "Сырье и приправы",
+        "color": "#6b7280",
+        "emoji": "🧂"
+      },
+      {
+        "id": 17,
+        "name": "Фрукты",
+        "color": "#fb7185",
+        "emoji": "🍎"
+      },
+      {
+        "id": 18,
+        "name": "Хлебобулочные изделия",
+        "color": "#c2843e",
+        "emoji": "🥐"
+      },
+      {
+        "id": 19,
+        "name": "Ягоды",
+        "color": "#ec4899",
+        "emoji": "🍓"
+      },
+      {
+        "id": 20,
+        "name": "Яйца",
+        "color": "#fef08a",
+        "emoji": "🥚"
+      },
+      {
+        "id": 21,
+        "name": "Кондитерские изделия и сладости",
+        "color": "#d946ef",
+        "emoji": "🍬"
+      },
+      {
+        "id": 22,
+        "name": "Мороженое",
+        "color": "#f9a8d4",
+        "emoji": "🍦"
+      },
+      {
+        "id": 23,
+        "name": "Торты",
+        "color": "#c026d3",
+        "emoji": "🎂"
+      },
+      {
+        "id": 24,
+        "name": "Шоколад",
+        "color": "#78350f",
+        "emoji": "🍫"
+      },
+      {
+        "id": 25,
+        "name": "Напитки алкогольные",
+        "color": "#881337",
+        "emoji": "🍷"
+      },
+      {
+        "id": 26,
+        "name": "Напитки безалкогольные",
+        "color": "#06b6d4",
+        "emoji": "🥤"
+      },
+      {
+        "id": 27,
+        "name": "Соки и компоты",
+        "color": "#fb923c",
+        "emoji": "🧃"
+      }
+    ],
+    "equipment": [
+      {
+        "name": "Палатка Archeos 3",
+        "description": "",
+        "weight": 3000,
+        "type": "personal",
+        "categoryId": 1,
+        "ownerId": 1756372022346,
+        "id": 1757276397162
+      },
+      {
+        "name": "Кан 5 литров",
+        "description": "",
+        "weight": 500,
+        "type": "common",
+        "categoryId": 3,
+        "ownerId": 1757276319488,
+        "id": 1757276437893
+      },
+      {
+        "name": "Горелка мультитопливная Kovea",
+        "description": "Требуется ремонт",
+        "weight": 300,
+        "type": "common",
+        "categoryId": 3,
+        "ownerId": 1757276319488,
+        "id": 1757276489675
+      },
+      {
+        "name": "Спальник The North Face",
+        "description": "",
+        "weight": 1000,
+        "type": "personal",
+        "categoryId": 2,
+        "ownerId": 1757276319488,
+        "id": 1757276522470
+      },
+      {
+        "name": "Фитюлька",
+        "description": "",
+        "weight": 50,
+        "type": "personal",
+        "categoryId": null,
+        "ownerId": 1756363780696,
+        "id": 1757276627357
+      }
+    ],
+    "equipmentCategories": [
+      {
+        "id": 1,
+        "name": "Палатки и тенты",
+        "color": "#ef4444",
+        "emoji": "⛺"
+      },
+      {
+        "id": 2,
+        "name": "Спальные системы",
+        "color": "#3b82f6",
+        "emoji": "🛌"
+      },
+      {
+        "id": 3,
+        "name": "Кухонное оборудование",
+        "color": "#f59e0b",
+        "emoji": "🍳"
+      },
+      {
+        "id": 4,
+        "name": "Одежда и обувь",
+        "color": "#22c55e",
+        "emoji": "👕"
+      },
+      {
+        "id": 5,
+        "name": "Инструменты и навигация",
+        "color": "#8b5cf6",
+        "emoji": "🧭"
+      },
+      {
+        "id": 6,
+        "name": "Безопасность и медицина",
+        "color": "#ec4899",
+        "emoji": "⛑️"
+      }
+    ],
+    "mealTypes": [
+      {
+        "id": 1,
+        "name": "Завтрак"
+      },
+      {
+        "id": 2,
+        "name": "Обед"
+      },
+      {
+        "id": 3,
+        "name": "Ужин"
+      },
+      {
+        "id": 1757276650251,
+        "name": "Полдник"
+      },
+      {
+        "id": 1757276656940,
+        "name": "Перекус"
+      }
+    ],
+    "settings": {
+      "theme": "light"
+    }
+  },
+  "participants": [
+    {
+      "name": "Злата",
+      "gender": "female",
+      "age": "adult",
+      "notes": "",
+      "experienceLevel": "experienced",
+      "phone": "",
+      "email": "",
+      "birthDate": "",
+      "id": 1756363780696
+    },
+    {
+      "name": "Петра",
+      "gender": "female",
+      "age": "child",
+      "notes": "",
+      "experienceLevel": "beginner",
+      "phone": "",
+      "email": "",
+      "birthDate": "",
+      "id": 1756363997837
+    },
+    {
+      "name": "Иван",
+      "gender": "male",
+      "age": "adult",
+      "notes": "Не любит орехи",
+      "experienceLevel": "professional",
+      "phone": "+79013579113",
+      "email": "iv@mail.ru",
+      "birthDate": "1999-09-09",
+      "id": 1756372022346
+    },
+    {
+      "name": "Александра Петрова",
+      "gender": "female",
+      "age": "adult",
+      "notes": "Не любит орехи и мёд",
+      "experienceLevel": "professional",
+      "phone": "+79013579145",
+      "email": "ap@mail.ru",
+      "birthDate": "2000-09-09",
+      "id": 1756389014262
+    },
+    {
+      "name": "Тёма",
+      "gender": "male",
+      "age": "adult",
+      "experienceLevel": "beginner",
+      "phone": "",
+      "email": "",
+      "birthDate": "",
+      "notes": "",
+      "id": 1756811778835
+    },
+    {
+      "name": "Олег",
+      "gender": "male",
+      "age": "adult",
+      "experienceLevel": "beginner",
+      "phone": "",
+      "email": "",
+      "birthDate": "1981-01-07",
+      "notes": "",
+      "id": 1757276319488
+    }
+  ],
+  "trips": [
+    {
+      "name": "Эльбрус 2025",
+      "description": "",
+      "destination": "КБР",
+      "difficulty": "easy",
+      "days": 5,
+      "mealsPerDay": 3,
+      "participants": [
+        1756363997837,
+        1756372022346
+      ],
+      "startDate": "2025-09-06",
+      "endDate": "2025-09-10",
+      "id": 1756363730156,
+      "createdAt": "2025-08-28T06:48:50.156Z",
+      "status": "planning",
+      "selectedMeals": {},
+      "effectiveStatus": "planning"
+    },
+    {
+      "name": "Безенги",
+      "description": "",
+      "destination": "КБР",
+      "difficulty": "medium",
+      "days": 3,
+      "mealsPerDay": 3,
+      "participants": [
+        1756363997837,
+        1756372022346
+      ],
+      "startDate": "2025-08-31",
+      "endDate": "2025-09-02",
+      "id": 1756373638069,
+      "createdAt": "2025-08-28T09:33:58.069Z",
+      "status": "planning",
+      "selectedMeals": {}
+    },
+    {
+      "name": "Большой Тхач",
+      "description": "",
+      "destination": "Адыгея",
+      "difficulty": "easy",
+      "days": 3,
+      "mealsPerDay": 3,
+      "participants": [
+        1756372022346
+      ],
+      "startDate": "",
+      "endDate": "",
+      "id": 1756373668167,
+      "createdAt": "2025-08-28T09:34:28.167Z",
+      "status": "planning",
+      "selectedMeals": {}
+    },
+    {
+      "name": "Казбек",
+      "description": "",
+      "destination": "Грузия",
+      "difficulty": "hard",
+      "days": 3,
+      "mealsPerDay": 3,
+      "participants": [
+        1756372022346
+      ],
+      "startDate": "",
+      "endDate": "",
+      "id": 1756373964704,
+      "createdAt": "2025-08-28T09:39:24.704Z",
+      "status": "planning",
+      "selectedMeals": {
+        "1-1": []
+      },
+      "dayMeals": {
+        "1": [
+          1,
+          2,
+          3
+        ],
+        "2": [
+          1,
+          2,
+          3
+        ],
+        "3": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "name": "Килиманджаро",
+      "description": "",
+      "destination": "",
+      "difficulty": "hard",
+      "days": 1,
+      "mealsPerDay": 3,
+      "startDate": "",
+      "endDate": "",
+      "participants": [],
+      "id": 1757276281383,
+      "createdAt": "2025-09-07T20:18:01.383Z",
+      "status": "planning",
+      "selectedMeals": {},
+      "dayMeals": {
+        "1": []
+      }
+    }
+  ],
+  "products": [
+    {
+      "name": "Амарант",
+      "description": "",
+      "calories": 371,
+      "proteins": 13.6,
+      "fats": 7,
+      "carbs": 69,
+      "isPerishable": false,
+      "packaging": "",
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785644,
+      "categoryId": 2
+    },
+    {
+      "name": "Амарантовые отруби Di&Di с гречей",
+      "description": "",
+      "calories": 345,
+      "proteins": 19,
+      "fats": 5.5,
+      "carbs": 55,
+      "isPerishable": false,
+      "packaging": "",
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785646,
+      "categoryId": 4
+    },
+    {
+      "name": "Амарантовые отруби Di&Di с ламинарией",
+      "description": "",
+      "calories": 311,
+      "proteins": 20.4,
+      "fats": 5.1,
+      "carbs": 37,
+      "isPerishable": false,
+      "packaging": "",
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785647,
+      "categoryId": 2
+    },
+    {
+      "name": "Амарантовые отруби Di&Di с топинамбуром",
+      "description": "",
+      "calories": 345,
+      "proteins": 19,
+      "fats": 5.5,
+      "carbs": 55,
+      "isPerishable": false,
+      "packaging": "",
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785648,
+      "categoryId": 3
+    },
+    {
+      "name": "Булгур",
+      "description": "",
+      "calories": 342,
+      "proteins": 12.3,
+      "fats": 1.3,
+      "carbs": 57.6,
+      "isPerishable": false,
+      "packaging": "",
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785649,
+      "categoryId": null
+    },
+    {
+      "name": "Булгур Yelli с белыми грибами",
+      "description": "",
+      "calories": 330,
+      "proteins": 14,
+      "fats": 2,
+      "carbs": 64,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785650
+    },
+    {
+      "name": "Булгур Готово! с овощами",
+      "description": "",
+      "calories": 330,
+      "proteins": 13,
+      "fats": 1.5,
+      "carbs": 67,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785651
+    },
+    {
+      "name": "Булгур Мистраль",
+      "description": "",
+      "calories": 343,
+      "proteins": 14.2,
+      "fats": 1.1,
+      "carbs": 73.4,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785652
+    },
+    {
+      "name": "Булгур приготовленный",
+      "description": "",
+      "calories": 83,
+      "proteins": 3.1,
+      "fats": 0.2,
+      "carbs": 14.1,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785653
+    },
+    {
+      "name": "Гарнир Националь бурый рис, киноа и семена льна",
+      "description": "",
+      "calories": 385,
+      "proteins": 9.3,
+      "fats": 8.2,
+      "carbs": 68.6,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785654
+    },
+    {
+      "name": "Гарнир Националь рис, киноа, тыква",
+      "description": "",
+      "calories": 389,
+      "proteins": 10.6,
+      "fats": 8.6,
+      "carbs": 67.3,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785655
+    },
+    {
+      "name": "Горох Makfa дробленый в пакетиках",
+      "description": "",
+      "calories": 299,
+      "proteins": 23,
+      "fats": 1.5,
+      "carbs": 48.1,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785656
+    },
+    {
+      "name": "Горох Makfa колотый",
+      "description": "",
+      "calories": 299,
+      "proteins": 23,
+      "fats": 1.5,
+      "carbs": 48.1,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785657
+    },
+    {
+      "name": "Горох Агро-Альянс колотый",
+      "description": "",
+      "calories": 350,
+      "proteins": 23,
+      "fats": 1,
+      "carbs": 62,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785658
+    },
+    {
+      "name": "Горох маш Ярмарка Платинум",
+      "description": "",
+      "calories": 312,
+      "proteins": 23.5,
+      "fats": 2,
+      "carbs": 50,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785659
+    },
+    {
+      "name": "Горох Мистраль Айдахо",
+      "description": "",
+      "calories": 317,
+      "proteins": 20.8,
+      "fats": 1.4,
+      "carbs": 55.2,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785660
+    },
+    {
+      "name": "Горох Мистраль Орегон",
+      "description": "",
+      "calories": 327,
+      "proteins": 20,
+      "fats": 1.5,
+      "carbs": 66.4,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785661
+    },
+    {
+      "name": "Горох Пассим колотый",
+      "description": "",
+      "calories": 299,
+      "proteins": 23,
+      "fats": 1.6,
+      "carbs": 48.1,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785662
+    },
+    {
+      "name": "Горох Увелка колотый",
+      "description": "",
+      "calories": 360,
+      "proteins": 20,
+      "fats": 2,
+      "carbs": 67,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785663
+    },
+    {
+      "name": "Готовый завтрак Nestle Kosmostars звездочки и галактики медовые",
+      "description": "",
+      "calories": 400,
+      "proteins": 7.2,
+      "fats": 5,
+      "carbs": 76.2,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785664
+    },
+    {
+      "name": "Гречка Yelli с белыми грибами",
+      "description": "",
+      "calories": 290,
+      "proteins": 13,
+      "fats": 3.5,
+      "carbs": 52,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785665
+    },
+    {
+      "name": "Гречка зелёная вареная",
+      "description": "",
+      "calories": 110,
+      "proteins": 4,
+      "fats": 1,
+      "carbs": 21,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785666
+    },
+    {
+      "name": "Гречка зелёная для проращивания",
+      "description": "",
+      "calories": 295,
+      "proteins": 10.8,
+      "fats": 3.2,
+      "carbs": 54.4,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785667
+    },
+    {
+      "name": "Гречневая каша вязкая на воде",
+      "description": "",
+      "calories": 90,
+      "proteins": 3.2,
+      "fats": 0.8,
+      "carbs": 17.1,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785668
+    },
+    {
+      "name": "Гречневая каша из крупы ядрица",
+      "description": "",
+      "calories": 101,
+      "proteins": 3,
+      "fats": 3.4,
+      "carbs": 14.6,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785669
+    },
+    {
+      "name": "Гречневая каша на молоке",
+      "description": "",
+      "calories": 118,
+      "proteins": 4.2,
+      "fats": 2.3,
+      "carbs": 21.6,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785670
+    },
+    {
+      "name": "Гречневая каша с маслом",
+      "description": "",
+      "calories": 132,
+      "proteins": 4.5,
+      "fats": 2.3,
+      "carbs": 25,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785671
+    },
+    {
+      "name": "Гречневая крупа (продел)",
+      "description": "",
+      "calories": 306,
+      "proteins": 9.5,
+      "fats": 2.3,
+      "carbs": 65.9,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785672
+    },
+    {
+      "name": "Гречневая крупа (ядрица)",
+      "description": "",
+      "calories": 313,
+      "proteins": 12.6,
+      "fats": 3.3,
+      "carbs": 62.1,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785673
+    },
+    {
+      "name": "Гречневая крупа (ядрица) зелёная",
+      "description": "",
+      "calories": 296,
+      "proteins": 10.8,
+      "fats": 3.2,
+      "carbs": 56,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785674
+    },
+    {
+      "name": "Гречневая крупа Makfa Экстра в пакетиках",
+      "description": "",
+      "calories": 310,
+      "proteins": 13,
+      "fats": 3.5,
+      "carbs": 57,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785675
+    },
+    {
+      "name": "Гречневая крупа Агро-Альянс Элитная",
+      "description": "",
+      "calories": 350,
+      "proteins": 13,
+      "fats": 3,
+      "carbs": 68,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785676
+    },
+    {
+      "name": "Гречневая крупа Мистраль зеленая",
+      "description": "",
+      "calories": 328,
+      "proteins": 13.4,
+      "fats": 3,
+      "carbs": 68,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785677
+    },
+    {
+      "name": "Гречневая крупа Мистраль ядрица",
+      "description": "",
+      "calories": 353,
+      "proteins": 13.6,
+      "fats": 3.3,
+      "carbs": 65,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785678
+    },
+    {
+      "name": "Гречневая крупа Пассим Алтайская",
+      "description": "",
+      "calories": 329,
+      "proteins": 12.6,
+      "fats": 2.6,
+      "carbs": 68,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785679
+    },
+    {
+      "name": "Гречневая манка Гарнец безглютеновая",
+      "description": "",
+      "calories": 350,
+      "proteins": 12.5,
+      "fats": 2.5,
+      "carbs": 70,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785680
+    },
+    {
+      "name": "Гречневые хлопья",
+      "description": "",
+      "calories": 330,
+      "proteins": 9,
+      "fats": 2.4,
+      "carbs": 67,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785681
+    },
+    {
+      "name": "Гречневые хлопья Makfa",
+      "description": "",
+      "calories": 375,
+      "proteins": 8,
+      "fats": 3,
+      "carbs": 79,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785682
+    },
+    {
+      "name": "Гречневые хлопья Myllyn Paras",
+      "description": "",
+      "calories": 340,
+      "proteins": 13,
+      "fats": 1.7,
+      "carbs": 67.5,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785683
+    },
+    {
+      "name": "Гречневые хлопья Myllyn Paras для каши",
+      "description": "",
+      "calories": 340,
+      "proteins": 13,
+      "fats": 1.7,
+      "carbs": 67.5,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785684
+    },
+    {
+      "name": "Гречневые хлопья Агро-Альянс",
+      "description": "",
+      "calories": 370,
+      "proteins": 11,
+      "fats": 2,
+      "carbs": 74,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785685
+    },
+    {
+      "name": "Гречневые хлопья Алтайская сказка",
+      "description": "",
+      "calories": 346,
+      "proteins": 12.8,
+      "fats": 3.4,
+      "carbs": 66.1,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785686
+    },
+    {
+      "name": "Гречневые хлопья Мистраль",
+      "description": "",
+      "calories": 345,
+      "proteins": 12.6,
+      "fats": 2.3,
+      "carbs": 59,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785687
+    },
+    {
+      "name": "Гречневые хлопья Пассим",
+      "description": "",
+      "calories": 322,
+      "proteins": 9.5,
+      "fats": 2.3,
+      "carbs": 65.8,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785688
+    },
+    {
+      "name": "Каша 4-х зерновая Myllyn Paras",
+      "description": "",
+      "calories": 320,
+      "proteins": 11.4,
+      "fats": 2.8,
+      "carbs": 61.1,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785689
+    },
+    {
+      "name": "Каша 7 злаков Маtti",
+      "description": "",
+      "calories": 320,
+      "proteins": 12,
+      "fats": 5,
+      "carbs": 56,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785690
+    },
+    {
+      "name": "Каша Yelli из поленты с абрикосом",
+      "description": "",
+      "calories": 352,
+      "proteins": 7.5,
+      "fats": 3,
+      "carbs": 74,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785691
+    },
+    {
+      "name": "Киноа",
+      "description": "",
+      "calories": 368,
+      "proteins": 14.1,
+      "fats": 6.1,
+      "carbs": 57.2,
+      "isPerishable": false,
+      "packaging": "",
+      "categoryId": 1,
+      "portions": [
+        {
+          "name": "Стандартная",
+          "weight": 100
+        }
+      ],
+      "id": 1757276785692
+    }
+  ],
+  "dishes": [
+    {
+      "name": "Гречка с Булгуром",
+      "description": "",
+      "products": [
+        {
+          "productId": 1757276785673,
+          "weight": 80
+        },
+        {
+          "productId": 1757276785652,
+          "weight": 50
+        }
+      ],
+      "id": 1757276843588
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Крупы и макароны",
+      "color": "#f59e0b",
+      "emoji": "🌾"
+    },
+    {
+      "id": 2,
+      "name": "Мясо и сублиматы",
+      "color": "#ef4444",
+      "emoji": "🥩"
+    },
+    {
+      "id": 3,
+      "name": "Сладкое и снеки",
+      "color": "#a855f7",
+      "emoji": "🍫"
+    },
+    {
+      "id": 4,
+      "name": "Грибы",
+      "color": "#a16207",
+      "emoji": "🍄"
+    },
+    {
+      "id": 5,
+      "name": "Колбасные изделия",
+      "color": "#f43f5e",
+      "emoji": "🌭"
+    },
+    {
+      "id": 6,
+      "name": "Крупы и каши",
+      "color": "#f97316",
+      "emoji": "🥣"
+    },
+    {
+      "id": 7,
+      "name": "Масла и жиры",
+      "color": "#eab308",
+      "emoji": "🧈"
+    },
+    {
+      "id": 8,
+      "name": "Молочные продукты",
+      "color": "#38bdf8",
+      "emoji": "🥛"
+    },
+    {
+      "id": 9,
+      "name": "Мука и мучные изделия",
+      "color": "#d4a97f",
+      "emoji": "🍞"
+    },
+    {
+      "id": 10,
+      "name": "Мясные продукты",
+      "color": "#dc2626",
+      "emoji": "🍖"
+    },
+    {
+      "id": 11,
+      "name": "Овощи и зелень",
+      "color": "#22c55e",
+      "emoji": "🥦"
+    },
+    {
+      "id": 12,
+      "name": "Орехи и сухофрукты",
+      "color": "#854d0e",
+      "emoji": "🥜"
+    },
+    {
+      "id": 13,
+      "name": "Рыба и морепродукты",
+      "color": "#3b82f6",
+      "emoji": "🐟"
+    },
+    {
+      "id": 14,
+      "name": "Снэки",
+      "color": "#a855f7",
+      "emoji": "🥨"
+    },
+    {
+      "id": 15,
+      "name": "Сыры и творог",
+      "color": "#facc15",
+      "emoji": "🧀"
+    },
+    {
+      "id": 16,
+      "name": "Сырье и приправы",
+      "color": "#6b7280",
+      "emoji": "🧂"
+    },
+    {
+      "id": 17,
+      "name": "Фрукты",
+      "color": "#fb7185",
+      "emoji": "🍎"
+    },
+    {
+      "id": 18,
+      "name": "Хлебобулочные изделия",
+      "color": "#c2843e",
+      "emoji": "🥐"
+    },
+    {
+      "id": 19,
+      "name": "Ягоды",
+      "color": "#ec4899",
+      "emoji": "🍓"
+    },
+    {
+      "id": 20,
+      "name": "Яйца",
+      "color": "#fef08a",
+      "emoji": "🥚"
+    },
+    {
+      "id": 21,
+      "name": "Кондитерские изделия и сладости",
+      "color": "#d946ef",
+      "emoji": "🍬"
+    },
+    {
+      "id": 22,
+      "name": "Мороженое",
+      "color": "#f9a8d4",
+      "emoji": "🍦"
+    },
+    {
+      "id": 23,
+      "name": "Торты",
+      "color": "#c026d3",
+      "emoji": "🎂"
+    },
+    {
+      "id": 24,
+      "name": "Шоколад",
+      "color": "#78350f",
+      "emoji": "🍫"
+    },
+    {
+      "id": 25,
+      "name": "Напитки алкогольные",
+      "color": "#881337",
+      "emoji": "🍷"
+    },
+    {
+      "id": 26,
+      "name": "Напитки безалкогольные",
+      "color": "#06b6d4",
+      "emoji": "🥤"
+    },
+    {
+      "id": 27,
+      "name": "Соки и компоты",
+      "color": "#fb923c",
+      "emoji": "🧃"
+    }
+  ]
+}

@@ -1,12 +1,12 @@
 // src/pages/CategoriesPage.tsx
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useMemo, useCallback } from 'react';
 import { CirclePlus, Filter, Package, Edit, Copy, Trash2, Share, Tag } from 'lucide-react';
 import useCategoryStore from '../stores/useCategoryStore';
 import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
-import type { Category, CategoryData } from '../types';
+import { useCategoryManagement } from '../hooks/useCategoryManagement';
+import type { Category } from '../types';
 import CategoryForm from '../components/categories/CategoryForm';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
@@ -21,70 +21,21 @@ const CategoriesPage: React.FC = () => {
   const categoryStore = useCategoryStore();
   const productStore = useProductStore();
   const { searchTerm } = useSearchStore();
-  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeId, setActiveId] = useState<number | null>(null);
   const [filters, setFilters] = useState<CategoryFilters>({
     hasProducts: 'all',
   });
-  const [showFormModal, setShowFormModal] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    const selectedId = searchParams.get('selectedId');
-    if (selectedId && categoryStore.categories.some((c) => c.id === Number(selectedId))) {
-      setActiveId(Number(selectedId));
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, categoryStore.categories, setSearchParams]);
+  const categoryManagement = useCategoryManagement({
+    enableUrlSync: true,
+    enableFilters: true,
+    filters,
+  });
 
-  const filteredCategories = useMemo(() => {
-    return categoryStore.categories
-      .filter((c) => {
-        if (searchTerm.trim()) {
-          const search = searchTerm.toLowerCase();
-          if (!c.name.toLowerCase().includes(search)) {
-            return false;
-          }
-        }
-
-        if (filters.hasProducts !== 'all') {
-          const productCount = productStore.products.filter((p) => p.categoryId === c.id).length;
-          if (filters.hasProducts === 'with_products' && productCount === 0) return false;
-          if (filters.hasProducts === 'without_products' && productCount > 0) return false;
-        }
-        return true;
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [categoryStore.categories, searchTerm, filters, productStore.products]);
-
-  const selectedCategory = useMemo(
-    () => categoryStore.categories.find((c) => c.id === activeId) || null,
-    [activeId, categoryStore.categories]
-  );
-
-  const handleAddNew = useCallback(() => {
-    setEditingCategory(null);
-    setShowFormModal(true);
-  }, []);
-
-  const handleEdit = useCallback((c: Category) => {
-    setEditingCategory(c);
-    setShowFormModal(true);
-  }, []);
-
-  const handleFormSubmit = useCallback(
-    (formData: CategoryData) => {
-      if (editingCategory) {
-        categoryStore.updateCategory(editingCategory.id, formData);
-      } else {
-        categoryStore.addCategory(formData);
-      }
-      setShowFormModal(false);
-    },
-    [editingCategory, categoryStore]
+  const hasActiveFilters = useMemo(
+    () => Object.values(filters).some((v) => v !== 'all'),
+    [filters]
   );
 
   const handleClone = useCallback(
@@ -95,19 +46,9 @@ const CategoriesPage: React.FC = () => {
     [categoryStore]
   );
 
-  const handleRequestDelete = useCallback((c: Category) => setCategoryToDelete(c), []);
-  const handleConfirmDelete = useCallback(() => {
-    if (categoryToDelete) {
-      if (categoryToDelete.id === activeId) setActiveId(null);
-      categoryStore.deleteCategory(categoryToDelete.id);
-      setCategoryToDelete(null);
-    }
-  }, [categoryToDelete, activeId, categoryStore]);
-
-  const hasActiveFilters = useMemo(
-    () => Object.values(filters).some((v) => v !== 'all'),
-    [filters]
-  );
+  const handleExport = useCallback((category: Category) => {
+    console.log('Export category', category);
+  }, []);
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
@@ -128,7 +69,7 @@ const CategoriesPage: React.FC = () => {
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-card" />
               )}
             </Button>
-            <Button onClick={handleAddNew} variant="primary" size="default">
+            <Button onClick={categoryManagement.handleAddNew} variant="primary" size="default">
               <CirclePlus className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Добавить категорию</span>
             </Button>
@@ -146,7 +87,7 @@ const CategoriesPage: React.FC = () => {
       {/* Основной контент */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         <div className="lg:col-span-1 space-y-3">
-          {filteredCategories.map((category) => {
+          {categoryManagement.filteredCategories.map((category) => {
             const productCount = productStore.products.filter(
               (p) => p.categoryId === category.id
             ).length;
@@ -155,7 +96,7 @@ const CategoriesPage: React.FC = () => {
               {
                 label: 'Редактировать',
                 icon: Edit,
-                onClick: () => handleEdit(category),
+                onClick: () => categoryManagement.handleEdit(category),
               },
               {
                 label: 'Клонировать',
@@ -165,12 +106,12 @@ const CategoriesPage: React.FC = () => {
               {
                 label: 'Экспорт',
                 icon: Share,
-                onClick: () => console.log('Export category', category),
+                onClick: () => handleExport(category),
               },
               {
                 label: 'Удалить',
                 icon: Trash2,
-                onClick: () => handleRequestDelete(category),
+                onClick: () => categoryManagement.handleRequestDelete(category),
                 className:
                   'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
               },
@@ -187,26 +128,26 @@ const CategoriesPage: React.FC = () => {
                   </div>
                 }
                 icon={() => (
-                  <span className="text-base w-4 h-4 flex items-center justify-center">
-                    {category.emoji}
+                  <span className="text-lg w-5 h-5 flex items-center justify-center">
+                    {category.emoji || '📦'}
                   </span>
                 )}
                 details={[]} // Empty for true one-line layout
-                isSelected={activeId === category.id}
-                onSelect={() => setActiveId(category.id)}
+                isSelected={categoryManagement.activeId === category.id}
+                onSelect={() => categoryManagement.setActiveId(category.id)}
                 borderColor={category.color}
                 menuItems={menuItems}
               />
             );
           })}
-          {filteredCategories.length === 0 && (
+          {categoryManagement.filteredCategories.length === 0 && (
             <div className="text-center py-16 px-6 text-muted-foreground">
               <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-medium text-foreground">
                 {searchTerm || hasActiveFilters ? 'Категории не найдены' : 'Категорий пока нет'}
               </h3>
               {!searchTerm && !hasActiveFilters && (
-                <Button onClick={handleAddNew} className="mt-4">
+                <Button onClick={categoryManagement.handleAddNew} className="mt-4">
                   <CirclePlus className="w-4 h-4 mr-2" />
                   Добавить первую категорию
                 </Button>
@@ -216,10 +157,15 @@ const CategoriesPage: React.FC = () => {
         </div>
 
         <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
-          {selectedCategory ? (
+          {categoryManagement.selectedCategory ? (
             <CategoryDetail
-              category={selectedCategory}
-              onEdit={() => selectedCategory && handleEdit(selectedCategory)}
+              category={categoryManagement.selectedCategory}
+              onEdit={() =>
+                categoryManagement.selectedCategory &&
+                categoryManagement.handleEdit(categoryManagement.selectedCategory)
+              }
+              onEditProduct={categoryManagement.handleEditProduct}
+              onDeleteProduct={categoryManagement.handleDeleteProductRequest}
             />
           ) : (
             <div className="h-full flex items-center justify-center">
@@ -239,28 +185,28 @@ const CategoriesPage: React.FC = () => {
 
       {/* Модальные окна */}
       <Modal
-        isOpen={showFormModal}
-        onClose={() => setShowFormModal(false)}
-        title={editingCategory ? 'Редактирование категории' : 'Новая категория'}
+        isOpen={categoryManagement.isFormModalOpen}
+        onClose={() => categoryManagement.setFormModalOpen(false)}
+        title={categoryManagement.editingCategory ? 'Редактирование категории' : 'Новая категория'}
       >
         <CategoryForm
-          category={editingCategory}
-          onSubmit={handleFormSubmit}
-          onCancel={() => setShowFormModal(false)}
+          category={categoryManagement.editingCategory}
+          onSubmit={categoryManagement.handleFormSubmit}
+          onCancel={() => categoryManagement.setFormModalOpen(false)}
         />
       </Modal>
 
       <ConfirmModal
-        isOpen={!!categoryToDelete}
-        onClose={() => setCategoryToDelete(null)}
-        onConfirm={handleConfirmDelete}
+        isOpen={!!categoryManagement.categoryToDelete}
+        onClose={() => categoryManagement.setCategoryToDelete(null)}
+        onConfirm={categoryManagement.handleConfirmDelete}
         title="Подтверждение"
         variant="danger"
         confirmText="Удалить"
       >
         <p>
           Вы уверены, что хотите удалить категорию{' '}
-          <span className="font-bold">{categoryToDelete?.name}</span>?
+          <span className="font-bold">{categoryManagement.categoryToDelete?.name}</span>?
         </p>
         <p className="text-sm text-muted-foreground mt-2">
           Все продукты в этой категории будут перемещены в &quote;Без категории&quote;.

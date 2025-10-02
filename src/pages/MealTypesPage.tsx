@@ -171,6 +171,7 @@ const MealTypesPage: React.FC = () => {
                 key={mealType.id}
                 title={mealType.name}
                 icon={Utensils}
+                iconColor="text-primary"
                 details={[
                   {
                     key: 'repeatable',
@@ -180,6 +181,7 @@ const MealTypesPage: React.FC = () => {
                 ]}
                 isSelected={activeId === mealType.id}
                 onSelect={() => setActiveId(mealType.id)}
+                borderColor="#6b7280"
                 menuItems={menuItems}
               />
             );

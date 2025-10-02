@@ -23,7 +23,7 @@ interface DetailItem {
 interface EntityCardProps {
   title: string;
   subtitle?: React.ReactNode;
-  icon: React.ElementType;
+  icon: React.ElementType | (() => React.ReactElement);
   iconColor?: string;
   details?: DetailItem[];
   menuItems?: MenuItem[];
@@ -51,6 +51,18 @@ const EntityCard: React.FC<EntityCardProps> = ({
   linkTo,
   description,
 }) => {
+  const cardClasses = cn(
+    'block p-3 rounded-lg border transition-all duration-200',
+    'hover:shadow-sm hover:bg-muted/30',
+    {
+      'border-primary/60 bg-primary/5 hover:bg-primary/10 hover:border-primary/70': isSelected,
+      'bg-card hover:border-border/40': !isSelected,
+    },
+    borderColor && !isSelected ? `border-[${borderColor}]/20 hover:border-[${borderColor}]/40` : '',
+    borderColor && isSelected ? `border-[${borderColor}]/60 hover:border-[${borderColor}]/70` : '',
+    className
+  );
+
   const cardContent = (
     <>
       <div className="flex items-start justify-between">
@@ -61,7 +73,11 @@ const EntityCard: React.FC<EntityCardProps> = ({
               iconColor ? `bg-${iconColor}/10` : 'bg-primary/10'
             )}
           >
-            <Icon className={cn('w-5 h-5', iconColor ? `text-${iconColor}` : 'text-primary')} />
+            {typeof Icon === 'function' ? (
+              <Icon />
+            ) : (
+              <Icon className={cn('w-5 h-5', iconColor ? `text-${iconColor}` : 'text-primary')} />
+            )}
           </div>
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-foreground truncate" title={title}>
@@ -104,17 +120,6 @@ const EntityCard: React.FC<EntityCardProps> = ({
         </div>
       )}
     </>
-  );
-
-  const cardClasses = cn(
-    'block p-3 rounded-xl border-2 transition-all duration-200 notion-border-semitransparent',
-    'hover:notion-shadow-sm hover:border-primary/50',
-    {
-      'border-primary bg-primary/5 hover:bg-primary/10': isSelected,
-      'bg-card border-transparent': !isSelected,
-    },
-    borderColor,
-    className
   );
 
   if (linkTo) {

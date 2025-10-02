@@ -2,7 +2,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
-// import Dashboard from './components/Dashboard';
 import TripPlanningPage from './pages/TripPlanningPage';
 import SettingsPage from './pages/SettingsPage';
 import TripsPage from './pages/TripsPage';
@@ -13,7 +12,6 @@ import CategoriesPage from './pages/CategoriesPage';
 import MealTypesPage from './pages/MealTypesPage';
 import EquipmentPage from './pages/EquipmentPage';
 import EquipmentCategoriesPage from './pages/EquipmentCategoriesPage';
-import TypesAndCategoriesPage from './pages/TypesAndCategoriesPage';
 import MealsPage from './pages/MealsPage';
 import MealDetailPage from './pages/MealDetailPage';
 
@@ -24,7 +22,6 @@ function App() {
         <Route index element={<Navigate to="/trips" replace />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="dishes" element={<DishesPage />} />
-        <Route path="types-and-categories" element={<TypesAndCategoriesPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="meal-types" element={<MealTypesPage />} />
         <Route path="equipment" element={<EquipmentPage />} />

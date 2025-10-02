@@ -3,21 +3,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
-import type { Product } from '../types';
+import type { Category, CategoryData, Product } from '../types';
 import useProductStore from './useProductStore';
-
-export interface Category {
-  id: number;
-  name: string;
-  color: string;
-  iconName: string;
-}
-
-export interface CategoryData {
-  name: string;
-  color: string;
-  iconName: string;
-}
 
 interface CategoryState {
   categories: Category[];
@@ -30,15 +17,15 @@ const useCategoryStore = create<CategoryState>()(
   persist(
     (set, get) => ({
       categories: [
-        { id: 1, name: 'Крупы и макароны', color: '#f59e0b', iconName: 'Wheat' },
-        { id: 2, name: 'Консервы', color: '#84cc16', iconName: 'Box' },
-        { id: 3, name: 'Мясо и сублиматы', color: '#ef4444', iconName: 'Beef' },
-        { id: 4, name: 'Сладкое и снеки', color: '#d946ef', iconName: 'Cookie' },
-        { id: 5, name: 'Напитки', color: '#3b82f6', iconName: 'Coffee' },
-        { id: 6, name: 'Молочные продукты', color: '#6366f1', iconName: 'Milk' },
-        { id: 7, name: 'Овощи и фрукты', color: '#22c55e', iconName: 'Carrot' },
-        { id: 8, name: 'Специи и соусы', color: '#a855f7', iconName: 'Salt' },
-        { id: 9, name: 'Хлеб и выпечка', color: '#eab308', iconName: 'Sandwich' },
+        { id: 1, name: 'Крупы и макароны', color: '#f59e0b', emoji: '🌾' },
+        { id: 2, name: 'Консервы', color: '#84cc16', emoji: '🥫' },
+        { id: 3, name: 'Мясо и сублиматы', color: '#ef4444', emoji: '🥩' },
+        { id: 4, name: 'Сладкое и снеки', color: '#d946ef', emoji: '🍪' },
+        { id: 5, name: 'Напитки', color: '#3b82f6', emoji: '☕' },
+        { id: 6, name: 'Молочные продукты', color: '#6366f1', emoji: '🥛' },
+        { id: 7, name: 'Овощи и фрукты', color: '#22c55e', emoji: '🥕' },
+        { id: 8, name: 'Специи и соусы', color: '#a855f7', emoji: '🧂' },
+        { id: 9, name: 'Хлеб и выпечка', color: '#eab308', emoji: '🥖' },
       ],
       addCategory: (data: CategoryData) => {
         const newCategory = { id: Date.now(), ...data };

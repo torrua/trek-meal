@@ -1,14 +1,14 @@
 // src/pages/CategoriesPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CirclePlus, Filter, Package, Edit, Copy, Trash2, Share, Tag } from 'lucide-react';
 import useCategoryStore from '../stores/useCategoryStore';
 import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
 import { useCategoryManagement } from '../hooks/useCategoryManagement';
 import type { Category } from '../types';
-import CategoryForm from '../components/categories/CategoryForm';
-import Modal from '../ui/Modal';
+// Editing moved to dedicated page
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard, { MenuItem } from '../ui/EntityCard';
@@ -18,6 +18,7 @@ import CategoryFiltersComponent, {
 import CategoryDetail from '../components/categories/CategoryDetail';
 
 const CategoriesPage: React.FC = () => {
+  const navigate = useNavigate();
   const categoryStore = useCategoryStore();
   const productStore = useProductStore();
   const { searchTerm } = useSearchStore();
@@ -69,7 +70,7 @@ const CategoriesPage: React.FC = () => {
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-card" />
               )}
             </Button>
-            <Button onClick={categoryManagement.handleAddNew} variant="primary" size="default">
+            <Button onClick={() => navigate('/categories/new')} variant="primary" size="default">
               <CirclePlus className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Добавить категорию</span>
             </Button>
@@ -96,7 +97,7 @@ const CategoriesPage: React.FC = () => {
               {
                 label: 'Редактировать',
                 icon: Edit,
-                onClick: () => categoryManagement.handleEdit(category),
+                onClick: () => navigate(`/categories/${category.id}/edit`),
               },
               {
                 label: 'Клонировать',
@@ -162,7 +163,7 @@ const CategoriesPage: React.FC = () => {
               category={categoryManagement.selectedCategory}
               onEdit={() =>
                 categoryManagement.selectedCategory &&
-                categoryManagement.handleEdit(categoryManagement.selectedCategory)
+                navigate(`/categories/${categoryManagement.selectedCategory.id}/edit`)
               }
               onEditProduct={categoryManagement.handleEditProduct}
               onDeleteProduct={categoryManagement.handleDeleteProductRequest}
@@ -183,18 +184,7 @@ const CategoriesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Модальные окна */}
-      <Modal
-        isOpen={categoryManagement.isFormModalOpen}
-        onClose={() => categoryManagement.setFormModalOpen(false)}
-        title={categoryManagement.editingCategory ? 'Редактирование категории' : 'Новая категория'}
-      >
-        <CategoryForm
-          category={categoryManagement.editingCategory}
-          onSubmit={categoryManagement.handleFormSubmit}
-          onCancel={() => categoryManagement.setFormModalOpen(false)}
-        />
-      </Modal>
+      {/* Editing handled via CategoryDetailPage routes */}
 
       <ConfirmModal
         isOpen={!!categoryManagement.categoryToDelete}

@@ -1,19 +1,14 @@
 // src/pages/ParticipantsPage.tsx
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Users, UserRoundPlus, Filter, CirclePlus } from 'lucide-react';
-import useParticipantStore from '../stores/useParticipantStore';
-import useEquipmentStore from '../stores/useEquipmentStore';
-import useSearchStore from '../stores/useSearchStore';
+import { useParticipantsManagement } from '../hooks/useParticipantsManagement';
 import useTripStore from '../stores/useTripStore';
-import type { Participant, ParticipantData } from '../types';
+import useEquipmentStore from '../stores/useEquipmentStore';
+import type { Trip, Equipment } from '../types';
 import ParticipantDetail from '../components/participants/ParticipantDetail';
-import ParticipantFiltersComponent, {
-  ParticipantFilters,
-} from '../components/participants/ParticipantFiltersComponent';
-import ParticipantForm from '../components/participants/ParticipantForm';
-import Modal from '../ui/Modal';
+import ParticipantFiltersComponent from '../components/participants/ParticipantFiltersComponent';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard from '../ui/EntityCard';
@@ -22,123 +17,39 @@ import SelectTripModal from '../components/participants/SelectTripModal';
 import { participantEntityConfig } from '../config/entityConfig';
 
 const ParticipantsPage: React.FC = () => {
-  const store = useParticipantStore();
-  const { equipment } = useEquipmentStore();
-  const { trips } = useTripStore();
-  const { searchTerm } = useSearchStore();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const {
+    // state
+    activeId,
+    filters,
+    // showFormModal, // editing via routes now
+    // editingParticipant,
+    participantToDelete,
+    showFilters,
+    isSelectTripModalOpen,
+    openSections,
 
-  const [activeId, setActiveId] = useState<number | null>(null);
-  const [filters, setFilters] = useState<ParticipantFilters>({
-    gender: 'all',
-    age: 'all',
-    experience: 'all',
-    hasTrips: 'all',
-  });
-  const [showFormModal, setShowFormModal] = useState(false);
-  const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
-  const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [isSelectTripModalOpen, setSelectTripModalOpen] = useState(false);
-  const [openSections, setOpenSections] = useState<string[]>(['data', 'trips']);
+    // data
+    filteredParticipants,
+    selectedParticipant,
+    hasActiveFilters,
 
-  const handleToggleSection = (sectionId: string) => {
-    setOpenSections((prev) =>
-      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
-    );
-  };
+    // setters/actions
+    setActiveId,
+    setFilters,
+    // setShowFormModal,
+    setParticipantToDelete,
+    setShowFilters,
+    setSelectTripModalOpen,
 
-  useEffect(() => {
-    const selectedId = searchParams.get('selectedId');
-    if (selectedId && store.participants.some((p) => p.id === Number(selectedId))) {
-      setActiveId(Number(selectedId));
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, store.participants, setSearchParams]);
-
-  const filteredParticipants = useMemo(() => {
-    return store.participants
-      .filter((p) => {
-        if (searchTerm.trim()) {
-          const search = searchTerm.toLowerCase();
-          if (
-            !p.name.toLowerCase().includes(search) &&
-            !p.notes?.toLowerCase().includes(search) &&
-            !p.email?.toLowerCase().includes(search) &&
-            !p.phone?.toLowerCase().includes(search)
-          ) {
-            return false;
-          }
-        }
-        if (filters.gender !== 'all' && p.gender !== filters.gender) return false;
-        if (filters.age !== 'all' && p.age !== filters.age) return false;
-        if (filters.experience !== 'all' && p.experienceLevel !== filters.experience) return false;
-        if (filters.hasTrips !== 'all') {
-          const hasTrips = trips.some((trip) => trip.participants.includes(p.id));
-          if (filters.hasTrips === 'with_trips' && !hasTrips) return false;
-          if (filters.hasTrips === 'without_trips' && hasTrips) return false;
-        }
-        return true;
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [store.participants, searchTerm, filters, trips]);
-
-  const selectedParticipant = useMemo(
-    () => store.participants.find((p) => p.id === activeId) || null,
-    [activeId, store.participants]
-  );
-
-  const handleAddNew = useCallback(() => {
-    setEditingParticipant(null);
-    setShowFormModal(true);
-  }, []);
-
-  const handleEdit = useCallback((p: Participant) => {
-    setEditingParticipant(p);
-    setShowFormModal(true);
-  }, []);
-
-  const handleFormSubmit = useCallback(
-    (formData: ParticipantData) => {
-      if (editingParticipant) {
-        store.updateParticipant(editingParticipant.id, formData);
-      } else {
-        store.addParticipant(formData);
-      }
-      setShowFormModal(false);
-    },
-    [editingParticipant, store]
-  );
-
-  const handleClone = useCallback((p: Participant) => store.cloneParticipant(p.id), [store]);
-  const handleRequestDelete = useCallback((p: Participant) => setParticipantToDelete(p), []);
-  const handleConfirmDelete = useCallback(() => {
-    if (participantToDelete) {
-      if (participantToDelete.id === activeId) setActiveId(null);
-      store.deleteParticipant(participantToDelete.id);
-      setParticipantToDelete(null);
-    }
-  }, [participantToDelete, activeId, store]);
-
-  const handleAddToTrip = useCallback((p: Participant) => {
-    setActiveId(p.id);
-    setSelectTripModalOpen(true);
-  }, []);
-
-  const handleConfirmAddToTrip = useCallback(
-    (tripId: number) => {
-      if (activeId) {
-        useTripStore.getState().addParticipantsToTrip(tripId, [activeId]);
-      }
-      setSelectTripModalOpen(false);
-    },
-    [activeId]
-  );
-
-  const hasActiveFilters = useMemo(
-    () => Object.values(filters).some((v) => v !== 'all'),
-    [filters]
-  );
+    handleToggleSection,
+    handleAddNew,
+    handleClone,
+    handleRequestDelete,
+    handleConfirmDelete,
+    handleAddToTrip,
+    handleConfirmAddToTrip,
+  } = useParticipantsManagement();
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
@@ -159,7 +70,7 @@ const ParticipantsPage: React.FC = () => {
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-card" />
               )}
             </Button>
-            <Button onClick={handleAddNew} variant="primary" size="default">
+            <Button onClick={() => navigate('/participants/new')} variant="primary" size="default">
               <UserRoundPlus className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Добавить участника</span>
             </Button>
@@ -178,12 +89,16 @@ const ParticipantsPage: React.FC = () => {
         {/* Список участников */}
         <div className="lg:col-span-1 space-y-3">
           {filteredParticipants.map((p) => {
-            const tripCount = trips.filter((trip) => trip.participants.includes(p.id)).length;
-            const equipmentCount = equipment.filter((eq) => eq.ownerId === p.id).length;
+            const tripCount = useTripStore
+              .getState()
+              .trips.filter((trip: Trip) => trip.participants.includes(p.id)).length;
+            const equipmentCount = useEquipmentStore
+              .getState()
+              .equipment.filter((eq: Equipment) => eq.ownerId === p.id).length;
 
             const cardConfig = participantEntityConfig.views.card;
             const actions = participantEntityConfig.getActions({
-              onEdit: () => handleEdit(p),
+              onEdit: () => navigate(`/participants/${p.id}/edit`),
               onAddToTrip: () => handleAddToTrip(p),
               onClone: () => handleClone(p),
               onExport: () => exportParticipantToJson(p),
@@ -209,9 +124,9 @@ const ParticipantsPage: React.FC = () => {
             <div className="text-center py-16 px-6 text-muted-foreground">
               <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-medium text-foreground">
-                {searchTerm || hasActiveFilters ? 'Участники не найдены' : 'Участников пока нет'}
+                {hasActiveFilters ? 'Участники не найдены' : 'Участников пока нет'}
               </h3>
-              {!searchTerm && !hasActiveFilters && (
+              {!hasActiveFilters && (
                 <Button onClick={handleAddNew} className="mt-4">
                   <CirclePlus className="w-4 h-4 mr-2" />
                   Добавить первого участника
@@ -226,7 +141,9 @@ const ParticipantsPage: React.FC = () => {
             <ParticipantDetail
               participant={selectedParticipant}
               onAddToTrip={() => selectedParticipant && handleAddToTrip(selectedParticipant)}
-              onEdit={() => selectedParticipant && handleEdit(selectedParticipant)}
+              onEdit={() =>
+                selectedParticipant && navigate(`/participants/${selectedParticipant.id}/edit`)
+              }
               openSections={openSections}
               onToggleSection={handleToggleSection}
             />
@@ -246,18 +163,7 @@ const ParticipantsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Модальные окна */}
-      <Modal
-        isOpen={showFormModal}
-        onClose={() => setShowFormModal(false)}
-        title={editingParticipant ? 'Редактирование участника' : 'Новый участник'}
-      >
-        <ParticipantForm
-          participant={editingParticipant}
-          onSubmit={handleFormSubmit}
-          onCancel={() => setShowFormModal(false)}
-        />
-      </Modal>
+      {/* Editing handled via Participant detail routes */}
 
       <ConfirmModal
         isOpen={!!participantToDelete}

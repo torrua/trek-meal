@@ -7,13 +7,11 @@ import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useParticipantStore from '../stores/useParticipantStore';
 import useSearchStore from '../stores/useSearchStore';
-import type { Equipment, EquipmentData, EquipmentCategory, Participant } from '../types';
+import type { Equipment, EquipmentCategory, Participant } from '../types';
 import EntityCard from '../ui/EntityCard';
-import EquipmentForm from '../components/equipment/EquipmentForm';
 import EquipmentFiltersComponent, {
   EquipmentFilters,
 } from '../components/equipment/EquipmentFiltersComponent';
-import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import DetailPane from '../ui/DetailPane';
@@ -22,15 +20,13 @@ import { equipmentEntityConfig } from '../config/entityConfig';
 import { Edit, ExternalLink, Scale, User, Users } from 'lucide-react';
 
 const EquipmentPage: React.FC = () => {
-  const { equipment, addEquipment, updateEquipment, deleteEquipment } = useEquipmentStore();
+  const { equipment, deleteEquipment } = useEquipmentStore();
   const { categories } = useEquipmentCategoryStore();
   const { participants } = useParticipantStore();
   const { searchTerm } = useSearchStore();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [isFormModalOpen, setFormModalOpen] = useState(false);
-  const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
   const [equipmentToDelete, setEquipmentToDelete] = useState<Equipment | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [openSections, setOpenSections] = useState<string[]>(['info']);
@@ -69,13 +65,13 @@ const EquipmentPage: React.FC = () => {
   );
 
   const handleAddNew = useCallback(() => {
-    setEditingEquipment(null);
-    setFormModalOpen(true);
+    // Navigate to new equipment page
+    window.location.href = '/equipment/new';
   }, []);
 
   const handleEdit = useCallback((equipment: Equipment) => {
-    setEditingEquipment(equipment);
-    setFormModalOpen(true);
+    // Navigate to edit equipment page
+    window.location.href = `/equipment/${equipment.id}`;
   }, []);
 
   const handleRequestDelete = useCallback((equipment: Equipment) => {
@@ -94,15 +90,6 @@ const EquipmentPage: React.FC = () => {
     setOpenSections((prev) =>
       prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
     );
-  };
-
-  const handleFormSubmit = (formData: EquipmentData) => {
-    if (editingEquipment) {
-      updateEquipment(editingEquipment.id, formData);
-    } else {
-      addEquipment(formData);
-    }
-    setFormModalOpen(false);
   };
 
   const formatWeight = (weight: number) => {
@@ -308,19 +295,6 @@ const EquipmentPage: React.FC = () => {
           )}
         </div>
       </div>
-
-      <Modal
-        isOpen={isFormModalOpen}
-        onClose={() => setFormModalOpen(false)}
-        title={editingEquipment ? 'Редактировать снаряжение' : 'Добавить снаряжение'}
-        size="lg"
-      >
-        <EquipmentForm
-          equipment={editingEquipment}
-          onSubmit={handleFormSubmit}
-          onCancel={() => setFormModalOpen(false)}
-        />
-      </Modal>
 
       <ConfirmModal
         isOpen={!!equipmentToDelete}

@@ -1,6 +1,6 @@
 // src/ui/DropdownSelect.tsx
 
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import cn from 'classnames';
 
@@ -14,14 +14,15 @@ interface DropdownOption {
 interface DropdownSelectProps {
   label: string;
   options: DropdownOption[];
-  value: string;
-  onChange: (value: string) => void;
+  value: string | string[];
+  onChange: (value: string | string[]) => void;
   icon: React.ComponentType<{ className?: string }>;
   containerClassName?: string;
   disabled?: boolean;
   isActive?: boolean;
   placeholder?: string;
   'data-testid'?: string;
+  isMulti?: boolean;
 }
 
 const DropdownSelect: React.FC<DropdownSelectProps> = ({
@@ -35,13 +36,15 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
   isActive = false,
   placeholder,
   'data-testid': testId,
+  isMulti = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [minMenuWidth, setMinMenuWidth] = useState(0);
 
-  const selectedOption = options.find((opt) => opt.value === value);
+  const selectedValues = useMemo(() => (Array.isArray(value) ? value : [value]), [value]);
+  const selectedOption = !isMulti ? options.find((opt) => opt.value === (value as string)) : null;
 
   const handleOutsideClick = useCallback((event: MouseEvent) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -74,12 +77,23 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
   const handleOptionSelect = useCallback(
     (optionValue: string) => {
       const option = options.find((opt) => opt.value === optionValue);
-      if (option && !option.disabled) {
+      if (!option || option.disabled) return;
+
+      if (isMulti) {
+        const current = new Set(selectedValues);
+        if (current.has(optionValue)) {
+          current.delete(optionValue);
+        } else {
+          current.add(optionValue);
+        }
+        onChange(Array.from(current));
+        // keep menu open for multi-select
+      } else {
         onChange(optionValue);
         setIsOpen(false);
       }
     },
-    [options, onChange]
+    [options, onChange, isMulti, selectedValues]
   );
 
   useEffect(() => {
@@ -132,7 +146,14 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
           )}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
-          aria-label={`${label}: ${selectedOption?.label || placeholder || 'Не выбрано'}`}
+          aria-label={`${label}: ${
+            isMulti
+              ? selectedValues.length > 0 &&
+                !(selectedValues.length === 1 && selectedValues[0] === '')
+                ? `Выбрано ${selectedValues.length}`
+                : placeholder || 'Не выбрано'
+              : selectedOption?.label || placeholder || 'Не выбрано'
+          }`}
         >
           <div className="flex items-center gap-3 min-w-0 flex-1">
             {/* Icon with Notion-style background */}
@@ -146,14 +167,27 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
               <Icon className="w-3.5 h-3.5" />
             </div>
 
-            <span
-              className={cn(
-                'text-sm font-medium truncate',
-                !selectedOption && 'text-muted-foreground'
-              )}
-            >
-              {selectedOption ? selectedOption.label : placeholder || 'Выберите опцию'}
-            </span>
+            {isMulti ? (
+              <span
+                className={cn(
+                  'text-sm font-medium truncate',
+                  selectedValues.length === 0 && 'text-muted-foreground'
+                )}
+              >
+                {selectedValues.length > 0
+                  ? `Выбрано ${selectedValues.length}`
+                  : placeholder || 'Выберите опции'}
+              </span>
+            ) : (
+              <span
+                className={cn(
+                  'text-sm font-medium truncate',
+                  !selectedOption && 'text-muted-foreground'
+                )}
+              >
+                {selectedOption ? selectedOption.label : placeholder || 'Выберите опцию'}
+              </span>
+            )}
           </div>
 
           <ChevronDown
@@ -177,40 +211,41 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             aria-label={label}
           >
             {options.length > 0 ? (
-              options.map((option) => (
-                <button
-                  type="button"
-                  key={option.value}
-                  onClick={() => handleOptionSelect(option.value)}
-                  disabled={option.disabled}
-                  className={cn(
-                    'w-full px-4 py-2.5 text-left text-sm transition-all duration-150 flex items-center gap-3',
-                    'notion-bg-hover',
-                    value === option.value && 'bg-primary/10 text-primary font-semibold',
-                    option.disabled && 'text-muted-foreground/50 cursor-not-allowed',
-                    !option.disabled &&
-                      !value === option.value &&
-                      'text-foreground hover:text-foreground'
-                  )}
-                  role="option"
-                  aria-selected={value === option.value}
-                >
-                  {/* Option icon */}
-                  {option.icon ? (
-                    <option.icon className="w-4 h-4 flex-shrink-0" />
-                  ) : (
-                    <div className="w-4 h-4 flex-shrink-0" />
-                  )}
+              options.map((option) => {
+                const checked = isMulti
+                  ? selectedValues.includes(option.value)
+                  : (value as string) === option.value;
+                return (
+                  <button
+                    type="button"
+                    key={option.value}
+                    onClick={() => handleOptionSelect(option.value)}
+                    disabled={option.disabled}
+                    className={cn(
+                      'w-full px-4 py-2.5 text-left text-sm transition-all duration-150 flex items-center gap-3',
+                      'notion-bg-hover',
+                      checked && 'bg-primary/10 text-primary font-semibold',
+                      option.disabled && 'text-muted-foreground/50 cursor-not-allowed',
+                      !option.disabled && 'text-foreground hover:text-foreground'
+                    )}
+                    role="option"
+                    aria-selected={checked}
+                  >
+                    {/* Option icon */}
+                    {option.icon ? (
+                      <option.icon className="w-4 h-4 flex-shrink-0" />
+                    ) : (
+                      <div className="w-4 h-4 flex-shrink-0" />
+                    )}
 
-                  {/* Option label */}
-                  <div className="flex-1 truncate font-medium">{option.label}</div>
+                    {/* Option label */}
+                    <div className="flex-1 truncate font-medium">{option.label}</div>
 
-                  {/* Selected indicator */}
-                  {value === option.value && (
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                  )}
-                </button>
-              ))
+                    {/* Selected indicator */}
+                    {checked && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                  </button>
+                );
+              })
             ) : (
               <div className="px-4 py-6 text-center">
                 <p className="text-sm text-muted-foreground">Нет доступных опций</p>

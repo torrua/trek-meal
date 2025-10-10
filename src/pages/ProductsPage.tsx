@@ -1,8 +1,8 @@
 // src/pages/ProductsPage.tsx
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { CirclePlus, Filter, UploadCloud, Component, X } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { CirclePlus, Filter, UploadCloud, Component } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import useProductStore from '../stores/useProductStore';
 import useCategoryStore from '../stores/useCategoryStore';
@@ -10,8 +10,7 @@ import useSearchStore from '../stores/useSearchStore';
 import type { Product, ProductData, ImportedJsonData, Category } from '../types';
 import EntityCard from '../ui/EntityCard';
 import ProductDetail from '../components/products/ProductDetail';
-import ProductForm from '../components/products/ProductForm';
-import Modal from '../ui/Modal';
+// ProductForm removed from this page (editing navigates to dedicated page)
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import ImportProductsModal from '../components/products/ImportProductsModal';
@@ -21,20 +20,19 @@ import ProductFiltersComponent, {
 import { productEntityConfig } from '../config/entityConfig';
 
 const ProductsPage: React.FC = () => {
-  const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
+  const { products, deleteProduct } = useProductStore();
+  const navigate = useNavigate();
   const { categories } = useCategoryStore();
   const { searchTerm } = useSearchStore();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [isFormModalOpen, setFormModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  // Editing is performed on dedicated ProductDetailPage
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [isImportModalOpen, setImportModalOpen] = useState(false);
   const [fileContent, setFileContent] = useState<ImportedJsonData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const filterPopupRef = useRef<HTMLDivElement>(null);
 
   const [filters, setFilters] = useState<ProductFilters>({ categoryIds: [] });
 
@@ -46,19 +44,7 @@ const ProductsPage: React.FC = () => {
     }
   }, [searchParams, products, setSearchParams]);
 
-  // Close filter popup when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (filterPopupRef.current && !filterPopupRef.current.contains(event.target as Node)) {
-        setIsFilterPopupOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  // No outside click handler needed with inline filters panel
 
   const filteredProducts = useMemo(() => {
     return products
@@ -84,14 +70,15 @@ const ProductsPage: React.FC = () => {
   );
 
   const handleAddNew = useCallback(() => {
-    setEditingProduct(null);
-    setFormModalOpen(true);
-  }, []);
+    navigate('/products/new');
+  }, [navigate]);
 
-  const handleEdit = useCallback((product: Product) => {
-    setEditingProduct(product);
-    setFormModalOpen(true);
-  }, []);
+  const handleEdit = useCallback(
+    (product: Product) => {
+      navigate(`/products/${product.id}`);
+    },
+    [navigate]
+  );
 
   const handleRequestDelete = useCallback((product: Product) => {
     setProductToDelete(product);
@@ -105,14 +92,7 @@ const ProductsPage: React.FC = () => {
     }
   };
 
-  const handleFormSubmit = (formData: ProductData) => {
-    if (editingProduct) {
-      updateProduct(editingProduct.id, formData);
-    } else {
-      addProduct(formData);
-    }
-    setFormModalOpen(false);
-  };
+  // Form submission is handled in ProductDetailPage
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -142,50 +122,30 @@ const ProductsPage: React.FC = () => {
         onChange={handleFileChange}
         accept=".json"
         className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
       />
       <div className="mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <h1 className="text-2xl font-bold text-foreground dark:text-white">Продукты</h1>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="relative">
-              <Button
-                variant="secondary"
-                size="icon"
-                onClick={() => setIsFilterPopupOpen(!isFilterPopupOpen)}
-                title="Фильтр"
-                className="relative"
-              >
-                <Filter className="w-4 h-4" />
-                {hasActiveFilters && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border-2 border-card" />
-                )}
-              </Button>
-
-              {/* Filter Popup */}
-              {isFilterPopupOpen && (
-                <div
-                  ref={filterPopupRef}
-                  className="absolute right-0 top-full mt-2 z-50 bg-card rounded-notion-lg border border-border shadow-notion-lg p-4 w-80"
-                >
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-notion-sm font-semibold text-foreground">Фильтры</h3>
-                    <button
-                      onClick={() => setIsFilterPopupOpen(false)}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <ProductFiltersComponent filters={filters} onFiltersChange={setFilters} />
-                </div>
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => setShowFilters((s) => !s)}
+              title="Фильтр"
+            >
+              <Filter className="w-4 h-4" />
+              {hasActiveFilters && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border-2 border-card" />
               )}
-            </div>
-
+            </Button>
             <Button
               variant="secondary"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
               title="Импорт"
+              aria-label="Импорт"
             >
               <UploadCloud className="w-4 h-4" />
             </Button>
@@ -196,6 +156,13 @@ const ProductsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Filters block (inline, like Participants) */}
+      {showFilters && (
+        <div className="mb-4 sm:mb-6 bg-card rounded-xl border p-3 sm:p-4">
+          <ProductFiltersComponent filters={filters} onFiltersChange={setFilters} />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         <div className="lg:col-span-1 space-y-3">
@@ -263,17 +230,7 @@ const ProductsPage: React.FC = () => {
         </div>
       </div>
 
-      <Modal
-        isOpen={isFormModalOpen}
-        onClose={() => setFormModalOpen(false)}
-        title={editingProduct ? 'Редактировать продукт' : 'Новый продукт'}
-      >
-        <ProductForm
-          product={editingProduct}
-          onSubmit={handleFormSubmit}
-          onCancel={() => setFormModalOpen(false)}
-        />
-      </Modal>
+      {/* Editing handled via ProductDetailPage routes */}
 
       <ConfirmModal
         isOpen={!!productToDelete}

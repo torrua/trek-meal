@@ -1,6 +1,7 @@
 // src/pages/TripsPage.tsx
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Backpack,
   Filter,
@@ -12,162 +13,52 @@ import {
   Clock,
   Route,
 } from 'lucide-react';
-import useTripStore from '../stores/useTripStore';
-import useSearchStore from '../stores/useSearchStore';
-import type { Trip, TripData } from '../types';
-import TripFiltersComponent, { TripFilters } from '../components/trips/TripFiltersComponent';
+import { useTripsManagement } from '../hooks/useTripsManagement';
+import TripFiltersComponent from '../components/trips/TripFiltersComponent';
 import TripDetail from '../components/trips/TripDetail';
-import TripForm from '../components/trips/TripForm';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
-import { toast } from 'react-hot-toast';
-import { exportTripToJson } from '../utils/backup';
 import AddParticipantsModal from '../components/trips/AddParticipantsModal';
 import EntityCard from '../ui/EntityCard';
-import { getEffectiveStatus } from '../utils/index';
 import { DIFFICULTY_CONFIG, STATUS_CONFIG } from '../constants/trips';
 import { Users, MapPin, Calendar } from 'lucide-react';
 import { formatDate } from '../utils';
 
 const TripsPage: React.FC = () => {
-  const { trips, addTrip, deleteTrip, updateTrip } = useTripStore();
-  const { searchTerm } = useSearchStore();
+  const navigate = useNavigate();
+  const {
+    // state
+    activeId,
+    filters,
+    // showFormModal, // no longer used for editing
+    // editingTrip, // no longer used for editing
+    showFilters,
+    tripToDelete,
+    isAddParticipantModalOpen,
 
-  const [activeId, setActiveId] = useState<number | null>(null);
-  const [filters, setFilters] = useState<TripFilters>({ status: 'all', difficulty: 'all' });
-  const [showFormModal, setShowFormModal] = useState(false);
-  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [tripToDelete, setTripToDelete] = useState<Trip | null>(null);
-  const [isAddParticipantModalOpen, setAddParticipantModalOpen] = useState(false);
+    // data
+    filteredTrips,
+    selectedTrip,
+    hasActiveFilters,
 
-  // Мемоизация для оптимизации производительности
-  const filteredTrips = useMemo(() => {
-    let result = trips.map((t) => ({ ...t, effectiveStatus: getEffectiveStatus(t) }));
+    // setters/actions
+    setActiveId,
+    setFilters,
+    setShowFilters,
+    setAddParticipantModalOpen,
+    setTripToDelete,
 
-    // Фильтрация по поисковому запросу
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase();
-      result = result.filter(
-        (t) =>
-          t.name.toLowerCase().includes(search) ||
-          t.destination?.toLowerCase().includes(search) ||
-          t.description?.toLowerCase().includes(search)
-      );
-    }
-
-    // Фильтрация по статусу и сложности
-    result = result.filter((t) => {
-      if (filters.status !== 'all' && t.effectiveStatus !== filters.status) return false;
-      if (filters.difficulty !== 'all' && t.difficulty !== filters.difficulty) return false;
-      return true;
-    });
-
-    // Сортировка по дате создания (новые сверху)
-    return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [trips, searchTerm, filters]);
-
-  const selectedTrip = useMemo(() => trips.find((t) => t.id === activeId), [activeId, trips]);
-
-  const handleAddNew = useCallback(() => {
-    setEditingTrip(null);
-    setShowFormModal(true);
-  }, []);
-
-  const handleEdit = useCallback((trip: Trip) => {
-    setEditingTrip(trip);
-    setShowFormModal(true);
-  }, []);
-
-  const handleFormSubmit = useCallback(
-    (formData: TripData) => {
-      try {
-        if (editingTrip) {
-          updateTrip(editingTrip.id, formData);
-          toast.success(`Поход "${formData.name}" обновлен.`);
-        } else {
-          const newTrip = addTrip(formData);
-          if (newTrip) {
-            setActiveId(newTrip.id);
-            toast.success(`Поход "${formData.name}" создан.`);
-          }
-        }
-        setShowFormModal(false);
-        setEditingTrip(null);
-      } catch (error) {
-        toast.error('Произошла ошибка при сохранении похода');
-        console.error('Error saving trip:', error);
-      }
-    },
-    [editingTrip, addTrip, updateTrip]
-  );
-
-  const handleClone = useCallback(
-    (trip: Trip) => {
-      try {
-        const { name, participants: _p, ...rest } = trip;
-        const clonedTripData: TripData = {
-          ...rest,
-          name: `${name} (копия)`,
-          participants: [],
-        };
-        const newTrip = addTrip(clonedTripData);
-        if (newTrip) {
-          setActiveId(newTrip.id);
-          toast.success(`Поход "${trip.name}" клонирован.`);
-        }
-      } catch (error) {
-        toast.error('Ошибка при клонировании похода');
-        console.error('Error cloning trip:', error);
-      }
-    },
-    [addTrip]
-  );
-
-  const handleExport = useCallback((trip: Trip) => {
-    try {
-      exportTripToJson(trip);
-      toast.success('Поход экспортирован');
-    } catch (error) {
-      toast.error('Ошибка при экспорте');
-      console.error('Export error:', error);
-    }
-  }, []);
-
-  const handleRequestDelete = useCallback((trip: Trip) => setTripToDelete(trip), []);
-
-  const handleConfirmDelete = useCallback(() => {
-    if (tripToDelete) {
-      try {
-        if (tripToDelete.id === activeId) setActiveId(null);
-        deleteTrip(tripToDelete.id);
-        setTripToDelete(null);
-        toast.success(`Поход "${tripToDelete.name}" удален`);
-      } catch (error) {
-        toast.error('Ошибка при удалении похода');
-        console.error('Delete error:', error);
-      }
-    }
-  }, [tripToDelete, activeId, deleteTrip]);
-
-  const handleCloseModal = useCallback(() => {
-    setShowFormModal(false);
-    setEditingTrip(null);
-  }, []);
-
-  const handleAddParticipant = useCallback(() => {
-    if (selectedTrip) setAddParticipantModalOpen(true);
-  }, [selectedTrip]);
-
-  const handleSelectTrip = useCallback((tripId: number) => {
-    setActiveId(tripId);
-  }, []);
-
-  const hasActiveFilters = useMemo(
-    () => Object.values(filters).some((v) => v !== 'all'),
-    [filters]
-  );
+    handleAddNew,
+    handleEdit,
+    handleClone,
+    handleExport,
+    handleRequestDelete,
+    handleConfirmDelete,
+    handleCloseModal,
+    handleAddParticipant,
+    handleSelectTrip,
+  } = useTripsManagement();
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
@@ -189,7 +80,7 @@ const TripsPage: React.FC = () => {
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-card" />
               )}
             </Button>
-            <Button onClick={handleAddNew} variant="primary" size="default">
+            <Button onClick={() => navigate('/trips/new')} variant="primary" size="default">
               <MapPinPlus className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Создать поход</span>
             </Button>
@@ -251,7 +142,7 @@ const TripsPage: React.FC = () => {
                 icon: Edit,
                 onClick: (e: React.MouseEvent) => {
                   e.stopPropagation();
-                  handleEdit(trip);
+                  navigate(`/trips/${trip.id}/edit`);
                 },
               },
               {
@@ -301,9 +192,9 @@ const TripsPage: React.FC = () => {
             <div className="text-center py-16 px-6 text-muted-foreground">
               <Backpack className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-medium text-foreground">
-                {searchTerm || hasActiveFilters ? 'Походы не найдены' : 'Походов пока нет'}
+                {hasActiveFilters ? 'Походы не найдены' : 'Походов пока нет'}
               </h3>
-              {!searchTerm && !hasActiveFilters && (
+              {!hasActiveFilters && (
                 <Button onClick={handleAddNew} className="mt-4">
                   <MapPinPlus className="w-4 h-4 mr-2" />
                   Создать первый поход
@@ -318,7 +209,7 @@ const TripsPage: React.FC = () => {
           {selectedTrip ? (
             <TripDetail
               trip={selectedTrip}
-              onEdit={() => selectedTrip && handleEdit(selectedTrip)}
+              onEdit={() => selectedTrip && navigate(`/trips/${selectedTrip.id}/edit`)}
               onAddParticipant={handleAddParticipant}
             />
           ) : (
@@ -359,14 +250,7 @@ const TripsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Модальное окно формы */}
-      <Modal
-        isOpen={showFormModal}
-        onClose={handleCloseModal}
-        title={editingTrip ? 'Редактирование похода' : 'Новый поход'}
-      >
-        <TripForm trip={editingTrip} onSubmit={handleFormSubmit} onCancel={handleCloseModal} />
-      </Modal>
+      {/* Editing handled via TripDetailPage routes */}
 
       {/* Подтверждение удаления */}
       <ConfirmModal

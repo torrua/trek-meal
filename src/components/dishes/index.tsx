@@ -5,7 +5,8 @@ import useDishStore from '../../stores/useDishStore';
 import useTripStore from '../../stores/useTripStore';
 import useSearchStore from '../../stores/useSearchStore';
 import type { Dish, DishData, SubmitDishAction } from '../../types';
-import DishCard from './DishCard';
+import EntityCard from '../../ui/EntityCard';
+import { dishEntityConfig } from '../../config/entityConfig';
 import DishDetail from './DishDetail';
 import DishForm from './DishForm';
 import Modal from '../../ui/Modal';
@@ -27,6 +28,13 @@ const DishesContent: React.FC<DishesContentProps> = ({ setAddHandler }) => {
   const [isFormModalOpen, setFormModalOpen] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
   const [dishToDelete, setDishToDelete] = useState<Dish | null>(null);
+  const [openSections, setOpenSections] = useState<string[]>(['main', 'products', 'trips']);
+
+  const handleToggleSection = useCallback((sectionId: string) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
+  }, []);
 
   const filteredDishes = useMemo(() => {
     return dishes.filter(
@@ -55,8 +63,7 @@ const DishesContent: React.FC<DishesContentProps> = ({ setAddHandler }) => {
     setFormModalOpen(true);
   }, []);
 
-  const handleRequestDelete = (e: React.MouseEvent, dish: Dish) => {
-    e.stopPropagation();
+  const handleRequestDelete = (dish: Dish) => {
     if (isDishInUse(dish.id)) {
       toast.error(
         'Это блюдо используется в одном или нескольких походах. Сначала удалите его из раскладок.',
@@ -105,22 +112,42 @@ const DishesContent: React.FC<DishesContentProps> = ({ setAddHandler }) => {
               )}
             </div>
           ) : (
-            filteredDishes.map((dish) => (
-              <DishCard
-                key={dish.id}
-                dish={dish}
-                isSelected={activeId === dish.id}
-                onSelect={() => setActiveId(dish.id)}
-                onEdit={() => handleEdit(dish)}
-                onDelete={(e) => handleRequestDelete(e, dish)}
-              />
-            ))
+            filteredDishes.map((dish) => {
+              const cardConfig = dishEntityConfig.views.card;
+              const menuItems = dishEntityConfig.getActions({
+                onEdit: () => handleEdit(dish),
+                onDelete: () => handleRequestDelete(dish),
+              });
+
+              // Временно добавляем 'key' для соответствия интерфейсу, так как он отсутствует в конфиге
+              const detailsWithKeys = cardConfig.details(dish).map((detail) => ({
+                ...detail,
+                key: detail.title || 'detail',
+              }));
+
+              return (
+                <EntityCard
+                  key={dish.id}
+                  title={cardConfig.title(dish)}
+                  icon={dishEntityConfig.getIcon(dish)}
+                  details={detailsWithKeys}
+                  menuItems={menuItems}
+                  isSelected={activeId === dish.id}
+                  onSelect={() => setActiveId(dish.id)}
+                />
+              );
+            })
           )}
         </div>
       </div>
 
       <div className="lg:col-span-2 hidden lg:block">
-        <DishDetail dish={selectedDish} onEdit={() => selectedDish && handleEdit(selectedDish)} />
+        <DishDetail
+          dish={selectedDish}
+          onEdit={() => selectedDish && handleEdit(selectedDish)}
+          openSections={openSections}
+          onToggleSection={handleToggleSection}
+        />
       </div>
 
       <Modal

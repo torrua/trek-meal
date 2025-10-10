@@ -1,6 +1,7 @@
 // src/pages/DishesPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CirclePlus, Soup } from 'lucide-react';
 import useDishStore from '../stores/useDishStore';
 import useTripStore from '../stores/useTripStore';
@@ -9,22 +10,21 @@ import useSearchStore from '../stores/useSearchStore';
 import type { Dish, DishData, SubmitDishAction } from '../types';
 import EntityCard from '../ui/EntityCard';
 import DishDetail from '../components/dishes/DishDetail';
-import DishForm from '../components/dishes/DishForm';
-import Modal from '../ui/Modal';
+// Editing moved to dedicated page
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import { toast } from 'react-hot-toast';
 import { dishEntityConfig } from '../config/entityConfig';
 
 const DishesPage: React.FC = () => {
-  const { dishes, addDish, updateDish, deleteDish } = useDishStore();
+  const navigate = useNavigate();
+  const { dishes, deleteDish } = useDishStore();
   const { isDishInUse } = useTripStore();
   const { products: allProducts } = useProductStore();
   const { searchTerm } = useSearchStore();
 
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [isFormModalOpen, setFormModalOpen] = useState(false);
-  const [editingDish, setEditingDish] = useState<Dish | null>(null);
+  // Editing handled via DishDetailPage routes
   const [dishToDelete, setDishToDelete] = useState<Dish | null>(null);
 
   const filteredDishes = useMemo(() => {
@@ -42,14 +42,15 @@ const DishesPage: React.FC = () => {
   );
 
   const handleAddNew = useCallback(() => {
-    setEditingDish(null);
-    setFormModalOpen(true);
-  }, []);
+    navigate('/dishes/new');
+  }, [navigate]);
 
-  const handleEdit = useCallback((dish: Dish) => {
-    setEditingDish(dish);
-    setFormModalOpen(true);
-  }, []);
+  const handleEdit = useCallback(
+    (dish: Dish) => {
+      navigate(`/dishes/${dish.id}/edit`);
+    },
+    [navigate]
+  );
 
   const handleRequestDelete = useCallback(
     (dish: Dish) => {
@@ -72,17 +73,7 @@ const DishesPage: React.FC = () => {
     }
   };
 
-  const handleFormSubmit = (formData: DishData, action: SubmitDishAction) => {
-    if (action === 'create_or_update') {
-      if (editingDish) {
-        updateDish(editingDish.id, formData);
-      } else {
-        addDish(formData);
-      }
-    }
-    setFormModalOpen(false);
-    setEditingDish(null);
-  };
+  // Form submission handled in DishDetailPage
 
   // Helper function to calculate dish nutrition for the card
   const calculateDishNutrition = (dish: Dish) => {
@@ -186,17 +177,7 @@ const DishesPage: React.FC = () => {
         </div>
       </div>
 
-      <Modal
-        isOpen={isFormModalOpen}
-        onClose={() => setFormModalOpen(false)}
-        title={editingDish ? 'Редактировать блюдо' : 'Новое блюдо'}
-      >
-        <DishForm
-          dish={editingDish}
-          onSubmit={handleFormSubmit}
-          onCancel={() => setFormModalOpen(false)}
-        />
-      </Modal>
+      {/* Editing handled via DishDetailPage routes */}
 
       <ConfirmModal
         isOpen={!!dishToDelete}

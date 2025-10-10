@@ -42,7 +42,7 @@ const DetailPane: React.FC<DetailPaneProps> = ({
       <div className="flex-1 min-h-0 overflow-hidden">
         <div className="h-full overflow-y-auto notion-scrollbar">
           {sections.map(({ id, title, icon: Icon, content, actionButton }) => {
-            const isOpen = openSections.includes(id);
+            const isOpen = openSections?.includes(id) ?? false;
 
             return (
               <div key={id} className="border-b notion-border-subtle last:border-b-0">
@@ -77,7 +77,7 @@ const DetailPane: React.FC<DetailPaneProps> = ({
                   <div className="flex items-center gap-3 flex-shrink-0 min-h-[24px]">
                     {actionButton && <div onClick={(e) => e.stopPropagation()}>{actionButton}</div>}
 
-                    {onToggleSection && (
+                    {onToggleSection && typeof onToggleSection === 'function' && (
                       <button
                         className={cn(
                           'p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-all duration-200',

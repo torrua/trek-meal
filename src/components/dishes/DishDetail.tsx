@@ -17,9 +17,11 @@ import { tripEntityConfig, productEntityConfig } from '../../config/entityConfig
 interface DishDetailProps {
   dish: Dish | null;
   onEdit: () => void;
+  openSections: string[];
+  onToggleSection: (sectionId: string) => void;
 }
 
-const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
+const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit, openSections, onToggleSection }) => {
   const navigate = useNavigate();
   const { products: allProducts } = useProductStore();
   const { categories } = useCategoryStore();
@@ -89,6 +91,43 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
 
   const sections = [
     {
+      id: 'main',
+      title: 'Основное',
+      icon: Flame,
+      actionButton: (
+        <Button size="sm" variant="ghost" onClick={onEdit} title="Редактировать блюдо">
+          <Edit className="w-4 h-4" />
+        </Button>
+      ),
+      content: (
+        <div className="space-y-4">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <span>Общий вес: {totalWeight} г</span>
+            <span>•</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1" title="Калорийность">
+                <Flame className="w-3 h-3" />
+                <span>{nutrition.calories} ккал</span>
+              </div>
+              <span>•</span>
+              <div className="flex items-center gap-1" title="Белки">
+                <Zap className="w-3 h-3" />
+                <span>Б:{nutrition.proteins}</span>
+              </div>
+              <div className="flex items-center gap-1" title="Жиры">
+                <Droplet className="w-3 h-3" />
+                <span>Ж:{nutrition.fats}</span>
+              </div>
+              <div className="flex items-center gap-1" title="Углеводы">
+                <Wheat className="w-3 h-3" />
+                <span>У:{nutrition.carbs}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
       id: 'products',
       title: 'Состав блюда',
       icon: Soup,
@@ -110,7 +149,7 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
             const actions =
               dish.products.length > 1
                 ? allActions
-                : allActions.filter((a: any) => a.label !== 'Удалить продукт из блюда');
+                : allActions?.filter((a: any) => a.label !== 'Удалить продукт из блюда');
 
             return (
               <EntityListItem
@@ -173,38 +212,9 @@ const DishDetail: React.FC<DishDetailProps> = ({ dish, onEdit }) => {
 
   return (
     <>
-      <DetailPane sections={sections} openSections={['products', 'trips']}>
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <h2 className="text-2xl font-bold text-foreground mb-1">{dish.name}</h2>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Общий вес: {totalWeight} г</span>
-              <span>•</span>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1" title="Калорийность">
-                  <Flame className="w-3 h-3" />
-                  <span>{nutrition.calories} ккал</span>
-                </div>
-                <span>•</span>
-                <div className="flex items-center gap-1" title="Белки">
-                  <Zap className="w-3 h-3" />
-                  <span>Б:{nutrition.proteins}</span>
-                </div>
-                <div className="flex items-center gap-1" title="Жиры">
-                  <Droplet className="w-3 h-3" />
-                  <span>Ж:{nutrition.fats}</span>
-                </div>
-                <div className="flex items-center gap-1" title="Углеводы">
-                  <Wheat className="w-3 h-3" />
-                  <span>У:{nutrition.carbs}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <Button variant="secondary" onClick={onEdit}>
-            <Edit className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Изменить</span>
-          </Button>
+      <DetailPane sections={sections} openSections={openSections} onToggleSection={onToggleSection}>
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold text-foreground mb-1">{dish.name}</h2>
         </div>
       </DetailPane>
 

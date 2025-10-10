@@ -139,8 +139,13 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
   }, [isDirty, onCancel]);
 
   const handleConfirmCancel = useCallback(() => {
+    // Close modal first, then navigate on next tick to avoid any interference
     setConfirmModalOpen(false);
-    onCancel();
+    setTimeout(() => {
+      // eslint-disable-next-line no-console
+      console.debug('[TripForm] Confirm cancel -> onCancel');
+      onCancel();
+    }, 0);
   }, [onCancel]);
 
   const handleSubmit = useCallback(

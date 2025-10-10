@@ -33,10 +33,10 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
       <div className="text-notion-sm text-muted-foreground">{children}</div>
       <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-border">
-        <Button variant="ghost" onClick={onClose} disabled={isLoading}>
+        <Button type="button" variant="ghost" onClick={onClose} disabled={isLoading}>
           {cancelText}
         </Button>
-        <Button variant={variant} onClick={onConfirm} disabled={isLoading}>
+        <Button type="button" variant={variant} onClick={onConfirm} disabled={isLoading}>
           {confirmText}
         </Button>
       </div>

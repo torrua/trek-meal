@@ -6,12 +6,10 @@ import { CirclePlus, Filter, Backpack, Edit, Copy, Trash2, Tag } from 'lucide-re
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useSearchStore from '../stores/useSearchStore';
-import type { EquipmentCategory, EquipmentCategoryData } from '../types';
-import Modal from '../ui/Modal';
+import type { EquipmentCategory } from '../types';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard, { MenuItem } from '../ui/EntityCard';
-import EquipmentCategoryForm from '../components/equipment/EquipmentCategoryForm';
 
 const EquipmentCategoriesPage: React.FC = () => {
   const categoryStore = useEquipmentCategoryStore();
@@ -20,8 +18,6 @@ const EquipmentCategoriesPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [showFormModal, setShowFormModal] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<EquipmentCategory | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<EquipmentCategory | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<{ hasEquipment: string }>({
@@ -64,26 +60,14 @@ const EquipmentCategoriesPage: React.FC = () => {
   );
 
   const handleAddNew = useCallback(() => {
-    setEditingCategory(null);
-    setShowFormModal(true);
+    // Navigate to new category page
+    window.location.href = '/equipment-categories/new';
   }, []);
 
   const handleEdit = useCallback((c: EquipmentCategory) => {
-    setEditingCategory(c);
-    setShowFormModal(true);
+    // Navigate to edit category page
+    window.location.href = `/equipment-categories/${c.id}`;
   }, []);
-
-  const handleFormSubmit = useCallback(
-    (formData: EquipmentCategoryData) => {
-      if (editingCategory) {
-        categoryStore.updateCategory(editingCategory.id, formData);
-      } else {
-        categoryStore.addCategory(formData);
-      }
-      setShowFormModal(false);
-    },
-    [editingCategory, categoryStore]
-  );
 
   const handleClone = useCallback(
     (category: EquipmentCategory) => {
@@ -150,6 +134,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                 value={filters.hasEquipment}
                 onChange={(e) => setFilters((prev) => ({ ...prev, hasEquipment: e.target.value }))}
                 className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                aria-label="Фильтр по наличию снаряжения"
               >
                 <option value="all">Все категории</option>
                 <option value="with_equipment">С снаряжением</option>
@@ -184,6 +169,7 @@ const EquipmentCategoriesPage: React.FC = () => {
 
               const details = [
                 {
+                  key: 'equipment-count',
                   icon: Backpack,
                   text: equipmentCount,
                   title: 'Снаряжения в категории',
@@ -216,7 +202,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                   title={category.name}
                   icon={() => (
                     <span className="text-xl w-6 h-6 flex items-center justify-center">
-                      {category.emoji}
+                      {category.iconName}
                     </span>
                   )}
                   details={details}
@@ -237,7 +223,7 @@ const EquipmentCategoriesPage: React.FC = () => {
             <div className="bg-white dark:bg-gray-800 rounded-xl border p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{selectedCategory.emoji}</span>
+                  <span className="text-2xl">{selectedCategory.iconName}</span>
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                     {selectedCategory.name}
                   </h2>
@@ -264,7 +250,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
                         Эмодзи
                       </label>
-                      <span className="text-2xl">{selectedCategory.emoji}</span>
+                      <span className="text-2xl">{selectedCategory.iconName}</span>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -320,21 +306,6 @@ const EquipmentCategoriesPage: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Equipment Category Form Modal - placeholder for now */}
-      <Modal
-        isOpen={showFormModal}
-        onClose={() => setShowFormModal(false)}
-        title={
-          editingCategory ? 'Редактировать категорию снаряжения' : 'Добавить категорию снаряжения'
-        }
-      >
-        <EquipmentCategoryForm
-          category={editingCategory}
-          onSubmit={handleFormSubmit}
-          onCancel={() => setShowFormModal(false)}
-        />
-      </Modal>
 
       {/* Delete confirmation */}
       <ConfirmModal

@@ -115,23 +115,10 @@ const DishesPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        <div className="lg:col-span-1 space-y-3">
-          {filteredDishes.length === 0 ? (
-            <div className="text-center py-16 px-6 text-muted-foreground">
-              <Soup className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium text-foreground">
-                {searchTerm ? 'Блюда не найдены' : 'Блюд пока нет'}
-              </h3>
-              {!searchTerm && (
-                <Button onClick={handleAddNew} className="mt-4">
-                  <CirclePlus className="w-4 h-4 mr-2" />
-                  Создать первое блюдо
-                </Button>
-              )}
-            </div>
-          ) : (
-            filteredDishes.map((dish) => {
+      {filteredDishes.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="lg:col-span-1 space-y-3">
+            {filteredDishes.map((dish) => {
               const { nutrition, totalWeight } = calculateDishNutrition(dish);
               const cardConfig = dishEntityConfig.views.card;
               const actions = dishEntityConfig.getActions({
@@ -146,36 +133,56 @@ const DishesPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(dish, { totalWeight })}
                   icon={dishEntityConfig.getIcon(dish)}
                   iconColor={dishEntityConfig.getIconColor?.(dish)}
-                  details={cardConfig.details(dish, { nutrition, totalWeight })}
+                  details={cardConfig
+                    .details(dish, { nutrition, totalWeight })
+                    .map((detail, index) => ({
+                      ...detail,
+                      key: `dish-detail-${index}`,
+                    }))}
                   isSelected={activeId === dish.id}
                   onSelect={() => setActiveId(dish.id)}
                   borderColor={dishEntityConfig.getBorderColor(dish)}
                   menuItems={actions}
                 />
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
 
-        <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
-          {selectedDish ? (
-            <DishDetail
-              dish={selectedDish}
-              onEdit={() => selectedDish && handleEdit(selectedDish)}
-            />
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center p-4">
-                <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Soup className="w-10 h-10 text-muted-foreground" />
+          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
+            {selectedDish ? (
+              <DishDetail
+                dish={selectedDish}
+                onEdit={() => selectedDish && handleEdit(selectedDish)}
+              />
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center p-4">
+                  <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Soup className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">Выберите блюдо</h3>
+                  <p className="text-muted-foreground">
+                    Кликните на карточку для просмотра состава.
+                  </p>
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">Выберите блюдо</h3>
-                <p className="text-muted-foreground">Кликните на карточку для просмотра состава.</p>
               </div>
-            </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-16 px-6 text-muted-foreground">
+          <Soup className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <h3 className="text-lg font-medium text-foreground">
+            {searchTerm ? 'Блюда не найдены' : 'Блюд пока нет'}
+          </h3>
+          {!searchTerm && (
+            <Button onClick={handleAddNew} className="mt-4">
+              <CirclePlus className="w-4 h-4 mr-2" />
+              Создать первое блюдо
+            </Button>
           )}
         </div>
-      </div>
+      )}
 
       {/* Editing handled via DishDetailPage routes */}
 

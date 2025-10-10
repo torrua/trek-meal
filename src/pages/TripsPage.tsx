@@ -96,137 +96,143 @@ const TripsPage: React.FC = () => {
       )}
 
       {/* Основной контент */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        {/* Список походов */}
-        <div className="lg:col-span-1 space-y-3">
-          {filteredTrips.map((trip) => {
-            const difficultyConfig = DIFFICULTY_CONFIG[trip.difficulty];
-            const statusConfig = STATUS_CONFIG[trip.effectiveStatus];
-            const statusBorderColor =
-              statusConfig.icon === Clock
-                ? '#f97316' // orange-600
-                : statusConfig.icon === Route
-                  ? '#9333ea' // purple-600
-                  : '#4b5563'; // gray-600
+      {filteredTrips.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          {/* Список походов */}
+          <div className="lg:col-span-1 space-y-3">
+            {filteredTrips.map((trip) => {
+              const difficultyConfig = DIFFICULTY_CONFIG[trip.difficulty];
+              const statusConfig = STATUS_CONFIG[trip.effectiveStatus];
+              const statusBorderColor =
+                statusConfig.icon === Clock
+                  ? '#f97316' // orange-600
+                  : statusConfig.icon === Route
+                    ? '#9333ea' // purple-600
+                    : '#4b5563'; // gray-600
 
-            const details = [
-              {
-                key: 'status',
-                icon: statusConfig.icon,
-                text: statusConfig.label,
-                title: statusConfig.label,
-                className:
-                  statusConfig.icon === Clock
-                    ? 'text-orange-600 dark:text-orange-400'
-                    : statusConfig.icon === Route
-                      ? 'text-purple-600 dark:text-purple-400'
-                      : 'text-gray-600 dark:text-gray-400',
-              },
-              {
-                key: 'participants',
-                icon: Users,
-                text: trip.participants.length,
-                title: 'Участники',
-              },
-              ...(trip.destination
-                ? [{ key: 'destination', icon: MapPin, text: trip.destination, title: 'Место' }]
-                : []),
-              ...(trip.startDate
-                ? [{ key: 'date', icon: Calendar, text: formatDate(trip.startDate), title: 'Дата' }]
-                : []),
-            ];
+              const details = [
+                {
+                  key: 'status',
+                  icon: statusConfig.icon,
+                  text: statusConfig.label,
+                  title: statusConfig.label,
+                  className:
+                    statusConfig.icon === Clock
+                      ? 'text-orange-600 dark:text-orange-400'
+                      : statusConfig.icon === Route
+                        ? 'text-purple-600 dark:text-purple-400'
+                        : 'text-gray-600 dark:text-gray-400',
+                },
+                {
+                  key: 'participants',
+                  icon: Users,
+                  text: trip.participants.length,
+                  title: 'Участники',
+                },
+                ...(trip.destination
+                  ? [{ key: 'destination', icon: MapPin, text: trip.destination, title: 'Место' }]
+                  : []),
+                ...(trip.startDate
+                  ? [
+                      {
+                        key: 'date',
+                        icon: Calendar,
+                        text: formatDate(trip.startDate),
+                        title: 'Дата',
+                      },
+                    ]
+                  : []),
+              ];
 
-            const menuItems = [
-              {
-                label: 'Редактировать',
-                icon: Edit,
-                onClick: (e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  navigate(`/trips/${trip.id}/edit`);
+              const menuItems = [
+                {
+                  label: 'Редактировать',
+                  icon: Edit,
+                  onClick: (e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    navigate(`/trips/${trip.id}/edit`);
+                  },
                 },
-              },
-              {
-                label: 'Клонировать',
-                icon: Copy,
-                onClick: (e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  handleClone(trip);
+                {
+                  label: 'Клонировать',
+                  icon: Copy,
+                  onClick: (e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    handleClone(trip);
+                  },
                 },
-              },
-              {
-                label: 'Экспорт',
-                icon: Share,
-                onClick: (e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  handleExport(trip);
+                {
+                  label: 'Экспорт',
+                  icon: Share,
+                  onClick: (e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    handleExport(trip);
+                  },
                 },
-              },
-              {
-                label: 'Удалить',
-                icon: Trash2,
-                onClick: (e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  handleRequestDelete(trip);
+                {
+                  label: 'Удалить',
+                  icon: Trash2,
+                  onClick: (e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    handleRequestDelete(trip);
+                  },
+                  className: 'text-danger',
                 },
-                className: 'text-danger',
-              },
-            ];
+              ];
 
-            return (
-              <EntityCard
-                key={trip.id}
-                title={trip.name}
-                icon={difficultyConfig.icon}
-                iconColor={difficultyConfig.colorClassName}
-                details={details}
-                menuItems={menuItems}
-                isSelected={activeId === trip.id}
-                onSelect={() => handleSelectTrip(trip.id)}
-                borderColor={statusBorderColor}
+              return (
+                <EntityCard
+                  key={trip.id}
+                  title={trip.name}
+                  icon={difficultyConfig.icon}
+                  iconColor={difficultyConfig.colorClassName}
+                  details={details}
+                  menuItems={menuItems}
+                  isSelected={activeId === trip.id}
+                  onSelect={() => handleSelectTrip(trip.id)}
+                  borderColor={statusBorderColor}
+                />
+              );
+            })}
+          </div>
+
+          {/* Детали похода */}
+          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
+            {selectedTrip ? (
+              <TripDetail
+                trip={selectedTrip}
+                onEdit={() => selectedTrip && navigate(`/trips/${selectedTrip.id}/edit`)}
+                onAddParticipant={handleAddParticipant}
               />
-            );
-          })}
-
-          {/* Пустое состояние */}
-          {filteredTrips.length === 0 && (
-            <div className="text-center py-16 px-6 text-muted-foreground">
-              <Backpack className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium text-foreground">
-                {hasActiveFilters ? 'Походы не найдены' : 'Походов пока нет'}
-              </h3>
-              {!hasActiveFilters && (
-                <Button onClick={handleAddNew} className="mt-4">
-                  <MapPinPlus className="w-4 h-4 mr-2" />
-                  Создать первый поход
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Детали похода */}
-        <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
-          {selectedTrip ? (
-            <TripDetail
-              trip={selectedTrip}
-              onEdit={() => selectedTrip && navigate(`/trips/${selectedTrip.id}/edit`)}
-              onAddParticipant={handleAddParticipant}
-            />
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center p-4">
-                <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Backpack className="w-10 h-10 text-muted-foreground" />
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center p-4">
+                  <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Backpack className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">Выберите поход</h3>
+                  <p className="text-muted-foreground">
+                    Кликните на карточку для просмотра подробной информации.
+                  </p>
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">Выберите поход</h3>
-                <p className="text-muted-foreground">
-                  Кликните на карточку для просмотра подробной информации.
-                </p>
               </div>
-            </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-16 px-6 text-muted-foreground">
+          <MapPin className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <h3 className="text-lg font-medium text-foreground">
+            {hasActiveFilters ? 'Походы не найдены' : 'Походов пока нет'}
+          </h3>
+          {!hasActiveFilters && (
+            <Button onClick={handleAddNew} className="mt-4">
+              <MapPinPlus className="w-4 h-4 mr-2" />
+              Создать первый поход
+            </Button>
           )}
         </div>
-      </div>
+      )}
 
       {/* Модальное окно деталей для мобильных устройств */}
       {activeId !== null && (

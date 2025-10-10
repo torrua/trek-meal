@@ -9,7 +9,7 @@ import {
   Soup,
   Backpack,
   Settings,
-  Tags,
+  Tag,
   Utensils,
   Layers,
 } from 'lucide-react';
@@ -28,7 +28,7 @@ const dbNavigation = [
 ];
 
 const categoriesNavigation = [
-  { path: '/categories', label: 'Категории продуктов', icon: Tags },
+  { path: '/categories', label: 'Категории продуктов', icon: Tag },
   { path: '/meal-types', label: 'Типы приемов пищи', icon: Utensils },
   { path: '/equipment-categories', label: 'Категории снаряжения', icon: Layers },
 ];

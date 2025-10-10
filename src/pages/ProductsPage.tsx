@@ -164,23 +164,10 @@ const ProductsPage: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        <div className="lg:col-span-1 space-y-3">
-          {filteredProducts.length === 0 ? (
-            <div className="text-center py-16 px-6 text-muted-foreground">
-              <Component className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-notion-lg font-medium text-foreground">
-                {searchTerm || hasActiveFilters ? 'Продукты не найдены' : 'Продуктов пока нет'}
-              </h3>
-              {!searchTerm && !hasActiveFilters && (
-                <Button onClick={handleAddNew} className="mt-4">
-                  <CirclePlus className="w-4 h-4 mr-2" />
-                  Добавить первый продукт
-                </Button>
-              )}
-            </div>
-          ) : (
-            filteredProducts.map((product) => {
+      {filteredProducts.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="lg:col-span-1 space-y-3">
+            {filteredProducts.map((product) => {
               const category = categories.find((c: Category) => c.id === product.categoryId);
               const cardConfig = productEntityConfig.views.card;
               const actions = productEntityConfig.getActions({
@@ -195,40 +182,54 @@ const ProductsPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(product, { category })}
                   icon={productEntityConfig.getIcon(product)}
                   iconColor={productEntityConfig.getIconColor?.(product, { category })}
-                  details={cardConfig.details(product)}
+                  details={cardConfig.details(product).map((detail, index) => ({
+                    ...detail,
+                    key: `product-detail-${index}`,
+                  }))}
                   menuItems={actions}
                   isSelected={activeId === product.id}
                   onSelect={() => setActiveId(product.id)}
                   borderColor={productEntityConfig.getBorderColor(product, { category })}
                 />
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
 
-        <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
-          {selectedProduct ? (
-            <ProductDetail
-              product={selectedProduct}
-              onEdit={() => selectedProduct && handleEdit(selectedProduct)}
-            />
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center p-4">
-                <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Component className="w-10 h-10 text-muted-foreground" />
+          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
+            {selectedProduct ? (
+              <ProductDetail
+                product={selectedProduct}
+                onEdit={() => selectedProduct && handleEdit(selectedProduct)}
+              />
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center p-4">
+                  <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Component className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">Выберите продукт</h3>
+                  <p className="text-muted-foreground">
+                    Кликните на карточку для просмотра подробной информации.
+                  </p>
                 </div>
-                <h3 className="text-notion-lg font-medium text-foreground mb-2">
-                  Выберите продукт
-                </h3>
-                <p className="text-muted-foreground">
-                  Кликните на карточку для просмотра подробной информации.
-                </p>
               </div>
-            </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-16 px-6 text-muted-foreground">
+          <Component className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <h3 className="text-lg font-medium text-foreground">
+            {searchTerm || hasActiveFilters ? 'Продукты не найдены' : 'Продуктов пока нет'}
+          </h3>
+          {!searchTerm && !hasActiveFilters && (
+            <Button onClick={handleAddNew} className="mt-4">
+              <CirclePlus className="w-4 h-4 mr-2" />
+              Добавить первый продукт
+            </Button>
           )}
         </div>
-      </div>
+      )}
 
       {/* Editing handled via ProductDetailPage routes */}
 

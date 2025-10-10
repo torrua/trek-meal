@@ -1,9 +1,9 @@
 // src/components/meals/MealForm.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Trash2, GripVertical, Utensils, Info } from 'lucide-react';
+import { Trash2, GripVertical, Utensils, Info } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -14,7 +14,6 @@ import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import Button from '../../ui/Button';
 import ThemedSelect from '../../ui/ThemedSelect';
-import cn from 'classnames';
 
 const mealFormSchema = z.object({
   name: z.string().min(1, 'Название обязательно'),

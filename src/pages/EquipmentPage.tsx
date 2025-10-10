@@ -136,23 +136,10 @@ const EquipmentPage: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        <div className="lg:col-span-1 space-y-3">
-          {filteredEquipment.length === 0 ? (
-            <div className="text-center py-16 px-6 text-muted-foreground">
-              <Backpack className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium text-foreground">
-                {searchTerm || hasActiveFilters ? 'Снаряжение не найдено' : 'Снаряжения пока нет'}
-              </h3>
-              {!searchTerm && !hasActiveFilters && (
-                <Button onClick={handleAddNew} className="mt-4">
-                  <CirclePlus className="w-4 h-4 mr-2" />
-                  Добавить первое снаряжение
-                </Button>
-              )}
-            </div>
-          ) : (
-            filteredEquipment.map((equipmentItem) => {
+      {filteredEquipment.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="lg:col-span-1 space-y-3">
+            {filteredEquipment.map((equipmentItem) => {
               const category = categories.find(
                 (c: EquipmentCategory) => c.id === equipmentItem.categoryId
               );
@@ -184,117 +171,132 @@ const EquipmentPage: React.FC = () => {
                   data-testid={`equipment-card-${equipmentItem.id}`}
                 />
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
 
-        {/* Detail panel */}
-        <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
-          {selectedEquipment ? (
-            <DetailPane
-              sections={[
-                {
-                  id: 'info',
-                  title: 'Основная информация',
-                  icon: Info,
-                  actionButton: (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleEdit(selectedEquipment)}
-                      title="Редактировать снаряжение"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  ),
-                  content: (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <InfoField
-                          icon={Scale}
-                          label="Вес"
-                          value={formatWeight(selectedEquipment.weight)}
-                        />
-                        <InfoField
-                          icon={selectedEquipment.type === 'personal' ? User : Users}
-                          label="Тип"
-                          value={selectedEquipment.type === 'personal' ? 'Личное' : 'Общее'}
-                        />
-                        {selectedEquipment.ownerId &&
-                          (() => {
-                            const owner = participants.find(
-                              (p) => p.id === selectedEquipment.ownerId
-                            );
-                            return owner ? (
-                              <InfoField icon={User} label="Владелец" value={owner.name} />
-                            ) : null;
-                          })()}
+          {/* Detail panel */}
+          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
+            {selectedEquipment ? (
+              <DetailPane
+                sections={[
+                  {
+                    id: 'info',
+                    title: 'Основная информация',
+                    icon: Info,
+                    actionButton: (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleEdit(selectedEquipment)}
+                        title="Редактировать снаряжение"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    ),
+                    content: (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <InfoField
+                            icon={Scale}
+                            label="Вес"
+                            value={formatWeight(selectedEquipment.weight)}
+                          />
+                          <InfoField
+                            icon={selectedEquipment.type === 'personal' ? User : Users}
+                            label="Тип"
+                            value={selectedEquipment.type === 'personal' ? 'Личное' : 'Общее'}
+                          />
+                          {selectedEquipment.ownerId &&
+                            (() => {
+                              const owner = participants.find(
+                                (p) => p.id === selectedEquipment.ownerId
+                              );
+                              return owner ? (
+                                <InfoField icon={User} label="Владелец" value={owner.name} />
+                              ) : null;
+                            })()}
+                        </div>
+                        {selectedEquipment.description && (
+                          <div className="p-3 bg-muted/50 rounded-lg">
+                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                              Описание
+                            </label>
+                            <p className="text-foreground">{selectedEquipment.description}</p>
+                          </div>
+                        )}
+                        {selectedEquipment.link && (
+                          <div>
+                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                              Ссылка
+                            </label>
+                            <a
+                              href={selectedEquipment.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              Открыть ссылку
+                            </a>
+                          </div>
+                        )}
                       </div>
-                      {selectedEquipment.description && (
-                        <div className="p-3 bg-muted/50 rounded-lg">
-                          <label className="block text-sm font-medium text-muted-foreground mb-2">
-                            Описание
-                          </label>
-                          <p className="text-foreground">{selectedEquipment.description}</p>
-                        </div>
-                      )}
-                      {selectedEquipment.link && (
-                        <div>
-                          <label className="block text-sm font-medium text-muted-foreground mb-2">
-                            Ссылка
-                          </label>
-                          <a
-                            href={selectedEquipment.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                            Открыть ссылку
-                          </a>
-                        </div>
-                      )}
+                    ),
+                  },
+                ]}
+                openSections={openSections}
+                onToggleSection={handleToggleSection}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Backpack className="w-5 h-5 text-muted-foreground" />
                     </div>
-                  ),
-                },
-              ]}
-              openSections={openSections}
-              onToggleSection={handleToggleSection}
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Backpack className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground">
+                        {selectedEquipment.name}
+                      </h2>
+                      <p className="text-muted-foreground">
+                        {categories.find((c) => c.id === selectedEquipment.categoryId)?.name ||
+                          'Без категории'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-foreground">{selectedEquipment.name}</h2>
-                    <p className="text-muted-foreground">
-                      {categories.find((c) => c.id === selectedEquipment.categoryId)?.name ||
-                        'Без категории'}
-                    </p>
+                  <Button variant="secondary" onClick={() => handleEdit(selectedEquipment)}>
+                    <Edit className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Редактировать</span>
+                  </Button>
+                </div>
+              </DetailPane>
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center p-4">
+                  <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Backpack className="w-10 h-10 text-muted-foreground" />
                   </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">Выберите снаряжение</h3>
+                  <p className="text-muted-foreground">
+                    Кликните на карточку для просмотра подробной информации
+                  </p>
                 </div>
-                <Button variant="secondary" onClick={() => handleEdit(selectedEquipment)}>
-                  <Edit className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Редактировать</span>
-                </Button>
               </div>
-            </DetailPane>
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center p-4">
-                <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Backpack className="w-10 h-10 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">Выберите снаряжение</h3>
-                <p className="text-muted-foreground">
-                  Кликните на карточку для просмотра подробной информации
-                </p>
-              </div>
-            </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-16 px-6 text-muted-foreground">
+          <Backpack className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <h3 className="text-lg font-medium text-foreground">
+            {searchTerm || hasActiveFilters ? 'Снаряжение не найдено' : 'Снаряжения пока нет'}
+          </h3>
+          {!searchTerm && !hasActiveFilters && (
+            <Button onClick={handleAddNew} className="mt-4">
+              <CirclePlus className="w-4 h-4 mr-2" />
+              Добавить первое снаряжение
+            </Button>
           )}
         </div>
-      </div>
+      )}
 
       <ConfirmModal
         isOpen={!!equipmentToDelete}

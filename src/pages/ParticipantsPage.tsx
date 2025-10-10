@@ -85,83 +85,89 @@ const ParticipantsPage: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        {/* Список участников */}
-        <div className="lg:col-span-1 space-y-3">
-          {filteredParticipants.map((p) => {
-            const tripCount = useTripStore
-              .getState()
-              .trips.filter((trip: Trip) => trip.participants.includes(p.id)).length;
-            const equipmentCount = useEquipmentStore
-              .getState()
-              .equipment.filter((eq: Equipment) => eq.ownerId === p.id).length;
+      {filteredParticipants.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          {/* Список участников */}
+          <div className="lg:col-span-1 space-y-3">
+            {filteredParticipants.map((p) => {
+              const tripCount = useTripStore
+                .getState()
+                .trips.filter((trip: Trip) => trip.participants.includes(p.id)).length;
+              const equipmentCount = useEquipmentStore
+                .getState()
+                .equipment.filter((eq: Equipment) => eq.ownerId === p.id).length;
 
-            const cardConfig = participantEntityConfig.views.card;
-            const actions = participantEntityConfig.getActions({
-              onEdit: () => navigate(`/participants/${p.id}/edit`),
-              onAddToTrip: () => handleAddToTrip(p),
-              onClone: () => handleClone(p),
-              onExport: () => exportParticipantToJson(p),
-              onDelete: () => handleRequestDelete(p),
-            });
+              const cardConfig = participantEntityConfig.views.card;
+              const actions = participantEntityConfig.getActions({
+                onEdit: () => navigate(`/participants/${p.id}/edit`),
+                onAddToTrip: () => handleAddToTrip(p),
+                onClone: () => handleClone(p),
+                onExport: () => exportParticipantToJson(p),
+                onDelete: () => handleRequestDelete(p),
+              });
 
-            return (
-              <EntityCard
-                key={p.id}
-                title={cardConfig.title(p)}
-                subtitle={cardConfig.subtitle && cardConfig.subtitle(p)}
-                icon={participantEntityConfig.getIcon(p)}
-                iconColor={participantEntityConfig.getIconColor?.(p)}
-                details={cardConfig.details(p, { tripCount, equipmentCount })}
-                isSelected={activeId === p.id}
-                onSelect={() => setActiveId(p.id)}
-                borderColor={participantEntityConfig.getBorderColor(p)}
-                menuItems={actions}
+              return (
+                <EntityCard
+                  key={p.id}
+                  title={cardConfig.title(p)}
+                  subtitle={cardConfig.subtitle && cardConfig.subtitle(p)}
+                  icon={participantEntityConfig.getIcon(p)}
+                  iconColor={participantEntityConfig.getIconColor?.(p)}
+                  details={cardConfig
+                    .details(p, { tripCount, equipmentCount })
+                    .map((detail, index) => ({
+                      ...detail,
+                      key: `participant-detail-${index}`,
+                    }))}
+                  isSelected={activeId === p.id}
+                  onSelect={() => setActiveId(p.id)}
+                  borderColor={participantEntityConfig.getBorderColor(p)}
+                  menuItems={actions}
+                />
+              );
+            })}
+          </div>
+
+          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
+            {selectedParticipant ? (
+              <ParticipantDetail
+                participant={selectedParticipant}
+                onAddToTrip={() => selectedParticipant && handleAddToTrip(selectedParticipant)}
+                onEdit={() =>
+                  selectedParticipant && navigate(`/participants/${selectedParticipant.id}/edit`)
+                }
+                openSections={openSections}
+                onToggleSection={handleToggleSection}
               />
-            );
-          })}
-          {filteredParticipants.length === 0 && (
-            <div className="text-center py-16 px-6 text-muted-foreground">
-              <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium text-foreground">
-                {hasActiveFilters ? 'Участники не найдены' : 'Участников пока нет'}
-              </h3>
-              {!hasActiveFilters && (
-                <Button onClick={handleAddNew} className="mt-4">
-                  <CirclePlus className="w-4 h-4 mr-2" />
-                  Добавить первого участника
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
-          {selectedParticipant ? (
-            <ParticipantDetail
-              participant={selectedParticipant}
-              onAddToTrip={() => selectedParticipant && handleAddToTrip(selectedParticipant)}
-              onEdit={() =>
-                selectedParticipant && navigate(`/participants/${selectedParticipant.id}/edit`)
-              }
-              openSections={openSections}
-              onToggleSection={handleToggleSection}
-            />
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center p-4">
-                <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-10 h-10 text-muted-foreground" />
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center p-4">
+                  <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Users className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">Выберите участника</h3>
+                  <p className="text-muted-foreground">
+                    Кликните на карточку для просмотра подробной информации.
+                  </p>
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">Выберите участника</h3>
-                <p className="text-muted-foreground">
-                  Кликните на карточку для просмотра подробной информации.
-                </p>
               </div>
-            </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-16 px-6 text-muted-foreground">
+          <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <h3 className="text-lg font-medium text-foreground">
+            {hasActiveFilters ? 'Участники не найдены' : 'Участников пока нет'}
+          </h3>
+          {!hasActiveFilters && (
+            <Button onClick={handleAddNew} className="mt-4">
+              <CirclePlus className="w-4 h-4 mr-2" />
+              Добавить первого участника
+            </Button>
           )}
         </div>
-      </div>
+      )}
 
       {/* Editing handled via Participant detail routes */}
 

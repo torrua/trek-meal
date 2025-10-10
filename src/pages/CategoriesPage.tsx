@@ -86,103 +86,104 @@ const CategoriesPage: React.FC = () => {
       )}
 
       {/* Основной контент */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-        <div className="lg:col-span-1 space-y-3">
-          {categoryManagement.filteredCategories.map((category) => {
-            const productCount = productStore.products.filter(
-              (p) => p.categoryId === category.id
-            ).length;
+      {categoryManagement.filteredCategories.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="lg:col-span-1 space-y-3">
+            {categoryManagement.filteredCategories.map((category) => {
+              const productCount = productStore.products.filter(
+                (p) => p.categoryId === category.id
+              ).length;
 
-            const menuItems: MenuItem[] = [
-              {
-                label: 'Редактировать',
-                icon: Edit,
-                onClick: () => navigate(`/categories/${category.id}/edit`),
-              },
-              {
-                label: 'Клонировать',
-                icon: Copy,
-                onClick: () => handleClone(category),
-              },
-              {
-                label: 'Экспорт',
-                icon: Share,
-                onClick: () => handleExport(category),
-              },
-              {
-                label: 'Удалить',
-                icon: Trash2,
-                onClick: () => categoryManagement.handleRequestDelete(category),
-                className:
-                  'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
-              },
-            ];
+              const menuItems: MenuItem[] = [
+                {
+                  label: 'Редактировать',
+                  icon: Edit,
+                  onClick: () => navigate(`/categories/${category.id}/edit`),
+                },
+                {
+                  label: 'Клонировать',
+                  icon: Copy,
+                  onClick: () => handleClone(category),
+                },
+                {
+                  label: 'Экспорт',
+                  icon: Share,
+                  onClick: () => handleExport(category),
+                },
+                {
+                  label: 'Удалить',
+                  icon: Trash2,
+                  onClick: () => categoryManagement.handleRequestDelete(category),
+                  className:
+                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
+                },
+              ];
 
-            return (
-              <EntityCard
-                key={category.id}
-                title={category.name}
-                subtitle={
-                  <div className="flex items-center gap-1">
-                    <Package className="w-4 h-4" />
-                    <span>{productCount}</span>
-                  </div>
+              return (
+                <EntityCard
+                  key={category.id}
+                  title={category.name}
+                  subtitle={
+                    <div className="flex items-center gap-1">
+                      <Package className="w-4 h-4" />
+                      <span>{productCount}</span>
+                    </div>
+                  }
+                  icon={() => (
+                    <span className="text-lg w-5 h-5 flex items-center justify-center">
+                      {category.emoji || '📦'}
+                    </span>
+                  )}
+                  details={[]} // Empty for true one-line layout
+                  isSelected={categoryManagement.activeId === category.id}
+                  onSelect={() => categoryManagement.setActiveId(category.id)}
+                  borderColor={category.color}
+                  menuItems={menuItems}
+                />
+              );
+            })}
+          </div>
+
+          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
+            {categoryManagement.selectedCategory ? (
+              <CategoryDetail
+                category={categoryManagement.selectedCategory}
+                onEdit={() =>
+                  categoryManagement.selectedCategory &&
+                  navigate(`/categories/${categoryManagement.selectedCategory.id}/edit`)
                 }
-                icon={() => (
-                  <span className="text-lg w-5 h-5 flex items-center justify-center">
-                    {category.emoji || '📦'}
-                  </span>
-                )}
-                details={[]} // Empty for true one-line layout
-                isSelected={categoryManagement.activeId === category.id}
-                onSelect={() => categoryManagement.setActiveId(category.id)}
-                borderColor={category.color}
-                menuItems={menuItems}
+                onEditProduct={categoryManagement.handleEditProduct}
+                onDeleteProduct={categoryManagement.handleDeleteProductRequest}
               />
-            );
-          })}
-          {categoryManagement.filteredCategories.length === 0 && (
-            <div className="text-center py-16 px-6 text-muted-foreground">
-              <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-medium text-foreground">
-                {searchTerm || hasActiveFilters ? 'Категории не найдены' : 'Категорий пока нет'}
-              </h3>
-              {!searchTerm && !hasActiveFilters && (
-                <Button onClick={categoryManagement.handleAddNew} className="mt-4">
-                  <CirclePlus className="w-4 h-4 mr-2" />
-                  Добавить первую категорию
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
-          {categoryManagement.selectedCategory ? (
-            <CategoryDetail
-              category={categoryManagement.selectedCategory}
-              onEdit={() =>
-                categoryManagement.selectedCategory &&
-                navigate(`/categories/${categoryManagement.selectedCategory.id}/edit`)
-              }
-              onEditProduct={categoryManagement.handleEditProduct}
-              onDeleteProduct={categoryManagement.handleDeleteProductRequest}
-            />
-          ) : (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center p-4">
-                <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Tag className="w-10 h-10 text-muted-foreground" />
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center p-4">
+                  <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Tag className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">Выберите категорию</h3>
+                  <p className="text-muted-foreground">
+                    Кликните на карточку для просмотра подробной информации.
+                  </p>
                 </div>
-                <h3 className="text-lg font-medium text-foreground mb-2">Выберите категорию</h3>
-                <p className="text-muted-foreground">
-                  Кликните на карточку для просмотра подробной информации.
-                </p>
               </div>
-            </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-16 px-6 text-muted-foreground">
+          <Tag className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <h3 className="text-lg font-medium text-foreground">
+            {searchTerm || hasActiveFilters ? 'Категории не найдены' : 'Категорий пока нет'}
+          </h3>
+          {!searchTerm && !hasActiveFilters && (
+            <Button onClick={categoryManagement.handleAddNew} className="mt-4">
+              <CirclePlus className="w-4 h-4 mr-2" />
+              Добавить первую категорию
+            </Button>
           )}
         </div>
-      </div>
+      )}
 
       {/* Editing handled via CategoryDetailPage routes */}
 

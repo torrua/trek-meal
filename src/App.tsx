@@ -15,6 +15,7 @@ import DishDetailPage from './pages/DishDetailPage';
 import CategoriesPage from './pages/CategoriesPage';
 import CategoryDetailPage from './pages/CategoryDetailPage';
 import MealTypesPage from './pages/MealTypesPage';
+import MealTypeDetailPage from './pages/MealTypeDetailPage';
 import EquipmentPage from './pages/EquipmentPage';
 import EquipmentDetailPage from './pages/EquipmentDetailPage';
 import EquipmentCategoriesPage from './pages/EquipmentCategoriesPage';
@@ -37,6 +38,8 @@ function App() {
         <Route path="categories/new" element={<CategoryDetailPage />} />
         <Route path="categories/:categoryId/edit" element={<CategoryDetailPage />} />
         <Route path="meal-types" element={<MealTypesPage />} />
+        <Route path="meal-types/new" element={<MealTypeDetailPage />} />
+        <Route path="meal-types/:mealTypeId" element={<MealTypeDetailPage />} />
         <Route path="equipment" element={<EquipmentPage />} />
         <Route path="equipment/new" element={<EquipmentDetailPage />} />
         <Route path="equipment/:equipmentId" element={<EquipmentDetailPage />} />

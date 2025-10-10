@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, Outlet } from 'react-router-dom';
 import cn from 'classnames';
 import { Toaster } from 'react-hot-toast';
@@ -30,12 +30,68 @@ const Layout: React.FC = () => {
       location.pathname
     ) || location.pathname.includes('/trips/');
 
-  const getBreadcrumbs = () => {
+  const breadcrumbs = useMemo(() => {
     const pathParts = location.pathname.split('/').filter((p) => p);
-    // You would have a mapping from path part to label
-    // This is a simplified example
-    return pathParts.length > 0 ? pathParts.join(' / ') : 'Главная';
-  };
+
+    // Mapping for Russian breadcrumb labels
+    const breadcrumbLabels: { [key: string]: string } = {
+      products: 'Продукты',
+      dishes: 'Блюда',
+      equipment: 'Снаряжение',
+      participants: 'Участники',
+      trips: 'Походы',
+      meals: 'Приемы пищи',
+      categories: 'Категории продуктов',
+      'meal-types': 'Типы приемов пищи',
+      'equipment-categories': 'Категории снаряжения',
+      settings: 'Настройки',
+      new: 'Создать',
+      edit: 'Редактировать',
+    };
+
+    if (pathParts.length === 0) return 'Главная';
+
+    const breadcrumbArray: string[] = [];
+
+    for (let i = 0; i < pathParts.length; i++) {
+      const part = pathParts[i];
+      const prevPart = i > 0 ? pathParts[i - 1] : '';
+
+      // Skip IDs (numeric values)
+      if (/^\d+$/.test(part)) continue;
+
+      // Handle special cases
+      if (part === 'new') {
+        const parentLabel = breadcrumbLabels[prevPart] || prevPart;
+        // Only add parent if it's not already the last item in breadcrumbs
+        if (
+          breadcrumbArray.length === 0 ||
+          breadcrumbArray[breadcrumbArray.length - 1] !== parentLabel
+        ) {
+          breadcrumbArray.push(parentLabel);
+        }
+        breadcrumbArray.push(breadcrumbLabels['new']);
+      } else if (part === 'edit' && i < pathParts.length - 1 && /^\d+$/.test(pathParts[i + 1])) {
+        const parentLabel = breadcrumbLabels[prevPart] || prevPart;
+        // Only add parent if it's not already the last item in breadcrumbs
+        if (
+          breadcrumbArray.length === 0 ||
+          breadcrumbArray[breadcrumbArray.length - 1] !== parentLabel
+        ) {
+          breadcrumbArray.push(parentLabel);
+        }
+        breadcrumbArray.push(breadcrumbLabels['edit']);
+      } else {
+        const label = breadcrumbLabels[part] || part;
+        // Avoid duplicates
+        if (breadcrumbArray.length === 0 || breadcrumbArray[breadcrumbArray.length - 1] !== label) {
+          breadcrumbArray.push(label);
+        }
+      }
+    }
+
+    return breadcrumbArray.join(' / ');
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -70,7 +126,7 @@ const Layout: React.FC = () => {
                     <ChevronsRight className="w-5 h-5" />
                   )}
                 </button>
-                <div className="text-sm text-muted-foreground capitalize">{getBreadcrumbs()}</div>
+                <div className="text-sm text-muted-foreground capitalize">{breadcrumbs}</div>
               </div>
 
               <div className="flex items-center gap-3">

@@ -64,21 +64,7 @@ const TripDetailPage: React.FC = () => {
         <TripForm
           trip={trip ?? undefined}
           onSubmit={handleSubmit}
-          onCancel={() => {
-            // eslint-disable-next-line no-console
-            console.debug('[TripDetailPage] onCancel -> navigate to /trips (replace)');
-            navigate('/trips', { replace: true });
-            // Fallback: if SPA navigation is blocked, force a hard redirect
-            setTimeout(() => {
-              try {
-                if (window.location.pathname !== '/trips') {
-                  window.location.assign('/trips');
-                }
-              } catch {
-                window.location.assign('/trips');
-              }
-            }, 100);
-          }}
+          onCancel={() => navigate('/trips')}
         />
       </div>
     </div>

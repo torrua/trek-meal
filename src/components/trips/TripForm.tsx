@@ -28,7 +28,7 @@ interface FormErrors {
   mealsPerDay?: string;
 }
 
-const INITIAL_STATE: Omit<TripData, 'participants'> = {
+const INITIAL_STATE: TripData = {
   name: '',
   description: '',
   destination: '',
@@ -37,13 +37,16 @@ const INITIAL_STATE: Omit<TripData, 'participants'> = {
   mealsPerDay: 3,
   startDate: '',
   endDate: '',
+  participants: [],
+  requiredEquipmentIds: [],
+  assignedEquipment: {},
 };
 
 const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) => {
   const [formData, setFormData] = useState<TripData>({ ...INITIAL_STATE, participants: [] });
   const [initialData, setInitialData] = useState<TripData>({ ...INITIAL_STATE, participants: [] });
   const { dateRange, days, handleDateRangeChange, handleDaysChange } = useTripDates(
-    trip || { ...INITIAL_STATE, participants: [], days: 1 }
+    useMemo(() => trip || { ...INITIAL_STATE, participants: [], days: 1 }, [trip])
   );
   const [errors, setErrors] = useState<FormErrors>({});
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);

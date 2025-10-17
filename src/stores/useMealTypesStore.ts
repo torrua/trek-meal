@@ -4,10 +4,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import useTripStore from './useTripStore';
+import type { MealType as BaseMealType, MealData } from '../types';
 
-export interface MealType {
-  id: number;
-  name: string;
+export interface MealType extends BaseMealType {
+  // Keep the existing properties and add repeatable
   repeatable?: boolean;
 }
 
@@ -16,6 +16,7 @@ interface MealTypesState {
   addMealType: (name: string, repeatable?: boolean) => void;
   updateMealType: (id: number, name: string, repeatable?: boolean) => void;
   deleteMealType: (id: number) => void;
+  cloneMealType: (id: number) => void;
   setMealTypes: (mealTypes: MealType[]) => void;
 }
 
@@ -23,9 +24,24 @@ const useMealTypesStore = create<MealTypesState>()(
   persist(
     (set, get) => ({
       mealTypes: [
-        { id: 1, name: 'Завтрак', repeatable: false },
-        { id: 2, name: 'Обед', repeatable: false },
-        { id: 3, name: 'Ужин', repeatable: false },
+        {
+          id: 1,
+          name: 'Завтрак',
+          repeatable: false,
+          defaultValues: { name: 'Завтрак', items: [] },
+        },
+        {
+          id: 2,
+          name: 'Обед',
+          repeatable: false,
+          defaultValues: { name: 'Обед', items: [] },
+        },
+        {
+          id: 3,
+          name: 'Ужин',
+          repeatable: false,
+          defaultValues: { name: 'Ужин', items: [] },
+        },
       ],
 
       addMealType: (name, repeatable = false) => {
@@ -38,7 +54,12 @@ const useMealTypesStore = create<MealTypesState>()(
           toast.error('Такой прием пищи уже существует.');
           return;
         }
-        const newMealType = { id: Date.now(), name: trimmedName, repeatable };
+        const newMealType: MealType = {
+          id: Date.now(),
+          name: trimmedName,
+          repeatable,
+          defaultValues: { name: trimmedName, items: [] },
+        };
         set((state) => ({ mealTypes: [...state.mealTypes, newMealType] }));
         toast.success(`"${trimmedName}" добавлен.`);
       },
@@ -65,8 +86,8 @@ const useMealTypesStore = create<MealTypesState>()(
           const isUsed = trips.some(
             (trip) =>
               trip.dayMeals &&
-              Object.values(trip.dayMeals).some((mealTypes) =>
-                mealTypes.includes(mealTypeToDelete.id)
+              Object.values(trip.dayMeals).some((mealInstances) =>
+                mealInstances.some((instance) => instance.title === mealTypeToDelete.name)
               )
           );
 
@@ -79,6 +100,19 @@ const useMealTypesStore = create<MealTypesState>()(
             mealTypes: state.mealTypes.filter((mt) => mt.id !== id),
           }));
           toast.error(`Прием пищи "${mealTypeToDelete.name}" удален.`);
+        }
+      },
+
+      cloneMealType: (id) => {
+        const mealTypeToClone = get().mealTypes.find((mt) => mt.id === id);
+        if (mealTypeToClone) {
+          const clonedMealType: MealType = {
+            ...mealTypeToClone,
+            id: Date.now(),
+            name: `${mealTypeToClone.name} (Копия)`,
+          };
+          set((state) => ({ mealTypes: [...state.mealTypes, clonedMealType] }));
+          toast.success(`Прием пищи "${mealTypeToClone.name}" клонирован.`);
         }
       },
 

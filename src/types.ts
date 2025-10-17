@@ -127,6 +127,7 @@ export interface MealType {
   name: string;
   description?: string;
   defaultValues: MealData;
+  repeatable?: boolean;
 }
 
 // --- НОВЫЙ ТИП: Для импортируемых файлов ---

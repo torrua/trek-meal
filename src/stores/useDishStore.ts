@@ -11,6 +11,7 @@ interface DishState {
   addDish: (data: DishData) => Dish | undefined;
   updateDish: (id: number, data: DishData) => void;
   deleteDish: (id: number) => void;
+  cloneDish: (id: number) => void;
   removeProductFromDish: (dishId: number, productIndex: number) => void;
   updateProductInDish: (dishId: number, productIndex: number, newWeight: number) => void;
   isProductInUse: (productId: number) => boolean;
@@ -139,6 +140,19 @@ const useDishStore = create<DishState>()(
         return dishes.some((dish) =>
           dish.products.some((product) => product.productId === productId)
         );
+      },
+
+      cloneDish: (id) => {
+        const dishToClone = get().dishes.find((d) => d.id === id);
+        if (dishToClone) {
+          const clonedDish: Dish = {
+            ...dishToClone,
+            id: Date.now(),
+            name: `${dishToClone.name} (копия)`,
+          };
+          set((state) => ({ dishes: [...state.dishes, clonedDish] }));
+          toast.success(`Блюдо "${dishToClone.name}" клонировано.`);
+        }
       },
     }),
     { name: 'trek-meal-dishes' }

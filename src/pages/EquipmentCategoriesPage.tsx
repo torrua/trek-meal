@@ -14,7 +14,10 @@ import {
   X,
   Check,
   CheckCheck,
+  LayoutList,
+  Grid3X3,
 } from 'lucide-react';
+import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useSearchStore from '../stores/useSearchStore';
@@ -25,6 +28,7 @@ import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard, { MenuItem } from '../ui/EntityCard';
 import EquipmentCategoryForm from '../components/equipment/EquipmentCategoryForm';
 import DynamicIcon from '../ui/DynamicIcon';
+import { exportEquipmentCategoryToJson } from '../utils/backup';
 
 const EquipmentCategoriesPage: React.FC = () => {
   const categoryStore = useEquipmentCategoryStore();
@@ -44,6 +48,9 @@ const EquipmentCategoriesPage: React.FC = () => {
   // Multi-selection state
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
+
+  // View mode state
+  const { viewMode, toggleViewMode } = useViewMode('equipment-categories'); // Use the new hook
 
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
@@ -113,6 +120,10 @@ const EquipmentCategoriesPage: React.FC = () => {
     },
     [categoryStore]
   );
+
+  const handleExport = useCallback((category: EquipmentCategory) => {
+    exportEquipmentCategoryToJson(category);
+  }, []);
 
   const handleRequestDelete = useCallback((c: EquipmentCategory) => setCategoryToDelete(c), []);
   const handleConfirmDelete = useCallback(() => {
@@ -211,6 +222,22 @@ const EquipmentCategoriesPage: React.FC = () => {
                     <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
                   )}
                 </Button>
+
+                {/* View mode toggle button */}
+                <Button
+                  onClick={toggleViewMode}
+                  variant="secondary"
+                  size="icon"
+                  title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                >
+                  {viewMode === 'default' ? (
+                    <LayoutList className="w-4 h-4" />
+                  ) : (
+                    <Grid3X3 className="w-4 h-4" />
+                  )}
+                </Button>
+
                 <Button onClick={toggleMultiSelect} variant="secondary" size="default">
                   Выделить
                 </Button>
@@ -328,6 +355,11 @@ const EquipmentCategoriesPage: React.FC = () => {
                   onClick: () => handleClone(category),
                 },
                 {
+                  label: 'Экспорт',
+                  icon: Share,
+                  onClick: () => handleExport(category),
+                },
+                {
                   label: 'Удалить',
                   icon: Trash2,
                   onClick: () => handleRequestDelete(category),
@@ -354,6 +386,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                   menuItems={menuItems}
                   data-testid={`equipment-category-card-${category.id}`}
                   showMultiSelect={showMultiSelect}
+                  viewMode={viewMode} // Pass viewMode to EntityCard
                 />
               );
             })}

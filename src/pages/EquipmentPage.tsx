@@ -2,7 +2,20 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CirclePlus, Filter, Backpack, Info } from 'lucide-react';
+import {
+  CirclePlus,
+  Filter,
+  Backpack,
+  Info,
+  Trash2,
+  Copy,
+  Share,
+  X,
+  Check,
+  CheckCheck,
+  LayoutList,
+  Grid3X3,
+} from 'lucide-react';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useParticipantStore from '../stores/useParticipantStore';
@@ -18,6 +31,8 @@ import DetailPane from '../ui/DetailPane';
 import InfoField from '../ui/InfoField';
 import { equipmentEntityConfig } from '../config/entityConfig';
 import { Edit, ExternalLink, Scale, User, Users } from 'lucide-react';
+import { useViewMode } from '../hooks/useViewMode';
+import { exportEquipmentToJson } from '../utils/backup';
 
 const EquipmentPage: React.FC = () => {
   const { equipment, deleteEquipment } = useEquipmentStore();
@@ -35,6 +50,15 @@ const EquipmentPage: React.FC = () => {
     categoryId: 'all',
     type: 'all',
   });
+
+  // Multi-selection state
+  const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<number[]>([]);
+  const [showMultiSelect, setShowMultiSelect] = useState(false);
+  // Add state for bulk delete confirmation
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // View mode state
+  const { viewMode, toggleViewMode } = useViewMode('equipment');
 
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
@@ -104,6 +128,78 @@ const EquipmentPage: React.FC = () => {
     [filters]
   );
 
+  // Multi-selection handlers
+  const toggleMultiSelect = () => {
+    setShowMultiSelect(!showMultiSelect);
+    if (showMultiSelect) {
+      setSelectedEquipmentIds([]);
+    }
+  };
+
+  const toggleEquipmentSelection = (equipmentId: number) => {
+    setSelectedEquipmentIds((prev: number[]) =>
+      prev.includes(equipmentId)
+        ? prev.filter((id: number) => id !== equipmentId)
+        : [...prev, equipmentId]
+    );
+  };
+
+  const selectAllEquipment = () => {
+    setSelectedEquipmentIds(filteredEquipment.map((equipmentItem: Equipment) => equipmentItem.id));
+  };
+
+  // Exit multi-select mode completely
+  const exitMultiSelectMode = () => {
+    setShowMultiSelect(false);
+    setSelectedEquipmentIds([]);
+  };
+
+  // Bulk action handlers
+  const handleBulkDelete = () => {
+    if (selectedEquipmentIds.length === 0) return;
+    // Show confirmation modal
+    setShowBulkDeleteConfirm(true);
+  };
+
+  const handleConfirmBulkDelete = () => {
+    // Delete all selected equipment directly using the store function
+    selectedEquipmentIds.forEach((id) => {
+      if (id === activeId) setActiveId(null);
+      deleteEquipment(id);
+    });
+    // Exit multi-select mode
+    exitMultiSelectMode();
+    setShowBulkDeleteConfirm(false);
+  };
+
+  const handleBulkClone = () => {
+    if (selectedEquipmentIds.length === 0) return;
+
+    console.log(`Cloning equipment: ${selectedEquipmentIds.join(', ')}`);
+  };
+
+  const handleBulkExport = () => {
+    if (selectedEquipmentIds.length === 0) return;
+
+    console.log(`Exporting equipment: ${selectedEquipmentIds.join(', ')}`);
+  };
+
+  // Individual equipment actions
+  const handleClone = useCallback((equipmentItem: Equipment) => {
+    const { cloneEquipment } = useEquipmentStore.getState();
+    cloneEquipment(equipmentItem.id);
+  }, []);
+
+  const handleExport = useCallback((equipmentItem: Equipment) => {
+    try {
+      exportEquipmentToJson(equipmentItem);
+      // toast.success('Снаряжение экспортировано');
+    } catch (error) {
+      // toast.error('Ошибка при экспорте');
+      console.error('Export error:', error);
+    }
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-6 sm:mb-8">
@@ -112,23 +208,98 @@ const EquipmentPage: React.FC = () => {
             Снаряжение
           </h1>
           <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setShowFilters((s) => !s)}
-              variant="secondary"
-              size="icon"
-              className="relative"
-              title="Фильтры"
-              aria-label="Показать фильтры"
-            >
-              <Filter className="w-4 h-4" />
-              {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
-              )}
-            </Button>
-            <Button onClick={handleAddNew} variant="primary" size="default">
-              <CirclePlus className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Добавить снаряжение</span>
-            </Button>
+            {!showMultiSelect ? (
+              <>
+                <Button
+                  onClick={() => setShowFilters((s) => !s)}
+                  variant="secondary"
+                  size="icon"
+                  className="relative"
+                  title="Фильтры"
+                  aria-label="Показать фильтры"
+                >
+                  <Filter className="w-4 h-4" />
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
+                  )}
+                </Button>
+
+                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
+                  Выделить
+                </Button>
+
+                {/* View mode toggle button */}
+                <Button
+                  onClick={toggleViewMode}
+                  variant="secondary"
+                  size="icon"
+                  title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                >
+                  {viewMode === 'default' ? (
+                    <LayoutList className="w-4 h-4" />
+                  ) : (
+                    <Grid3X3 className="w-4 h-4" />
+                  )}
+                </Button>
+
+                <Button onClick={handleAddNew} variant="primary" size="default">
+                  <CirclePlus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Добавить снаряжение</span>
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
+                  <span>{selectedEquipmentIds.length}</span>
+                  <span className="text-primary/70">из {filteredEquipment.length} выделено</span>
+                </div>
+
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={selectAllEquipment}
+                  disabled={selectedEquipmentIds.length === filteredEquipment.length}
+                  title="Выделить все"
+                >
+                  <CheckCheck className="w-4 h-4" />
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkClone}
+                    disabled={selectedEquipmentIds.length === 0}
+                    title="Клонировать"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkExport}
+                    disabled={selectedEquipmentIds.length === 0}
+                    title="Экспорт"
+                  >
+                    <Share className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="icon"
+                    onClick={handleBulkDelete}
+                    disabled={selectedEquipmentIds.length === 0}
+                    title="Удалить"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <Button onClick={exitMultiSelectMode} variant="ghost" size="icon" title="Закрыть">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -151,6 +322,8 @@ const EquipmentPage: React.FC = () => {
               const cardConfig = equipmentEntityConfig.views.card;
               const actions = equipmentEntityConfig.getActions({
                 onEdit: () => handleEdit(equipmentItem),
+                onClone: () => handleClone(equipmentItem),
+                onExport: () => handleExport(equipmentItem),
                 onDelete: () => handleRequestDelete(equipmentItem),
               });
               const context = {
@@ -166,12 +339,19 @@ const EquipmentPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(equipmentItem, context)}
                   icon={equipmentEntityConfig.getIcon(equipmentItem)}
                   iconColor={equipmentEntityConfig.getIconColor?.(equipmentItem, context)}
-                  details={cardConfig.details(equipmentItem, context)}
+                  details={cardConfig.details(equipmentItem, context).map((detail, index) => ({
+                    ...detail,
+                    key: `equipment-detail-${index}`,
+                  }))}
                   menuItems={actions}
                   isSelected={activeId === equipmentItem.id}
+                  isMultiSelected={selectedEquipmentIds.includes(equipmentItem.id)}
                   onSelect={() => setActiveId(equipmentItem.id)}
+                  onMultiSelect={() => toggleEquipmentSelection(equipmentItem.id)}
                   borderColor={equipmentEntityConfig.getBorderColor(equipmentItem, context)}
                   data-testid={`equipment-card-${equipmentItem.id}`}
+                  showMultiSelect={showMultiSelect}
+                  viewMode={viewMode}
                 />
               );
             })}
@@ -312,6 +492,25 @@ const EquipmentPage: React.FC = () => {
       >
         Вы уверены, что хотите удалить снаряжение &quot;{equipmentToDelete?.name}&quot;? Это
         действие необратимо.
+      </ConfirmModal>
+
+      {/* Bulk delete confirmation */}
+      <ConfirmModal
+        isOpen={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        onConfirm={handleConfirmBulkDelete}
+        title="Удалить снаряжение"
+        confirmText="Удалить"
+        cancelText="Отмена"
+        variant="danger"
+      >
+        <p>
+          Вы уверены, что хотите удалить {selectedEquipmentIds.length} единиц снаряжения?
+          <br />
+          <span className="text-sm text-muted-foreground mt-2 block">
+            Снаряжение будет удалено безвозвратно.
+          </span>
+        </p>
       </ConfirmModal>
     </div>
   );

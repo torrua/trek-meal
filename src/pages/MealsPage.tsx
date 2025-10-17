@@ -1,9 +1,21 @@
 // src/pages/MealsPage.tsx
 import React, { useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Utensils, Trash2, Copy, Share, X, Check, CheckCheck } from 'lucide-react';
+import {
+  Plus,
+  Utensils,
+  Trash2,
+  Copy,
+  Share,
+  X,
+  Check,
+  CheckCheck,
+  LayoutList,
+  Grid3X3,
+} from 'lucide-react';
 import { useMealStore } from '../stores/useMealStore';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
 import type { Meal, MealData } from '../types';
 import Button from '../ui/Button';
 import EntityCard from '../ui/EntityCard';
@@ -16,6 +28,7 @@ import MealDetail from '../components/meals/MealDetail';
 const MealsPage: React.FC = () => {
   const { meals, addMeal, updateMeal, removeMeal } = useMealStore();
   const isMobile = useIsMobile();
+  const { viewMode, toggleViewMode } = useViewMode('meals'); // Use the new hook
   const [activeId, setActiveId] = useState<number | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
@@ -141,15 +154,31 @@ const MealsPage: React.FC = () => {
           <div className="flex items-center gap-2">
             {!showMultiSelect ? (
               <>
+                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
+                  Выделить
+                </Button>
+
+                {/* View mode toggle button */}
+                <Button
+                  onClick={toggleViewMode}
+                  variant="secondary"
+                  size="icon"
+                  title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                >
+                  {viewMode === 'default' ? (
+                    <LayoutList className="w-4 h-4" />
+                  ) : (
+                    <Grid3X3 className="w-4 h-4" />
+                  )}
+                </Button>
+
                 <Link to="/meals/new">
                   <Button variant="primary" size="default">
                     <Plus className="w-4 h-4 sm:mr-2" />
                     <span className="hidden sm:inline">Создать прием пищи</span>
                   </Button>
                 </Link>
-                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
-                  Выделить
-                </Button>
               </>
             ) : (
               <div className="flex items-center gap-2">
@@ -247,6 +276,7 @@ const MealsPage: React.FC = () => {
                   onMultiSelect={() => toggleMealSelection(meal.id)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
+                  viewMode={viewMode} // Pass viewMode to EntityCard
                 />
               );
             })}

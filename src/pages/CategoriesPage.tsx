@@ -2,7 +2,19 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CirclePlus, Filter, Tag, Trash2, Copy, Share, X, Check, CheckCheck } from 'lucide-react';
+import {
+  CirclePlus,
+  Filter,
+  Tag,
+  Trash2,
+  Copy,
+  Share,
+  X,
+  Check,
+  CheckCheck,
+  LayoutList,
+  Grid3X3,
+} from 'lucide-react';
 import useCategoryStore from '../stores/useCategoryStore';
 import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
@@ -17,6 +29,7 @@ import CategoryFiltersComponent, {
 } from '../components/categories/CategoryFiltersComponent';
 import CategoryDetail from '../components/categories/CategoryDetail';
 import { categoryEntityConfig } from '../config/entityConfig';
+import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
 
 const CategoriesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -128,6 +141,9 @@ const CategoriesPage: React.FC = () => {
     ];
   };
 
+  // View mode state
+  const { viewMode, toggleViewMode } = useViewMode('categories'); // Use the new hook
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Заголовок и кнопки */}
@@ -152,9 +168,26 @@ const CategoriesPage: React.FC = () => {
                     <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
                   )}
                 </Button>
+
                 <Button onClick={toggleMultiSelect} variant="secondary" size="default">
                   Выделить
                 </Button>
+
+                {/* View mode toggle button */}
+                <Button
+                  onClick={toggleViewMode}
+                  variant="secondary"
+                  size="icon"
+                  title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                >
+                  {viewMode === 'default' ? (
+                    <LayoutList className="w-4 h-4" />
+                  ) : (
+                    <Grid3X3 className="w-4 h-4" />
+                  )}
+                </Button>
+
                 <Button
                   onClick={() => navigate('/categories/new')}
                   variant="primary"
@@ -264,6 +297,7 @@ const CategoriesPage: React.FC = () => {
                   borderColor={categoryEntityConfig.getBorderColor(category)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
+                  viewMode={viewMode} // Pass viewMode to EntityCard
                 />
               );
             })}

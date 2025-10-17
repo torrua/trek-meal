@@ -13,7 +13,10 @@ import {
   X,
   Check,
   CheckCheck,
+  LayoutList,
+  Grid3X3,
 } from 'lucide-react';
+import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
 import { useParticipantsManagement } from '../hooks/useParticipantsManagement';
 import useParticipantStore from '../stores/useParticipantStore';
 import useTripStore from '../stores/useTripStore';
@@ -71,6 +74,9 @@ const ParticipantsPage: React.FC = () => {
   const [showMultiSelect, setShowMultiSelect] = useState(false);
   // Add state for bulk delete confirmation
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // View mode state
+  const { viewMode, toggleViewMode } = useViewMode('participants'); // Use the new hook
 
   // Multi-selection handlers
   const toggleMultiSelect = () => {
@@ -152,6 +158,22 @@ const ParticipantsPage: React.FC = () => {
                     <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
                   )}
                 </Button>
+
+                {/* View mode toggle button */}
+                <Button
+                  onClick={toggleViewMode}
+                  variant="secondary"
+                  size="icon"
+                  title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                >
+                  {viewMode === 'default' ? (
+                    <LayoutList className="w-4 h-4" />
+                  ) : (
+                    <Grid3X3 className="w-4 h-4" />
+                  )}
+                </Button>
+
                 <Button onClick={toggleMultiSelect} variant="secondary" size="default">
                   Выделить
                 </Button>
@@ -268,6 +290,7 @@ const ParticipantsPage: React.FC = () => {
                   borderColor={participantEntityConfig.getBorderColor(p)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
+                  viewMode={viewMode} // Pass viewMode to EntityCard
                 />
               );
             })}

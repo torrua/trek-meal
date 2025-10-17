@@ -15,8 +15,11 @@ import {
   X,
   Check,
   CheckCheck,
+  LayoutList,
+  Grid3X3,
 } from 'lucide-react';
 import { useTripsManagement } from '../hooks/useTripsManagement';
+import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
 import useTripStore from '../stores/useTripStore';
 import TripFiltersComponent from '../components/trips/TripFiltersComponent';
 import TripDetail from '../components/trips/TripDetail';
@@ -33,6 +36,7 @@ import type { Trip } from '../types';
 const TripsPage: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { viewMode, toggleViewMode } = useViewMode('trips'); // Use the new hook
   const {
     // state
     activeId,
@@ -186,6 +190,22 @@ const TripsPage: React.FC = () => {
                     <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
                   )}
                 </Button>
+
+                {/* View mode toggle button */}
+                <Button
+                  onClick={toggleViewMode}
+                  variant="secondary"
+                  size="icon"
+                  title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                >
+                  {viewMode === 'default' ? (
+                    <LayoutList className="w-4 h-4" />
+                  ) : (
+                    <Grid3X3 className="w-4 h-4" />
+                  )}
+                </Button>
+
                 <Button onClick={toggleMultiSelect} variant="secondary" size="default">
                   Выделить
                 </Button>
@@ -285,6 +305,7 @@ const TripsPage: React.FC = () => {
                   onMultiSelect={() => toggleTripSelection(trip.id)}
                   borderColor={tripEntityConfig.getBorderColor(trip)}
                   showMultiSelect={showMultiSelect}
+                  viewMode={viewMode} // Pass viewMode to EntityCard
                 />
               );
             })}

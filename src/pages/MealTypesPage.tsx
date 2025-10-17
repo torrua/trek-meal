@@ -1,26 +1,40 @@
 // src/pages/MealTypesPage.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { CirclePlus, Utensils, Edit, Trash2, Repeat } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import {
+  CirclePlus,
+  Utensils,
+  Edit,
+  Trash2,
+  Repeat,
+  Copy,
+  Share,
+  X,
+  CheckCheck,
+  LayoutList,
+  Grid3X3,
+} from 'lucide-react';
 import useMealTypesStore from '../stores/useMealTypesStore';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard, { MenuItem } from '../ui/EntityCard';
+import { useViewMode } from '../hooks/useViewMode';
 
-interface MealType {
-  id: number;
-  name: string;
-  repeatable?: boolean;
-}
+import type { MealType } from '../types';
 
 const MealTypesPage: React.FC = () => {
   const { mealTypes, deleteMealType } = useMealTypesStore();
+  const { viewMode, toggleViewMode } = useViewMode('meal-types');
   const [activeId, setActiveId] = useState<number | null>(null);
   const [typeToDelete, setTypeToDelete] = useState<{
     id: number;
     name: string;
     repeatable?: boolean;
   } | null>(null);
+  // Multi-selection state
+  const [selectedMealTypeIds, setSelectedMealTypeIds] = useState<number[]>([]);
+  const [showMultiSelect, setShowMultiSelect] = useState(false);
 
   const sortedMealTypes = useMemo(() => {
     return [...mealTypes].sort((a, b) => a.name.localeCompare(b.name));
@@ -43,6 +57,78 @@ const MealTypesPage: React.FC = () => {
     }
   };
 
+  // Multi-selection handlers
+  const toggleMultiSelect = () => {
+    setShowMultiSelect(!showMultiSelect);
+    if (showMultiSelect) {
+      setSelectedMealTypeIds([]);
+    }
+  };
+
+  const toggleMealTypeSelection = (mealTypeId: number) => {
+    setSelectedMealTypeIds((prev: number[]) =>
+      prev.includes(mealTypeId)
+        ? prev.filter((id: number) => id !== mealTypeId)
+        : [...prev, mealTypeId]
+    );
+  };
+
+  const selectAllMealTypes = () => {
+    setSelectedMealTypeIds(sortedMealTypes.map((mealType: MealType) => mealType.id));
+  };
+
+  // Exit multi-select mode completely
+  const exitMultiSelectMode = () => {
+    setShowMultiSelect(false);
+    setSelectedMealTypeIds([]);
+  };
+
+  // Bulk action handlers
+  const handleBulkDelete = () => {
+    if (selectedMealTypeIds.length === 0) return;
+    // For now, just log the action - would need to implement actual deletion
+    console.log(`Deleting meal types: ${selectedMealTypeIds.join(', ')}`);
+  };
+
+  const handleBulkClone = () => {
+    if (selectedMealTypeIds.length === 0) return;
+    // For now, just log the action
+    console.log(`Cloning meal types: ${selectedMealTypeIds.join(', ')}`);
+  };
+
+  const handleBulkExport = () => {
+    if (selectedMealTypeIds.length === 0) return;
+    // For now, just log the action
+    console.log(`Exporting meal types: ${selectedMealTypeIds.join(', ')}`);
+  };
+
+  const handleClone = useCallback((mealType: MealType) => {
+    const { cloneMealType } = useMealTypesStore.getState();
+    cloneMealType(mealType.id);
+  }, []);
+
+  const handleExport = useCallback((mealType: MealType) => {
+    try {
+      const jsonString = JSON.stringify(mealType, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      const safeName = mealType.name.replace(/\s+/g, '-').toLowerCase();
+      a.download = `meal-type-${safeName}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success(`Данные типа приема пищи "${mealType.name}" экспортированы!`);
+    } catch (error) {
+      console.error('Ошибка при экспорте данных типа приема пищи:', error);
+      toast.error('Произошла ошибка при экспорте.');
+    }
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header and buttons */}
@@ -52,14 +138,87 @@ const MealTypesPage: React.FC = () => {
             Типы приемов пищи
           </h1>
           <div className="flex items-center gap-2">
-            <Button
-              onClick={() => (window.location.href = '/meal-types/new')}
-              variant="primary"
-              size="default"
-            >
-              <CirclePlus className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Добавить тип</span>
-            </Button>
+            {!showMultiSelect ? (
+              <>
+                {/* View mode toggle button */}
+                <Button
+                  onClick={toggleViewMode}
+                  variant="secondary"
+                  size="icon"
+                  title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                >
+                  {viewMode === 'default' ? (
+                    <LayoutList className="w-4 h-4" />
+                  ) : (
+                    <Grid3X3 className="w-4 h-4" />
+                  )}
+                </Button>
+
+                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
+                  Выделить
+                </Button>
+                <Button
+                  onClick={() => (window.location.href = '/meal-types/new')}
+                  variant="primary"
+                  size="default"
+                >
+                  <CirclePlus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Добавить тип</span>
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
+                  <span>{selectedMealTypeIds.length}</span>
+                  <span className="text-primary/70">из {sortedMealTypes.length} выделено</span>
+                </div>
+
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={selectAllMealTypes}
+                  disabled={selectedMealTypeIds.length === sortedMealTypes.length}
+                  title="Выделить все"
+                >
+                  <CheckCheck className="w-4 h-4" />
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkClone}
+                    disabled={selectedMealTypeIds.length === 0}
+                    title="Клонировать"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkExport}
+                    disabled={selectedMealTypeIds.length === 0}
+                    title="Экспорт"
+                  >
+                    <Share className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="icon"
+                    onClick={handleBulkDelete}
+                    disabled={selectedMealTypeIds.length === 0}
+                    title="Удалить"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <Button onClick={exitMultiSelectMode} variant="ghost" size="icon" title="Закрыть">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -74,6 +233,16 @@ const MealTypesPage: React.FC = () => {
                   label: 'Редактировать',
                   icon: Edit,
                   onClick: () => (window.location.href = `/meal-types/${mealType.id}`),
+                },
+                {
+                  label: 'Клонировать',
+                  icon: Copy,
+                  onClick: () => handleClone(mealType),
+                },
+                {
+                  label: 'Экспорт',
+                  icon: Share,
+                  onClick: () => handleExport(mealType),
                 },
                 {
                   label: 'Удалить',
@@ -97,10 +266,14 @@ const MealTypesPage: React.FC = () => {
                     },
                   ]}
                   isSelected={activeId === mealType.id}
+                  isMultiSelected={selectedMealTypeIds.includes(mealType.id)}
                   onSelect={() => setActiveId(mealType.id)}
+                  onMultiSelect={() => toggleMealTypeSelection(mealType.id)}
                   borderColor="#6b7280"
                   menuItems={menuItems}
                   data-testid={`meal-type-card-${mealType.id}`}
+                  showMultiSelect={showMultiSelect}
+                  viewMode={viewMode}
                 />
               );
             })}

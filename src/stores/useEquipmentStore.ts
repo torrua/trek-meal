@@ -10,6 +10,7 @@ interface EquipmentState {
   addEquipment: (data: EquipmentData) => void;
   updateEquipment: (id: number, data: EquipmentData) => void;
   deleteEquipment: (id: number) => void;
+  cloneEquipment: (id: number) => void;
   removeCategoryFromEquipment: (categoryId: number) => void;
   isEquipmentInUse: (equipmentId: number) => boolean;
 }
@@ -142,6 +143,19 @@ const useEquipmentStore = create<EquipmentState>()(
         }
 
         return false;
+      },
+
+      cloneEquipment: (id) => {
+        const equipmentToClone = get().equipment.find((e) => e.id === id);
+        if (equipmentToClone) {
+          const clonedEquipment: Equipment = {
+            ...equipmentToClone,
+            id: Date.now(),
+            name: `${equipmentToClone.name} (копия)`,
+          };
+          set((state) => ({ equipment: [...state.equipment, clonedEquipment] }));
+          toast.success(`Снаряжение "${equipmentToClone.name}" клонировано.`);
+        }
       },
     }),
     { name: 'trek-meal-equipment' }

@@ -2,7 +2,19 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CirclePlus, Soup } from 'lucide-react';
+import {
+  CirclePlus,
+  Soup,
+  Filter,
+  Trash2,
+  Copy,
+  Share,
+  X,
+  Check,
+  CheckCheck,
+  LayoutList,
+  Grid3X3,
+} from 'lucide-react';
 import useDishStore from '../stores/useDishStore';
 import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
@@ -15,6 +27,8 @@ import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import { toast } from 'react-hot-toast';
 import { dishEntityConfig } from '../config/entityConfig';
+import { useViewMode } from '../hooks/useViewMode';
+import { exportDishToJson } from '../utils/backup';
 
 const DishesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +41,15 @@ const DishesPage: React.FC = () => {
   // Editing handled via DishDetailPage routes
   const [dishToDelete, setDishToDelete] = useState<Dish | null>(null);
   const [openSections, setOpenSections] = useState<string[]>(['main', 'products', 'trips']);
+
+  // Multi-selection state
+  const [selectedDishIds, setSelectedDishIds] = useState<number[]>([]);
+  const [showMultiSelect, setShowMultiSelect] = useState(false);
+  // Add state for bulk delete confirmation
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // View mode state
+  const { viewMode, toggleViewMode } = useViewMode('dishes');
 
   const handleToggleSection = useCallback((sectionId: string) => {
     setOpenSections((prev) =>
@@ -80,6 +103,76 @@ const DishesPage: React.FC = () => {
     }
   };
 
+  // Multi-selection handlers
+  const toggleMultiSelect = () => {
+    setShowMultiSelect(!showMultiSelect);
+    if (showMultiSelect) {
+      setSelectedDishIds([]);
+    }
+  };
+
+  const toggleDishSelection = (dishId: number) => {
+    setSelectedDishIds((prev: number[]) =>
+      prev.includes(dishId) ? prev.filter((id: number) => id !== dishId) : [...prev, dishId]
+    );
+  };
+
+  const selectAllDishes = () => {
+    setSelectedDishIds(filteredDishes.map((dish: Dish) => dish.id));
+  };
+
+  // Exit multi-select mode completely
+  const exitMultiSelectMode = () => {
+    setShowMultiSelect(false);
+    setSelectedDishIds([]);
+  };
+
+  // Bulk action handlers
+  const handleBulkDelete = () => {
+    if (selectedDishIds.length === 0) return;
+    // Show confirmation modal
+    setShowBulkDeleteConfirm(true);
+  };
+
+  const handleConfirmBulkDelete = () => {
+    // Delete all selected dishes directly using the store function
+    selectedDishIds.forEach((id) => {
+      if (id === activeId) setActiveId(null);
+      deleteDish(id);
+    });
+    // Exit multi-select mode
+    exitMultiSelectMode();
+    setShowBulkDeleteConfirm(false);
+  };
+
+  const handleBulkClone = () => {
+    if (selectedDishIds.length === 0) return;
+
+    console.log(`Cloning dishes: ${selectedDishIds.join(', ')}`);
+  };
+
+  const handleBulkExport = () => {
+    if (selectedDishIds.length === 0) return;
+
+    console.log(`Exporting dishes: ${selectedDishIds.join(', ')}`);
+  };
+
+  // Individual dish actions
+  const handleClone = useCallback((dish: Dish) => {
+    const { cloneDish } = useDishStore.getState();
+    cloneDish(dish.id);
+  }, []);
+
+  const handleExport = useCallback((dish: Dish) => {
+    try {
+      exportDishToJson(dish);
+      toast.success('Блюдо экспортировано');
+    } catch (error) {
+      toast.error('Ошибка при экспорте');
+      console.error('Export error:', error);
+    }
+  }, []);
+
   // Form submission handled in DishDetailPage
 
   // Helper function to calculate dish nutrition for the card
@@ -116,10 +209,84 @@ const DishesPage: React.FC = () => {
             Блюда
           </h1>
           <div className="flex items-center gap-2">
-            <Button onClick={handleAddNew} variant="primary" size="default">
-              <CirclePlus className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Добавить блюдо</span>
-            </Button>
+            {!showMultiSelect ? (
+              <>
+                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
+                  Выделить
+                </Button>
+
+                {/* View mode toggle button */}
+                <Button
+                  onClick={toggleViewMode}
+                  variant="secondary"
+                  size="icon"
+                  title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                >
+                  {viewMode === 'default' ? (
+                    <LayoutList className="w-4 h-4" />
+                  ) : (
+                    <Grid3X3 className="w-4 h-4" />
+                  )}
+                </Button>
+
+                <Button onClick={handleAddNew} variant="primary" size="default">
+                  <CirclePlus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Добавить блюдо</span>
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
+                  <span>{selectedDishIds.length}</span>
+                  <span className="text-primary/70">из {filteredDishes.length} выделено</span>
+                </div>
+
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={selectAllDishes}
+                  disabled={selectedDishIds.length === filteredDishes.length}
+                  title="Выделить все"
+                >
+                  <CheckCheck className="w-4 h-4" />
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkClone}
+                    disabled={selectedDishIds.length === 0}
+                    title="Клонировать"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkExport}
+                    disabled={selectedDishIds.length === 0}
+                    title="Экспорт"
+                  >
+                    <Share className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="icon"
+                    onClick={handleBulkDelete}
+                    disabled={selectedDishIds.length === 0}
+                    title="Удалить"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <Button onClick={exitMultiSelectMode} variant="ghost" size="icon" title="Закрыть">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -132,6 +299,8 @@ const DishesPage: React.FC = () => {
               const cardConfig = dishEntityConfig.views.card;
               const actions = dishEntityConfig.getActions({
                 onEdit: () => handleEdit(dish),
+                onClone: () => handleClone(dish),
+                onExport: () => handleExport(dish),
                 onDelete: () => handleRequestDelete(dish),
               });
 
@@ -149,9 +318,13 @@ const DishesPage: React.FC = () => {
                       key: `dish-detail-${index}`,
                     }))}
                   isSelected={activeId === dish.id}
+                  isMultiSelected={selectedDishIds.includes(dish.id)}
                   onSelect={() => setActiveId(dish.id)}
+                  onMultiSelect={() => toggleDishSelection(dish.id)}
                   borderColor={dishEntityConfig.getBorderColor(dish)}
                   menuItems={actions}
+                  showMultiSelect={showMultiSelect}
+                  viewMode={viewMode}
                 />
               );
             })}
@@ -208,6 +381,24 @@ const DishesPage: React.FC = () => {
         <p>
           Вы уверены, что хотите удалить блюдо{' '}
           <span className="font-bold">{dishToDelete?.name}</span>?
+        </p>
+      </ConfirmModal>
+
+      {/* Bulk delete confirmation */}
+      <ConfirmModal
+        isOpen={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        onConfirm={handleConfirmBulkDelete}
+        title="Подтверждение"
+        variant="danger"
+        confirmText="Удалить"
+      >
+        <p>
+          Вы уверены, что хотите удалить {selectedDishIds.length} блюд?
+          <br />
+          <span className="text-sm text-muted-foreground mt-2 block">
+            Это действие нельзя отменить. Все данные о блюдах будут потеряны.
+          </span>
         </p>
       </ConfirmModal>
     </div>

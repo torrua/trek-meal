@@ -12,6 +12,7 @@ interface ProductState {
   addMultipleProducts: (data: ProductData[]) => void; // --- НОВАЯ ФУНКЦИЯ ---
   updateProduct: (id: number, data: ProductData) => void;
   deleteProduct: (id: number) => void;
+  cloneProduct: (id: number) => void;
   removeCategoryFromProducts: (categoryId: number) => void;
   removePortionFromProduct: (productId: number, portionName: string) => void;
 }
@@ -157,6 +158,19 @@ const useProductStore = create<ProductState>()(
             return product;
           }),
         }));
+      },
+
+      cloneProduct: (id) => {
+        const productToClone = get().products.find((p) => p.id === id);
+        if (productToClone) {
+          const clonedProduct: Product = {
+            ...productToClone,
+            id: Date.now(),
+            name: `${productToClone.name} (копия)`,
+          };
+          set((state) => ({ products: [...state.products, clonedProduct] }));
+          toast.success(`Продукт "${productToClone.name}" клонирован.`);
+        }
       },
     }),
     { name: 'trek-meal-products' }

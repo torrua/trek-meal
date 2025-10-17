@@ -13,7 +13,10 @@ import {
   X,
   Check,
   CheckCheck,
+  LayoutList,
+  Grid3X3,
 } from 'lucide-react';
+import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
 import { toast } from 'react-hot-toast';
 import useProductStore from '../stores/useProductStore';
 import useCategoryStore from '../stores/useCategoryStore';
@@ -29,6 +32,7 @@ import ProductFiltersComponent, {
   ProductFilters,
 } from '../components/products/ProductFiltersComponent';
 import { productEntityConfig } from '../config/entityConfig';
+import { exportProductToJson } from '../utils/backup';
 
 const ProductsPage: React.FC = () => {
   const { products, deleteProduct } = useProductStore();
@@ -50,6 +54,9 @@ const ProductsPage: React.FC = () => {
   // Multi-selection state
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
+
+  // View mode state
+  const { viewMode, toggleViewMode } = useViewMode('products'); // Use the new hook
 
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
@@ -188,6 +195,22 @@ const ProductsPage: React.FC = () => {
     console.log(`Exporting products: ${selectedProductIds.join(', ')}`);
   };
 
+  // Individual product actions
+  const handleClone = useCallback((product: Product) => {
+    const { cloneProduct } = useProductStore.getState();
+    cloneProduct(product.id);
+  }, []);
+
+  const handleExport = useCallback((product: Product) => {
+    try {
+      exportProductToJson(product);
+      toast.success('Продукт экспортирован');
+    } catch (error) {
+      toast.error('Ошибка при экспорте');
+      console.error('Export error:', error);
+    }
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto">
       <input
@@ -220,6 +243,7 @@ const ProductsPage: React.FC = () => {
                     <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
                   )}
                 </Button>
+
                 <Button
                   variant="secondary"
                   size="icon"
@@ -229,6 +253,22 @@ const ProductsPage: React.FC = () => {
                 >
                   <UploadCloud className="w-4 h-4" />
                 </Button>
+
+                {/* View mode toggle button */}
+                <Button
+                  onClick={toggleViewMode}
+                  variant="secondary"
+                  size="icon"
+                  title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
+                >
+                  {viewMode === 'default' ? (
+                    <LayoutList className="w-4 h-4" />
+                  ) : (
+                    <Grid3X3 className="w-4 h-4" />
+                  )}
+                </Button>
+
                 <Button onClick={toggleMultiSelect} variant="secondary" size="default">
                   Выделить
                 </Button>
@@ -308,6 +348,8 @@ const ProductsPage: React.FC = () => {
               const cardConfig = productEntityConfig.views.card;
               const actions = productEntityConfig.getActions({
                 onEdit: () => handleEdit(product),
+                onClone: () => handleClone(product),
+                onExport: () => handleExport(product),
                 onDelete: () => handleRequestDelete(product),
               });
 
@@ -329,6 +371,7 @@ const ProductsPage: React.FC = () => {
                   onMultiSelect={() => toggleProductSelection(product.id)}
                   borderColor={productEntityConfig.getBorderColor(product, { category })}
                   showMultiSelect={showMultiSelect}
+                  viewMode={viewMode} // Pass viewMode to EntityCard
                 />
               );
             })}

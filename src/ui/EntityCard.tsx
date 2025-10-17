@@ -39,6 +39,7 @@ interface EntityCardProps {
   linkTo?: string;
   description?: string;
   showMultiSelect?: boolean;
+  viewMode?: 'default' | 'compact'; // Added viewMode prop
 }
 
 const EntityCard: React.FC<EntityCardProps> = ({
@@ -58,11 +59,15 @@ const EntityCard: React.FC<EntityCardProps> = ({
   linkTo,
   description,
   showMultiSelect = false,
+  viewMode = 'default', // Default to default view
 }) => {
+  const isCompact = viewMode === 'compact';
+
   const cardClasses = cn(
     // Base styles with refined Notion aesthetics
-    'block p-4 rounded-xl border transition-all duration-200 cursor-pointer relative',
+    'block rounded-xl border transition-all duration-200 cursor-pointer relative',
     'notion-shadow-xs hover:notion-shadow-sm',
+    isCompact ? 'p-3' : 'p-4',
     // Selected state
     {
       'border-primary/40 bg-primary/5 hover:bg-primary/8 hover:border-primary/60 notion-shadow-sm':
@@ -77,7 +82,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
   const cardContent = (
     <>
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
           {/* Multi-select checkbox */}
           {showMultiSelect && (
@@ -89,23 +94,24 @@ const EntityCard: React.FC<EntityCardProps> = ({
                   onMultiSelect?.(!isMultiSelected);
                 }}
                 className={cn(
-                  'flex items-center justify-center w-5 h-5 rounded border transition-all duration-200',
+                  'flex items-center justify-center rounded border transition-all duration-200',
+                  isCompact ? 'w-4 h-4' : 'w-5 h-5',
                   isMultiSelected
                     ? 'bg-primary border-primary text-primary-foreground'
                     : 'border-border bg-card hover:border-border-hover'
                 )}
                 aria-label={isMultiSelected ? 'Снять выделение' : 'Выделить'}
               >
-                {isMultiSelected && <Check className="w-4 h-4" />}
+                {isMultiSelected && <Check className={isCompact ? 'w-3 h-3' : 'w-4 h-4'} />}
               </button>
             </div>
           )}
 
           <div
             className={cn(
-              'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl',
-              'transition-colors duration-200',
-              'bg-primary/10'
+              'flex flex-shrink-0 items-center justify-center rounded-xl transition-colors duration-200',
+              'bg-primary/10',
+              isCompact ? 'h-8 w-8' : 'h-10 w-10'
             )}
             style={iconColor ? { backgroundColor: `${iconColor}1A` } : undefined}
           >
@@ -113,28 +119,43 @@ const EntityCard: React.FC<EntityCardProps> = ({
               <Icon />
             ) : (
               <Icon
-                className={cn('w-5 h-5', !iconColor && 'text-primary')}
+                className={cn('text-primary', isCompact ? 'w-4 h-4' : 'w-5 h-5')}
                 style={iconColor ? { color: iconColor } : undefined}
               />
             )}
           </div>
-          <div className="min-w-0 flex-1">
-            <h3
-              className="text-base font-medium text-foreground truncate leading-snug"
-              title={title}
-            >
-              {title}
-            </h3>
-            {subtitle && (
-              <div className="text-sm text-muted-foreground mt-0.5 leading-snug">{subtitle}</div>
-            )}
-            {description && (
-              <p className="text-sm text-muted-foreground mt-1 truncate leading-relaxed">
-                {description}
-              </p>
-            )}
-          </div>
+
+          {isCompact ? (
+            // Compact view - only title and icon
+            <div className="min-w-0 flex-1">
+              <h3
+                className="text-base font-medium text-foreground truncate leading-snug"
+                title={title}
+              >
+                {title}
+              </h3>
+            </div>
+          ) : (
+            // Default view - full content
+            <div className="min-w-0 flex-1">
+              <h3
+                className="text-base font-medium text-foreground truncate leading-snug"
+                title={title}
+              >
+                {title}
+              </h3>
+              {subtitle && (
+                <div className="text-sm text-muted-foreground mt-0.5 leading-snug">{subtitle}</div>
+              )}
+              {description && (
+                <p className="text-sm text-muted-foreground mt-1 truncate leading-relaxed">
+                  {description}
+                </p>
+              )}
+            </div>
+          )}
         </div>
+
         {menuItems && menuItems.length > 0 && (
           <DropdownMenu
             items={menuItems}
@@ -147,13 +168,14 @@ const EntityCard: React.FC<EntityCardProps> = ({
                 className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-lg transition-all duration-200 notion-focus-ring"
                 aria-label="More options"
               >
-                <MoreHorizontal className="w-4 h-4" />
+                <MoreHorizontal className={isCompact ? 'w-3 h-3' : 'w-4 h-4'} />
               </button>
             }
           />
         )}
       </div>
-      {details && details.length > 0 && (
+
+      {!isCompact && details && details.length > 0 && (
         <div className="mt-4 border-t border-border/60 pt-4">
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
             {details.map((item) => (

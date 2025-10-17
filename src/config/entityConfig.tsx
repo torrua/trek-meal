@@ -1,7 +1,17 @@
 // src/config/entityConfig.tsx
 
 import React from 'react';
-import type { Trip, Participant, Product, Dish, Equipment, DishProduct, Category } from '../types';
+import type {
+  Trip,
+  Participant,
+  Product,
+  Dish,
+  Equipment,
+  DishProduct,
+  Category,
+  MealType,
+  EquipmentCategory,
+} from '../types';
 import { formatDate, getEffectiveStatus, calculateAge } from '../utils/index';
 import { DIFFICULTY_CONFIG, STATUS_CONFIG } from '../constants/trips';
 import { EXPERIENCE_CONFIG, GENDER_CONFIG } from '../constants/participants';
@@ -22,6 +32,8 @@ import {
   User,
   ExternalLink,
   Tag,
+  Utensils,
+  Layers,
 } from 'lucide-react';
 
 // Типизация хендлеров для каждой сущности
@@ -40,14 +52,20 @@ type ParticipantActions = {
 };
 type ProductActions = {
   onEdit: (entity: Product) => void;
+  onClone: (entity: Product) => void;
+  onExport: (entity: Product) => void;
   onDelete: (entity: Product) => void;
 };
 type DishActions = {
   onEdit: (entity: Dish) => void;
+  onClone: (entity: Dish) => void;
+  onExport: (entity: Dish) => void;
   onDelete: (entity: Dish) => void;
 };
 type EquipmentActions = {
   onEdit: (entity: Equipment) => void;
+  onClone: (entity: Equipment) => void;
+  onExport: (entity: Equipment) => void;
   onDelete: (entity: Equipment) => void;
 };
 type CategoryActions = {
@@ -57,6 +75,24 @@ type CategoryActions = {
   onDelete: (entity: Category) => void;
 };
 
+interface CustomMealType extends MealType {
+  repeatable?: boolean;
+}
+
+type MealTypeActions = {
+  onEdit: (entity: CustomMealType) => void;
+  onClone: (entity: CustomMealType) => void;
+  onExport: (entity: CustomMealType) => void;
+  onDelete: (entity: CustomMealType) => void;
+};
+
+type EquipmentCategoryActions = {
+  onEdit: (entity: EquipmentCategory) => void;
+  onClone: (entity: EquipmentCategory) => void;
+  onExport: (entity: EquipmentCategory) => void;
+  onDelete: (entity: EquipmentCategory) => void;
+};
+
 // Общий тип для всех хендлеров, чтобы избежать 'any'
 type EntityActions =
   | TripActions
@@ -64,7 +100,9 @@ type EntityActions =
   | ProductActions
   | DishActions
   | EquipmentActions
-  | CategoryActions;
+  | CategoryActions
+  | MealTypeActions
+  | EquipmentCategoryActions;
 
 interface CardViewConfig<T> {
   title: (entity: T) => string;
@@ -259,6 +297,8 @@ export const productEntityConfig: EntityConfig<Product> = {
   },
   getActions: (handlers: ProductActions) => [
     { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
+    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
+    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
     {
       label: 'Удалить',
       icon: Trash2,
@@ -311,6 +351,40 @@ export const categoryEntityConfig: EntityConfig<Category> = {
   ],
 };
 
+// --- Конфигурация для "Типа приема пищи" (MealType) ---
+export const mealTypeEntityConfig: EntityConfig<CustomMealType> = {
+  getIcon: () => Utensils,
+  getIconColor: () => 'text-gray-500',
+  getBorderColor: () => '#6b7280',
+  views: {
+    card: {
+      title: (mealType) => mealType.name,
+      details: (mealType) => [
+        {
+          key: 'repeatable',
+          icon: mealType.repeatable ? Copy : Tag,
+          text: mealType.repeatable ? 'Повторяемый' : 'Один раз в день',
+          title: 'Повторяемость',
+        },
+      ],
+    },
+    listItem: {
+      title: (mealType) => mealType.name,
+    },
+  },
+  getActions: (handlers: MealTypeActions) => [
+    { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
+    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
+    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
+    {
+      label: 'Удалить',
+      icon: Trash2,
+      onClick: handlers.onDelete,
+      className: 'text-red-600 dark:text-red-400',
+    },
+  ],
+};
+
 // --- Конфигурация для "Блюда" (Dish) ---
 export const dishEntityConfig: EntityConfig<Dish> = {
   getIcon: () => Soup,
@@ -342,6 +416,8 @@ export const dishEntityConfig: EntityConfig<Dish> = {
   },
   getActions: (handlers: DishActions) => [
     { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
+    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
+    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
     {
       label: 'Удалить',
       icon: Trash2,
@@ -395,6 +471,42 @@ export const equipmentEntityConfig: EntityConfig<Equipment> = {
   },
   getActions: (handlers: EquipmentActions) => [
     { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
+    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
+    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
+    {
+      label: 'Удалить',
+      icon: Trash2,
+      onClick: handlers.onDelete,
+      className: 'text-red-600 dark:text-red-400',
+    },
+  ],
+};
+
+// --- Конфигурация для "Категории снаряжения" (EquipmentCategory) ---
+export const equipmentCategoryEntityConfig: EntityConfig<EquipmentCategory> = {
+  getIcon: () => Layers,
+  getIconColor: () => 'text-gray-500',
+  getBorderColor: (category) => category.color || '#6b7280',
+  views: {
+    card: {
+      title: (category) => category.name,
+      details: (category) => [
+        {
+          key: 'color',
+          icon: Tag,
+          text: category.color,
+          title: 'Цвет',
+        },
+      ],
+    },
+    listItem: {
+      title: (category) => category.name,
+    },
+  },
+  getActions: (handlers: EquipmentCategoryActions) => [
+    { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
+    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
+    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
     {
       label: 'Удалить',
       icon: Trash2,

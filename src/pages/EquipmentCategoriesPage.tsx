@@ -301,7 +301,7 @@ const EquipmentCategoriesPage: React.FC = () => {
       {/* Main content */}
       {filteredCategories.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar">
             {filteredCategories.map((category) => {
               const equipmentCount = equipmentStore.equipment.filter(
                 (e) => e.categoryId === category.id
@@ -360,7 +360,7 @@ const EquipmentCategoriesPage: React.FC = () => {
           </div>
 
           {/* Detail panel */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {selectedCategory ? (
               <div className="bg-card rounded-xl border border-border p-6">
                 <div className="flex items-center justify-between mb-6">

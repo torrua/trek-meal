@@ -234,7 +234,7 @@ const CategoriesPage: React.FC = () => {
       {/* Основной контент */}
       {categoryManagement.filteredCategories.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar">
             {categoryManagement.filteredCategories.map((category) => {
               const productCount = productStore.products.filter(
                 (p) => p.categoryId === category.id
@@ -269,7 +269,7 @@ const CategoriesPage: React.FC = () => {
             })}
           </div>
 
-          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
+          <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {categoryManagement.selectedCategory ? (
               <CategoryDetail
                 category={categoryManagement.selectedCategory}

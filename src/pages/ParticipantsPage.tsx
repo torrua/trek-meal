@@ -230,7 +230,7 @@ const ParticipantsPage: React.FC = () => {
       {filteredParticipants.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* Список участников */}
-          <div className="lg:col-span-1 space-y-3">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar">
             {filteredParticipants.map((p) => {
               const tripCount = useTripStore
                 .getState()
@@ -273,7 +273,7 @@ const ParticipantsPage: React.FC = () => {
             })}
           </div>
 
-          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
+          <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {selectedParticipant ? (
               <ParticipantDetail
                 participant={selectedParticipant}

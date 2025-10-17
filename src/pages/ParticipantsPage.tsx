@@ -1,9 +1,21 @@
 // src/pages/ParticipantsPage.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, UserRoundPlus, Filter, CirclePlus } from 'lucide-react';
+import {
+  Users,
+  UserRoundPlus,
+  Filter,
+  CirclePlus,
+  Trash2,
+  Copy,
+  Share,
+  X,
+  Check,
+  CheckCheck,
+} from 'lucide-react';
 import { useParticipantsManagement } from '../hooks/useParticipantsManagement';
+import useParticipantStore from '../stores/useParticipantStore';
 import useTripStore from '../stores/useTripStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import type { Trip, Equipment } from '../types';
@@ -51,6 +63,71 @@ const ParticipantsPage: React.FC = () => {
     handleConfirmAddToTrip,
   } = useParticipantsManagement();
 
+  // Get the delete function directly from the store
+  const { deleteParticipant } = useParticipantStore();
+
+  // Multi-selection state
+  const [selectedParticipantIds, setSelectedParticipantIds] = useState<number[]>([]);
+  const [showMultiSelect, setShowMultiSelect] = useState(false);
+  // Add state for bulk delete confirmation
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // Multi-selection handlers
+  const toggleMultiSelect = () => {
+    setShowMultiSelect(!showMultiSelect);
+    if (showMultiSelect) {
+      setSelectedParticipantIds([]);
+    }
+  };
+
+  const toggleParticipantSelection = (participantId: number) => {
+    setSelectedParticipantIds((prev: number[]) =>
+      prev.includes(participantId)
+        ? prev.filter((id: number) => id !== participantId)
+        : [...prev, participantId]
+    );
+  };
+
+  const selectAllParticipants = () => {
+    setSelectedParticipantIds(filteredParticipants.map((p) => p.id));
+  };
+
+  // Exit multi-select mode completely
+  const exitMultiSelectMode = () => {
+    setShowMultiSelect(false);
+    setSelectedParticipantIds([]);
+  };
+
+  // Bulk action handlers
+  const handleBulkDelete = () => {
+    if (selectedParticipantIds.length === 0) return;
+    // Show confirmation modal
+    setShowBulkDeleteConfirm(true);
+  };
+
+  const handleConfirmBulkDelete = () => {
+    // Delete all selected participants directly using the store function
+    selectedParticipantIds.forEach((id) => {
+      if (id === activeId) setActiveId(null);
+      deleteParticipant(id);
+    });
+    // Exit multi-select mode
+    exitMultiSelectMode();
+    setShowBulkDeleteConfirm(false);
+  };
+
+  const handleBulkClone = () => {
+    if (selectedParticipantIds.length === 0) return;
+
+    console.log(`Cloning participants: ${selectedParticipantIds.join(', ')}`);
+  };
+
+  const handleBulkExport = () => {
+    if (selectedParticipantIds.length === 0) return;
+
+    console.log(`Exporting participants: ${selectedParticipantIds.join(', ')}`);
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Заголовок и кнопки */}
@@ -60,23 +137,85 @@ const ParticipantsPage: React.FC = () => {
             Участники
           </h1>
           <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setShowFilters((s) => !s)}
-              variant="secondary"
-              size="icon"
-              className="relative"
-              title="Фильтры"
-              aria-label="Показать фильтры"
-            >
-              <Filter className="w-4 h-4" />
-              {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
-              )}
-            </Button>
-            <Button onClick={() => navigate('/participants/new')} variant="primary" size="default">
-              <UserRoundPlus className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Добавить участника</span>
-            </Button>
+            {!showMultiSelect ? (
+              <>
+                <Button
+                  onClick={() => setShowFilters((s) => !s)}
+                  variant="secondary"
+                  size="icon"
+                  className="relative"
+                  title="Фильтры"
+                  aria-label="Показать фильтры"
+                >
+                  <Filter className="w-4 h-4" />
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
+                  )}
+                </Button>
+                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
+                  Выделить
+                </Button>
+                <Button
+                  onClick={() => navigate('/participants/new')}
+                  variant="primary"
+                  size="default"
+                >
+                  <UserRoundPlus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Добавить участника</span>
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
+                  <span>{selectedParticipantIds.length}</span>
+                  <span className="text-primary/70">из {filteredParticipants.length} выделено</span>
+                </div>
+
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={selectAllParticipants}
+                  disabled={selectedParticipantIds.length === filteredParticipants.length}
+                  title="Выделить все"
+                >
+                  <CheckCheck className="w-4 h-4" />
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkClone}
+                    disabled={selectedParticipantIds.length === 0}
+                    title="Клонировать"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkExport}
+                    disabled={selectedParticipantIds.length === 0}
+                    title="Экспорт"
+                  >
+                    <Share className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="icon"
+                    onClick={handleBulkDelete}
+                    disabled={selectedParticipantIds.length === 0}
+                    title="Удалить"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <Button onClick={exitMultiSelectMode} variant="ghost" size="icon" title="Закрыть">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -123,9 +262,12 @@ const ParticipantsPage: React.FC = () => {
                       key: `participant-detail-${index}`,
                     }))}
                   isSelected={activeId === p.id}
+                  isMultiSelected={selectedParticipantIds.includes(p.id)}
                   onSelect={() => setActiveId(p.id)}
+                  onMultiSelect={() => toggleParticipantSelection(p.id)}
                   borderColor={participantEntityConfig.getBorderColor(p)}
                   menuItems={actions}
+                  showMultiSelect={showMultiSelect}
                 />
               );
             })}
@@ -185,6 +327,24 @@ const ParticipantsPage: React.FC = () => {
         <p>
           Вы уверены, что хотите удалить участника{' '}
           <span className="font-bold">{participantToDelete?.name}</span>?
+        </p>
+      </ConfirmModal>
+
+      {/* Bulk delete confirmation */}
+      <ConfirmModal
+        isOpen={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        onConfirm={handleConfirmBulkDelete}
+        title="Подтверждение"
+        variant="danger"
+        confirmText="Удалить"
+      >
+        <p>
+          Вы уверены, что хотите удалить {selectedParticipantIds.length} участников?
+          <br />
+          <span className="text-sm text-muted-foreground mt-2 block">
+            Это действие нельзя отменить. Все данные об участниках будут потеряны.
+          </span>
         </p>
       </ConfirmModal>
 

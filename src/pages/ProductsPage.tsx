@@ -2,7 +2,18 @@
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CirclePlus, Filter, UploadCloud, Component } from 'lucide-react';
+import {
+  CirclePlus,
+  Filter,
+  UploadCloud,
+  Component,
+  Trash2,
+  Copy,
+  Share,
+  X,
+  Check,
+  CheckCheck,
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import useProductStore from '../stores/useProductStore';
 import useCategoryStore from '../stores/useCategoryStore';
@@ -35,6 +46,10 @@ const ProductsPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [filters, setFilters] = useState<ProductFilters>({ categoryIds: [] });
+
+  // Multi-selection state
+  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
+  const [showMultiSelect, setShowMultiSelect] = useState(false);
 
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
@@ -114,6 +129,65 @@ const ProductsPage: React.FC = () => {
 
   const hasActiveFilters = useMemo(() => filters.categoryIds.length > 0, [filters]);
 
+  // Multi-selection handlers
+  const toggleMultiSelect = () => {
+    setShowMultiSelect(!showMultiSelect);
+    if (showMultiSelect) {
+      setSelectedProductIds([]);
+    }
+  };
+
+  const toggleProductSelection = (productId: number) => {
+    setSelectedProductIds((prev: number[]) =>
+      prev.includes(productId)
+        ? prev.filter((id: number) => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  const selectAllProducts = () => {
+    setSelectedProductIds(filteredProducts.map((product: Product) => product.id));
+  };
+
+  // Exit multi-select mode completely
+  const exitMultiSelectMode = () => {
+    setShowMultiSelect(false);
+    setSelectedProductIds([]);
+  };
+
+  // Add state for bulk delete confirmation
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // Bulk action handlers
+  const handleBulkDelete = () => {
+    if (selectedProductIds.length === 0) return;
+    // Show confirmation modal
+    setShowBulkDeleteConfirm(true);
+  };
+
+  const handleConfirmBulkDelete = () => {
+    // Delete all selected products directly using the store function
+    selectedProductIds.forEach((id) => {
+      if (id === activeId) setActiveId(null);
+      deleteProduct(id);
+    });
+    // Exit multi-select mode
+    exitMultiSelectMode();
+    setShowBulkDeleteConfirm(false);
+  };
+
+  const handleBulkClone = () => {
+    if (selectedProductIds.length === 0) return;
+
+    console.log(`Cloning products: ${selectedProductIds.join(', ')}`);
+  };
+
+  const handleBulkExport = () => {
+    if (selectedProductIds.length === 0) return;
+
+    console.log(`Exporting products: ${selectedProductIds.join(', ')}`);
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <input
@@ -131,32 +205,90 @@ const ProductsPage: React.FC = () => {
             Продукты
           </h1>
           <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setShowFilters((s) => !s)}
-              variant="secondary"
-              size="icon"
-              className="relative"
-              title="Фильтры"
-              aria-label="Показать фильтры"
-            >
-              <Filter className="w-4 h-4" />
-              {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
-              )}
-            </Button>
-            <Button
-              variant="secondary"
-              size="icon"
-              onClick={() => fileInputRef.current?.click()}
-              title="Импорт"
-              aria-label="Импорт"
-            >
-              <UploadCloud className="w-4 h-4" />
-            </Button>
-            <Button onClick={handleAddNew} variant="primary" size="default">
-              <CirclePlus className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Добавить продукт</span>
-            </Button>
+            {!showMultiSelect ? (
+              <>
+                <Button
+                  onClick={() => setShowFilters((s) => !s)}
+                  variant="secondary"
+                  size="icon"
+                  className="relative"
+                  title="Фильтры"
+                  aria-label="Показать фильтры"
+                >
+                  <Filter className="w-4 h-4" />
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
+                  )}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Импорт"
+                  aria-label="Импорт"
+                >
+                  <UploadCloud className="w-4 h-4" />
+                </Button>
+                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
+                  Выделить
+                </Button>
+                <Button onClick={handleAddNew} variant="primary" size="default">
+                  <CirclePlus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Добавить продукт</span>
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
+                  <span>{selectedProductIds.length}</span>
+                  <span className="text-primary/70">из {filteredProducts.length} выделено</span>
+                </div>
+
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={selectAllProducts}
+                  disabled={selectedProductIds.length === filteredProducts.length}
+                  title="Выделить все"
+                >
+                  <CheckCheck className="w-4 h-4" />
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkClone}
+                    disabled={selectedProductIds.length === 0}
+                    title="Клонировать"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkExport}
+                    disabled={selectedProductIds.length === 0}
+                    title="Экспорт"
+                  >
+                    <Share className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="icon"
+                    onClick={handleBulkDelete}
+                    disabled={selectedProductIds.length === 0}
+                    title="Удалить"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <Button onClick={exitMultiSelectMode} variant="ghost" size="icon" title="Закрыть">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -192,8 +324,11 @@ const ProductsPage: React.FC = () => {
                   }))}
                   menuItems={actions}
                   isSelected={activeId === product.id}
+                  isMultiSelected={selectedProductIds.includes(product.id)}
                   onSelect={() => setActiveId(product.id)}
+                  onMultiSelect={() => toggleProductSelection(product.id)}
                   borderColor={productEntityConfig.getBorderColor(product, { category })}
+                  showMultiSelect={showMultiSelect}
                 />
               );
             })}
@@ -248,6 +383,24 @@ const ProductsPage: React.FC = () => {
         <p>
           Вы уверены, что хотите удалить продукт{' '}
           <span className="font-bold">{productToDelete?.name}</span>?
+        </p>
+      </ConfirmModal>
+
+      {/* Bulk delete confirmation */}
+      <ConfirmModal
+        isOpen={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        onConfirm={handleConfirmBulkDelete}
+        title="Подтверждение удаления"
+        variant="danger"
+        confirmText="Удалить"
+      >
+        <p>
+          Вы уверены, что хотите удалить {selectedProductIds.length} продуктов?
+          <br />
+          <span className="text-sm text-muted-foreground mt-2 block">
+            Это действие нельзя отменить. Все данные о продуктах будут потеряны.
+          </span>
         </p>
       </ConfirmModal>
 

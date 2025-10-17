@@ -2,7 +2,19 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CirclePlus, Filter, Backpack, Edit, Copy, Trash2, Layers } from 'lucide-react';
+import {
+  CirclePlus,
+  Filter,
+  Backpack,
+  Edit,
+  Copy,
+  Trash2,
+  Layers,
+  Share,
+  X,
+  Check,
+  CheckCheck,
+} from 'lucide-react';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useSearchStore from '../stores/useSearchStore';
@@ -28,6 +40,10 @@ const EquipmentCategoriesPage: React.FC = () => {
   const [filters, setFilters] = useState<{ hasEquipment: string }>({
     hasEquipment: 'all',
   });
+
+  // Multi-selection state
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [showMultiSelect, setShowMultiSelect] = useState(false);
 
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
@@ -112,6 +128,65 @@ const EquipmentCategoriesPage: React.FC = () => {
     [filters]
   );
 
+  // Multi-selection handlers
+  const toggleMultiSelect = () => {
+    setShowMultiSelect(!showMultiSelect);
+    if (showMultiSelect) {
+      setSelectedCategoryIds([]);
+    }
+  };
+
+  const toggleCategorySelection = (categoryId: number) => {
+    setSelectedCategoryIds((prev: number[]) =>
+      prev.includes(categoryId)
+        ? prev.filter((id: number) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const selectAllCategories = () => {
+    setSelectedCategoryIds(filteredCategories.map((category: EquipmentCategory) => category.id));
+  };
+
+  // Exit multi-select mode completely
+  const exitMultiSelectMode = () => {
+    setShowMultiSelect(false);
+    setSelectedCategoryIds([]);
+  };
+
+  // Add state for bulk delete confirmation
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // Bulk action handlers
+  const handleBulkDelete = () => {
+    if (selectedCategoryIds.length === 0) return;
+    // Show confirmation modal
+    setShowBulkDeleteConfirm(true);
+  };
+
+  const handleConfirmBulkDelete = () => {
+    // Delete all selected equipment categories directly using the store function
+    selectedCategoryIds.forEach((id) => {
+      if (id === activeId) setActiveId(null);
+      categoryStore.deleteCategory(id);
+    });
+    // Exit multi-select mode
+    exitMultiSelectMode();
+    setShowBulkDeleteConfirm(false);
+  };
+
+  const handleBulkClone = () => {
+    if (selectedCategoryIds.length === 0) return;
+
+    console.log(`Cloning equipment categories: ${selectedCategoryIds.join(', ')}`);
+  };
+
+  const handleBulkExport = () => {
+    if (selectedCategoryIds.length === 0) return;
+
+    console.log(`Exporting equipment categories: ${selectedCategoryIds.join(', ')}`);
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header and buttons */}
@@ -121,23 +196,81 @@ const EquipmentCategoriesPage: React.FC = () => {
             Категории снаряжения
           </h1>
           <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setShowFilters((s) => !s)}
-              variant="secondary"
-              size="icon"
-              className="relative"
-              title="Фильтры"
-              aria-label="Показать фильтры"
-            >
-              <Filter className="w-4 h-4" />
-              {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
-              )}
-            </Button>
-            <Button onClick={handleAddNew} variant="primary" size="default">
-              <CirclePlus className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Добавить категорию</span>
-            </Button>
+            {!showMultiSelect ? (
+              <>
+                <Button
+                  onClick={() => setShowFilters((s) => !s)}
+                  variant="secondary"
+                  size="icon"
+                  className="relative"
+                  title="Фильтры"
+                  aria-label="Показать фильтры"
+                >
+                  <Filter className="w-4 h-4" />
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
+                  )}
+                </Button>
+                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
+                  Выделить
+                </Button>
+                <Button onClick={handleAddNew} variant="primary" size="default">
+                  <CirclePlus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Добавить категорию</span>
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
+                  <span>{selectedCategoryIds.length}</span>
+                  <span className="text-primary/70">из {filteredCategories.length} выделено</span>
+                </div>
+
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={selectAllCategories}
+                  disabled={selectedCategoryIds.length === filteredCategories.length}
+                  title="Выделить все"
+                >
+                  <CheckCheck className="w-4 h-4" />
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkClone}
+                    disabled={selectedCategoryIds.length === 0}
+                    title="Клонировать"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={handleBulkExport}
+                    disabled={selectedCategoryIds.length === 0}
+                    title="Экспорт"
+                  >
+                    <Share className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="icon"
+                    onClick={handleBulkDelete}
+                    disabled={selectedCategoryIds.length === 0}
+                    title="Удалить"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <Button onClick={exitMultiSelectMode} variant="ghost" size="icon" title="Закрыть">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -214,10 +347,13 @@ const EquipmentCategoriesPage: React.FC = () => {
                   icon={IconComponent}
                   details={details}
                   isSelected={activeId === category.id}
+                  isMultiSelected={selectedCategoryIds.includes(category.id)}
                   onSelect={() => setActiveId(category.id)}
+                  onMultiSelect={() => toggleCategorySelection(category.id)}
                   borderColor={category.color}
                   menuItems={menuItems}
                   data-testid={`equipment-category-card-${category.id}`}
+                  showMultiSelect={showMultiSelect}
                 />
               );
             })}
@@ -358,6 +494,25 @@ const EquipmentCategoriesPage: React.FC = () => {
       >
         Вы уверены, что хотите удалить категорию &quot;{categoryToDelete?.name}&quot;? Снаряжение в
         этой категории будет перемещено в &quot;Без категории&quot;.
+      </ConfirmModal>
+
+      {/* Bulk delete confirmation */}
+      <ConfirmModal
+        isOpen={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        onConfirm={handleConfirmBulkDelete}
+        title="Удалить категории снаряжения"
+        confirmText="Удалить"
+        cancelText="Отмена"
+        variant="danger"
+      >
+        <p>
+          Вы уверены, что хотите удалить {selectedCategoryIds.length} категорий снаряжения?
+          <br />
+          <span className="text-sm text-muted-foreground mt-2 block">
+            Снаряжение в этих категориях будет перемещено в &quot;Без категории&quot;.
+          </span>
+        </p>
       </ConfirmModal>
     </div>
   );

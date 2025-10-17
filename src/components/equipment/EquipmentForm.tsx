@@ -16,6 +16,7 @@ import type {
 import Input from '../../ui/Input';
 import DropdownSelect from '../../ui/DropdownSelect';
 import Textarea from '../../ui/Textarea';
+import FormField from '../../ui/FormField';
 
 interface EquipmentFormProps {
   equipment: Equipment | null;
@@ -143,7 +144,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ equipment, onSubmit, onCa
               label="Категория"
               icon={Tag}
               value={String(formData.categoryId || '')}
-              onChange={(value) => handleSelectChange('categoryId', value)}
+              onChange={(val) => typeof val === 'string' && handleSelectChange('categoryId', val)}
               options={categoryOptions}
             />
 
@@ -179,18 +180,18 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ equipment, onSubmit, onCa
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <Input
-                label="Вес (граммы)"
-                name="weight"
-                type="number"
-                value={formData.weight}
-                onChange={handleChange}
-                required
-                min="1"
-                step="1"
-                placeholder="Введите вес в граммах"
-                icon={Scale}
-              />
+              <FormField label="Вес (граммы)" required>
+                <Input
+                  name="weight"
+                  type="number"
+                  value={formData.weight}
+                  onChange={handleChange}
+                  min="1"
+                  step="1"
+                  placeholder="Введите вес в граммах"
+                  icon={Scale}
+                />
+              </FormField>
 
               {formData.weight > 0 && (
                 <div className="p-3 bg-muted/30 rounded-lg border notion-border-subtle">
@@ -274,7 +275,7 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ equipment, onSubmit, onCa
               label="Владелец"
               icon={User}
               value={String(formData.ownerId || '')}
-              onChange={(value) => handleSelectChange('ownerId', value)}
+              onChange={(val) => typeof val === 'string' && handleSelectChange('ownerId', val)}
               options={ownerOptions}
             />
           </div>

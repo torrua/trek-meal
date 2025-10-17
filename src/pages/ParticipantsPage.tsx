@@ -52,11 +52,13 @@ const ParticipantsPage: React.FC = () => {
   } = useParticipantsManagement();
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       {/* Заголовок и кнопки */}
-      <div className="mb-4 sm:mb-6">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Участники</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+            Участники
+          </h1>
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setShowFilters((s) => !s)}
@@ -64,10 +66,11 @@ const ParticipantsPage: React.FC = () => {
               size="icon"
               className="relative"
               title="Фильтры"
+              aria-label="Показать фильтры"
             >
               <Filter className="w-4 h-4" />
               {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-card" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
               )}
             </Button>
             <Button onClick={() => navigate('/participants/new')} variant="primary" size="default">
@@ -80,7 +83,7 @@ const ParticipantsPage: React.FC = () => {
 
       {/* Фильтры */}
       {showFilters && (
-        <div className="mb-4 sm:mb-6 bg-card rounded-xl border p-3 sm:p-4">
+        <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border notion-shadow-xs p-4 sm:p-5">
           <ParticipantFiltersComponent filters={filters} onFiltersChange={setFilters} />
         </div>
       )}
@@ -140,7 +143,7 @@ const ParticipantsPage: React.FC = () => {
                 onToggleSection={handleToggleSection}
               />
             ) : (
-              <div className="h-full flex items-center justify-center">
+              <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">
                   <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Users className="w-10 h-10 text-muted-foreground" />

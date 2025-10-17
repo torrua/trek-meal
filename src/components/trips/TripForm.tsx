@@ -8,7 +8,7 @@ import { useTripDates } from '../../hooks/useTripDates';
 import Button from '../../ui/Button';
 import ThemedDatePicker from '../../ui/ThemedDatePicker';
 import Input from '../../ui/Input';
-import ThemedSelect from '../../ui/ThemedSelect';
+import DropdownSelect from '../../ui/DropdownSelect';
 import Textarea from '../../ui/Textarea';
 import type { Trip, TripData } from '../../types';
 import ConfirmModal from '../../ui/ConfirmModal';
@@ -25,7 +25,6 @@ interface FormErrors {
   days?: string;
   startDate?: string;
   endDate?: string;
-  mealsPerDay?: string;
 }
 
 const INITIAL_STATE: TripData = {
@@ -34,7 +33,6 @@ const INITIAL_STATE: TripData = {
   destination: '',
   difficulty: 'easy',
   days: 1,
-  mealsPerDay: 3,
   startDate: '',
   endDate: '',
   participants: [],
@@ -72,7 +70,14 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
   useEffect(() => {
     let dataToSet: TripData;
     if (trip) {
-      const { id: _id, createdAt: _ca, status: _st, selectedMeals: _sm, ...rest } = trip;
+      const {
+        id: _id,
+        createdAt: _ca,
+        status: _st,
+        selectedMeals: _sm,
+        dayMeals: _dm,
+        ...rest
+      } = trip;
       dataToSet = { ...INITIAL_STATE, ...rest };
     } else {
       dataToSet = { ...INITIAL_STATE, participants: [], days: 1 };
@@ -85,7 +90,7 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
   const validateForm = useCallback((): FormErrors => {
     const newErrors: FormErrors = {};
 
-    // Validation logic remains the same
+    // Validation logic
     if (!formData.name.trim()) {
       newErrors.name = 'Пожалуйста, укажите название похода';
     } else if (formData.name.trim().length < 2) {
@@ -104,12 +109,6 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
       newErrors.days = 'Длительность не должна превышать 365 дней';
     }
 
-    if (formData.mealsPerDay < 1) {
-      newErrors.mealsPerDay = 'Минимум 1 прием пищи в день';
-    } else if (formData.mealsPerDay > 10) {
-      newErrors.mealsPerDay = 'Максимум 10 приемов пищи в день';
-    }
-
     if (dateRange[0] && dateRange[1]) {
       const today = startOfDay(new Date());
       if (!trip && isBefore(dateRange[0], today)) {
@@ -126,11 +125,23 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
   const handleFieldChange = useCallback(
     (field: keyof TripData, value: string | number) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
+      // Clear the specific field error when the field changes
       if (errors[field as keyof FormErrors]) {
-        setErrors((prev) => ({ ...prev, [field]: undefined }));
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[field as keyof FormErrors];
+          return newErrors;
+        });
       }
+
+      // Revalidate the form after a short delay to allow state to update
+      setTimeout(() => {
+        const currentErrors = validateForm();
+        // Only keep errors that still exist after the field change
+        setErrors(currentErrors);
+      }, 0);
     },
-    [errors]
+    [errors, validateForm]
   );
 
   const handleCancel = useCallback(() => {
@@ -238,13 +249,14 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
               <label className="block text-sm font-medium text-foreground mb-2 tracking-tight">
                 Сложность
               </label>
-              <ThemedSelect
-                value={difficultyOptions.find((opt) => opt.value === formData.difficulty)}
-                onChange={(option) => option && handleFieldChange('difficulty', option.value)}
+              <DropdownSelect
+                icon={MapPin}
                 options={difficultyOptions}
-                menuPortalTarget={document.body}
+                value={formData.difficulty}
+                onChange={(value) =>
+                  typeof value === 'string' && handleFieldChange('difficulty', value)
+                }
                 placeholder="Выберите сложность"
-                isSearchable={false}
               />
             </div>
           </div>
@@ -305,18 +317,6 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
               value={days}
               onChange={(e) => handleDaysChange(Number(e.target.value))}
               error={errors.days}
-              required
-            />
-
-            <Input
-              label="Приемов пищи в день"
-              name="mealsPerDay"
-              type="number"
-              min="1"
-              max="10"
-              value={formData.mealsPerDay}
-              onChange={(e) => handleFieldChange('mealsPerDay', Number(e.target.value))}
-              error={errors.mealsPerDay}
               required
             />
           </div>

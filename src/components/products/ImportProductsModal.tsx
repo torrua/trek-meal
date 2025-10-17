@@ -1,14 +1,13 @@
 // src/components/products/ImportProductsModal.tsx
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { SingleValue } from 'react-select';
 import type { ProductData, Category, ImportedJsonData } from '../../types';
 import useCategoryStore from '../../stores/useCategoryStore';
 import useProductStore from '../../stores/useProductStore';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
 import Input from '../../ui/Input';
-import ThemedSelect from '../../ui/ThemedSelect';
+import DropdownSelect from '../../ui/DropdownSelect';
 import { CheckCircle, PackagePlus, Info } from 'lucide-react';
 
 interface ImportProductsModalProps {
@@ -17,7 +16,7 @@ interface ImportProductsModalProps {
   fileContent: ImportedJsonData | null;
 }
 
-type CategoryOption = { value: number | string; label: string; __isNew__?: boolean };
+type CategoryOption = { value: string; label: string; __isNew__?: boolean };
 type StagedProduct = ProductData & { originalCategoryId?: number | null };
 
 const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
@@ -51,18 +50,14 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
   }, [fileContent, existingProducts]);
 
   const categoryOptions: CategoryOption[] = categories.map((c: Category) => ({
-    value: c.id,
+    value: String(c.id),
     label: c.name,
   }));
 
-  const handleCategoryChange = (index: number, option: SingleValue<CategoryOption>) => {
+  const handleCategoryChange = (index: number, option: string) => {
     const newStagedProducts = [...stagedProducts];
-    if (option && option.__isNew__) {
-      const newCategory = addCategory({ name: option.label, color: '#cccccc', emoji: '📦' });
-      newStagedProducts[index].categoryId = newCategory.id;
-    } else {
-      newStagedProducts[index].categoryId = (option?.value as number) ?? null;
-    }
+    const found = categories.find((c) => String(c.id) === option);
+    newStagedProducts[index].categoryId = found ? found.id : null;
     setStagedProducts(newStagedProducts);
   };
 
@@ -139,15 +134,13 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
               className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center p-2 rounded-notion-md bg-muted"
             >
               <span className="font-medium truncate">{product.name}</span>
-              <ThemedSelect
-                isCreatable
+              <DropdownSelect
+                label="Категория"
+                icon={PackagePlus}
                 options={categoryOptions}
-                value={categoryOptions.find((opt) => opt.value === product.categoryId)}
-                onChange={(option) => handleCategoryChange(index, option)}
+                value={String(product.categoryId ?? '')}
+                onChange={(val) => typeof val === 'string' && handleCategoryChange(index, val)}
                 placeholder="Без категории"
-                isClearable
-                formatCreateLabel={(inputValue) => `Создать "${inputValue}"`}
-                closeMenuOnScroll={true}
               />
             </div>
           ))}

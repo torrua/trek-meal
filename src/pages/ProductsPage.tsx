@@ -115,7 +115,7 @@ const ProductsPage: React.FC = () => {
   const hasActiveFilters = useMemo(() => filters.categoryIds.length > 0, [filters]);
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       <input
         type="file"
         ref={fileInputRef}
@@ -125,19 +125,23 @@ const ProductsPage: React.FC = () => {
         aria-hidden="true"
         tabIndex={-1}
       />
-      <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-          <h1 className="text-2xl font-bold text-foreground dark:text-white">Продукты</h1>
-          <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+            Продукты
+          </h1>
+          <div className="flex items-center gap-2">
             <Button
+              onClick={() => setShowFilters((s) => !s)}
               variant="secondary"
               size="icon"
-              onClick={() => setShowFilters((s) => !s)}
-              title="Фильтр"
+              className="relative"
+              title="Фильтры"
+              aria-label="Показать фильтры"
             >
               <Filter className="w-4 h-4" />
               {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full border-2 border-card" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
               )}
             </Button>
             <Button
@@ -149,7 +153,7 @@ const ProductsPage: React.FC = () => {
             >
               <UploadCloud className="w-4 h-4" />
             </Button>
-            <Button variant="primary" onClick={handleAddNew}>
+            <Button onClick={handleAddNew} variant="primary" size="default">
               <CirclePlus className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Добавить продукт</span>
             </Button>
@@ -157,9 +161,9 @@ const ProductsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters block (inline, like Participants) */}
+      {/* Фильтры */}
       {showFilters && (
-        <div className="mb-4 sm:mb-6 bg-card rounded-xl border p-3 sm:p-4">
+        <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border notion-shadow-xs p-4 sm:p-5">
           <ProductFiltersComponent filters={filters} onFiltersChange={setFilters} />
         </div>
       )}
@@ -202,7 +206,7 @@ const ProductsPage: React.FC = () => {
                 onEdit={() => selectedProduct && handleEdit(selectedProduct)}
               />
             ) : (
-              <div className="h-full flex items-center justify-center">
+              <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">
                   <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Component className="w-10 h-10 text-muted-foreground" />

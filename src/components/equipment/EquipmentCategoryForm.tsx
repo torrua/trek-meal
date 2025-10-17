@@ -6,6 +6,7 @@ import type { EquipmentCategoryData } from '../../types';
 import Input from '../../ui/Input';
 import Button from '../../ui/Button';
 import DynamicIcon from '../../ui/DynamicIcon';
+import FormField from '../../ui/FormField';
 
 interface EquipmentCategoryFormProps {
   category: EquipmentCategoryData | null;
@@ -82,23 +83,24 @@ const EquipmentCategoryForm: React.FC<EquipmentCategoryFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name and Icon Section */}
         <div className="space-y-6">
-          <Input
-            label="Название категории"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoFocus
-            placeholder="Например, Палатки и тенты"
-            className="text-base"
-          />
+          <FormField label="Название категории" required>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              placeholder="Например, Палатки и тенты"
+              className="text-base"
+            />
+          </FormField>
 
-          <Input
-            label="Иконка (Lucide)"
-            value={iconName}
-            onChange={(e) => setIconName(e.target.value)}
-            placeholder="Например, Tent"
-            className="text-center font-mono text-sm"
-          />
+          <FormField label="Иконка (Lucide)">
+            <Input
+              value={iconName}
+              onChange={(e) => setIconName(e.target.value)}
+              placeholder="Например, Tent"
+              className="text-center font-mono text-sm"
+            />
+          </FormField>
         </div>
 
         {/* Color Selection */}

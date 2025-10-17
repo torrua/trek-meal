@@ -12,7 +12,7 @@ interface DropdownOption {
 }
 
 interface DropdownSelectProps {
-  label: string;
+  label?: string;
   options: DropdownOption[];
   value: string | string[];
   onChange: (value: string | string[]) => void;
@@ -113,7 +113,9 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
 
   return (
     <div className={cn('space-y-2', containerClassName)} ref={dropdownRef} data-testid={testId}>
-      <label className="block text-sm font-medium text-foreground tracking-tight">{label}</label>
+      {label && (
+        <label className="block text-sm font-medium text-foreground tracking-tight">{label}</label>
+      )}
 
       <div className="relative">
         <button
@@ -128,21 +130,21 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             }
           }}
           className={cn(
-            // Base Notion-style button
-            'flex items-center justify-between w-full px-4 py-3 text-left rounded-lg border transition-all duration-200',
-            'notion-focus-ring notion-shadow-sm hover:notion-shadow',
+            // Base Notion-style button - matches Input height
+            'flex items-center justify-between w-full h-10 px-4 py-2 text-left rounded-lg border transition-all duration-200',
+            'notion-focus-ring',
             'min-w-[220px]',
 
             // Active/inactive states
             isActive
               ? 'bg-primary/5 border-primary/30 text-primary'
-              : 'bg-card border notion-border-subtle hover:border-border text-foreground',
+              : 'bg-background border-border hover:border-border-hover text-foreground',
 
             // Disabled state
             disabled && 'bg-muted/50 text-muted-foreground cursor-not-allowed opacity-60',
 
             // Open state
-            isOpen && 'border-primary/50 ring-2 ring-primary/20'
+            isOpen && 'border-primary/60 ring-2 ring-primary/20 bg-card'
           )}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
@@ -155,17 +157,14 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
               : selectedOption?.label || placeholder || 'Не выбрано'
           }`}
         >
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {/* Icon with Notion-style background */}
-            <div
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            {/* Icon - simplified to match Input style */}
+            <Icon
               className={cn(
-                'flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center',
-                'bg-muted/50 border notion-border-subtle',
-                isActive ? 'bg-primary/10 border-primary/20 text-primary' : 'text-muted-foreground'
+                'w-4 h-4 flex-shrink-0',
+                isActive ? 'text-primary' : 'text-muted-foreground'
               )}
-            >
-              <Icon className="w-3.5 h-3.5" />
-            </div>
+            />
 
             {isMulti ? (
               <span
@@ -204,7 +203,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             style={{ minWidth: `${minMenuWidth}px` }}
             className={cn(
               'absolute z-50 top-full left-0 mt-2 w-max max-w-xs',
-              'bg-card border notion-border-subtle rounded-xl notion-shadow-lg',
+              'bg-card border border-border rounded-xl notion-shadow-lg',
               'py-2 overflow-hidden notion-scale-in'
             )}
             role="listbox"

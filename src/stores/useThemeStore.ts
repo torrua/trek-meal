@@ -3,12 +3,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type Theme = 'light' | 'dark'; // <-- Убираем 'sepia'
+export type Theme = 'light';
 
 interface ThemeState {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  toggleTheme: () => void; // <-- Добавляем удобную функцию-переключатель
+  toggleTheme: () => void;
 }
 
 const useThemeStore = create<ThemeState>()(
@@ -16,9 +16,7 @@ const useThemeStore = create<ThemeState>()(
     (set) => ({
       theme: 'light',
       setTheme: (theme) => set({ theme }),
-      // --- НОВАЯ ФУНКЦИЯ ---
-      // Переключает тему на противоположную
-      toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
+      toggleTheme: () => set({ theme: 'light' }),
     }),
     {
       name: 'trek-meal-theme-storage',

@@ -6,6 +6,7 @@ import type { CategoryData } from '../../types';
 import Input from '../../ui/Input';
 import Button from '../../ui/Button';
 import DynamicIcon from '../../ui/DynamicIcon';
+import FormField from '../../ui/FormField';
 
 interface CategoryFormProps {
   category: CategoryData | null;
@@ -35,12 +36,12 @@ const PRESET_COLORS = [
 const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCancel }) => {
   const [name, setName] = useState(category?.name || '');
   const [color, setColor] = useState(category?.color || '#a855f7');
-  const [iconName, setIconName] = useState(category?.iconName || 'Package');
+  const [emoji, setEmoji] = useState(category?.emoji || '📦');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onSubmit({ name: name.trim(), color, iconName });
+      onSubmit({ name: name.trim(), color, emoji });
     }
   };
 
@@ -60,7 +61,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
               className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white notion-shadow-sm"
               style={{ backgroundColor: color }}
             >
-              <DynamicIcon name={iconName} className="w-6 h-6" />
+              <span className="text-xl">{emoji || '📦'}</span>
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="font-semibold text-foreground text-lg tracking-tight truncate">
@@ -75,23 +76,24 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name and Icon Section */}
         <div className="space-y-6">
-          <Input
-            label="Название категории"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoFocus
-            placeholder="Например, Крупы и макароны"
-            className="text-base"
-          />
+          <FormField label="Название категории" required>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              placeholder="Например, Крупы и макароны"
+              className="text-base"
+            />
+          </FormField>
 
-          <Input
-            label="Иконка (Lucide)"
-            value={iconName}
-            onChange={(e) => setIconName(e.target.value)}
-            placeholder="Например, Package"
-            className="text-center font-mono text-sm"
-          />
+          <FormField label="Эмодзи">
+            <Input
+              value={emoji}
+              onChange={(e) => setEmoji(e.target.value)}
+              placeholder="Например, 🌾"
+              className="text-center text-2xl"
+            />
+          </FormField>
         </div>
 
         {/* Color Selection */}

@@ -214,12 +214,6 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onEdit, onAddParticipant 
       content: (
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <InfoField
-              icon={Utensils}
-              label="Приемов пищи в день"
-              value={trip.mealsPerDay}
-              data-testid="meals-per-day"
-            />
             {summary && (
               <InfoField
                 icon={BarChart}

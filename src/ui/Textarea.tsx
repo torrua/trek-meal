@@ -1,86 +1,55 @@
-// ============================================
-// src/ui/Textarea.tsx - Notion-style textarea
-// ============================================
+// src/ui/Textarea.tsx
 
 import React from 'react';
 import cn from 'classnames';
 import { AlertCircle } from 'lucide-react';
 
-interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
   containerClassName?: string;
-  hint?: string;
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  (
-    {
-      label,
-      name,
-      value,
-      onChange,
-      placeholder,
-      rows = 4,
-      error,
-      disabled = false,
-      containerClassName,
-      className,
-      hint,
-      required,
-      ...props
-    },
-    ref
-  ) => {
+  ({ className, label, error, containerClassName, ...props }, ref) => {
+    const textareaId =
+      props.id || props.name || `textarea-${Math.random().toString(36).substr(2, 9)}`;
+
     return (
       <div className={cn('w-full', containerClassName)}>
         {label && (
           <label
-            htmlFor={name}
-            className="block text-notion-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5"
+            htmlFor={textareaId}
+            className="block text-sm font-medium text-foreground tracking-tight mb-2"
           >
             {label}
-            {required && <span className="text-danger ml-0.5">*</span>}
+            {props.required && <span className="text-danger ml-1">*</span>}
           </label>
         )}
-
         <textarea
-          id={name}
-          ref={ref}
-          name={name}
-          value={value || ''}
-          onChange={onChange}
-          placeholder={placeholder}
-          rows={rows}
-          disabled={disabled}
+          id={textareaId}
           className={cn(
-            'w-full min-h-[80px] px-3 py-2',
-            'bg-white dark:bg-dark-tertiary',
-            'border border-border dark:border-dark-border rounded-notion-md',
-            'text-notion-sm text-foreground dark:text-white placeholder:text-muted-foreground/60',
-            'transition-all duration-100 resize-vertical',
-            'focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10',
-            'hover:border-border/70 dark:hover:border-dark-borderMedium',
-            'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border disabled:resize-none',
-            error && 'border-danger focus:ring-danger/10',
+            'flex min-h-[80px] w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm',
+            'placeholder:text-muted-foreground text-foreground transition-all duration-200',
+            'hover:border-border-hover focus:border-primary/60 focus:bg-card',
+            'focus:outline-none focus:ring-2 focus:ring-primary/20',
+            'disabled:cursor-not-allowed disabled:opacity-50 resize-vertical',
+            error && 'border-danger focus:border-danger focus:ring-danger/20',
             className
           )}
+          ref={ref}
           {...props}
         />
-
-        {hint && !error && <p className="text-notion-xs text-muted-foreground mt-1.5">{hint}</p>}
-
         {error && (
-          <p className="text-notion-xs text-danger flex items-center gap-1 mt-1.5">
-            <AlertCircle className="w-3 h-3" />
-            {error}
-          </p>
+          <div className="mt-2 flex items-center gap-2 text-sm text-danger">
+            <AlertCircle className="h-4 w-4" />
+            <span>{error}</span>
+          </div>
         )}
       </div>
     );
   }
 );
-
 Textarea.displayName = 'Textarea';
 
 export default Textarea;

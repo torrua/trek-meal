@@ -1,7 +1,7 @@
 // src/config/entityConfig.tsx
 
 import React from 'react';
-import type { Trip, Participant, Product, Dish, Equipment, DishProduct } from '../types';
+import type { Trip, Participant, Product, Dish, Equipment, DishProduct, Category } from '../types';
 import { formatDate, getEffectiveStatus, calculateAge } from '../utils/index';
 import { DIFFICULTY_CONFIG, STATUS_CONFIG } from '../constants/trips';
 import { EXPERIENCE_CONFIG, GENDER_CONFIG } from '../constants/participants';
@@ -21,6 +21,7 @@ import {
   Scale,
   User,
   ExternalLink,
+  Tag,
 } from 'lucide-react';
 
 // Типизация хендлеров для каждой сущности
@@ -49,6 +50,12 @@ type EquipmentActions = {
   onEdit: (entity: Equipment) => void;
   onDelete: (entity: Equipment) => void;
 };
+type CategoryActions = {
+  onEdit: (entity: Category) => void;
+  onClone: (entity: Category) => void;
+  onExport: (entity: Category) => void;
+  onDelete: (entity: Category) => void;
+};
 
 // Общий тип для всех хендлеров, чтобы избежать 'any'
 type EntityActions =
@@ -56,7 +63,8 @@ type EntityActions =
   | ParticipantActions
   | ProductActions
   | DishActions
-  | EquipmentActions;
+  | EquipmentActions
+  | CategoryActions;
 
 interface CardViewConfig<T> {
   title: (entity: T) => string;
@@ -86,7 +94,7 @@ interface EntityConfig<T> {
     card: CardViewConfig<T>;
     listItem: ListItemViewConfig<T>;
   };
-  getActions: (handlers: EntityActions) => any[];
+  getActions: (handlers: any) => any[];
 }
 
 // --- Конфигурация для "Похода" (Trip) ---
@@ -231,10 +239,10 @@ export const productEntityConfig: EntityConfig<Product> = {
     },
     listItem: {
       title: (p) => p.name,
-      details: (_p, context?: { dishProduct: DishProduct }) => [
+      details: (_p, context?: Record<string, unknown>) => [
         <div key="weight" className="flex items-center gap-1.5" title="Вес продукта">
           <Scale className="w-4 h-4" />
-          <span className="font-medium">{context?.dishProduct.weight} г</span>
+          <span className="font-medium">{(context?.dishProduct as DishProduct)?.weight} г</span>
         </div>,
       ],
       actions: (handlers) => [
@@ -251,6 +259,49 @@ export const productEntityConfig: EntityConfig<Product> = {
   },
   getActions: (handlers: ProductActions) => [
     { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
+    {
+      label: 'Удалить',
+      icon: Trash2,
+      onClick: handlers.onDelete,
+      className: 'text-red-600 dark:text-red-400',
+    },
+  ],
+};
+
+// --- Конфигурация для "Категории" (Category) ---
+export const categoryEntityConfig: EntityConfig<Category> = {
+  getIcon: () => Tag,
+  getIconColor: () => 'text-gray-500',
+  getBorderColor: (category) => category.color || '#6b7280',
+  views: {
+    card: {
+      title: (category) => category.name,
+      subtitle: (category, context) => {
+        const productCount = (context?.productCount as number) || 0;
+        return (
+          <div className="flex items-center gap-1">
+            <Component className="w-4 h-4" />
+            <span>{productCount}</span>
+          </div>
+        );
+      },
+      details: (category, context) => [
+        {
+          key: 'products',
+          icon: Component,
+          text: (context?.productCount as number) || 0,
+          title: 'Продукты',
+        },
+      ],
+    },
+    listItem: {
+      title: (category) => category.name,
+    },
+  },
+  getActions: (handlers: CategoryActions) => [
+    { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
+    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
+    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
     {
       label: 'Удалить',
       icon: Trash2,

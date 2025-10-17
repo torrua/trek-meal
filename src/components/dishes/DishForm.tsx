@@ -1,13 +1,13 @@
 // src/components/database/dishes/DishForm.tsx
 
 import React, { useState, useEffect } from 'react';
-import { SingleValue } from 'react-select';
-import ThemedSelect from '../../ui/ThemedSelect';
+import DropdownSelect from '../../ui/DropdownSelect';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
 import Button from '../../ui/Button';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
+import FormField from '../../ui/FormField';
 import type { Dish, DishData, DishProduct, Product, SubmitDishAction } from '../../types';
 import { toast } from 'react-hot-toast';
 import { X, Plus, Soup, Component, Scale, ChefHat } from 'lucide-react';
@@ -19,10 +19,10 @@ interface DishFormProps {
   onCancel: () => void;
 }
 
-type ProductOption = { value: number; label: string };
-type PortionOption = { value: number; label: string };
+type ProductOption = { value: string; label: string };
+type PortionOption = { value: string; label: string };
 
-const CUSTOM_WEIGHT_VALUE = -1;
+const CUSTOM_WEIGHT_VALUE = '-1';
 
 const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCancel }) => {
   const [name, setName] = useState('');
@@ -53,24 +53,23 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
   }, [dish, dishToClone]);
 
   const productOptions: ProductOption[] = allProducts.map((p: Product) => ({
-    value: p.id,
+    value: String(p.id),
     label: p.name,
   }));
 
-  const handleProductChange = (index: number, selectedOption: SingleValue<ProductOption>) => {
+  const handleProductChange = (index: number, selectedValue: string) => {
     const newProducts = [...products];
-    const productId = selectedOption?.value || 0;
+    const productId = Number(selectedValue) || 0;
     newProducts[index].productId = productId;
     const product = allProducts.find((p: Product) => p.id === productId);
     newProducts[index].weight = product?.portions?.[0]?.weight || 0;
     setProducts(newProducts);
   };
 
-  const handlePortionChange = (index: number, selectedOption: SingleValue<PortionOption>) => {
-    const weight = selectedOption?.value;
-    if (weight !== undefined && weight !== CUSTOM_WEIGHT_VALUE) {
+  const handlePortionChange = (index: number, selectedValue: string) => {
+    if (selectedValue !== undefined && selectedValue !== CUSTOM_WEIGHT_VALUE) {
       const newProducts = [...products];
-      newProducts[index].weight = weight;
+      newProducts[index].weight = Number(selectedValue) || 0;
       setProducts(newProducts);
     }
   };
@@ -132,24 +131,25 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
             </h3>
           </div>
 
-          <Input
-            label="Название блюда"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoFocus
-            placeholder="Например, Плов туристический"
-            className="text-base font-medium"
-          />
+          <FormField label="Название блюда" required>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              placeholder="Например, Плов туристический"
+              className="text-base font-medium"
+            />
+          </FormField>
 
-          <Textarea
-            label="Описание"
-            name="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            placeholder="Описание блюда, способ приготовления, особенности..."
-          />
+          <FormField label="Описание">
+            <Textarea
+              name="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              placeholder="Описание блюда, способ приготовления, особенности..."
+            />
+          </FormField>
         </div>
 
         {/* Recipe Summary */}
@@ -187,13 +187,13 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
               const selectedProduct = allProducts.find((prod: Product) => prod.id === p.productId);
               const portionOptions: PortionOption[] =
                 selectedProduct?.portions.map((portion) => ({
-                  value: portion.weight,
+                  value: String(portion.weight),
                   label: `${portion.name} (${portion.weight} г)`,
                 })) || [];
               portionOptions.push({ value: CUSTOM_WEIGHT_VALUE, label: 'Свой вес...' });
 
               const currentPortion =
-                portionOptions.find((opt) => opt.value === p.weight) ||
+                portionOptions.find((opt) => Number(opt.value) === p.weight) ||
                 portionOptions.find((opt) => opt.value === CUSTOM_WEIGHT_VALUE);
 
               return (
@@ -214,36 +214,41 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
                       </Button>
                     </div>
 
-                    <ThemedSelect<ProductOption>
+                    <DropdownSelect
+                      label="Продукт"
+                      icon={Component}
                       options={productOptions}
-                      value={productOptions.find((opt) => opt.value === p.productId)}
-                      onChange={(opt) => handleProductChange(index, opt)}
+                      value={String(p.productId || '')}
+                      onChange={(val) => typeof val === 'string' && handleProductChange(index, val)}
                       placeholder="Выберите продукт..."
-                      menuPortalTarget={document.body}
-                      isSearchable
                     />
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div className="md:col-span-2">
-                        <ThemedSelect<PortionOption>
+                        <DropdownSelect
+                          label="Порция"
+                          icon={Scale}
                           options={portionOptions}
-                          value={currentPortion}
-                          onChange={(opt) => handlePortionChange(index, opt)}
-                          isDisabled={!selectedProduct}
+                          value={currentPortion?.value || CUSTOM_WEIGHT_VALUE}
+                          onChange={(val) =>
+                            typeof val === 'string' && handlePortionChange(index, val)
+                          }
+                          disabled={!selectedProduct}
                           placeholder="Выберите порцию..."
-                          menuPortalTarget={document.body}
                         />
                       </div>
 
-                      <Input
-                        type="number"
-                        value={p.weight || ''}
-                        onChange={(e) => handleWeightChange(index, e.target.value)}
-                        required
-                        min="0"
-                        placeholder="Вес (г)"
-                        icon={Scale}
-                      />
+                      <FormField label="Вес (г)" className="w-full">
+                        <Input
+                          type="number"
+                          value={p.weight || ''}
+                          onChange={(e) => handleWeightChange(index, e.target.value)}
+                          required
+                          min="0"
+                          placeholder="Вес (г)"
+                          icon={Scale}
+                        />
+                      </FormField>
                     </div>
                   </div>
                 </div>

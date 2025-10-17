@@ -1,7 +1,6 @@
 // src/components/layout/ThemeSwitcher.tsx
 
 import React from 'react';
-import useThemeStore from '../../stores/useThemeStore';
 
 const SunIcon = () => (
   <svg
@@ -29,18 +28,6 @@ const MoonIcon = () => (
   </svg>
 );
 
-const ThemeSwitcher: React.FC = () => {
-  const { theme, toggleTheme } = useThemeStore();
-
-  return (
-    <button
-      onClick={toggleTheme}
-      className="p-2 rounded-full text-secondary-foreground hover:bg-muted transition-colors duration-200"
-      title={theme === 'light' ? 'Переключить на темную тему' : 'Переключить на светлую тему'}
-    >
-      {theme === 'light' ? <MoonIcon /> : <SunIcon />}
-    </button>
-  );
-};
+const ThemeSwitcher: React.FC = () => null;
 
 export default ThemeSwitcher;

@@ -1,14 +1,14 @@
 // src/components/trips/AddParticipantsModal.tsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { MultiValue } from 'react-select';
 import { Users, X, AlertCircle } from 'lucide-react';
 import useTripStore from '../../stores/useTripStore';
 import useParticipantStore from '../../stores/useParticipantStore';
 import type { Participant } from '../../types';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
-import ThemedSelect from '../../ui/ThemedSelect';
+import DropdownSelect from '../../ui/DropdownSelect';
+import FormField from '../../ui/FormField';
 import { toast } from 'react-hot-toast';
 
 interface AddParticipantsModalProps {
@@ -18,7 +18,7 @@ interface AddParticipantsModalProps {
 }
 
 type ParticipantOption = {
-  value: number;
+  value: string;
   label: string;
   isDisabled?: boolean;
 };
@@ -26,9 +26,7 @@ type ParticipantOption = {
 const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onClose, tripId }) => {
   const { trips, addParticipantsToTrip } = useTripStore();
   const { participants: allParticipants } = useParticipantStore();
-  const [selectedParticipants, setSelectedParticipants] = useState<MultiValue<ParticipantOption>>(
-    []
-  );
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const trip = useMemo(() => trips.find((t) => t.id === tripId), [trips, tripId]);
@@ -39,7 +37,7 @@ const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onC
     return allParticipants
       .filter((p) => !trip.participants.includes(p.id))
       .map((p: Participant) => ({
-        value: p.id,
+        value: String(p.id),
         label: p.name,
         isDisabled: false,
       }))
@@ -51,10 +49,13 @@ const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onC
 
     setIsSubmitting(true);
     try {
-      const participantIds = selectedParticipants.map((p) => p.value);
+      const participantIds = selectedParticipants.map((id) => Number(id));
       addParticipantsToTrip(tripId, participantIds);
 
-      const participantNames = selectedParticipants.map((p) => p.label).join(', ');
+      const participantNames = selectedParticipants
+        .map((id) => allParticipants.find((p) => p.id === Number(id))?.name || '')
+        .filter(Boolean)
+        .join(', ');
       toast.success(
         `${selectedParticipants.length === 1 ? 'Участник' : 'Участники'} ${participantNames} ${selectedParticipants.length === 1 ? 'добавлен' : 'добавлены'} в поход`
       );
@@ -67,7 +68,7 @@ const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onC
     } finally {
       setIsSubmitting(false);
     }
-  }, [tripId, selectedParticipants, addParticipantsToTrip, onClose]);
+  }, [tripId, selectedParticipants, addParticipantsToTrip, onClose, allParticipants]);
 
   const handleClose = useCallback(() => {
     if (isSubmitting) return; // Предотвращаем закрытие во время загрузки
@@ -76,18 +77,17 @@ const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onC
   }, [onClose, isSubmitting]);
 
   const handleSelectionChange = useCallback(
-    (newValue: MultiValue<ParticipantOption>) => {
-      // Ограничиваем количество участников (например, максимум 20)
+    (newValues: string[]) => {
       const MAX_PARTICIPANTS = 20;
       const currentParticipantsCount = trip?.participants.length || 0;
       const availableSlots = MAX_PARTICIPANTS - currentParticipantsCount;
 
-      if (newValue.length > availableSlots) {
+      if (newValues.length > availableSlots) {
         toast.warning(`Можно добавить не более ${availableSlots} участников`);
         return;
       }
 
-      setSelectedParticipants(newValue);
+      setSelectedParticipants(newValues);
     },
     [trip]
   );
@@ -107,8 +107,8 @@ const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onC
       <div className="space-y-6">
         {/* Информация о текущем состоянии */}
         {trip && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+            <div className="flex items-center gap-2 text-sm text-primary">
               <Users className="w-4 h-4" />
               <span>
                 В походе уже {currentParticipantsCount}{' '}
@@ -124,8 +124,8 @@ const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onC
 
         {/* Предупреждение если достигнут лимит */}
         {maxParticipantsReached && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-            <div className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-300">
+          <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
+            <div className="flex items-start gap-2 text-sm text-warning">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium">Достигнут максимум участников</p>
@@ -140,26 +140,19 @@ const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onC
         {/* Селектор участников */}
         {hasAvailableParticipants && !maxParticipantsReached && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Выберите участников для добавления
-            </label>
-            <ThemedSelect
-              isMulti
-              options={participantOptions}
-              value={selectedParticipants}
-              onChange={handleSelectionChange}
-              placeholder="Начните вводить имя участника..."
-              noOptionsMessage={() => 'Все доступные участники уже в походе'}
-              isSearchable
-              autoFocus
-              menuPortalTarget={document.body}
-              closeMenuOnSelect={false}
-              isDisabled={isSubmitting}
-              classNamePrefix="react-select"
-              maxMenuHeight={200}
-            />
+            <FormField label="Выберите участников для добавления">
+              <DropdownSelect
+                icon={Users}
+                isMulti
+                options={participantOptions}
+                value={selectedParticipants}
+                onChange={(val) => Array.isArray(val) && handleSelectionChange(val)}
+                placeholder="Начните вводить имя участника..."
+                disabled={isSubmitting}
+              />
+            </FormField>
             {selectedParticipants.length > 0 && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Выбрано: {selectedParticipants.length}{' '}
                 {selectedParticipants.length === 1
                   ? 'участник'
@@ -174,11 +167,9 @@ const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onC
         {/* Сообщение если нет доступных участников */}
         {!hasAvailableParticipants && !maxParticipantsReached && (
           <div className="text-center py-8">
-            <Users className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-              Нет доступных участников
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400">
+            <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+            <h3 className="text-lg font-medium text-foreground mb-2">Нет доступных участников</h3>
+            <p className="text-muted-foreground">
               Все участники уже добавлены в этот поход или нет зарегистрированных участников.
             </p>
           </div>
@@ -186,7 +177,7 @@ const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onC
       </div>
 
       {/* Кнопки действий */}
-      <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-border">
         <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
           <X className="w-4 h-4 mr-2" />
           Отмена

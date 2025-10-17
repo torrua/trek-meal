@@ -3,7 +3,6 @@
 import React, { forwardRef } from 'react';
 import DatePicker, { ReactDatePickerProps } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import useThemeStore from '../stores/useThemeStore';
 import Input from './Input';
 import { Calendar } from 'lucide-react';
 
@@ -69,16 +68,13 @@ const CustomDateInput = forwardRef<HTMLInputElement, CustomInputProps>(
 CustomDateInput.displayName = 'CustomDateInput';
 
 const ThemedDatePicker: React.FC<ReactDatePickerProps> = (props) => {
-  const { theme } = useThemeStore();
-  const isDark = theme === 'dark';
-
   const themeVariables = `
     :root {
-      --datepicker-bg: ${isDark ? 'var(--dark-secondary)' : 'var(--card)'};
-      --datepicker-border: ${isDark ? 'var(--dark-border)' : 'var(--border)'};
-      --datepicker-text: ${isDark ? 'var(--text-primary)' : 'var(--foreground)'};
-      --datepicker-header-bg: ${isDark ? 'var(--dark-tertiary)' : 'var(--muted)'};
-      --datepicker-hover-bg: ${isDark ? 'var(--dark-border)' : 'var(--muted)'};
+      --datepicker-bg: var(--card);
+      --datepicker-border: var(--border);
+      --datepicker-text: var(--foreground);
+      --datepicker-header-bg: var(--muted);
+      --datepicker-hover-bg: var(--muted);
     }
   `;
 

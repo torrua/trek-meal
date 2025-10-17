@@ -1,13 +1,13 @@
 // src/components/participants/SelectTripModal.tsx
 
 import React, { useState, useMemo } from 'react';
-import { SingleValue } from 'react-select';
 import { MapPin, Calendar, Users, Info, X } from 'lucide-react';
 import useTripStore from '../../stores/useTripStore';
 import type { Trip } from '../../types';
 import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
-import ThemedSelect from '../../ui/ThemedSelect';
+import DropdownSelect from '../../ui/DropdownSelect';
+import FormField from '../../ui/FormField';
 import { formatDate } from '../../utils';
 
 interface SelectTripModalProps {
@@ -19,7 +19,7 @@ interface SelectTripModalProps {
 }
 
 type TripOption = {
-  value: number;
+  value: string;
   label: string;
   trip: Trip;
 };
@@ -32,7 +32,7 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
   selectedIds,
 }) => {
   const { trips } = useTripStore();
-  const [selectedTrip, setSelectedTrip] = useState<SingleValue<TripOption>>(null);
+  const [selectedTrip, setSelectedTrip] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const tripOptions: TripOption[] = useMemo(() => {
@@ -44,7 +44,7 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
     }
 
     return availableTrips.map((trip: Trip) => ({
-      value: trip.id,
+      value: String(trip.id),
       label: trip.name,
       trip,
     }));
@@ -57,7 +57,7 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      await onConfirm(selectedTrip.value);
+      await onConfirm(Number(selectedTrip));
       handleClose();
     } finally {
       setIsSubmitting(false);
@@ -66,7 +66,7 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setSelectedTrip(null);
+      setSelectedTrip('');
       onClose();
     }
   };
@@ -80,8 +80,8 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
   const customFormatOptionLabel = (option: TripOption) => (
     <div className="flex items-center justify-between w-full py-1">
       <div className="min-w-0 flex-1">
-        <div className="font-medium truncate text-gray-900 dark:text-white">{option.trip.name}</div>
-        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <div className="font-medium truncate text-foreground">{option.trip.name}</div>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
             <span>{formatDate(option.trip.startDate)}</span>
@@ -94,7 +94,7 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
           )}
         </div>
       </div>
-      <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 ml-3 flex-shrink-0">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground ml-3 flex-shrink-0">
         <Users className="w-3 h-3" />
         <span>{option.trip.participants.length}</span>
       </div>
@@ -116,10 +116,10 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
       size="lg"
     >
       <div className="space-y-6">
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-800 dark:text-blue-200">
+            <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-foreground">
               {tripOptions.length > 0 ? (
                 <>
                   <p className="font-medium mb-1">Выберите поход для добавления участников</p>
@@ -144,57 +144,65 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
 
         {tripOptions.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-              Выберите поход *
-            </label>
-            <ThemedSelect
-              options={tripOptions}
-              value={selectedTrip}
-              onChange={setSelectedTrip}
-              placeholder="Выберите поход из списка..."
-              noOptionsMessage={() => 'Нет подходящих походов'}
-              formatOptionLabel={customFormatOptionLabel}
-              isSearchable
-              isDisabled={isSubmitting}
-              menuPortalTarget={document.body}
-            />
+            <FormField label="Выберите поход *">
+              <DropdownSelect
+                icon={MapPin}
+                options={tripOptions}
+                value={selectedTrip}
+                onChange={(val) => typeof val === 'string' && setSelectedTrip(val)}
+                placeholder="Выберите поход из списка..."
+                disabled={isSubmitting}
+              />
+            </FormField>
 
             {selectedTrip && (
-              <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-3">
-                  Информация о походе
-                </h4>
+              <div className="mt-4 p-4 bg-muted/30 rounded-lg border border-border">
+                <h4 className="font-medium text-foreground mb-3">Информация о походе</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4 text-gray-400" />
                     <div>
                       <div className="font-medium">Даты</div>
                       <div>
-                        {formatDate(selectedTrip.trip.startDate)} -{' '}
-                        {formatDate(selectedTrip.trip.endDate)}
+                        {formatDate(
+                          tripOptions.find((o) => o.value === selectedTrip)!.trip.startDate
+                        )}{' '}
+                        -{' '}
+                        {formatDate(
+                          tripOptions.find((o) => o.value === selectedTrip)!.trip.endDate
+                        )}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="w-4 h-4 text-gray-400" />
                     <div>
                       <div className="font-medium">Место</div>
                       <div className="truncate">
-                        {selectedTrip.trip.destination || 'Место не указано'}
+                        {tripOptions.find((o) => o.value === selectedTrip)!.trip.destination ||
+                          'Место не указано'}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Users className="w-4 h-4 text-gray-400" />
                     <div>
                       <div className="font-medium">Участники</div>
-                      <div>Текущих: {selectedTrip.trip.participants.length}</div>
+                      <div>
+                        Текущих:{' '}
+                        {
+                          tripOptions.find((o) => o.value === selectedTrip)!.trip.participants
+                            .length
+                        }
+                      </div>
                     </div>
                   </div>
-                  {selectedTrip.trip.description && (
-                    <div className="sm:col-span-2 text-sm text-gray-600 dark:text-gray-300">
+                  {tripOptions.find((o) => o.value === selectedTrip)!.trip.description && (
+                    <div className="sm:col-span-2 text-sm text-muted-foreground">
                       <div className="font-medium mb-1">Описание</div>
-                      <p className="line-clamp-2">{selectedTrip.trip.description}</p>
+                      <p className="line-clamp-2">
+                        {tripOptions.find((o) => o.value === selectedTrip)!.trip.description}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -204,7 +212,7 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
         )}
       </div>
 
-      <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-border">
         <Button
           variant="secondary"
           onClick={handleClose}

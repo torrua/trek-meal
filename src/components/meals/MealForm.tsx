@@ -13,7 +13,7 @@ import useDishStore from '../../stores/useDishStore';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import Button from '../../ui/Button';
-import ThemedSelect from '../../ui/ThemedSelect';
+import DropdownSelect from '../../ui/DropdownSelect';
 
 const mealFormSchema = z.object({
   name: z.string().min(1, 'Название обязательно'),
@@ -129,22 +129,25 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
 
   const watchItems = watch('items');
 
-  const groupedOptions = useMemo(() => {
-    return [
-      {
-        label: 'Продукты',
-        options: products.map((p) => ({ value: `product-${p.id}`, label: p.name })),
-      },
-      {
-        label: 'Блюда',
-        options: dishes.map((d) => ({ value: `dish-${d.id}`, label: d.name })),
-      },
-    ];
+  // Create flat options array for DropdownSelect
+  const flatOptions = useMemo(() => {
+    const productOptions = products.map((p) => ({
+      value: `product-${p.id}`,
+      label: p.name,
+    }));
+
+    const dishOptions = dishes.map((d) => ({
+      value: `dish-${d.id}`,
+      label: d.name,
+    }));
+
+    // Combine all options into a single flat array
+    return [...productOptions, ...dishOptions];
   }, [products, dishes]);
 
-  const handleAddItem = (option: any) => {
-    if (!option) return;
-    const [type, idStr] = option.value.split('-');
+  const handleAddItem = (optionValue: string) => {
+    if (!optionValue) return;
+    const [type, idStr] = optionValue.split('-');
     const itemId = parseInt(idStr, 10);
 
     append({
@@ -231,12 +234,26 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
             </p>
           )}
         </div>
-        <ThemedSelect
-          options={groupedOptions}
-          onChange={handleAddItem}
-          placeholder="Добавить продукт или блюдо..."
-          value={null}
+        <DropdownSelect
+          label="Добавить продукт или блюдо"
+          icon={Utensils}
+          options={flatOptions}
+          value=""
+          onChange={(val) => typeof val === 'string' && handleAddItem(val)}
+          placeholder={
+            flatOptions.length === 0
+              ? 'Сначала создайте продукты или блюда'
+              : 'Добавить продукт или блюдо...'
+          }
+          disabled={flatOptions.length === 0}
         />
+        {flatOptions.length === 0 && (
+          <div className="mt-3 p-3 bg-warning/5 rounded-lg border border-warning/20">
+            <p className="text-xs text-muted-foreground">
+              Создайте продукты и блюда в соответствующих разделах, чтобы добавить их в прием пищи.
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t">

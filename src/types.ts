@@ -101,9 +101,6 @@ export interface Trip {
   selectedMeals: SelectedMeals;
   requiredEquipmentIds: number[]; // Equipment required for this trip
   assignedEquipment: { [participantId: number]: number[] }; // Equipment assignments per participant
-
-  // Legacy field for backward compatibility - will be calculated from dayMeals
-  mealsPerDay?: number;
 }
 export type TripData = Omit<Trip, 'id' | 'createdAt' | 'status' | 'selectedMeals' | 'dayMeals'>;
 

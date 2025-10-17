@@ -2,24 +2,19 @@
 
 import { useMemo } from 'react';
 import { StylesConfig, GroupBase } from 'react-select';
-import useThemeStore from '../stores/useThemeStore';
 
 export const useThemeAwareSelectStyles = <
   Option,
   IsMulti extends boolean = false,
   Group extends GroupBase<Option> = GroupBase<Option>,
 >() => {
-  const { theme } = useThemeStore();
-
   const styles: StylesConfig<Option, IsMulti, Group> = useMemo(() => {
-    const isDark = theme === 'dark';
-
     const colors = {
-      bgSecondary: isDark ? '#111827' : '#ffffff',
-      bgMuted: isDark ? '#1f2937' : '#f3f4f6',
-      borderPrimary: isDark ? '#374151' : '#d1d5db',
-      textPrimary: isDark ? '#f9fafb' : '#111827',
-      textMuted: isDark ? '#9ca3af' : '#6b7280',
+      bgSecondary: '#ffffff',
+      bgMuted: '#f3f4f6',
+      borderPrimary: '#d1d5db',
+      textPrimary: '#111827',
+      textMuted: '#6b7280',
       blue600: '#2563eb',
       blue700: '#1d4ed8',
     };
@@ -27,16 +22,26 @@ export const useThemeAwareSelectStyles = <
     return {
       control: (base) => ({
         ...base,
+        minHeight: '40px',
+        height: '40px',
         backgroundColor: colors.bgSecondary,
         borderColor: colors.borderPrimary,
         boxShadow: 'none',
+        borderRadius: '0.5rem',
         '&:hover': {
           borderColor: colors.blue600,
         },
       }),
+      valueContainer: (base) => ({
+        ...base,
+        padding: '0 16px',
+        height: '40px',
+      }),
       input: (base) => ({
         ...base,
         color: colors.textPrimary,
+        margin: '0',
+        padding: '0',
       }),
       singleValue: (base) => ({
         ...base,
@@ -84,7 +89,7 @@ export const useThemeAwareSelectStyles = <
         zIndex: 9999,
       }),
     };
-  }, [theme]);
+  }, []);
 
   return styles;
 };

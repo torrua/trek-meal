@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CirclePlus, Filter, Package, Edit, Copy, Trash2, Share, Tag } from 'lucide-react';
+import { CirclePlus, Filter, Tag } from 'lucide-react';
 import useCategoryStore from '../stores/useCategoryStore';
 import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
@@ -11,11 +11,12 @@ import type { Category } from '../types';
 // Editing moved to dedicated page
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
-import EntityCard, { MenuItem } from '../ui/EntityCard';
+import EntityCard from '../ui/EntityCard';
 import CategoryFiltersComponent, {
   CategoryFilters,
 } from '../components/categories/CategoryFiltersComponent';
 import CategoryDetail from '../components/categories/CategoryDetail';
+import { categoryEntityConfig } from '../config/entityConfig';
 
 const CategoriesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -51,12 +52,26 @@ const CategoriesPage: React.FC = () => {
     console.log('Export category', category);
   }, []);
 
+  // Function to transform category details to match EntityCard's DetailItem type
+  const getCategoryDetails = (category: Category, productCount: number) => {
+    return [
+      {
+        key: 'products',
+        icon: categoryEntityConfig.getIcon(category),
+        text: productCount,
+        title: 'Продукты',
+      },
+    ];
+  };
+
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       {/* Заголовок и кнопки */}
-      <div className="mb-4 sm:mb-6">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Категории</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+            Категории
+          </h1>
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setShowFilters((s) => !s)}
@@ -64,10 +79,11 @@ const CategoriesPage: React.FC = () => {
               size="icon"
               className="relative"
               title="Фильтры"
+              aria-label="Показать фильтры"
             >
               <Filter className="w-4 h-4" />
               {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-card" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
               )}
             </Button>
             <Button onClick={() => navigate('/categories/new')} variant="primary" size="default">
@@ -80,7 +96,7 @@ const CategoriesPage: React.FC = () => {
 
       {/* Фильтры */}
       {showFilters && (
-        <div className="mb-4 sm:mb-6 bg-card rounded-xl border p-3 sm:p-4">
+        <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border notion-shadow-xs p-4 sm:p-5">
           <CategoryFiltersComponent filters={filters} onFiltersChange={setFilters} />
         </div>
       )}
@@ -94,51 +110,27 @@ const CategoriesPage: React.FC = () => {
                 (p) => p.categoryId === category.id
               ).length;
 
-              const menuItems: MenuItem[] = [
-                {
-                  label: 'Редактировать',
-                  icon: Edit,
-                  onClick: () => navigate(`/categories/${category.id}/edit`),
-                },
-                {
-                  label: 'Клонировать',
-                  icon: Copy,
-                  onClick: () => handleClone(category),
-                },
-                {
-                  label: 'Экспорт',
-                  icon: Share,
-                  onClick: () => handleExport(category),
-                },
-                {
-                  label: 'Удалить',
-                  icon: Trash2,
-                  onClick: () => categoryManagement.handleRequestDelete(category),
-                  className:
-                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
-                },
-              ];
+              const actions = categoryEntityConfig.getActions({
+                onEdit: () => navigate(`/categories/${category.id}/edit`),
+                onClone: () => handleClone(category),
+                onExport: () => handleExport(category),
+                onDelete: () => categoryManagement.handleRequestDelete(category),
+              });
+
+              const context = { productCount };
 
               return (
                 <EntityCard
                   key={category.id}
-                  title={category.name}
-                  subtitle={
-                    <div className="flex items-center gap-1">
-                      <Package className="w-4 h-4" />
-                      <span>{productCount}</span>
-                    </div>
-                  }
-                  icon={() => (
-                    <span className="text-lg w-5 h-5 flex items-center justify-center">
-                      {category.emoji || '📦'}
-                    </span>
-                  )}
-                  details={[]} // Empty for true one-line layout
+                  title={categoryEntityConfig.views.card.title(category)}
+                  subtitle={categoryEntityConfig.views.card.subtitle?.(category, context)}
+                  icon={categoryEntityConfig.getIcon(category)}
+                  iconColor={categoryEntityConfig.getIconColor?.(category)}
+                  details={getCategoryDetails(category, productCount)}
                   isSelected={categoryManagement.activeId === category.id}
                   onSelect={() => categoryManagement.setActiveId(category.id)}
-                  borderColor={category.color}
-                  menuItems={menuItems}
+                  borderColor={categoryEntityConfig.getBorderColor(category)}
+                  menuItems={actions}
                 />
               );
             })}
@@ -156,7 +148,7 @@ const CategoriesPage: React.FC = () => {
                 onDeleteProduct={categoryManagement.handleDeleteProductRequest}
               />
             ) : (
-              <div className="h-full flex items-center justify-center">
+              <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">
                   <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Tag className="w-10 h-10 text-muted-foreground" />

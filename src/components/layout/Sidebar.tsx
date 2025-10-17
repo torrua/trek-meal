@@ -47,17 +47,17 @@ const NavLinkItem = ({
   <NavLink
     to={item.path}
     className={cn(
-      'group flex items-center gap-3 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap',
-      'notion-bg-hover notion-focus-ring',
-      isNested ? 'py-1.5 pr-3 pl-9' : 'px-3 py-2',
+      'group flex items-center gap-3 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap',
+      'notion-focus-ring',
+      isNested ? 'py-2 pr-3 pl-9' : 'px-3 py-2.5',
       isActive
-        ? 'bg-muted/80 text-foreground'
-        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+        ? 'bg-muted text-foreground notion-shadow-xs'
+        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
     )}
     end
   >
-    <item.icon className="w-4 h-4" />
-    <span>{item.label}</span>
+    <item.icon className="w-4 h-4 flex-shrink-0" />
+    <span className="truncate">{item.label}</span>
   </NavLink>
 );
 
@@ -69,9 +69,9 @@ const Sidebar = ({ isSidebarOpen, location }: { isSidebarOpen: boolean; location
         isSidebarOpen ? 'w-64 p-4' : 'w-0 p-0 overflow-hidden'
       )}
     >
-      <nav className="flex-grow space-y-4">
-        <div>
-          <h3 className="px-3 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2">
+      <nav className="flex-grow space-y-6">
+        <div className="space-y-1">
+          <h3 className="px-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
             Основные
           </h3>
           {mainNavigation.map((item) => (
@@ -79,8 +79,8 @@ const Sidebar = ({ isSidebarOpen, location }: { isSidebarOpen: boolean; location
           ))}
         </div>
 
-        <div>
-          <h3 className="px-3 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2">
+        <div className="space-y-1">
+          <h3 className="px-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
             Базы данных
           </h3>
           {dbNavigation.map((item) => (
@@ -88,8 +88,8 @@ const Sidebar = ({ isSidebarOpen, location }: { isSidebarOpen: boolean; location
           ))}
         </div>
 
-        <div>
-          <h3 className="px-3 text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-2 mt-4">
+        <div className="space-y-1">
+          <h3 className="px-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
             Категории
           </h3>
           {categoriesNavigation.map((item) => (

@@ -20,22 +20,34 @@ const PortionListItem: React.FC<PortionListItemProps> = ({
   return (
     <div
       className={cn(
-        'group relative bg-muted dark:bg-dark-tertiary rounded-notion-md border border-l-4 px-3 py-2 transition-all duration-200 hover:shadow-notion-sm hover:border-border/50 dark:hover:border-dark-border'
+        // Base styling with Notion-style hover effects
+        'group relative rounded-lg border transition-all duration-150',
+        'bg-card border-border hover:bg-card-hover hover:border-border-hover',
+
+        // Padding
+        'p-3'
       )}
-      style={{ borderLeftColor: 'var(--notion-blue)' }}
+      style={{
+        borderLeftWidth: '3px',
+        borderLeftColor: 'var(--notion-blue)',
+      }}
       data-testid={`portion-${portion.name}`}
     >
-      <div className="flex items-center justify-between">
-        {/* Левая часть: Иконка и Название */}
-        <div className="flex items-center gap-x-2 text-notion-sm min-w-0">
-          <Package className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          <h3 className="font-medium text-foreground dark:text-white truncate">{portion.name}</h3>
+      <div className="flex items-center gap-3 min-h-[1.5rem]">
+        {/* Icon */}
+        <div className="flex-shrink-0 w-8 h-8 rounded-md bg-muted/60 border border-border flex items-center justify-center">
+          <Package className="w-4 h-4 text-muted-foreground" />
         </div>
 
-        {/* Правая часть: Вес и кнопки действий */}
+        {/* Title and Weight */}
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <h3 className="text-sm font-medium text-foreground truncate">{portion.name}</h3>
+        </div>
+
+        {/* Weight and buttons */}
         <div className="flex items-center gap-4">
           <div
-            className="flex items-center gap-1.5 text-notion-sm text-muted-foreground"
+            className="flex items-center gap-1.5 text-[12px] text-muted-foreground"
             title="Вес порции"
           >
             <Scale className="w-4 h-4" />
@@ -48,11 +60,11 @@ const PortionListItem: React.FC<PortionListItemProps> = ({
                 e.stopPropagation();
                 onEdit();
               }}
-              className="p-1 hover:bg-muted-foreground/10 rounded-notion-sm transition-colors"
+              className="p-1.5 rounded-md transition-all duration-200 hover:bg-muted/60 active:scale-95 text-muted-foreground hover:text-foreground"
               title="Редактировать порцию"
               aria-label={`Редактировать порцию ${portion.name}`}
             >
-              <Edit className="w-4 h-4 text-muted-foreground" />
+              <Edit className="w-4 h-4" />
             </button>
             {canDelete && (
               <button
@@ -60,11 +72,11 @@ const PortionListItem: React.FC<PortionListItemProps> = ({
                   e.stopPropagation();
                   onDelete();
                 }}
-                className="p-1 hover:bg-danger/10 rounded-notion-sm transition-colors"
+                className="p-1.5 rounded-md transition-all duration-200 hover:bg-danger/10 active:scale-95 text-danger"
                 title="Удалить порцию"
                 aria-label={`Удалить порцию ${portion.name}`}
               >
-                <Trash2 className="w-4 h-4 text-danger" />
+                <Trash2 className="w-4 h-4" />
               </button>
             )}
           </div>

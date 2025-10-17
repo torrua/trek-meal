@@ -103,8 +103,6 @@ const useTripStore = create<TripState>()(
           status: 'planning',
           selectedMeals: {},
           dayMeals: defaultDayMeals,
-          // Keep mealsPerDay for backward compatibility
-          mealsPerDay: tripData.mealsPerDay || 3,
         };
         set((state) => ({ trips: [...state.trips, newTrip] }));
         toast.success(`Поход "${newTrip.name}" создан!`);

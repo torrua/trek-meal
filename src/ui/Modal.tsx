@@ -1,6 +1,7 @@
 // src/ui/Modal.tsx
 
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import cn from 'classnames';
 import { X } from 'lucide-react';
 
@@ -29,42 +30,38 @@ const Modal: React.FC<ModalProps> = ({
   size = 'lg',
   showCloseButton = true,
 }) => {
-  // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-      // Prevent body scroll
       document.body.style.overflow = 'hidden';
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
     };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-      {/* Notion-style backdrop */}
+      {/* Enhanced Notion-style backdrop */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Modal content */}
+      {/* Modal content with refined styling */}
       <div
         className={cn(
-          'relative bg-card rounded-2xl border notion-border-subtle notion-shadow-lg',
-          'w-full max-h-[85vh] flex flex-col overflow-hidden',
+          'relative bg-card rounded-2xl border border-border notion-shadow-xl',
+          'w-full max-h-[90vh] flex flex-col overflow-hidden',
           'notion-scale-in',
           sizeClasses[size]
         )}
@@ -73,10 +70,13 @@ const Modal: React.FC<ModalProps> = ({
         aria-modal="true"
         aria-labelledby="modal-title"
       >
-        {/* Header */}
-        <div className="flex-shrink-0 px-6 py-5 border-b notion-border-subtle">
-          <div className="flex items-center justify-between">
-            <h2 id="modal-title" className="text-lg font-semibold text-foreground tracking-tight">
+        {/* Header with refined spacing */}
+        <div className="flex-shrink-0 px-6 py-4 border-b border-border/60">
+          <div className="flex items-center justify-between gap-4">
+            <h2
+              id="modal-title"
+              className="text-xl font-semibold text-foreground tracking-tight leading-tight"
+            >
               {title}
             </h2>
 
@@ -84,9 +84,9 @@ const Modal: React.FC<ModalProps> = ({
               <button
                 onClick={onClose}
                 className={cn(
-                  'p-1.5 rounded-lg text-muted-foreground hover:text-foreground',
+                  'p-2 rounded-lg text-muted-foreground hover:text-foreground',
                   'hover:bg-muted/60 transition-all duration-200',
-                  'notion-focus-ring'
+                  'notion-focus-ring flex-shrink-0'
                 )}
                 aria-label="Закрыть"
               >
@@ -96,12 +96,13 @@ const Modal: React.FC<ModalProps> = ({
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content with refined padding */}
         <div className="flex-1 overflow-y-auto notion-scrollbar">
           <div className="p-6">{children}</div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.getElementById('root-portal')!
   );
 };
 

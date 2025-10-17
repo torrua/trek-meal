@@ -1,39 +1,10 @@
 // src/ui/ThemedSelect.tsx
 
-import React from 'react';
-import Select, { Props, GroupBase } from 'react-select';
-import CreatableSelect from 'react-select/creatable';
-import { useThemeAwareSelectStyles } from '../hooks/useThemeAwareSelectStyles';
-
-interface ThemedSelectProps<
-  Option,
-  IsMulti extends boolean = false,
-  Group extends GroupBase<Option> = GroupBase<Option>,
-> extends Props<Option, IsMulti, Group> {
-  isCreatable?: boolean;
+// Deprecated: ThemedSelect removed in favor of DropdownSelect (light-only, Notion-like)
+export default function ThemedSelect() {
+  if (process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console.warn('[ThemedSelect] Deprecated. Use DropdownSelect from ui instead.');
+  }
+  return null;
 }
-
-const ThemedSelect = <
-  Option,
-  IsMulti extends boolean = false,
-  Group extends GroupBase<Option> = GroupBase<Option>,
->(
-  props: ThemedSelectProps<Option, IsMulti, Group>
-) => {
-  const { isCreatable, ...rest } = props;
-  const themedStyles = useThemeAwareSelectStyles<Option, IsMulti, Group>();
-
-  const SelectComponent = isCreatable ? CreatableSelect : Select;
-
-  return (
-    <SelectComponent
-      {...rest}
-      styles={themedStyles}
-      menuPortalTarget={document.body}
-      // Добавляем класс для кастомизации через CSS
-      classNamePrefix="react-select"
-    />
-  );
-};
-
-export default ThemedSelect;

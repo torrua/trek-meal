@@ -68,8 +68,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
               // Variant styles
               variant === 'default' && [
-                'h-10 rounded-lg border notion-border-subtle bg-background px-4 py-2',
-                'hover:border-border focus:border-primary/50 focus:bg-background',
+                'h-10 rounded-lg border border-border bg-background px-4 py-2',
+                'hover:border-border-hover focus:border-primary/60 focus:bg-card',
                 'focus:ring-2 focus:ring-primary/20',
                 error && 'border-danger focus:border-danger focus:ring-danger/20',
               ],

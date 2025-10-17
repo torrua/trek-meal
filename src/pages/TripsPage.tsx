@@ -2,17 +2,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Backpack,
-  Filter,
-  MapPinPlus,
-  Edit,
-  Copy,
-  Trash2,
-  Share,
-  Clock,
-  Route,
-} from 'lucide-react';
+import { Backpack, Filter, MapPinPlus, MapPin, Users, Calendar } from 'lucide-react';
 import { useTripsManagement } from '../hooks/useTripsManagement';
 import TripFiltersComponent from '../components/trips/TripFiltersComponent';
 import TripDetail from '../components/trips/TripDetail';
@@ -21,18 +11,17 @@ import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import AddParticipantsModal from '../components/trips/AddParticipantsModal';
 import EntityCard from '../ui/EntityCard';
-import { DIFFICULTY_CONFIG, STATUS_CONFIG } from '../constants/trips';
-import { Users, MapPin, Calendar } from 'lucide-react';
+import { tripEntityConfig } from '../config/entityConfig';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { formatDate } from '../utils';
 
 const TripsPage: React.FC = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const {
     // state
     activeId,
     filters,
-    // showFormModal, // no longer used for editing
-    // editingTrip, // no longer used for editing
     showFilters,
     tripToDelete,
     isAddParticipantModalOpen,
@@ -55,17 +44,50 @@ const TripsPage: React.FC = () => {
     handleExport,
     handleRequestDelete,
     handleConfirmDelete,
-    handleCloseModal,
     handleAddParticipant,
     handleSelectTrip,
   } = useTripsManagement();
 
+  // Function to transform trip details to match EntityCard's DetailItem type
+  const getTripDetails = (trip: any) => {
+    const details = [
+      {
+        key: 'participants',
+        icon: Users,
+        text: trip.participants.length,
+        title: 'Участники',
+      },
+    ];
+
+    if (trip.destination) {
+      details.push({
+        key: 'destination',
+        icon: MapPin,
+        text: trip.destination,
+        title: 'Место',
+      });
+    }
+
+    if (trip.startDate) {
+      details.push({
+        key: 'startDate',
+        icon: Calendar,
+        text: formatDate(trip.startDate),
+        title: 'Дата',
+      });
+    }
+
+    return details;
+  };
+
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       {/* Заголовок и действия */}
-      <div className="mb-4 sm:mb-6">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Походы</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+            Походы
+          </h1>
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setShowFilters((s) => !s)}
@@ -77,7 +99,7 @@ const TripsPage: React.FC = () => {
             >
               <Filter className="w-4 h-4" />
               {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-card" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
               )}
             </Button>
             <Button onClick={() => navigate('/trips/new')} variant="primary" size="default">
@@ -90,107 +112,36 @@ const TripsPage: React.FC = () => {
 
       {/* Фильтры */}
       {showFilters && (
-        <div className="mb-4 sm:mb-6 bg-card rounded-xl border p-3 sm:p-4">
+        <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border notion-shadow-xs p-4 sm:p-5">
           <TripFiltersComponent filters={filters} onFiltersChange={setFilters} />
         </div>
       )}
 
-      {/* Основной контент */}
       {filteredTrips.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* Список походов */}
           <div className="lg:col-span-1 space-y-3">
             {filteredTrips.map((trip) => {
-              const difficultyConfig = DIFFICULTY_CONFIG[trip.difficulty];
-              const statusConfig = STATUS_CONFIG[trip.effectiveStatus];
-              const statusBorderColor =
-                statusConfig.icon === Clock
-                  ? '#f97316' // orange-600
-                  : statusConfig.icon === Route
-                    ? '#9333ea' // purple-600
-                    : '#4b5563'; // gray-600
-
-              const details = [
-                {
-                  key: 'status',
-                  icon: statusConfig.icon,
-                  text: statusConfig.label,
-                  title: statusConfig.label,
-                  className:
-                    statusConfig.icon === Clock
-                      ? 'text-orange-600 dark:text-orange-400'
-                      : statusConfig.icon === Route
-                        ? 'text-purple-600 dark:text-purple-400'
-                        : 'text-gray-600 dark:text-gray-400',
-                },
-                {
-                  key: 'participants',
-                  icon: Users,
-                  text: trip.participants.length,
-                  title: 'Участники',
-                },
-                ...(trip.destination
-                  ? [{ key: 'destination', icon: MapPin, text: trip.destination, title: 'Место' }]
-                  : []),
-                ...(trip.startDate
-                  ? [
-                      {
-                        key: 'date',
-                        icon: Calendar,
-                        text: formatDate(trip.startDate),
-                        title: 'Дата',
-                      },
-                    ]
-                  : []),
-              ];
-
-              const menuItems = [
-                {
-                  label: 'Редактировать',
-                  icon: Edit,
-                  onClick: (e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    navigate(`/trips/${trip.id}/edit`);
-                  },
-                },
-                {
-                  label: 'Клонировать',
-                  icon: Copy,
-                  onClick: (e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    handleClone(trip);
-                  },
-                },
-                {
-                  label: 'Экспорт',
-                  icon: Share,
-                  onClick: (e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    handleExport(trip);
-                  },
-                },
-                {
-                  label: 'Удалить',
-                  icon: Trash2,
-                  onClick: (e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    handleRequestDelete(trip);
-                  },
-                  className: 'text-danger',
-                },
-              ];
+              const cardConfig = tripEntityConfig.views.card;
+              const actions = tripEntityConfig.getActions({
+                onEdit: () => navigate(`/trips/${trip.id}/edit`),
+                onClone: () => handleClone(trip),
+                onExport: () => handleExport(trip),
+                onDelete: () => handleRequestDelete(trip),
+              });
 
               return (
                 <EntityCard
                   key={trip.id}
-                  title={trip.name}
-                  icon={difficultyConfig.icon}
-                  iconColor={difficultyConfig.colorClassName}
-                  details={details}
-                  menuItems={menuItems}
+                  title={cardConfig.title(trip)}
+                  subtitle={cardConfig.subtitle && cardConfig.subtitle(trip)}
+                  icon={tripEntityConfig.getIcon(trip)}
+                  iconColor={tripEntityConfig.getIconColor && tripEntityConfig.getIconColor(trip)}
+                  details={getTripDetails(trip)}
+                  menuItems={actions}
                   isSelected={activeId === trip.id}
                   onSelect={() => handleSelectTrip(trip.id)}
-                  borderColor={statusBorderColor}
+                  borderColor={tripEntityConfig.getBorderColor(trip)}
                 />
               );
             })}
@@ -205,7 +156,7 @@ const TripsPage: React.FC = () => {
                 onAddParticipant={handleAddParticipant}
               />
             ) : (
-              <div className="h-full flex items-center justify-center">
+              <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">
                   <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Backpack className="w-10 h-10 text-muted-foreground" />
@@ -218,6 +169,26 @@ const TripsPage: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Модальное окно деталей для мобильных устройств */}
+          {isMobile && activeId !== null && (
+            <Modal
+              isOpen={activeId !== null}
+              onClose={() => setActiveId(null)}
+              title={selectedTrip?.name || 'Детали'}
+            >
+              <TripDetail
+                trip={selectedTrip ?? null}
+                onEdit={() => {
+                  if (selectedTrip) {
+                    handleEdit(selectedTrip);
+                    setActiveId(null);
+                  }
+                }}
+                onAddParticipant={handleAddParticipant}
+              />
+            </Modal>
+          )}
         </div>
       ) : (
         <div className="text-center py-16 px-6 text-muted-foreground">
@@ -225,34 +196,17 @@ const TripsPage: React.FC = () => {
           <h3 className="text-lg font-medium text-foreground">
             {hasActiveFilters ? 'Походы не найдены' : 'Походов пока нет'}
           </h3>
+          <p className="text-sm text-muted-foreground mt-2">
+            {hasActiveFilters
+              ? 'Попробуйте изменить параметры фильтрации'
+              : 'Создайте свой первый поход, чтобы начать планирование'}
+          </p>
           {!hasActiveFilters && (
-            <Button onClick={handleAddNew} className="mt-4">
+            <Button onClick={() => navigate('/trips/new')} className="mt-4">
               <MapPinPlus className="w-4 h-4 mr-2" />
               Создать первый поход
             </Button>
           )}
-        </div>
-      )}
-
-      {/* Модальное окно деталей для мобильных устройств */}
-      {activeId !== null && (
-        <div className="lg:hidden">
-          <Modal
-            isOpen={activeId !== null}
-            onClose={() => setActiveId(null)}
-            title={selectedTrip?.name || 'Детали'}
-          >
-            <TripDetail
-              trip={selectedTrip ?? null}
-              onEdit={() => {
-                if (selectedTrip) {
-                  handleEdit(selectedTrip);
-                  setActiveId(null);
-                }
-              }}
-              onAddParticipant={handleAddParticipant}
-            />
-          </Modal>
         </div>
       )}
 

@@ -26,6 +26,13 @@ const DishesPage: React.FC = () => {
   const [activeId, setActiveId] = useState<number | null>(null);
   // Editing handled via DishDetailPage routes
   const [dishToDelete, setDishToDelete] = useState<Dish | null>(null);
+  const [openSections, setOpenSections] = useState<string[]>(['main', 'products', 'trips']);
+
+  const handleToggleSection = useCallback((sectionId: string) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
+  }, []);
 
   const filteredDishes = useMemo(() => {
     return dishes
@@ -102,12 +109,14 @@ const DishesPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Блюда</h1>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Button variant="primary" onClick={handleAddNew}>
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+            Блюда
+          </h1>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleAddNew} variant="primary" size="default">
               <CirclePlus className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Добавить блюдо</span>
             </Button>
@@ -153,9 +162,11 @@ const DishesPage: React.FC = () => {
               <DishDetail
                 dish={selectedDish}
                 onEdit={() => selectedDish && handleEdit(selectedDish)}
+                openSections={openSections}
+                onToggleSection={handleToggleSection}
               />
             ) : (
-              <div className="h-full flex items-center justify-center">
+              <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">
                   <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Soup className="w-10 h-10 text-muted-foreground" />

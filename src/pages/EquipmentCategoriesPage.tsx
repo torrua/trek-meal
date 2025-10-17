@@ -113,11 +113,13 @@ const EquipmentCategoriesPage: React.FC = () => {
   );
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       {/* Header and buttons */}
-      <div className="mb-4 sm:mb-6">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Категории снаряжения</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+            Категории снаряжения
+          </h1>
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setShowFilters((s) => !s)}
@@ -125,10 +127,11 @@ const EquipmentCategoriesPage: React.FC = () => {
               size="icon"
               className="relative"
               title="Фильтры"
+              aria-label="Показать фильтры"
             >
               <Filter className="w-4 h-4" />
               {hasActiveFilters && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-card" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-card" />
               )}
             </Button>
             <Button onClick={handleAddNew} variant="primary" size="default">
@@ -141,16 +144,16 @@ const EquipmentCategoriesPage: React.FC = () => {
 
       {/* Filters */}
       {showFilters && (
-        <div className="mb-4 sm:mb-6 bg-card rounded-xl border p-3 sm:p-4">
+        <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border notion-shadow-xs p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Наличие снаряжения
               </label>
               <select
                 value={filters.hasEquipment}
                 onChange={(e) => setFilters((prev) => ({ ...prev, hasEquipment: e.target.value }))}
-                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="w-full p-2 border border-border rounded-lg bg-card text-foreground"
                 aria-label="Фильтр по наличию снаряжения"
               >
                 <option value="all">Все категории</option>
@@ -195,16 +198,20 @@ const EquipmentCategoriesPage: React.FC = () => {
                   label: 'Удалить',
                   icon: Trash2,
                   onClick: () => handleRequestDelete(category),
-                  className:
-                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
+                  className: 'text-danger hover:bg-danger/10',
                 },
               ];
+
+              // Create a component that renders the DynamicIcon
+              const IconComponent = () => (
+                <DynamicIcon name={category.iconName} className="w-5 h-5" />
+              );
 
               return (
                 <EntityCard
                   key={category.id}
                   title={category.name}
-                  icon={() => <DynamicIcon name={category.iconName} className="w-5 h-5" />}
+                  icon={IconComponent}
                   details={details}
                   isSelected={activeId === category.id}
                   onSelect={() => setActiveId(category.id)}
@@ -219,11 +226,11 @@ const EquipmentCategoriesPage: React.FC = () => {
           {/* Detail panel */}
           <div className="lg:col-span-2">
             {selectedCategory ? (
-              <div className="bg-white dark:bg-gray-800 rounded-xl border p-6">
+              <div className="bg-card rounded-xl border border-border p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <DynamicIcon name={selectedCategory.iconName} className="w-8 h-8" />
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-semibold text-foreground">
                       {selectedCategory.name}
                     </h2>
                   </div>
@@ -239,24 +246,24 @@ const EquipmentCategoriesPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                    <h3 className="text-lg font-medium text-foreground mb-3">
                       Информация о категории
                     </h3>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <label className="block text-sm font-medium text-muted-foreground">
                           Название
                         </label>
-                        <p className="text-gray-900 dark:text-white">{selectedCategory.name}</p>
+                        <p className="text-foreground">{selectedCategory.name}</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <label className="block text-sm font-medium text-muted-foreground">
                           Иконка
                         </label>
                         <DynamicIcon name={selectedCategory.iconName} className="w-8 h-8" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <label className="block text-sm font-medium text-muted-foreground">
                           Цвет
                         </label>
                         <div className="flex items-center gap-2">
@@ -264,7 +271,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                             className="w-6 h-6 rounded border"
                             style={{ backgroundColor: selectedCategory.color }}
                           />
-                          <span className="text-gray-900 dark:text-white font-mono">
+                          <span className="text-foreground font-mono">
                             {selectedCategory.color}
                           </span>
                         </div>
@@ -273,17 +280,15 @@ const EquipmentCategoriesPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                      Статистика
-                    </h3>
+                    <h3 className="text-lg font-medium text-foreground mb-3">Статистика</h3>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <label className="block text-sm font-medium text-muted-foreground">
                           Количество снаряжения
                         </label>
                         <div className="flex items-center gap-2">
-                          <Backpack className="w-4 h-4 text-gray-500" />
-                          <p className="text-gray-900 dark:text-white">
+                          <Backpack className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-foreground">
                             {
                               equipmentStore.equipment.filter(
                                 (e) => e.categoryId === selectedCategory.id
@@ -297,14 +302,16 @@ const EquipmentCategoriesPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-xl border p-8 text-center">
-                <Layers className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Выберите категорию
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Выберите категорию из списка, чтобы увидеть подробную информацию
-                </p>
+              <div className="h-full flex items-start justify-center pt-16">
+                <div className="text-center p-4">
+                  <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Layers className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">Выберите категорию</h3>
+                  <p className="text-muted-foreground">
+                    Выберите категорию из списка, чтобы увидеть подробную информацию
+                  </p>
+                </div>
               </div>
             )}
           </div>

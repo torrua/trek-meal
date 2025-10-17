@@ -44,11 +44,13 @@ const MealTypesPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       {/* Header and buttons */}
-      <div className="mb-4 sm:mb-6">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Типы приемов пищи</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+            Типы приемов пищи
+          </h1>
           <div className="flex items-center gap-2">
             <Button
               onClick={() => (window.location.href = '/meal-types/new')}
@@ -77,8 +79,7 @@ const MealTypesPage: React.FC = () => {
                   label: 'Удалить',
                   icon: Trash2,
                   onClick: () => handleDeleteRequest(mealType),
-                  className:
-                    'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50',
+                  className: 'text-danger hover:bg-danger/10',
                 },
               ];
 
@@ -108,11 +109,11 @@ const MealTypesPage: React.FC = () => {
           {/* Detail panel */}
           <div className="lg:col-span-2">
             {selectedMealType ? (
-              <div className="bg-white dark:bg-gray-800 rounded-xl border p-6">
+              <div className="bg-card rounded-xl border border-border p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <Utensils className="w-8 h-8 text-primary" />
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    <h2 className="text-xl font-semibold text-foreground">
                       {selectedMealType.name}
                     </h2>
                   </div>
@@ -128,23 +129,21 @@ const MealTypesPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                      Информация о типе
-                    </h3>
+                    <h3 className="text-lg font-medium text-foreground mb-3">Информация о типе</h3>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <label className="block text-sm font-medium text-muted-foreground">
                           Название
                         </label>
-                        <p className="text-gray-900 dark:text-white">{selectedMealType.name}</p>
+                        <p className="text-foreground">{selectedMealType.name}</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <label className="block text-sm font-medium text-muted-foreground">
                           Повторяемость
                         </label>
                         <div className="flex items-center gap-2">
-                          <Repeat className="w-4 h-4 text-gray-500" />
-                          <span className="text-gray-900 dark:text-white">
+                          <Repeat className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-foreground">
                             {selectedMealType.repeatable
                               ? 'Можно добавлять несколько раз в день'
                               : 'Один раз в день'}
@@ -155,16 +154,14 @@ const MealTypesPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                      Использование
-                    </h3>
+                    <h3 className="text-lg font-medium text-foreground mb-3">Использование</h3>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <label className="block text-sm font-medium text-muted-foreground">
                           Используется в походах
                         </label>
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-900 dark:text-white">
+                          <span className="text-foreground">
                             {/* Simplified for now - will fix the meal type usage logic later */}0
                           </span>
                         </div>
@@ -174,14 +171,18 @@ const MealTypesPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-xl border p-8 text-center">
-                <Utensils className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Выберите тип приема пищи
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Выберите тип из списка, чтобы увидеть подробную информацию
-                </p>
+              <div className="h-full flex items-start justify-center pt-16">
+                <div className="text-center p-4">
+                  <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Utensils className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    Выберите тип приема пищи
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Выберите тип из списка, чтобы увидеть подробную информацию
+                  </p>
+                </div>
               </div>
             )}
           </div>

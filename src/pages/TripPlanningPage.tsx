@@ -3,7 +3,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SingleValue } from 'react-select';
-import ThemedSelect from '../ui/ThemedSelect';
 import DropdownSelect from '../ui/DropdownSelect';
 import DetailPane from '../ui/DetailPane';
 import {
@@ -342,11 +341,14 @@ const MealSlot: React.FC<{
 
       {/* Add Item Selector */}
       <div className="space-y-3">
-        <ThemedSelect<SelectMealOption, false, GroupedMealOption>
-          options={groupedMealOptions}
-          onChange={(option) => {
-            if (option) {
-              onAddItem(day, meal.instanceId, option);
+        <DropdownSelect
+          label="Добавить продукт или блюдо"
+          icon={Plus}
+          options={groupedMealOptions.flatMap((g) => g.options)}
+          value=""
+          onChange={(val) => {
+            if (typeof val === 'string') {
+              onAddItem(day, meal.instanceId, { value: val, label: '' });
             }
           }}
           placeholder={
@@ -354,18 +356,7 @@ const MealSlot: React.FC<{
               ? 'Сначала создайте продукты или блюда'
               : 'Добавить продукт или блюдо...'
           }
-          value={null}
-          isDisabled={groupedMealOptions.length === 0}
-          isClearable={false}
-          formatGroupLabel={(data) => (
-            <div className="flex items-center justify-between py-1">
-              <span className="font-medium text-foreground text-sm">{data.label}</span>
-              <span className="text-xs bg-muted text-muted-foreground rounded px-1.5 py-0.5">
-                {data.options.length}
-              </span>
-            </div>
-          )}
-          noOptionsMessage={() => 'Нет доступных опций'}
+          disabled={groupedMealOptions.length === 0}
         />
 
         {groupedMealOptions.length === 0 && (
@@ -723,7 +714,8 @@ function TripPlanningPage() {
                       label: template.name,
                     }))}
                     value=""
-                    onChange={(value) => {
+                    onChange={(val) => {
+                      const value = Array.isArray(val) ? '' : val;
                       if (value && trip) {
                         const selectedTemplate = mealTemplates.find(
                           (t) => t.id === parseInt(value, 10)

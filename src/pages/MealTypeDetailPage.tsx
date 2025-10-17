@@ -5,6 +5,7 @@ import useMealTypesStore, { MealType } from '../stores/useMealTypesStore';
 import { ArrowLeft, Utensils } from 'lucide-react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import FormField from '../ui/FormField';
 
 const MealTypeDetailPage: React.FC = () => {
   const { mealTypeId } = useParams<{ mealTypeId: string }>();
@@ -85,24 +86,23 @@ const MealTypeDetailPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border p-6">
+        <div className="bg-card rounded-xl border border-border p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <Input
-              label="Название типа"
-              name="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={errors.name}
-              autoFocus
-              required
-              maxLength={50}
-              placeholder="Например, Завтрак"
-              className="text-base font-medium"
-            />
+            <FormField label="Название типа" error={errors.name} required>
+              <Input
+                name="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+                maxLength={50}
+                placeholder="Например, Завтрак"
+                className="text-base font-medium"
+              />
+            </FormField>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              <label className="block text-sm font-medium text-foreground mb-3">
                 Повторяемость
               </label>
               <div className="flex items-center">
@@ -116,9 +116,7 @@ const MealTypeDetailPage: React.FC = () => {
                       className="sr-only"
                     />
                     <div
-                      className={`block w-10 h-6 rounded-full transition-colors ${
-                        repeatable ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                      }`}
+                      className={`block w-10 h-6 rounded-full transition-colors ${repeatable ? 'bg-primary' : 'bg-muted'}`}
                     ></div>
                     <div
                       className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${
@@ -126,7 +124,7 @@ const MealTypeDetailPage: React.FC = () => {
                       }`}
                     ></div>
                   </div>
-                  <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="ml-3 text-sm font-medium text-foreground">
                     Можно добавлять несколько раз в день
                   </span>
                 </label>

@@ -10,10 +10,12 @@ import Modal from '../ui/Modal';
 import ConfirmModal from '../ui/ConfirmModal';
 import MealForm from '../components/meals/MealForm';
 import MealDetail from '../components/meals/MealDetail';
+import { useIsMobile } from '../hooks/useIsMobile';
 import type { Meal, MealData } from '../types';
 
 const MealsPage: React.FC = () => {
   const { meals, addMeal, updateMeal, removeMeal } = useMealStore();
+  const isMobile = useIsMobile();
   const [activeId, setActiveId] = useState<number | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
@@ -58,14 +60,28 @@ const MealsPage: React.FC = () => {
     }
   }, [mealToDelete, activeId, removeMeal]);
 
+  // Function to transform meal details to match EntityCard's DetailItem type
+  const getMealDetails = (meal: Meal) => {
+    return [
+      {
+        key: 'items',
+        icon: mealEntityConfig.getIcon(meal),
+        text: meal.items.length,
+        title: 'Компоненты',
+      },
+    ];
+  };
+
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6">
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Приемы пищи</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
+            Приемы пищи
+          </h1>
           <div className="flex items-center gap-2">
             <Link to="/meals/new">
-              <Button variant="primary">
+              <Button variant="primary" size="default">
                 <Plus className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Создать прием пищи</span>
               </Button>
@@ -79,18 +95,34 @@ const MealsPage: React.FC = () => {
           {/* List */}
           <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)]">
             {meals.map((meal) => {
-              const cardConfig = mealEntityConfig.views.card;
-              const actions = mealEntityConfig.getActions({
-                onEdit: () => handleEdit(meal),
-                onDelete: () => handleRequestDelete(meal),
-              });
+              const actions = mealEntityConfig
+                .getActions({
+                  onEdit: () => handleEdit(meal),
+                  onDelete: () => handleRequestDelete(meal),
+                })
+                .map((action) => ({
+                  ...action,
+                  onClick: (e: React.MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // We need to call the original handler with the meal
+                    // Since the original handler expects the meal as a parameter,
+                    // we'll create a wrapper that calls it with the meal
+                    if (action.label === 'Редактировать') {
+                      handleEdit(meal);
+                    } else if (action.label === 'Удалить') {
+                      handleRequestDelete(meal);
+                    }
+                  },
+                }));
               return (
                 <EntityCard
                   key={meal.id}
-                  title={cardConfig.title(meal)}
+                  title={mealEntityConfig.views.card.title(meal)}
+                  subtitle={`${meal.items.length} комп.`}
                   icon={mealEntityConfig.getIcon(meal)}
-                  details={cardConfig.details(meal)}
-                  description={meal.description}
+                  iconColor="#6b7280" // gray-500 to match other pages
+                  details={getMealDetails(meal)}
                   borderColor={mealEntityConfig.getBorderColor(meal)}
                   isSelected={activeId === meal.id}
                   onSelect={() => setActiveId(meal.id)}
@@ -114,7 +146,7 @@ const MealsPage: React.FC = () => {
                 }
               />
             ) : (
-              <div className="h-full flex items-center justify-center">
+              <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">
                   <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Utensils className="w-10 h-10 text-muted-foreground" />
@@ -145,7 +177,7 @@ const MealsPage: React.FC = () => {
       )}
 
       {/* Detail modal (mobile) */}
-      {activeId !== null && (
+      {isMobile && activeId !== null && (
         <div className="lg:hidden">
           <Modal
             isOpen={activeId !== null}

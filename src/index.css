@@ -1,52 +1,53 @@
 /* src/index.css */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Notion-inspired Light Theme */
-    --background: 255 255 255; /* Pure white */
-    --foreground: 55 53 47; /* Notion's main text color */
+    /* Refined Notion-inspired Light Theme */
+    --background: 255 255 255;
+    --foreground: 55 53 47;
+
+    /* Card colors */
     --card: 255 255 255;
     --card-foreground: 55 53 47;
-    --muted: 248 248 248; /* Very light gray */
-    --muted-foreground: 120 119 116; /* Notion's secondary text */
-    --primary: 46 170 220; /* Notion's blue */
-    --primary-foreground: 255 255 255;
-    --secondary: 248 248 248;
-    --secondary-foreground: 55 53 47;
-    --danger: 235 87 87; /* Notion's red */
-    --danger-foreground: 255 255 255;
-    --border: 233 233 231; /* Notion's subtle border */
-    --input: 245 245 244; /* Notion's input background */
-    --ring: 46 170 220; /* Focus ring color */
-    --success: 68 151 103; /* Notion's green */
-    --warning: 224 162 59; /* Notion's yellow/orange */
-  }
+    --card-hover: 250 250 249;
 
-  .dark {
-    /* Notion-inspired Dark Theme */
-    --background: 25 25 25; /* Notion's dark background */
-    --foreground: 255 255 255;
-    --card: 32 32 32; /* Slightly lighter for cards */
-    --card-foreground: 255 255 255;
-    --muted: 37 37 37; /* Notion's darker sections */
-    --muted-foreground: 159 158 155; /* Notion's muted text in dark */
-    --primary: 80 188 235; /* Brighter blue for dark mode */
-    --primary-foreground: 25 25 25;
-    --secondary: 37 37 37;
-    --secondary-foreground: 255 255 255;
-    --danger: 255 112 112;
-    --danger-foreground: 25 25 25;
-    --border: 47 47 47; /* Subtle dark borders */
-    --input: 37 37 37;
-    --ring: 80 188 235;
-    --success: 98 181 133;
-    --warning: 255 193 115;
+    /* Muted colors */
+    --muted: 247 246 243;
+    --muted-foreground: 155 154 151;
+
+    /* Border colors */
+    --border: 233 233 231;
+    --border-hover: 209 209 206;
+
+    /* Input colors */
+    --input: 247 246 243;
+    --input-border: 233 233 231;
+
+    /* Primary brand color */
+    --primary: 35 131 226;
+    --primary-hover: 26 110 199;
+    --primary-foreground: 255 255 255;
+
+    /* Semantic colors */
+    --success: 15 123 108;
+    --success-foreground: 255 255 255;
+    --warning: 245 158 11;
+    --warning-foreground: 255 255 255;
+    --danger: 239 68 68;
+    --danger-foreground: 255 255 255;
+    --info: 59 130 246;
+    --info-foreground: 255 255 255;
+
+    /* Focus ring */
+    --ring: 35 131 226;
+
+    /* Secondary */
+    --secondary: 247 246 243;
+    --secondary-foreground: 55 53 47;
   }
 }
 
@@ -159,17 +160,29 @@
   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
 
-/* Notion-style shadows */
+/* Refined Notion-style shadows */
+.notion-shadow-xs {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
 .notion-shadow-sm {
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .notion-shadow {
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.notion-shadow-md {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .notion-shadow-lg {
-  box-shadow: 0 12px 40px rgb(0 0 0 / 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.notion-shadow-xl {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16);
 }
 
 /* Notion-style hover effects */

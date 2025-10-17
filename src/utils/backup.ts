@@ -9,7 +9,6 @@ import useCategoryStore from '../stores/useCategoryStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useMealTypesStore from '../stores/useMealTypesStore';
-import useThemeStore from '../stores/useThemeStore';
 import type { Participant, Trip } from '../types';
 
 interface BackupMetadata {
@@ -44,7 +43,7 @@ export const exportDataToJson = () => {
     const equipment = useEquipmentStore.getState().equipment;
     const equipmentCategories = useEquipmentCategoryStore.getState().categories;
     const mealTypes = useMealTypesStore.getState().mealTypes;
-    const theme = useThemeStore.getState().theme;
+    const theme = 'light';
 
     // Создаем метаданные для резервной копии
     const totalRecords =
@@ -184,9 +183,7 @@ export const importDataFromJson = (file: File) => {
         if (Array.isArray(importData.mealTypes)) {
           useMealTypesStore.setState({ mealTypes: importData.mealTypes });
         }
-        if (importData.settings?.theme) {
-          useThemeStore.setState({ theme: importData.settings.theme });
-        }
+        // Theme import ignored in light-only mode
       }
 
       const recordCount =

@@ -11,7 +11,7 @@ import Modal from '../../ui/Modal';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/ConfirmModal';
 import { Component, CirclePlus } from 'lucide-react';
-import ThemedSelect from '../../ui/ThemedSelect';
+import DropdownSelect from '../../ui/DropdownSelect';
 import useCategoryStore from '../../stores/useCategoryStore';
 
 interface ProductsContentProps {
@@ -99,11 +99,20 @@ const ProductsContent: React.FC<ProductsContentProps> = ({ setAddHandler, showFi
       <div className="lg:col-span-1">
         {showFilters && (
           <div className="mb-4">
-            <ThemedSelect<CategoryOption>
-              className="w-full"
-              value={filterCategory}
+            <DropdownSelect
+              label="Категория"
+              icon={Component}
               options={categoryOptions}
-              onChange={(option) => setFilterCategory(option as CategoryOption)}
+              value={filterCategory.value}
+              onChange={(val) =>
+                typeof val === 'string' &&
+                setFilterCategory(
+                  (categoryOptions.find((o) => o.value === val) as CategoryOption) || {
+                    value: 'all',
+                    label: 'Все категории',
+                  }
+                )
+              }
             />
           </div>
         )}

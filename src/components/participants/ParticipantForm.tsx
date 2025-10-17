@@ -1,21 +1,11 @@
 // src/components/participants/ParticipantForm.tsx
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  User,
-  Phone,
-  Mail,
-  Calendar,
-  Save,
-  AlertCircle,
-  X,
-  Users,
-  Award,
-  FileText,
-} from 'lucide-react';
+import { User, Phone, Mail, Calendar, Save, AlertCircle, X, FileText } from 'lucide-react';
 import type { Participant, ParticipantData } from '../../types';
 import Button from '../../ui/Button';
 import Input from '../../ui/Input';
+import FormField from '../../ui/FormField';
 import DropdownSelect from '../../ui/DropdownSelect';
 import Textarea from '../../ui/Textarea';
 import ConfirmModal from '../../ui/ConfirmModal';
@@ -42,6 +32,7 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
     email: '',
     birthDate: '',
     notes: '',
+    equipmentIds: [],
   });
   const [initialData, setInitialData] = useState<ParticipantData>(formData);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -161,69 +152,73 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
           </div>
 
           <div className="space-y-6">
-            <Input
-              label="Полное имя"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              error={errors.name}
-              required
-              placeholder="Введите полное имя"
-              icon={User}
-              disabled={isLoading}
-              autoFocus
-              className="text-base font-medium"
-            />
+            <FormField label="Полное имя" error={errors.name} required>
+              <Input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Введите полное имя"
+                icon={User}
+                disabled={isLoading}
+                autoFocus
+                className="text-base font-medium"
+              />
+            </FormField>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <DropdownSelect
                 label="Пол"
-                icon={Users}
+                icon={User}
                 value={formData.gender}
-                onChange={(value) => handleSelectChange('gender', value)}
+                onChange={(val) => typeof val === 'string' && handleSelectChange('gender', val)}
                 options={[
                   { value: 'male', label: 'Мужской' },
                   { value: 'female', label: 'Женский' },
                 ]}
+                placeholder="Выберите пол"
                 disabled={isLoading}
               />
 
               <DropdownSelect
-                label="Возрастная группа"
-                icon={Users}
+                label="Возраст"
+                icon={User}
                 value={formData.age}
-                onChange={(value) => handleSelectChange('age', value)}
+                onChange={(val) => typeof val === 'string' && handleSelectChange('age', val)}
                 options={[
                   { value: 'adult', label: 'Взрослый' },
                   { value: 'child', label: 'Ребенок' },
                 ]}
+                placeholder="Выберите возраст"
                 disabled={isLoading}
               />
 
               <DropdownSelect
-                label="Уровень опыта"
-                icon={Award}
+                label="Опыт"
+                icon={User}
                 value={formData.experienceLevel}
-                onChange={(value) => handleSelectChange('experienceLevel', value)}
+                onChange={(val) =>
+                  typeof val === 'string' && handleSelectChange('experienceLevel', val)
+                }
                 options={[
                   { value: 'beginner', label: 'Новичок' },
                   { value: 'experienced', label: 'Опытный' },
                   { value: 'professional', label: 'Профессионал' },
                 ]}
+                placeholder="Выберите уровень"
                 disabled={isLoading}
               />
             </div>
 
-            <Input
-              label="Дата рождения"
-              name="birthDate"
-              type="date"
-              value={formData.birthDate}
-              onChange={handleChange}
-              error={errors.birthDate}
-              icon={Calendar}
-              disabled={isLoading}
-            />
+            <FormField label="Дата рождения" error={errors.birthDate}>
+              <Input
+                name="birthDate"
+                type="date"
+                value={formData.birthDate}
+                onChange={handleChange}
+                icon={Calendar}
+                disabled={isLoading}
+              />
+            </FormField>
           </div>
         </div>
 
@@ -237,29 +232,29 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="Телефон"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              error={errors.phone}
-              placeholder="+7 (999) 123-45-67"
-              icon={Phone}
-              disabled={isLoading}
-            />
+            <FormField label="Телефон" error={errors.phone}>
+              <Input
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="+7 (999) 123-45-67"
+                icon={Phone}
+                disabled={isLoading}
+              />
+            </FormField>
 
-            <Input
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
-              placeholder="example@email.com"
-              icon={Mail}
-              disabled={isLoading}
-            />
+            <FormField label="Email" error={errors.email}>
+              <Input
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="example@email.com"
+                icon={Mail}
+                disabled={isLoading}
+              />
+            </FormField>
           </div>
         </div>
 

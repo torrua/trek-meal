@@ -8,13 +8,11 @@ export interface EquipmentCategory {
   id: number;
   name: string;
   color: string;
-  iconName: string;
 }
 
 export interface EquipmentCategoryData {
   name: string;
   color: string;
-  iconName: string;
 }
 
 interface EquipmentCategoryState {
@@ -28,14 +26,14 @@ const useEquipmentCategoryStore = create<EquipmentCategoryState>()(
   persist(
     (set, get) => ({
       categories: [
-        { id: 1, name: 'Палатки и тенты', color: '#22c55e', iconName: 'Tent' },
-        { id: 2, name: 'Рюкзаки и сумки', color: '#3b82f6', iconName: 'Backpack' },
-        { id: 3, name: 'Спальники и коврики', color: '#8b5cf6', iconName: 'BedDouble' },
-        { id: 4, name: 'Кухня', color: '#f97316', iconName: 'UtensilsCrossed' },
-        { id: 5, name: 'Одежда и обувь', color: '#ec4899', iconName: 'Shirt' },
-        { id: 6, name: 'Навигация', color: '#06b6d4', iconName: 'Compass' },
-        { id: 7, name: 'Инструменты', color: '#ef4444', iconName: 'Shield' },
-        { id: 8, name: 'Личное', color: '#eab308', iconName: 'User' },
+        { id: 1, name: 'Палатки и тенты', color: '#22c55e' },
+        { id: 2, name: 'Рюкзаки и сумки', color: '#3b82f6' },
+        { id: 3, name: 'Спальники и коврики', color: '#8b5cf6' },
+        { id: 4, name: 'Кухня', color: '#f97316' },
+        { id: 5, name: 'Одежда и обувь', color: '#ec4899' },
+        { id: 6, name: 'Навигация', color: '#06b6d4' },
+        { id: 7, name: 'Инструменты', color: '#ef4444' },
+        { id: 8, name: 'Личное', color: '#eab308' },
       ],
       addCategory: (data: EquipmentCategoryData) => {
         const newCategory = { id: Date.now(), ...data };

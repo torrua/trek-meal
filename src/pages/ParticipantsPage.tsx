@@ -1,6 +1,6 @@
 // src/pages/ParticipantsPage.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
@@ -15,6 +15,8 @@ import {
   CheckCheck,
   LayoutList,
   Grid3X3,
+  UploadCloud,
+  DownloadCloud,
 } from 'lucide-react';
 import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
 import { useParticipantsManagement } from '../hooks/useParticipantsManagement';
@@ -27,12 +29,17 @@ import ParticipantFiltersComponent from '../components/participants/ParticipantF
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard from '../ui/EntityCard';
-import { exportParticipantToJson } from '../utils/backup';
+import {
+  exportParticipantToJson,
+  exportBulkParticipantsToJson,
+  importDataFromJson,
+} from '../utils/backup';
 import SelectTripModal from '../components/participants/SelectTripModal';
 import { participantEntityConfig } from '../config/entityConfig';
 
 const ParticipantsPage: React.FC = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const {
     // state
     activeId,
@@ -131,11 +138,33 @@ const ParticipantsPage: React.FC = () => {
   const handleBulkExport = () => {
     if (selectedParticipantIds.length === 0) return;
 
-    console.log(`Exporting participants: ${selectedParticipantIds.join(', ')}`);
+    // Get selected participants and export them
+    const selectedParticipants = filteredParticipants.filter((p) =>
+      selectedParticipantIds.includes(p.id)
+    );
+    exportBulkParticipantsToJson(selectedParticipants);
+  };
+
+  // Import functionality
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importDataFromJson(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
     <div className="max-w-7xl mx-auto">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".json"
+        className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
       {/* Заголовок и кнопки */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
@@ -159,6 +188,16 @@ const ParticipantsPage: React.FC = () => {
                   )}
                 </Button>
 
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Импорт"
+                  aria-label="Импорт"
+                >
+                  <UploadCloud className="w-4 h-4" />
+                </Button>
+
                 {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
@@ -174,8 +213,14 @@ const ParticipantsPage: React.FC = () => {
                   )}
                 </Button>
 
-                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
-                  Выделить
+                <Button
+                  onClick={toggleMultiSelect}
+                  variant="secondary"
+                  size="icon"
+                  title="Выделить"
+                  aria-label="Выделить"
+                >
+                  <Check className="w-4 h-4" />
                 </Button>
                 <Button
                   onClick={() => navigate('/participants/new')}

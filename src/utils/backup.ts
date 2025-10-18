@@ -17,6 +17,7 @@ import type {
   Equipment,
   EquipmentCategory,
   MealType,
+  Category,
 } from '../types';
 
 interface BackupMetadata {
@@ -123,7 +124,7 @@ export const exportDataToJson = () => {
     });
   } catch (error) {
     console.error('Ошибка при создании резервной копии:', error);
-    toast.error('Произошла ошибка при создании резервной копии.');
+    toast.error('Произошла ошибкашибка при создании резервной копии.');
   }
 };
 
@@ -407,6 +408,240 @@ export const exportMealTypeToJson = (mealType: MealType) => {
     toast.success(`Данные типа приема пищи "${mealType.name}" экспортированы!`);
   } catch (error) {
     console.error('Ошибка при экспорте данных типа приема пищи:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует данные одной категории в JSON файл.
+ * @param category - Объект категории для экспорта.
+ */
+export const exportCategoryToJson = (category: Category) => {
+  try {
+    const jsonString = JSON.stringify(category, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = category.name.replace(/\s+/g, '-').toLowerCase();
+    a.download = `category-${safeName}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Данные категории "${category.name}" экспортированы!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте данных категории:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует выбранные походы в JSON файл.
+ * @param trips - Массив походов для экспорта.
+ */
+export const exportBulkTripsToJson = (trips: Trip[]) => {
+  try {
+    const jsonString = JSON.stringify(trips, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `trips-bulk-export-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Экспортировано ${trips.length} походов!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте походов:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует выбранных участников в JSON файл.
+ * @param participants - Массив участников для экспорта.
+ */
+export const exportBulkParticipantsToJson = (participants: Participant[]) => {
+  try {
+    const jsonString = JSON.stringify(participants, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `participants-bulk-export-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Экспортировано ${participants.length} участников!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте участников:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует выбранные продукты в JSON файл.
+ * @param products - Массив продуктов для экспорта.
+ */
+export const exportBulkProductsToJson = (products: Product[]) => {
+  try {
+    const jsonString = JSON.stringify(products, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `products-bulk-export-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Экспортировано ${products.length} продуктов!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте продуктов:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует выбранные блюда в JSON файл.
+ * @param dishes - Массив блюд для экспорта.
+ */
+export const exportBulkDishesToJson = (dishes: Dish[]) => {
+  try {
+    const jsonString = JSON.stringify(dishes, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `dishes-bulk-export-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Экспортировано ${dishes.length} блюд!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте блюд:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует выбранное снаряжение в JSON файл.
+ * @param equipment - Массив снаряжения для экспорта.
+ */
+export const exportBulkEquipmentToJson = (equipment: Equipment[]) => {
+  try {
+    const jsonString = JSON.stringify(equipment, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `equipment-bulk-export-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Экспортировано ${equipment.length} единиц снаряжения!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте снаряжения:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует выбранные категории в JSON файл.
+ * @param categories - Массив категорий для экспорта.
+ */
+export const exportBulkCategoriesToJson = (categories: Category[]) => {
+  try {
+    const jsonString = JSON.stringify(categories, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `categories-bulk-export-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Экспортировано ${categories.length} категорий!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте категорий:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует выбранные категории снаряжения в JSON файл.
+ * @param categories - Массив категорий снаряжения для экспорта.
+ */
+export const exportBulkEquipmentCategoriesToJson = (categories: EquipmentCategory[]) => {
+  try {
+    const jsonString = JSON.stringify(categories, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `equipment-categories-bulk-export-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Экспортировано ${categories.length} категорий снаряжения!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте категорий снаряжения:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует выбранные типы приемов пищи в JSON файл.
+ * @param mealTypes - Массив типов приемов пищи для экспорта.
+ */
+export const exportBulkMealTypesToJson = (mealTypes: MealType[]) => {
+  try {
+    const jsonString = JSON.stringify(mealTypes, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `meal-types-bulk-export-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Экспортировано ${mealTypes.length} типов приемов пищи!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте типов приемов пищи:', error);
     toast.error('Произошла ошибка при экспорте.');
   }
 };

@@ -1,6 +1,6 @@
 // src/pages/EquipmentPage.tsx
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   CirclePlus,
@@ -15,6 +15,8 @@ import {
   CheckCheck,
   LayoutList,
   Grid3X3,
+  UploadCloud,
+  DownloadCloud,
 } from 'lucide-react';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
@@ -32,7 +34,11 @@ import InfoField from '../ui/InfoField';
 import { equipmentEntityConfig } from '../config/entityConfig';
 import { Edit, ExternalLink, Scale, User, Users } from 'lucide-react';
 import { useViewMode } from '../hooks/useViewMode';
-import { exportEquipmentToJson } from '../utils/backup';
+import {
+  exportEquipmentToJson,
+  exportBulkEquipmentToJson,
+  importDataFromJson,
+} from '../utils/backup';
 
 const EquipmentPage: React.FC = () => {
   const { equipment, deleteEquipment } = useEquipmentStore();
@@ -40,6 +46,7 @@ const EquipmentPage: React.FC = () => {
   const { participants } = useParticipantStore();
   const { searchTerm } = useSearchStore();
   const [searchParams, setSearchParams] = useSearchParams();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [equipmentToDelete, setEquipmentToDelete] = useState<Equipment | null>(null);
@@ -181,7 +188,20 @@ const EquipmentPage: React.FC = () => {
   const handleBulkExport = () => {
     if (selectedEquipmentIds.length === 0) return;
 
-    console.log(`Exporting equipment: ${selectedEquipmentIds.join(', ')}`);
+    // Get selected equipment and export them
+    const selectedEquipmentItems = filteredEquipment.filter((e) =>
+      selectedEquipmentIds.includes(e.id)
+    );
+    exportBulkEquipmentToJson(selectedEquipmentItems);
+  };
+
+  // Import functionality
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importDataFromJson(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // Individual equipment actions
@@ -202,6 +222,16 @@ const EquipmentPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".json"
+        className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
+      {/* Header and buttons */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
@@ -224,8 +254,14 @@ const EquipmentPage: React.FC = () => {
                   )}
                 </Button>
 
-                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
-                  Выделить
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Импорт"
+                  aria-label="Импорт"
+                >
+                  <UploadCloud className="w-4 h-4" />
                 </Button>
 
                 {/* View mode toggle button */}
@@ -243,6 +279,15 @@ const EquipmentPage: React.FC = () => {
                   )}
                 </Button>
 
+                <Button
+                  onClick={toggleMultiSelect}
+                  variant="secondary"
+                  size="icon"
+                  title="Выделить"
+                  aria-label="Выделить"
+                >
+                  <Check className="w-4 h-4" />
+                </Button>
                 <Button onClick={handleAddNew} variant="primary" size="default">
                   <CirclePlus className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Добавить снаряжение</span>

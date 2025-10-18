@@ -1,6 +1,6 @@
 // src/pages/CategoriesPage.tsx
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CirclePlus,
@@ -14,6 +14,8 @@ import {
   CheckCheck,
   LayoutList,
   Grid3X3,
+  UploadCloud,
+  DownloadCloud,
 } from 'lucide-react';
 import useCategoryStore from '../stores/useCategoryStore';
 import useProductStore from '../stores/useProductStore';
@@ -30,9 +32,15 @@ import CategoryFiltersComponent, {
 import CategoryDetail from '../components/categories/CategoryDetail';
 import { categoryEntityConfig } from '../config/entityConfig';
 import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
+import {
+  exportCategoryToJson,
+  exportBulkCategoriesToJson,
+  importDataFromJson,
+} from '../utils/backup';
 
 const CategoriesPage: React.FC = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const categoryStore = useCategoryStore();
   const productStore = useProductStore();
   const { searchTerm } = useSearchStore();
@@ -114,7 +122,20 @@ const CategoriesPage: React.FC = () => {
   const handleBulkExport = () => {
     if (selectedCategoryIds.length === 0) return;
 
-    console.log(`Exporting categories: ${selectedCategoryIds.join(', ')}`);
+    // Get selected categories and export them
+    const selectedCategories = categoryManagement.filteredCategories.filter((c) =>
+      selectedCategoryIds.includes(c.id)
+    );
+    exportBulkCategoriesToJson(selectedCategories);
+  };
+
+  // Import functionality
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importDataFromJson(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleClone = useCallback(
@@ -126,7 +147,13 @@ const CategoriesPage: React.FC = () => {
   );
 
   const handleExport = useCallback((category: Category) => {
-    console.log('Export category', category);
+    try {
+      exportCategoryToJson(category);
+      // toast.success('Категория экспортирована');
+    } catch (error) {
+      // toast.error('Ошибка при экспорте');
+      console.error('Export error:', error);
+    }
   }, []);
 
   // Function to transform category details to match EntityCard's DetailItem type
@@ -146,6 +173,15 @@ const CategoriesPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".json"
+        className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
       {/* Заголовок и кнопки */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
@@ -169,8 +205,24 @@ const CategoriesPage: React.FC = () => {
                   )}
                 </Button>
 
-                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
-                  Выделить
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Импорт"
+                  aria-label="Импорт"
+                >
+                  <UploadCloud className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  onClick={toggleMultiSelect}
+                  variant="secondary"
+                  size="icon"
+                  title="Выделить"
+                  aria-label="Выделить"
+                >
+                  <Check className="w-4 h-4" />
                 </Button>
 
                 {/* View mode toggle button */}

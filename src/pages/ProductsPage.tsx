@@ -32,7 +32,7 @@ import ProductFiltersComponent, {
   ProductFilters,
 } from '../components/products/ProductFiltersComponent';
 import { productEntityConfig } from '../config/entityConfig';
-import { exportProductToJson } from '../utils/backup';
+import { exportProductToJson, exportBulkProductsToJson } from '../utils/backup';
 
 const ProductsPage: React.FC = () => {
   const { products, deleteProduct } = useProductStore();
@@ -192,7 +192,9 @@ const ProductsPage: React.FC = () => {
   const handleBulkExport = () => {
     if (selectedProductIds.length === 0) return;
 
-    console.log(`Exporting products: ${selectedProductIds.join(', ')}`);
+    // Get selected products and export them
+    const selectedProducts = filteredProducts.filter((p) => selectedProductIds.includes(p.id));
+    exportBulkProductsToJson(selectedProducts);
   };
 
   // Individual product actions
@@ -269,8 +271,14 @@ const ProductsPage: React.FC = () => {
                   )}
                 </Button>
 
-                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
-                  Выделить
+                <Button
+                  onClick={toggleMultiSelect}
+                  variant="secondary"
+                  size="icon"
+                  title="Выделить"
+                  aria-label="Выделить"
+                >
+                  <Check className="w-4 h-4" />
                 </Button>
                 <Button onClick={handleAddNew} variant="primary" size="default">
                   <CirclePlus className="w-4 h-4 sm:mr-2" />

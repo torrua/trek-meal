@@ -1,6 +1,6 @@
 // src/pages/DishesPage.tsx
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CirclePlus,
@@ -14,6 +14,8 @@ import {
   CheckCheck,
   LayoutList,
   Grid3X3,
+  UploadCloud,
+  DownloadCloud,
 } from 'lucide-react';
 import useDishStore from '../stores/useDishStore';
 import useTripStore from '../stores/useTripStore';
@@ -28,10 +30,11 @@ import ConfirmModal from '../ui/ConfirmModal';
 import { toast } from 'react-hot-toast';
 import { dishEntityConfig } from '../config/entityConfig';
 import { useViewMode } from '../hooks/useViewMode';
-import { exportDishToJson } from '../utils/backup';
+import { exportDishToJson, exportBulkDishesToJson, importDataFromJson } from '../utils/backup';
 
 const DishesPage: React.FC = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { dishes, deleteDish } = useDishStore();
   const { isDishInUse } = useTripStore();
   const { products: allProducts } = useProductStore();
@@ -154,7 +157,18 @@ const DishesPage: React.FC = () => {
   const handleBulkExport = () => {
     if (selectedDishIds.length === 0) return;
 
-    console.log(`Exporting dishes: ${selectedDishIds.join(', ')}`);
+    // Get selected dishes and export them
+    const selectedDishes = filteredDishes.filter((d) => selectedDishIds.includes(d.id));
+    exportBulkDishesToJson(selectedDishes);
+  };
+
+  // Import functionality
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importDataFromJson(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // Individual dish actions
@@ -203,6 +217,16 @@ const DishesPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".json"
+        className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
+      {/* Header and buttons */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
@@ -211,8 +235,24 @@ const DishesPage: React.FC = () => {
           <div className="flex items-center gap-2">
             {!showMultiSelect ? (
               <>
-                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
-                  Выделить
+                <Button
+                  onClick={() => setOpenSections((s) => (s.length ? [] : ['main', 'products']))}
+                  variant="secondary"
+                  size="icon"
+                  title="Фильтры"
+                  aria-label="Показать фильтры"
+                >
+                  <Filter className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Импорт"
+                  aria-label="Импорт"
+                >
+                  <UploadCloud className="w-4 h-4" />
                 </Button>
 
                 {/* View mode toggle button */}
@@ -230,6 +270,15 @@ const DishesPage: React.FC = () => {
                   )}
                 </Button>
 
+                <Button
+                  onClick={toggleMultiSelect}
+                  variant="secondary"
+                  size="icon"
+                  title="Выделить"
+                  aria-label="Выделить"
+                >
+                  <Check className="w-4 h-4" />
+                </Button>
                 <Button onClick={handleAddNew} variant="primary" size="default">
                   <CirclePlus className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Добавить блюдо</span>

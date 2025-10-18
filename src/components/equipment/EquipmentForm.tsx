@@ -57,14 +57,13 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ equipment, onSubmit, onCa
     if (name === 'categoryId') {
       setFormData((prev) => ({ ...prev, [name]: value ? Number(value) : null }));
     } else if (name === 'ownerId') {
-      setFormData((prev) => ({ ...prev, [name]: value ? Number(value) : null }));
+      const ownerId = value ? Number(value) : null;
+      // Automatically set type based on whether owner is selected
+      const type = ownerId ? 'personal' : 'common';
+      setFormData((prev) => ({ ...prev, ownerId, type }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value as EquipmentType }));
     }
-  };
-
-  const handleWeightQuickSelect = (weight: number) => {
-    setFormData((prev) => ({ ...prev, weight }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -105,16 +104,6 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ equipment, onSubmit, onCa
     }
     return `${(weight / 1000).toFixed(1)} кг`;
   };
-
-  const weightPresets = [
-    { label: '50г', value: 50 },
-    { label: '100г', value: 100 },
-    { label: '200г', value: 200 },
-    { label: '500г', value: 500 },
-    { label: '1кг', value: 1000 },
-    { label: '2кг', value: 2000 },
-    { label: '5кг', value: 5000 },
-  ];
 
   return (
     <div className="space-y-8">
@@ -169,13 +158,11 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ equipment, onSubmit, onCa
           />
         </div>
 
-        {/* Weight Section */}
+        {/* Characteristics Section */}
         <div className="space-y-6">
           <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
             <Scale className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground tracking-tight">
-              Вес и характеристики
-            </h3>
+            <h3 className="text-lg font-semibold text-foreground tracking-tight">Характеристики</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -206,78 +193,44 @@ const EquipmentForm: React.FC<EquipmentFormProps> = ({ equipment, onSubmit, onCa
               )}
             </div>
 
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-foreground tracking-tight">
-                Быстрый выбор веса
-              </label>
-              <div className="grid grid-cols-4 gap-2">
-                {weightPresets.map((preset) => (
-                  <button
-                    key={preset.value}
-                    type="button"
-                    onClick={() => handleWeightQuickSelect(preset.value)}
-                    className={`px-3 py-2 text-sm rounded-lg transition-all duration-200 border notion-focus-ring ${
-                      formData.weight === preset.value
-                        ? 'bg-primary text-primary-foreground border-primary notion-shadow-sm'
-                        : 'bg-muted/30 text-foreground border-notion-border-subtle hover:bg-muted/50 hover:notion-shadow-sm'
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
+            <div className="space-y-6">
+              <DropdownSelect
+                label="Владелец"
+                icon={User}
+                value={String(formData.ownerId || '')}
+                onChange={(val) => typeof val === 'string' && handleSelectChange('ownerId', val)}
+                options={ownerOptions}
+              />
+
+              {/* Display type information based on owner selection */}
+              <div className="p-4 bg-muted/30 rounded-lg border notion-border-subtle">
+                <div className="flex items-center gap-2">
+                  {formData.ownerId ? (
+                    <>
+                      <User className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="font-medium text-foreground">Личное снаряжение</p>
+                        <p className="text-sm text-muted-foreground">
+                          Принадлежит участнику:{' '}
+                          {participants.find((p) => p.id === formData.ownerId)?.name ||
+                            'Неизвестный участник'}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Users className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="font-medium text-foreground">Общее снаряжение</p>
+                        <p className="text-sm text-muted-foreground">
+                          Доступно всем участникам похода
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Type and Owner Section */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
-            <Users className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold text-foreground tracking-tight">Тип и владелец</h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-foreground tracking-tight">
-                Тип снаряжения
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleSelectChange('type', 'personal')}
-                  className={`flex items-center justify-center gap-3 p-4 rounded-xl border transition-all duration-200 notion-focus-ring ${
-                    formData.type === 'personal'
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-notion-border-subtle hover:bg-muted/30 text-foreground'
-                  }`}
-                >
-                  <User className="w-5 h-5" />
-                  <span className="font-medium">Личное</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleSelectChange('type', 'common')}
-                  className={`flex items-center justify-center gap-3 p-4 rounded-xl border transition-all duration-200 notion-focus-ring ${
-                    formData.type === 'common'
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-notion-border-subtle hover:bg-muted/30 text-foreground'
-                  }`}
-                >
-                  <Users className="w-5 h-5" />
-                  <span className="font-medium">Общее</span>
-                </button>
-              </div>
-            </div>
-
-            <DropdownSelect
-              label="Владелец"
-              icon={User}
-              value={String(formData.ownerId || '')}
-              onChange={(val) => typeof val === 'string' && handleSelectChange('ownerId', val)}
-              options={ownerOptions}
-            />
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 // src/pages/TripsPage.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Backpack,
@@ -17,6 +17,8 @@ import {
   CheckCheck,
   LayoutList,
   Grid3X3,
+  UploadCloud,
+  DownloadCloud,
 } from 'lucide-react';
 import { useTripsManagement } from '../hooks/useTripsManagement';
 import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
@@ -31,10 +33,12 @@ import EntityCard from '../ui/EntityCard';
 import { tripEntityConfig } from '../config/entityConfig';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { formatDate } from '../utils';
+import { exportBulkTripsToJson, importDataFromJson } from '../utils/backup';
 import type { Trip } from '../types';
 
 const TripsPage: React.FC = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const { viewMode, toggleViewMode } = useViewMode('trips'); // Use the new hook
   const {
@@ -163,11 +167,31 @@ const TripsPage: React.FC = () => {
   const handleBulkExport = () => {
     if (selectedTripIds.length === 0) return;
 
-    console.log(`Exporting trips: ${selectedTripIds.join(', ')}`);
+    // Get selected trips and export them
+    const selectedTrips = filteredTrips.filter((trip) => selectedTripIds.includes(trip.id));
+    exportBulkTripsToJson(selectedTrips);
+  };
+
+  // Import functionality
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importDataFromJson(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
     <div className="max-w-7xl mx-auto">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".json"
+        className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
       {/* Заголовок и действия */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
@@ -191,6 +215,16 @@ const TripsPage: React.FC = () => {
                   )}
                 </Button>
 
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Импорт"
+                  aria-label="Импорт"
+                >
+                  <UploadCloud className="w-4 h-4" />
+                </Button>
+
                 {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
@@ -206,8 +240,14 @@ const TripsPage: React.FC = () => {
                   )}
                 </Button>
 
-                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
-                  Выделить
+                <Button
+                  onClick={toggleMultiSelect}
+                  variant="secondary"
+                  size="icon"
+                  title="Выделить"
+                  aria-label="Выделить"
+                >
+                  <Check className="w-4 h-4" />
                 </Button>
                 <Button onClick={() => navigate('/trips/new')} variant="primary" size="default">
                   <MapPinPlus className="w-4 h-4 sm:mr-2" />

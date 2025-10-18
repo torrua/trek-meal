@@ -1,6 +1,6 @@
 // src/pages/MealTypesPage.tsx
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import {
   CirclePlus,
@@ -11,11 +11,15 @@ import {
   Copy,
   Share,
   X,
+  Check,
   CheckCheck,
   LayoutList,
   Grid3X3,
+  UploadCloud,
+  DownloadCloud,
 } from 'lucide-react';
 import useMealTypesStore from '../stores/useMealTypesStore';
+import { exportBulkMealTypesToJson, importDataFromJson } from '../utils/backup';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard, { MenuItem } from '../ui/EntityCard';
@@ -26,6 +30,7 @@ import type { MealType } from '../types';
 const MealTypesPage: React.FC = () => {
   const { mealTypes, deleteMealType } = useMealTypesStore();
   const { viewMode, toggleViewMode } = useViewMode('meal-types');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [typeToDelete, setTypeToDelete] = useState<{
     id: number;
@@ -98,8 +103,19 @@ const MealTypesPage: React.FC = () => {
 
   const handleBulkExport = () => {
     if (selectedMealTypeIds.length === 0) return;
-    // For now, just log the action
-    console.log(`Exporting meal types: ${selectedMealTypeIds.join(', ')}`);
+
+    // Get selected meal types and export them
+    const selectedMealTypes = sortedMealTypes.filter((mt) => selectedMealTypeIds.includes(mt.id));
+    exportBulkMealTypesToJson(selectedMealTypes);
+  };
+
+  // Import functionality
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      importDataFromJson(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleClone = useCallback((mealType: MealType) => {
@@ -131,6 +147,15 @@ const MealTypesPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".json"
+        className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
       {/* Header and buttons */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
@@ -140,6 +165,16 @@ const MealTypesPage: React.FC = () => {
           <div className="flex items-center gap-2">
             {!showMultiSelect ? (
               <>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Импорт"
+                  aria-label="Импорт"
+                >
+                  <UploadCloud className="w-4 h-4" />
+                </Button>
+
                 {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
@@ -155,8 +190,14 @@ const MealTypesPage: React.FC = () => {
                   )}
                 </Button>
 
-                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
-                  Выделить
+                <Button
+                  onClick={toggleMultiSelect}
+                  variant="secondary"
+                  size="icon"
+                  title="Выделить"
+                  aria-label="Выделить"
+                >
+                  <Check className="w-4 h-4" />
                 </Button>
                 <Button
                   onClick={() => (window.location.href = '/meal-types/new')}

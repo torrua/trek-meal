@@ -143,7 +143,6 @@ export interface EquipmentCategory {
   id: number;
   name: string;
   color: string;
-  iconName: string;
 }
 export type EquipmentCategoryData = Omit<EquipmentCategory, 'id'>;
 

@@ -1,7 +1,7 @@
 // src/ui/DropdownSelect.tsx
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, Search } from 'lucide-react';
 import cn from 'classnames';
 
 interface DropdownOption {
@@ -23,6 +23,7 @@ interface DropdownSelectProps {
   placeholder?: string;
   'data-testid'?: string;
   isMulti?: boolean;
+  searchable?: boolean; // Add searchable prop
 }
 
 const DropdownSelect: React.FC<DropdownSelectProps> = ({
@@ -37,11 +38,22 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
   placeholder,
   'data-testid': testId,
   isMulti = false,
+  searchable = false, // Default to false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [minMenuWidth, setMinMenuWidth] = useState(0);
+  const [searchTerm, setSearchTerm] = useState(''); // Add search term state
+
+  // Filter options based on search term
+  const filteredOptions = useMemo(() => {
+    if (!searchTerm) return options;
+    return options.filter((option) =>
+      option.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [options, searchTerm]);
 
   const selectedValues = useMemo(() => (Array.isArray(value) ? value : [value]), [value]);
   const selectedOption = !isMulti ? options.find((opt) => opt.value === (value as string)) : null;
@@ -49,6 +61,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
   const handleOutsideClick = useCallback((event: MouseEvent) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
       setIsOpen(false);
+      setSearchTerm(''); // Clear search when closing
     }
   }, []);
 
@@ -60,6 +73,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
         case 'Escape':
           setIsOpen(false);
           triggerRef.current?.focus();
+          setSearchTerm(''); // Clear search when closing
           break;
         case 'ArrowDown':
           event.preventDefault();
@@ -91,6 +105,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
       } else {
         onChange(optionValue);
         setIsOpen(false);
+        setSearchTerm(''); // Clear search when selecting
       }
     },
     [options, onChange, isMulti, selectedValues]
@@ -110,6 +125,15 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
       setMinMenuWidth(triggerRef.current.offsetWidth);
     }
   }, [isOpen]);
+
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isOpen && searchable && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [isOpen, searchable]);
 
   return (
     <div className={cn('space-y-2', containerClassName)} ref={dropdownRef} data-testid={testId}>
@@ -209,8 +233,25 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             role="listbox"
             aria-label={label}
           >
-            {options.length > 0 ? (
-              options.map((option) => {
+            {/* Search Input */}
+            {searchable && (
+              <div className="px-2 pb-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Поиск..."
+                    className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/60"
+                  />
+                </div>
+              </div>
+            )}
+
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => {
                 const checked = isMulti
                   ? selectedValues.includes(option.value)
                   : (value as string) === option.value;
@@ -247,7 +288,9 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
               })
             ) : (
               <div className="px-4 py-6 text-center">
-                <p className="text-sm text-muted-foreground">Нет доступных опций</p>
+                <p className="text-sm text-muted-foreground">
+                  {searchTerm ? 'Ничего не найдено' : 'Нет доступных опций'}
+                </p>
               </div>
             )}
           </div>

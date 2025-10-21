@@ -1,5 +1,5 @@
 // src/components/meals/MealForm.tsx
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -20,8 +20,20 @@ import {
   Eye,
   Check,
   Hash,
+  Beef,
+  Droplet,
+  Wheat,
+  Search,
 } from 'lucide-react';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragEndEvent,
+} from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Meal, MealData, MealPlanItem, Product, Dish, ProductPortion } from '../../types';
@@ -30,7 +42,6 @@ import useDishStore from '../../stores/useDishStore';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import Button from '../../ui/Button';
-import DropdownSelect from '../../ui/DropdownSelect';
 import Modal from '../../ui/Modal';
 
 const mealFormSchema = z.object({
@@ -61,7 +72,6 @@ const calculateNutrition = (item: any, products: Product[], dishes: Dish[]) => {
   if (item.type === 'product') {
     const product = products.find((p) => p.id === item.itemId);
     if (!product || !item.weight) return null;
-
     const multiplier = item.weight / 100;
     return {
       calories: Math.round(product.calories * multiplier),
@@ -70,17 +80,13 @@ const calculateNutrition = (item: any, products: Product[], dishes: Dish[]) => {
       carbs: Math.round(product.carbs * multiplier * 10) / 10,
     };
   }
-
   if (item.type === 'dish') {
     const dish = dishes.find((d) => d.id === item.itemId);
     if (!dish) return null;
-
-    // Calculate dish nutrition based on its products
-    let totalCalories = 0;
-    let totalProteins = 0;
-    let totalFats = 0;
-    let totalCarbs = 0;
-
+    let totalCalories = 0,
+      totalProteins = 0,
+      totalFats = 0,
+      totalCarbs = 0;
     dish.products.forEach((dishProduct) => {
       const product = products.find((p) => p.id === dishProduct.productId);
       if (product) {
@@ -91,7 +97,6 @@ const calculateNutrition = (item: any, products: Product[], dishes: Dish[]) => {
         totalCarbs += (product.carbs || 0) * weightRatio;
       }
     });
-
     return {
       calories: Math.round(totalCalories),
       proteins: Math.round(totalProteins * 10) / 10,
@@ -99,7 +104,6 @@ const calculateNutrition = (item: any, products: Product[], dishes: Dish[]) => {
       carbs: Math.round(totalCarbs * 10) / 10,
     };
   }
-
   return null;
 };
 
@@ -112,30 +116,36 @@ const SortableItem: React.FC<{
   onRemove: (index: number) => void;
   onUpdateWeight: (index: number, weight: number) => void;
   onQuickView: (item: any) => void;
-}> = ({ id, index, item, products, dishes, onRemove, onUpdateWeight, onQuickView }) => {
+  isDragging: boolean;
+}> = ({ id, index, item, products, dishes, onRemove, onUpdateWeight, onQuickView, isDragging }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const [isEditingWeight, setIsEditingWeight] = useState(false);
   const [customWeight, setCustomWeight] = useState(item.weight?.toString() || '');
   const [showPortions, setShowPortions] = useState(false);
+  const [itemHeight, setItemHeight] = useState<number | null>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (itemRef.current && !itemHeight) {
+      setItemHeight(itemRef.current.offsetHeight);
+    }
+  }, [itemHeight]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    height: isDragging && itemHeight ? `${itemHeight}px` : 'auto',
   };
 
   const selectedItem =
     item.type === 'product'
       ? products.find((p) => p.id === item.itemId)
       : dishes.find((d) => d.id === item.itemId);
-
   const nutrition = calculateNutrition(item, products, dishes);
-
-  // For products, get portions
   const portions = useMemo(() => {
     if (item.type !== 'product' || !selectedItem) return [];
     return (selectedItem as Product).portions || [];
   }, [item.type, selectedItem]);
-
   const currentPortion = useMemo(() => {
     if (item.type !== 'product' || !item.weight) return null;
     return portions.find((p: ProductPortion) => p.weight === item.weight);
@@ -154,180 +164,202 @@ const SortableItem: React.FC<{
     }
   };
 
-  const handleCustomWeightCancel = () => {
-    setCustomWeight(item.weight?.toString() || '');
-    setIsEditingWeight(false);
-  };
-
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        if (node) itemRef.current = node;
+      }}
       style={style}
-      className="group relative bg-card border border-border rounded-lg hover:border-primary/50 hover:shadow-md transition-all"
+      className={`bg-card border border-border rounded-lg p-3 transition-all ${isDragging ? 'opacity-50' : ''}`}
     >
-      <div className="flex items-start gap-3 p-4">
-        {/* Drag Handle */}
-        <div
+      <div className="flex items-center gap-2 mb-2">
+        <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground mt-1"
+          className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground p-1"
         >
-          <GripVertical className="w-5 h-5" />
+          <GripVertical className="w-4 h-4" />
+        </button>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {item.type === 'product' ? (
+            <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
+          ) : (
+            <Soup className="w-4 h-4 text-orange-500 flex-shrink-0" />
+          )}
+          <h4 className="font-medium text-foreground truncate">{selectedItem?.name}</h4>
         </div>
-
-        {/* Item Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <div className="flex items-center gap-2 min-w-0">
-              {item.type === 'product' ? (
-                <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
-              ) : (
-                <Soup className="w-4 h-4 text-orange-500 flex-shrink-0" />
-              )}
-              <h4 className="font-medium text-foreground truncate">{selectedItem?.name}</h4>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onQuickView(item)}
-              className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-              title="Быстрый просмотр"
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Weight Control for Products */}
-          {item.type === 'product' && (
-            <div className="space-y-2">
-              {!isEditingWeight ? (
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowPortions(!showPortions)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-md text-sm transition-colors"
-                  >
+        <div className="flex items-center gap-1 ml-auto">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onQuickView(item)}
+            className="h-8 w-8 bg-primary/10 hover:bg-primary/20 text-primary flex-shrink-0"
+            title="Быстрый просмотр"
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onRemove(index)}
+            className="h-8 w-8 bg-danger/10 hover:bg-danger/20 text-danger flex-shrink-0"
+            title="Удалить"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        {item.type === 'product' && (
+          <>
+            {!isEditingWeight ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onUpdateWeight(index, Math.max(10, (item.weight || 100) - 10))}
+                  className="h-8 w-8 bg-muted hover:bg-muted/80"
+                >
+                  <span className="text-lg font-semibold">-</span>
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setShowPortions(!showPortions)}
+                  className="min-w-[160px] px-3 py-1.5 text-sm bg-background border border-border rounded-lg hover:bg-muted transition-colors flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-2">
                     <Scale className="w-3.5 h-3.5" />
                     <span className="font-medium">
                       {currentPortion ? currentPortion.name : 'Другой'}
                     </span>
-                    <span className="text-muted-foreground">({item.weight} г)</span>
-                    <ChevronDown
-                      className={`w-3 h-3 transition-transform ${showPortions ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
+                  </span>
+                  <span className="text-muted-foreground">({item.weight} г)</span>
+                </button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setCustomWeight(item.weight?.toString() || '');
+                    setIsEditingWeight(true);
+                  }}
+                  className="h-8 w-8 bg-muted hover:bg-muted/80"
+                  title="Указать вес вручную"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onUpdateWeight(index, (item.weight || 100) + 10)}
+                  className="h-8 w-8 bg-muted hover:bg-muted/80"
+                >
+                  <span className="text-lg font-semibold">+</span>
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  value={customWeight}
+                  onChange={(e) => setCustomWeight(e.target.value)}
+                  placeholder="Вес в граммах"
+                  className="w-32 text-sm"
+                  min="1"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleCustomWeightSave();
+                    }
+                    if (e.key === 'Escape') {
                       setCustomWeight(item.weight?.toString() || '');
-                      setIsEditingWeight(true);
-                    }}
-                    title="Указать вес вручную"
-                  >
-                    <Edit className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    value={customWeight}
-                    onChange={(e) => setCustomWeight(e.target.value)}
-                    placeholder="Вес в граммах"
-                    className="w-32 text-sm"
-                    min="1"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleCustomWeightSave();
-                      }
-                      if (e.key === 'Escape') {
-                        handleCustomWeightCancel();
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    onClick={handleCustomWeightSave}
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCustomWeightCancel}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              )}
-
-              {/* Portions Dropdown */}
-              {showPortions && portions.length > 0 && (
-                <div className="absolute z-10 mt-1 w-64 bg-card border border-border rounded-lg shadow-lg py-1 max-h-60 overflow-auto">
-                  {portions.map((portion: ProductPortion, idx: number) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handlePortionSelect(portion)}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between ${
-                        portion.weight === item.weight ? 'bg-primary/10 text-primary' : ''
-                      }`}
-                    >
-                      <span className="font-medium">{portion.name}</span>
-                      <span className="text-muted-foreground">{portion.weight} г</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+                      setIsEditingWeight(false);
+                    }
+                  }}
+                />
+                <Button type="button" variant="primary" size="sm" onClick={handleCustomWeightSave}>
+                  <Check className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setCustomWeight(item.weight?.toString() || '');
+                    setIsEditingWeight(false);
+                  }}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+        {nutrition && (
+          <div className="flex items-center gap-3 flex-wrap ml-auto">
+            <div className="flex items-center gap-1.5 text-sm">
+              <Flame className="w-4 h-4 text-orange-500" />
+              <span className="font-semibold">{nutrition.calories}</span>
+              <span className="text-muted-foreground text-xs">ккал</span>
             </div>
-          )}
-
-          {/* Nutrition Info */}
-          {nutrition && (
-            <div className="flex flex-wrap items-center gap-3 mt-2 text-xs">
-              <div className="flex items-center gap-1.5 text-orange-600">
-                <Flame className="w-3.5 h-3.5" />
-                <span className="font-semibold">{nutrition.calories}</span>
-                <span className="text-muted-foreground">ккал</span>
+            <div className="hidden sm:flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-1">
+                <Beef className="w-3.5 h-3.5 text-blue-500" />
+                <span className="font-semibold text-blue-600">Б: {nutrition.proteins}г</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-blue-600 font-semibold">Б: {nutrition.proteins}г</span>
+                <Droplet className="w-3.5 h-3.5 text-yellow-500" />
+                <span className="font-semibold text-yellow-600">Ж: {nutrition.fats}г</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-yellow-600 font-semibold">Ж: {nutrition.fats}г</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-green-600 font-semibold">У: {nutrition.carbs}г</span>
+                <Wheat className="w-3.5 h-3.5 text-green-500" />
+                <span className="font-semibold text-green-600">У: {nutrition.carbs}г</span>
               </div>
             </div>
-          )}
-        </div>
-
-        {/* Remove Button */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => onRemove(index)}
-          className="text-danger hover:bg-danger/10 flex-shrink-0 mt-1"
-          title="Удалить"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+          </div>
+        )}
+        {showPortions && portions.length > 0 && (
+          <div className="absolute z-10 mt-1 w-64 bg-card border border-border rounded-lg shadow-lg py-1 max-h-60 overflow-auto">
+            {portions.map((portion: ProductPortion, idx: number) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handlePortionSelect(portion)}
+                className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between ${portion.weight === item.weight ? 'bg-primary/10 text-primary' : ''}`}
+              >
+                <span className="font-medium">{portion.name}</span>
+                <span className="text-muted-foreground">{portion.weight} г</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+      {nutrition && (
+        <div className="flex sm:hidden items-center gap-3 text-xs mt-2 justify-end">
+          <div className="flex items-center gap-1">
+            <Beef className="w-3.5 h-3.5 text-blue-500" />
+            <span className="font-semibold text-blue-600">Б: {nutrition.proteins}г</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Droplet className="w-3.5 h-3.5 text-yellow-500" />
+            <span className="font-semibold text-yellow-600">Ж: {nutrition.fats}г</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Wheat className="w-3.5 h-3.5 text-green-500" />
+            <span className="font-semibold text-green-600">У: {nutrition.carbs}г</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// Quick View Modal Component
 const QuickViewModal: React.FC<{
   item: any;
   products: Product[];
@@ -338,11 +370,8 @@ const QuickViewModal: React.FC<{
     item.type === 'product'
       ? products.find((p) => p.id === item.itemId)
       : dishes.find((d) => d.id === item.itemId);
-
   if (!selectedItem) return null;
-
   const nutrition = calculateNutrition(item, products, dishes);
-
   return (
     <Modal isOpen onClose={onClose} title={selectedItem.name}>
       <div className="space-y-4">
@@ -351,7 +380,6 @@ const QuickViewModal: React.FC<{
             <p className="text-sm text-muted-foreground">{selectedItem.description}</p>
           </div>
         )}
-
         {nutrition && (
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
@@ -365,23 +393,31 @@ const QuickViewModal: React.FC<{
             <div className="p-3 bg-muted/50 rounded-lg border border-border">
               <p className="text-xs text-muted-foreground mb-2">БЖУ</p>
               <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-blue-600">Белки:</span>
+                <div className="flex justify-between items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Beef className="w-3 h-3 text-blue-500" />
+                    <span className="text-blue-600">Белки:</span>
+                  </div>
                   <span className="font-semibold">{nutrition.proteins}г</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-yellow-600">Жиры:</span>
+                <div className="flex justify-between items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Droplet className="w-3 h-3 text-yellow-500" />
+                    <span className="text-yellow-600">Жиры:</span>
+                  </div>
                   <span className="font-semibold">{nutrition.fats}г</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-green-600">Углеводы:</span>
+                <div className="flex justify-between items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Wheat className="w-3 h-3 text-green-500" />
+                    <span className="text-green-600">Углев.:</span>
+                  </div>
                   <span className="font-semibold">{nutrition.carbs}г</span>
                 </div>
               </div>
             </div>
           </div>
         )}
-
         {item.type === 'product' && selectedItem && (selectedItem as Product).portions && (
           <div>
             <h4 className="text-sm font-medium mb-2">Доступные порции:</h4>
@@ -408,10 +444,10 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
   const { dishes } = useDishStore();
   const [quickViewItem, setQuickViewItem] = useState<any>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const {
-    register,
-    handleSubmit,
     control,
     formState: { errors },
     watch,
@@ -423,21 +459,26 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
       items: meal?.items || [],
     },
   });
-
-  const { fields, append, remove, move, update } = useFieldArray({
-    control,
-    name: 'items',
-  });
-
+  const { fields, append, remove, move, update } = useFieldArray({ control, name: 'items' });
   const watchItems = watch('items');
 
-  // Calculate total nutrition
-  const totalNutrition = useMemo(() => {
-    let calories = 0;
-    let proteins = 0;
-    let fats = 0;
-    let carbs = 0;
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return products;
+    const query = searchQuery.toLowerCase();
+    return products.filter((p) => p.name.toLowerCase().includes(query));
+  }, [products, searchQuery]);
 
+  const filteredDishes = useMemo(() => {
+    if (!searchQuery.trim()) return dishes;
+    const query = searchQuery.toLowerCase();
+    return dishes.filter((d) => d.name.toLowerCase().includes(query));
+  }, [dishes, searchQuery]);
+
+  const totalNutrition = useMemo(() => {
+    let calories = 0,
+      proteins = 0,
+      fats = 0,
+      carbs = 0;
     watchItems.forEach((item) => {
       const nutrition = calculateNutrition(item, products, dishes);
       if (nutrition) {
@@ -447,7 +488,6 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
         carbs += nutrition.carbs;
       }
     });
-
     return {
       calories: Math.round(calories),
       proteins: Math.round(proteins * 10) / 10,
@@ -456,75 +496,53 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
     };
   }, [watchItems, products, dishes]);
 
-  // Group options by type for better UX
-  const groupedOptions = useMemo(() => {
-    const productOptions = products.map((p) => ({
-      value: `product-${p.id}`,
-      label: p.name,
-      type: 'product' as const,
-    }));
-
-    const dishOptions = dishes.map((d) => ({
-      value: `dish-${d.id}`,
-      label: d.name,
-      type: 'dish' as const,
-    }));
-
-    return { products: productOptions, dishes: dishOptions };
-  }, [products, dishes]);
-
-  const handleAddItem = (optionValue: string) => {
-    if (!optionValue) return;
-    const [type, idStr] = optionValue.split('-');
-    const itemId = parseInt(idStr, 10);
-
+  const handleAddItem = (itemId: number, type: 'product' | 'dish') => {
     let defaultWeight = undefined;
     if (type === 'product') {
       const product = products.find((p) => p.id === itemId);
-      if (product && product.portions.length > 0) {
-        defaultWeight = product.portions[0].weight;
-      } else {
-        defaultWeight = 100;
-      }
+      defaultWeight = product && product.portions.length > 0 ? product.portions[0].weight : 100;
     }
-
     append({
       instanceId: `${type}-${Date.now()}`,
-      type: type as 'product' | 'dish',
+      type,
       itemId,
       weight: type === 'product' ? defaultWeight : undefined,
     });
-
     setShowAddMenu(false);
+    setSearchQuery('');
   };
 
   const updateItemWeight = (index: number, weight: number) => {
-    const currentItems = watchItems;
-    const updatedItem = { ...currentItems[index], weight };
+    const updatedItem = { ...watchItems[index], weight };
     update(index, updatedItem);
   };
 
   const sensors = useSensors(useSensor(PointerSensor));
-
-  const handleDragEnd = (event: any) => {
+  const handleDragStart = (event: DragStartEvent) => {
+    setDraggingId(event.active.id as string);
+  };
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (active.id !== over.id) {
+    setDraggingId(null);
+    if (over && active.id !== over.id) {
       const oldIndex = fields.findIndex((item) => item.id === active.id);
       const newIndex = fields.findIndex((item) => item.id === over.id);
       move(oldIndex, newIndex);
     }
   };
 
-  const processSubmit = (data: MealFormValues) => {
+  const processSubmit = () => {
+    const name = watch('name');
+    const description = watch('description');
+    if (!name.trim() || watchItems.length === 0) return;
     const mealData: MealData = {
-      name: data.name,
-      description: data.description,
-      items: data.items.map(({ instanceId, ...item }) => item) as MealPlanItem[],
+      name,
+      description,
+      items: watchItems.map(({ instanceId, ...item }) => item) as MealPlanItem[],
     };
     onSubmit(mealData);
   };
 
-  // Count items by type
   const itemCounts = useMemo(() => {
     const counts = { products: 0, dishes: 0 };
     watchItems.forEach((item) => {
@@ -536,8 +554,7 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
 
   return (
     <>
-      <form onSubmit={handleSubmit(processSubmit)} className="space-y-6 p-1">
-        {/* Basic Information */}
+      <div className="space-y-6 p-1">
         <div className="p-6 bg-card border border-border rounded-xl">
           <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
@@ -574,7 +591,6 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
           </div>
         </div>
 
-        {/* Nutrition Summary */}
         {watchItems.length > 0 && (
           <div className="p-4 bg-gradient-to-r from-orange-500/10 via-blue-500/10 to-green-500/10 rounded-xl border border-border">
             <div className="flex items-center justify-between mb-3">
@@ -596,17 +612,17 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
                 <p className="text-xs text-muted-foreground">ккал</p>
               </div>
               <div className="text-center p-3 bg-card rounded-lg">
-                <div className="w-5 h-5 rounded-full bg-blue-500/20 mx-auto mb-1" />
+                <Beef className="w-5 h-5 text-blue-600 mx-auto mb-1" />
                 <p className="text-2xl font-bold text-blue-600">{totalNutrition.proteins}</p>
                 <p className="text-xs text-muted-foreground">г белков</p>
               </div>
               <div className="text-center p-3 bg-card rounded-lg">
-                <div className="w-5 h-5 rounded-full bg-yellow-500/20 mx-auto mb-1" />
+                <Droplet className="w-5 h-5 text-yellow-600 mx-auto mb-1" />
                 <p className="text-2xl font-bold text-yellow-600">{totalNutrition.fats}</p>
                 <p className="text-xs text-muted-foreground">г жиров</p>
               </div>
               <div className="text-center p-3 bg-card rounded-lg">
-                <div className="w-5 h-5 rounded-full bg-green-500/20 mx-auto mb-1" />
+                <Wheat className="w-5 h-5 text-green-600 mx-auto mb-1" />
                 <p className="text-2xl font-bold text-green-600">{totalNutrition.carbs}</p>
                 <p className="text-xs text-muted-foreground">г углев.</p>
               </div>
@@ -614,7 +630,6 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
           </div>
         )}
 
-        {/* Composition */}
         <div className="p-6 bg-card border border-border rounded-xl">
           <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
@@ -629,14 +644,12 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
             )}
           </div>
 
-          {/* Add Item Button with Grouped Menu */}
           <div className="relative mb-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setShowAddMenu(!showAddMenu)}
               className="w-full border-2 border-dashed hover:border-primary hover:bg-primary/5"
-              disabled={groupedOptions.products.length === 0 && groupedOptions.dishes.length === 0}
             >
               <Plus className="w-4 h-4 mr-2" />
               Добавить продукт или блюдо
@@ -645,78 +658,76 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
 
             {showAddMenu && (
               <div className="absolute z-10 w-full mt-2 bg-card border border-border rounded-lg shadow-lg overflow-hidden">
-                {groupedOptions.products.length > 0 && (
-                  <div>
-                    <div className="px-3 py-2 bg-muted/50 border-b border-border flex items-center gap-2">
-                      <Component className="w-3.5 h-3.5 text-blue-500" />
-                      <span className="text-xs font-semibold text-muted-foreground uppercase">
-                        Продукты ({groupedOptions.products.length})
-                      </span>
-                    </div>
-                    <div className="max-h-48 overflow-auto">
-                      {groupedOptions.products.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => handleAddItem(option.value)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors flex items-center gap-2"
-                        >
-                          <Component className="w-3.5 h-3.5 text-blue-500" />
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
+                <div className="sticky top-0 bg-card p-3 border-b border-border">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Поиск продуктов и блюд..."
+                      className="w-full pl-9 pr-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      autoFocus
+                    />
                   </div>
-                )}
-
-                {groupedOptions.dishes.length > 0 && (
-                  <div>
-                    <div className="px-3 py-2 bg-muted/50 border-b border-border flex items-center gap-2">
-                      <Soup className="w-3.5 h-3.5 text-orange-500" />
-                      <span className="text-xs font-semibold text-muted-foreground uppercase">
-                        Блюда ({groupedOptions.dishes.length})
-                      </span>
+                </div>
+                <div className="p-2">
+                  {filteredProducts.length === 0 && filteredDishes.length === 0 ? (
+                    <div className="px-3 py-8 text-center text-sm text-muted-foreground">
+                      Ничего не найдено
                     </div>
-                    <div className="max-h-48 overflow-auto">
-                      {groupedOptions.dishes.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => handleAddItem(option.value)}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-muted transition-colors flex items-center gap-2"
-                        >
-                          <Soup className="w-3.5 h-3.5 text-orange-500" />
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {groupedOptions.products.length === 0 && groupedOptions.dishes.length === 0 && (
-                  <div className="px-4 py-8 text-center text-muted-foreground">
-                    <p className="text-sm">Нет доступных продуктов или блюд</p>
-                    <p className="text-xs mt-1">Создайте их в соответствующих разделах</p>
-                  </div>
-                )}
+                  ) : (
+                    <>
+                      {filteredProducts.length > 0 && (
+                        <div className="mb-2">
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                            <Component className="w-3.5 h-3.5 text-blue-500" />
+                            Продукты ({filteredProducts.length})
+                          </div>
+                          {filteredProducts.map((product) => (
+                            <button
+                              key={product.id}
+                              type="button"
+                              onClick={() => handleAddItem(product.id, 'product')}
+                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                            >
+                              <Component className="w-3.5 h-3.5 text-blue-500" />
+                              {product.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {filteredDishes.length > 0 && (
+                        <div>
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                            <Soup className="w-3.5 h-3.5 text-orange-500" />
+                            Блюда ({filteredDishes.length})
+                          </div>
+                          {filteredDishes.map((dish) => (
+                            <button
+                              key={dish.id}
+                              type="button"
+                              onClick={() => handleAddItem(dish.id, 'dish')}
+                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                            >
+                              <Soup className="w-3.5 h-3.5 text-orange-500" />
+                              {dish.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             )}
           </div>
 
-          {groupedOptions.products.length === 0 && groupedOptions.dishes.length === 0 && (
-            <div className="mb-4 p-4 bg-warning/5 rounded-lg border border-warning/20">
-              <p className="text-sm text-muted-foreground">
-                💡 Создайте продукты и блюда в соответствующих разделах, чтобы добавить их в прием
-                пищи.
-              </p>
-            </div>
-          )}
-
-          {/* Added Items - Moved below the add button */}
           <div className="space-y-3">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
             >
               <SortableContext
@@ -734,11 +745,11 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
                     onRemove={remove}
                     onUpdateWeight={updateItemWeight}
                     onQuickView={setQuickViewItem}
+                    isDragging={draggingId === field.id}
                   />
                 ))}
               </SortableContext>
             </DndContext>
-
             {watchItems.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -746,7 +757,6 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
                 <p className="text-xs mt-1">Перетаскивайте элементы для изменения порядка</p>
               </div>
             )}
-
             {errors.items && (
               <p className="text-sm text-danger mt-2 flex items-center gap-2">
                 <Info className="w-4 h-4" />
@@ -756,18 +766,15 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex justify-end gap-3 pt-4 border-t border-border">
           <Button type="button" variant="ghost" onClick={onCancel}>
             Отмена
           </Button>
-          <Button type="submit" variant="primary" icon={Utensils}>
+          <Button type="button" variant="primary" onClick={processSubmit} icon={Utensils}>
             {meal ? 'Сохранить изменения' : 'Создать прием пищи'}
           </Button>
         </div>
-      </form>
-
-      {/* Quick View Modal */}
+      </div>
       {quickViewItem && (
         <QuickViewModal
           item={quickViewItem}

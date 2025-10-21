@@ -75,11 +75,28 @@ const calculateNutrition = (item: any, products: Product[], dishes: Dish[]) => {
     const dish = dishes.find((d) => d.id === item.itemId);
     if (!dish) return null;
 
+    // Calculate dish nutrition based on its products
+    let totalCalories = 0;
+    let totalProteins = 0;
+    let totalFats = 0;
+    let totalCarbs = 0;
+
+    dish.products.forEach((dishProduct) => {
+      const product = products.find((p) => p.id === dishProduct.productId);
+      if (product) {
+        const weightRatio = dishProduct.weight / 100;
+        totalCalories += (product.calories || 0) * weightRatio;
+        totalProteins += (product.proteins || 0) * weightRatio;
+        totalFats += (product.fats || 0) * weightRatio;
+        totalCarbs += (product.carbs || 0) * weightRatio;
+      }
+    });
+
     return {
-      calories: Math.round(dish.totalCalories),
-      proteins: Math.round(dish.totalProteins * 10) / 10,
-      fats: Math.round(dish.totalFats * 10) / 10,
-      carbs: Math.round(dish.totalCarbs * 10) / 10,
+      calories: Math.round(totalCalories),
+      proteins: Math.round(totalProteins * 10) / 10,
+      fats: Math.round(totalFats * 10) / 10,
+      carbs: Math.round(totalCarbs * 10) / 10,
     };
   }
 
@@ -116,7 +133,7 @@ const SortableItem: React.FC<{
   // For products, get portions
   const portions = useMemo(() => {
     if (item.type !== 'product' || !selectedItem) return [];
-    return (selectedItem as Product).portions;
+    return (selectedItem as Product).portions || [];
   }, [item.type, selectedItem]);
 
   const currentPortion = useMemo(() => {
@@ -365,11 +382,11 @@ const QuickViewModal: React.FC<{
           </div>
         )}
 
-        {item.type === 'product' && selectedItem.portions && (
+        {item.type === 'product' && selectedItem && (selectedItem as Product).portions && (
           <div>
             <h4 className="text-sm font-medium mb-2">Доступные порции:</h4>
             <div className="space-y-1">
-              {selectedItem.portions.map((portion: ProductPortion, idx: number) => (
+              {(selectedItem as Product).portions.map((portion: ProductPortion, idx: number) => (
                 <div
                   key={idx}
                   className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm"
@@ -612,50 +629,8 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
             )}
           </div>
 
-          <div className="space-y-3 mb-4">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={fields.map((f) => f.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {fields.map((field, index) => (
-                  <SortableItem
-                    key={field.id}
-                    id={field.id}
-                    index={index}
-                    item={watchItems[index]}
-                    products={products}
-                    dishes={dishes}
-                    onRemove={remove}
-                    onUpdateWeight={updateItemWeight}
-                    onQuickView={setQuickViewItem}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-
-            {watchItems.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">Добавьте продукты или блюда</p>
-                <p className="text-xs mt-1">Перетаскивайте элементы для изменения порядка</p>
-              </div>
-            )}
-
-            {errors.items && (
-              <p className="text-sm text-danger mt-2 flex items-center gap-2">
-                <Info className="w-4 h-4" />
-                {errors.items.message || errors.items.root?.message}
-              </p>
-            )}
-          </div>
-
           {/* Add Item Button with Grouped Menu */}
-          <div className="relative">
+          <div className="relative mb-4">
             <Button
               type="button"
               variant="outline"
@@ -729,13 +704,56 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
           </div>
 
           {groupedOptions.products.length === 0 && groupedOptions.dishes.length === 0 && (
-            <div className="mt-3 p-4 bg-warning/5 rounded-lg border border-warning/20">
+            <div className="mb-4 p-4 bg-warning/5 rounded-lg border border-warning/20">
               <p className="text-sm text-muted-foreground">
                 💡 Создайте продукты и блюда в соответствующих разделах, чтобы добавить их в прием
                 пищи.
               </p>
             </div>
           )}
+
+          {/* Added Items - Moved below the add button */}
+          <div className="space-y-3">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={fields.map((f) => f.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {fields.map((field, index) => (
+                  <SortableItem
+                    key={field.id}
+                    id={field.id}
+                    index={index}
+                    item={watchItems[index]}
+                    products={products}
+                    dishes={dishes}
+                    onRemove={remove}
+                    onUpdateWeight={updateItemWeight}
+                    onQuickView={setQuickViewItem}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+
+            {watchItems.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">Добавьте продукты или блюда</p>
+                <p className="text-xs mt-1">Перетаскивайте элементы для изменения порядка</p>
+              </div>
+            )}
+
+            {errors.items && (
+              <p className="text-sm text-danger mt-2 flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                {errors.items.message || errors.items.root?.message}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Action Buttons */}

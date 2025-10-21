@@ -11,16 +11,24 @@ import MealDetail from '../components/meals/MealDetail';
 const MealDetailPage: React.FC = () => {
   const { mealId } = useParams<{ mealId: string }>();
   const navigate = useNavigate();
-  const isNew = !mealId || mealId === 'new';
-  const numericId = isNew ? null : mealId ? parseInt(mealId, 10) : null;
+
+  // Проверяем, является ли URL путем для редактирования
+  const isEditMode = window.location.pathname.endsWith('/edit');
+  const isNew = mealId === 'new';
+
+  // Парсим ID: если путь заканчивается на /edit, берем ID из предпоследнего сегмента
+  const numericId = isNew
+    ? null
+    : mealId && !isNaN(parseInt(mealId, 10))
+      ? parseInt(mealId, 10)
+      : null;
 
   const { getMealById, addMeal, updateMeal } = useMealStore();
 
   const meal = useMemo(() => (numericId ? getMealById(numericId) : null), [numericId, getMealById]);
-  const [isEditing, setIsEditing] = useState<boolean>(isNew);
   const [openSections, setOpenSections] = useState<string[]>(['main', 'items']);
 
-  if (!isNew && !meal) {
+  if (!isNew && !isEditMode && !meal) {
     return (
       <div className="text-center p-8">
         <h2 className="text-xl text-danger">Прием пищи не найден</h2>
@@ -40,6 +48,10 @@ const MealDetailPage: React.FC = () => {
     navigate('/meals');
   };
 
+  const handleEdit = () => {
+    navigate(`/meals/${numericId}/edit`);
+  };
+
   return (
     <div className="p-6 bg-background min-h-screen">
       <div className="max-w-4xl mx-auto">
@@ -47,7 +59,7 @@ const MealDetailPage: React.FC = () => {
           <ArrowLeft className="w-4 h-4 mr-2" />К списку приемов пищи
         </Button>
 
-        {isEditing || isNew ? (
+        {isNew || isEditMode ? (
           <>
             <div className="flex items-center gap-4 mb-8">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -64,16 +76,12 @@ const MealDetailPage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <MealForm
-              meal={meal}
-              onSubmit={handleSubmit}
-              onCancel={() => (isNew ? navigate('/meals') : setIsEditing(false))}
-            />
+            <MealForm meal={meal} onSubmit={handleSubmit} onCancel={() => navigate('/meals')} />
           </>
         ) : (
           <MealDetail
             meal={meal ?? null}
-            onEdit={() => setIsEditing(true)}
+            onEdit={handleEdit}
             openSections={openSections}
             onToggleSection={(id) =>
               setOpenSections((prev) =>

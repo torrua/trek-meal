@@ -56,6 +56,7 @@ function App() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="meals" element={<MealsPage />} />
         <Route path="meals/new" element={<MealDetailPage />} />
+        <Route path="meals/:mealId/edit" element={<MealDetailPage />} />
         <Route path="meals/:mealId" element={<MealDetailPage />} />
         <Route path="*" element={<Navigate to="/trips" replace />} />
       </Route>

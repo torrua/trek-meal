@@ -1,6 +1,6 @@
 // src/pages/MealsPage.tsx
 import React, { useMemo, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Plus,
   Utensils,
@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useMealStore } from '../stores/useMealStore';
 import { useIsMobile } from '../hooks/useIsMobile';
-import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
+import { useViewMode } from '../hooks/useViewMode';
 import type { Meal, MealData } from '../types';
 import Button from '../ui/Button';
 import EntityCard from '../ui/EntityCard';
@@ -28,7 +28,8 @@ import MealDetail from '../components/meals/MealDetail';
 const MealsPage: React.FC = () => {
   const { meals, addMeal, updateMeal, removeMeal } = useMealStore();
   const isMobile = useIsMobile();
-  const { viewMode, toggleViewMode } = useViewMode('meals'); // Use the new hook
+  const navigate = useNavigate();
+  const { viewMode, toggleViewMode } = useViewMode('meals');
   const [activeId, setActiveId] = useState<number | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
@@ -50,10 +51,12 @@ const MealsPage: React.FC = () => {
     setShowFormModal(true);
   }, []);
 
-  const handleEdit = useCallback((meal: Meal) => {
-    setEditingMeal(meal);
-    setShowFormModal(true);
-  }, []);
+  const handleEdit = useCallback(
+    (meal: Meal) => {
+      navigate(`/meals/${meal.id}/edit`);
+    },
+    [navigate]
+  );
 
   const handleFormSubmit = useCallback(
     (formData: MealData) => {
@@ -105,30 +108,25 @@ const MealsPage: React.FC = () => {
   // Bulk action handlers
   const handleBulkDelete = () => {
     if (selectedMealIds.length === 0) return;
-    // Show confirmation modal
     setShowBulkDeleteConfirm(true);
   };
 
   const handleConfirmBulkDelete = () => {
-    // Delete all selected meals directly using the store function
     selectedMealIds.forEach((id) => {
       if (id === activeId) setActiveId(null);
       removeMeal(id);
     });
-    // Exit multi-select mode
     exitMultiSelectMode();
     setShowBulkDeleteConfirm(false);
   };
 
   const handleBulkClone = () => {
     if (selectedMealIds.length === 0) return;
-
     console.log(`Cloning meals: ${selectedMealIds.join(', ')}`);
   };
 
   const handleBulkExport = () => {
     if (selectedMealIds.length === 0) return;
-
     console.log(`Exporting meals: ${selectedMealIds.join(', ')}`);
   };
 
@@ -251,9 +249,6 @@ const MealsPage: React.FC = () => {
                   onClick: (e: React.MouseEvent) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    // We need to call the original handler with the meal
-                    // Since the original handler expects the meal as a parameter,
-                    // we'll create a wrapper that calls it with the meal
                     if (action.label === 'Редактировать') {
                       handleEdit(meal);
                     } else if (action.label === 'Удалить') {
@@ -267,7 +262,7 @@ const MealsPage: React.FC = () => {
                   title={mealEntityConfig.views.card.title(meal)}
                   subtitle={`${meal.items.length} комп.`}
                   icon={mealEntityConfig.getIcon(meal)}
-                  iconColor="#6b7280" // gray-500 to match other pages
+                  iconColor="#6b7280"
                   details={getMealDetails(meal)}
                   borderColor={mealEntityConfig.getBorderColor(meal)}
                   isSelected={activeId === meal.id}
@@ -276,7 +271,7 @@ const MealsPage: React.FC = () => {
                   onMultiSelect={() => toggleMealSelection(meal.id)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
-                  viewMode={viewMode} // Pass viewMode to EntityCard
+                  viewMode={viewMode}
                 />
               );
             })}
@@ -287,7 +282,7 @@ const MealsPage: React.FC = () => {
             {selectedMeal ? (
               <MealDetail
                 meal={selectedMeal}
-                onEdit={() => selectedMeal && handleEdit(selectedMeal)}
+                onEdit={() => selectedMeal && navigate(`/meals/${selectedMeal.id}/edit`)}
                 openSections={openSections}
                 onToggleSection={(id) =>
                   setOpenSections((prev) =>

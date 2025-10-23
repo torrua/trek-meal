@@ -131,12 +131,30 @@ const ItemContent: React.FC<{
   const [customWeight, setCustomWeight] = useState(item.weight?.toString() || '');
   const [showPortions, setShowPortions] = useState(false);
   const [showDishIngredients, setShowDishIngredients] = useState(false);
+  const portionDropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedItem =
     item.type === 'product'
       ? products.find((p) => p.id === item.itemId)
       : dishes.find((d) => d.id === item.itemId);
   const nutrition = calculateNutrition(item, products, dishes);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        portionDropdownRef.current &&
+        !portionDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowPortions(false);
+      }
+    };
+
+    if (showPortions) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showPortions]);
 
   const dishDetails = useMemo(() => {
     if (item.type !== 'dish' || !selectedItem) return null;
@@ -172,11 +190,15 @@ const ItemContent: React.FC<{
     }
   };
 
+  const isProduct = item.type === 'product';
+  const isDish = item.type === 'dish';
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      {/* Header: Title + КБЖУ + Actions */}
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {item.type === 'product' ? (
+          {isProduct ? (
             <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
           ) : (
             <Soup className="w-4 h-4 text-orange-500 flex-shrink-0" />
@@ -236,125 +258,130 @@ const ItemContent: React.FC<{
         )}
       </div>
 
-      <div className="flex items-start gap-2 flex-wrap">
-        {item.type === 'product' && (
-          <>
-            {!isEditingWeight ? (
-              <div className="flex items-center gap-2">
-                <Button
+      {/* Portion Selection (Products only) */}
+      {isProduct && (
+        <div className="pt-2 border-t border-border/50">
+          {!isEditingWeight ? (
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() =>
+                  onUpdateWeight && onUpdateWeight(Math.max(10, (item.weight || 100) - 10))
+                }
+                className="bg-muted hover:bg-muted/80 flex-shrink-0"
+              >
+                <span className="text-base font-semibold">-</span>
+              </Button>
+              <div className="relative flex-1" ref={portionDropdownRef}>
+                <button
                   type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() =>
-                    onUpdateWeight && onUpdateWeight(Math.max(10, (item.weight || 100) - 10))
-                  }
-                  className="bg-muted hover:bg-muted/80 flex-shrink-0"
+                  onClick={() => setShowPortions(!showPortions)}
+                  className="w-full px-3 py-2 text-sm bg-card border border-border rounded-lg hover:bg-muted hover:border-primary/30 transition-all flex items-center justify-between group"
                 >
-                  <span className="text-base font-semibold">-</span>
-                </Button>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowPortions(!showPortions)}
-                    className="w-[200px] px-3 py-1.5 text-sm bg-card border border-border rounded-lg hover:bg-muted transition-colors flex items-center justify-between"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Scale className="w-3.5 h-3.5" />
-                      <span className="font-medium">
-                        {currentPortion ? currentPortion.name : 'Другой'}
-                      </span>
+                  <span className="flex items-center gap-2">
+                    <Scale className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium">
+                      {currentPortion ? currentPortion.name : 'Другой'}
                     </span>
+                  </span>
+                  <div className="flex items-center gap-2">
                     <span className="text-muted-foreground">({item.weight} г)</span>
-                  </button>
-                  {showPortions && portions.length > 0 && (
-                    <div className="absolute z-20 mt-1 w-full bg-card border border-border rounded-lg shadow-lg py-1 max-h-60 overflow-auto">
-                      {portions.map((portion: ProductPortion, idx: number) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => handlePortionSelect(portion)}
-                          className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between ${portion.weight === item.weight ? 'bg-primary/10 text-primary' : ''}`}
-                        >
-                          <span className="font-medium">{portion.name}</span>
-                          <span className="text-muted-foreground">{portion.weight} г</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => {
-                    setCustomWeight(item.weight?.toString() || '');
-                    setIsEditingWeight(true);
-                  }}
-                  className="bg-muted hover:bg-muted/80 flex-shrink-0"
-                  title="Указать вес вручную"
-                >
-                  <Edit className="w-3 h-3" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => onUpdateWeight && onUpdateWeight((item.weight || 100) + 10)}
-                  className="bg-muted hover:bg-muted/80 flex-shrink-0"
-                >
-                  <span className="text-base font-semibold">+</span>
-                </Button>
+                    <ChevronDown
+                      className={`w-4 h-4 text-muted-foreground transition-transform ${showPortions ? 'rotate-180' : ''}`}
+                    />
+                  </div>
+                </button>
+                {showPortions && portions.length > 0 && (
+                  <div className="absolute z-20 mt-1 w-full bg-card border border-border rounded-lg shadow-lg py-1 max-h-60 overflow-auto">
+                    {portions.map((portion: ProductPortion, idx: number) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handlePortionSelect(portion)}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between ${portion.weight === item.weight ? 'bg-primary/10 text-primary' : ''}`}
+                      >
+                        <span className="font-medium">{portion.name}</span>
+                        <span className="text-muted-foreground">{portion.weight} г</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  value={customWeight}
-                  onChange={(e) => setCustomWeight(e.target.value)}
-                  placeholder="Вес в граммах"
-                  className="w-32 text-sm"
-                  min="1"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleCustomWeightSave();
-                    }
-                    if (e.key === 'Escape') {
-                      setCustomWeight(item.weight?.toString() || '');
-                      setIsEditingWeight(false);
-                    }
-                  }}
-                />
-                <Button type="button" variant="primary" size="sm" onClick={handleCustomWeightSave}>
-                  <Check className="w-3.5 h-3.5" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => {
+                  setCustomWeight(item.weight?.toString() || '');
+                  setIsEditingWeight(true);
+                }}
+                className="bg-muted hover:bg-muted/80 flex-shrink-0"
+                title="Указать вес вручную"
+              >
+                <Edit className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => onUpdateWeight && onUpdateWeight((item.weight || 100) + 10)}
+                className="bg-muted hover:bg-muted/80 flex-shrink-0"
+              >
+                <span className="text-base font-semibold">+</span>
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                value={customWeight}
+                onChange={(e) => setCustomWeight(e.target.value)}
+                placeholder="Вес в граммах"
+                className="flex-1 text-sm"
+                min="1"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleCustomWeightSave();
+                  }
+                  if (e.key === 'Escape') {
                     setCustomWeight(item.weight?.toString() || '');
                     setIsEditingWeight(false);
-                  }}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+                  }
+                }}
+              />
+              <Button type="button" variant="primary" size="sm" onClick={handleCustomWeightSave}>
+                <Check className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setCustomWeight(item.weight?.toString() || '');
+                  setIsEditingWeight(false);
+                }}
+              >
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
-      {item.type === 'dish' && dishDetails && dishDetails.length > 0 && (
-        <div className="border-t border-border pt-2">
+      {/* Dish Ingredients */}
+      {isDish && dishDetails && dishDetails.length > 0 && (
+        <div className="pt-2 border-t border-border/50">
           <button
             type="button"
             onClick={() => setShowDishIngredients(!showDishIngredients)}
-            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full"
           >
             <ChevronDown
-              className={`w-3 h-3 transition-transform ${showDishIngredients ? 'rotate-180' : ''}`}
+              className={`w-3.5 h-3.5 transition-transform ${showDishIngredients ? 'rotate-180' : ''}`}
             />
             <span>Состав блюда ({dishDetails.length})</span>
           </button>
@@ -363,13 +390,13 @@ const ItemContent: React.FC<{
               {dishDetails.map((ingredient: any, idx: number) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between px-2 py-1 bg-muted/30 rounded text-xs"
+                  className="flex items-center justify-between px-2 py-1 bg-muted/20 rounded text-xs"
                 >
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1.5">
                     <Component className="w-3 h-3 text-blue-500" />
-                    {ingredient.name}
+                    <span className="text-foreground">{ingredient.name}</span>
                   </span>
-                  <span className="text-muted-foreground">{ingredient.weight}г</span>
+                  <span className="text-muted-foreground font-medium">{ingredient.weight}г</span>
                 </div>
               ))}
             </div>
@@ -393,6 +420,7 @@ const SortableItem: React.FC<{
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
   });
+  const [isHovered, setIsHovered] = useState(false);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -400,13 +428,33 @@ const SortableItem: React.FC<{
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const isProduct = item.type === 'product';
+  const isDish = item.type === 'dish';
+
+  // Light background colors for visual distinction
+  const bgColor = isProduct
+    ? 'bg-blue-500/5 hover:bg-blue-500/10'
+    : 'bg-orange-500/5 hover:bg-orange-500/10';
+
+  const borderColor = isProduct
+    ? 'border-blue-500/20 hover:border-blue-500/40'
+    : 'border-orange-500/20 hover:border-orange-500/40';
+
   return (
-    <div ref={setNodeRef} style={style} className="bg-card border border-border rounded-lg p-3">
+    <div
+      ref={setNodeRef}
+      style={style}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`${bgColor} border ${borderColor} rounded-lg p-3 transition-all duration-200 hover:shadow-sm`}
+    >
       <div className="flex items-start gap-2">
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground p-1 mt-0.5 flex-shrink-0"
+          className={`cursor-grab active:cursor-grabbing p-1 mt-0.5 flex-shrink-0 rounded transition-colors ${
+            isHovered ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground'
+          }`}
         >
           <GripVertical className="w-4 h-4" />
         </button>

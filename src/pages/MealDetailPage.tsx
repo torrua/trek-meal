@@ -12,23 +12,17 @@ const MealDetailPage: React.FC = () => {
   const { mealId } = useParams<{ mealId: string }>();
   const navigate = useNavigate();
 
-  // Проверяем, является ли URL путем для редактирования
+  const isNew = !mealId || mealId === 'new';
   const isEditMode = window.location.pathname.endsWith('/edit');
-  const isNew = mealId === 'new';
 
-  // Парсим ID: если путь заканчивается на /edit, берем ID из предпоследнего сегмента
-  const numericId = isNew
-    ? null
-    : mealId && !isNaN(parseInt(mealId, 10))
-      ? parseInt(mealId, 10)
-      : null;
+  const numericId = !isNew && mealId ? parseInt(mealId, 10) : null;
 
-  const { getMealById, addMeal, updateMeal } = useMealStore();
+  const { getMealById, addMeal, updateMeal, meals } = useMealStore();
 
   const meal = useMemo(() => (numericId ? getMealById(numericId) : null), [numericId, getMealById]);
   const [openSections, setOpenSections] = useState<string[]>(['main', 'items']);
 
-  if (!isNew && !isEditMode && !meal) {
+  if (!isNew && !meal) {
     return (
       <div className="text-center p-8">
         <h2 className="text-xl text-danger">Прием пищи не найден</h2>
@@ -51,6 +45,9 @@ const MealDetailPage: React.FC = () => {
   const handleEdit = () => {
     navigate(`/meals/${numericId}/edit`);
   };
+
+  // Generate default name for new meal
+  const defaultMealName = isNew ? `Прием пищи #${meals.length + 1}` : undefined;
 
   return (
     <div className="p-6 bg-background min-h-screen">
@@ -76,11 +73,16 @@ const MealDetailPage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <MealForm meal={meal} onSubmit={handleSubmit} onCancel={() => navigate('/meals')} />
+            <MealForm
+              meal={meal}
+              onSubmit={handleSubmit}
+              onCancel={() => navigate('/meals')}
+              defaultName={defaultMealName}
+            />
           </>
-        ) : (
+        ) : meal ? (
           <MealDetail
-            meal={meal ?? null}
+            meal={meal}
             onEdit={handleEdit}
             openSections={openSections}
             onToggleSection={(id) =>
@@ -89,6 +91,13 @@ const MealDetailPage: React.FC = () => {
               )
             }
           />
+        ) : (
+          <div className="text-center p-8">
+            <h2 className="text-xl text-danger">Прием пищи не найден</h2>
+            <Link to="/meals">
+              <Button variant="secondary">Вернуться к списку</Button>
+            </Link>
+          </div>
         )}
       </div>
     </div>

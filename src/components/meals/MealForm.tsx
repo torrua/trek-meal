@@ -32,8 +32,8 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragStartEvent,
   DragEndEvent,
+  DragStartEvent,
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -66,9 +66,9 @@ interface MealFormProps {
   meal?: Meal | null;
   onSubmit: (data: MealData) => void;
   onCancel: () => void;
+  defaultName?: string;
 }
 
-// Helper function to calculate nutrition
 const calculateNutrition = (item: any, products: Product[], dishes: Dish[]) => {
   if (item.type === 'product') {
     const product = products.find((p) => p.id === item.itemId);
@@ -129,35 +129,22 @@ const SortableItem: React.FC<{
   onUpdateWeight,
   onQuickView,
   onEditItem,
-  isDragging,
+  isDragging: isGlobalDragging,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging: isSortableDragging,
-  } = useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
   const [isEditingWeight, setIsEditingWeight] = useState(false);
   const [customWeight, setCustomWeight] = useState(item.weight?.toString() || '');
   const [showPortions, setShowPortions] = useState(false);
   const [showDishIngredients, setShowDishIngredients] = useState(false);
-  const [itemHeight, setItemHeight] = useState<number | null>(null);
-  const itemRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (itemRef.current) {
-      const height = itemRef.current.offsetHeight;
-      setItemHeight(height);
-    }
-  }, [isEditingWeight, showDishIngredients]);
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition: isSortableDragging ? transition : undefined,
-    height: isSortableDragging && itemHeight ? `${itemHeight}px` : 'auto',
-    overflow: isSortableDragging ? 'hidden' : 'visible',
+    transform: isDragging
+      ? `${CSS.Transform.toString(transform)} rotate(5deg)`
+      : CSS.Transform.toString(transform),
+    transition: isDragging ? 'none' : transition,
+    zIndex: isDragging ? 999 : 'auto',
   };
 
   const selectedItem =
@@ -166,7 +153,6 @@ const SortableItem: React.FC<{
       : dishes.find((d) => d.id === item.itemId);
   const nutrition = calculateNutrition(item, products, dishes);
 
-  // Get dish details if it's a dish
   const dishDetails = useMemo(() => {
     if (item.type !== 'dish' || !selectedItem) return null;
     const dish = selectedItem as Dish;
@@ -202,12 +188,11 @@ const SortableItem: React.FC<{
 
   return (
     <div
-      ref={(node) => {
-        setNodeRef(node);
-        if (node) itemRef.current = node;
-      }}
+      ref={setNodeRef}
       style={style}
-      className={`bg-card border border-border rounded-lg p-3 transition-all ${isSortableDragging ? 'opacity-50 shadow-lg z-50' : ''}`}
+      className={`bg-card border border-border rounded-lg p-3 transition-all ${
+        isDragging ? 'opacity-80 shadow-2xl scale-105' : ''
+      }`}
     >
       <div className="flex items-center gap-2 mb-2">
         <button
@@ -258,7 +243,7 @@ const SortableItem: React.FC<{
           </Button>
         </div>
       </div>
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-start gap-2 flex-wrap">
         {item.type === 'product' && (
           <>
             {!isEditingWeight ? (
@@ -268,14 +253,14 @@ const SortableItem: React.FC<{
                   variant="ghost"
                   size="icon"
                   onClick={() => onUpdateWeight(index, Math.max(10, (item.weight || 100) - 10))}
-                  className="h-8 w-8 bg-muted hover:bg-muted/80"
+                  className="h-8 w-8 bg-muted hover:bg-muted/80 flex-shrink-0"
                 >
                   <span className="text-lg font-semibold">-</span>
                 </Button>
                 <button
                   type="button"
                   onClick={() => setShowPortions(!showPortions)}
-                  className="min-w-[200px] px-3 py-1.5 text-sm bg-background border border-border rounded-lg hover:bg-muted transition-colors flex items-center justify-between"
+                  className="w-[220px] px-3 py-1.5 text-sm bg-background border border-border rounded-lg hover:bg-muted transition-colors flex items-center justify-between"
                 >
                   <span className="flex items-center gap-2">
                     <Scale className="w-3.5 h-3.5" />
@@ -293,7 +278,7 @@ const SortableItem: React.FC<{
                     setCustomWeight(item.weight?.toString() || '');
                     setIsEditingWeight(true);
                   }}
-                  className="h-8 w-8 bg-muted hover:bg-muted/80"
+                  className="h-8 w-8 bg-muted hover:bg-muted/80 flex-shrink-0"
                   title="Указать вес вручную"
                 >
                   <Edit className="w-3.5 h-3.5" />
@@ -303,7 +288,7 @@ const SortableItem: React.FC<{
                   variant="ghost"
                   size="icon"
                   onClick={() => onUpdateWeight(index, (item.weight || 100) + 10)}
-                  className="h-8 w-8 bg-muted hover:bg-muted/80"
+                  className="h-8 w-8 bg-muted hover:bg-muted/80 flex-shrink-0"
                 >
                   <span className="text-lg font-semibold">+</span>
                 </Button>
@@ -348,13 +333,13 @@ const SortableItem: React.FC<{
           </>
         )}
         {nutrition && (
-          <div className="flex items-center gap-3 flex-wrap ml-auto">
+          <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto sm:ml-auto mt-2 sm:mt-0">
             <div className="flex items-center gap-1.5 text-sm">
               <Flame className="w-4 h-4 text-orange-500" />
               <span className="font-semibold">{nutrition.calories}</span>
               <span className="text-muted-foreground text-xs">ккал</span>
             </div>
-            <div className="hidden sm:flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-3 text-xs">
               <div className="flex items-center gap-1">
                 <Beef className="w-3.5 h-3.5 text-blue-500" />
                 <span className="font-semibold text-blue-600">Б: {nutrition.proteins}г</span>
@@ -387,7 +372,6 @@ const SortableItem: React.FC<{
         )}
       </div>
 
-      {/* Dish Ingredients Collapsible */}
       {item.type === 'dish' && dishDetails && dishDetails.length > 0 && (
         <div className="mt-2 border-t border-border pt-2">
           <button
@@ -416,23 +400,6 @@ const SortableItem: React.FC<{
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {nutrition && (
-        <div className="flex sm:hidden items-center gap-3 text-xs mt-2">
-          <div className="flex items-center gap-1">
-            <Beef className="w-3.5 h-3.5 text-blue-500" />
-            <span className="font-semibold text-blue-600">Б: {nutrition.proteins}г</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Droplet className="w-3.5 h-3.5 text-yellow-500" />
-            <span className="font-semibold text-yellow-600">Ж: {nutrition.fats}г</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Wheat className="w-3.5 h-3.5 text-green-500" />
-            <span className="font-semibold text-green-600">У: {nutrition.carbs}г</span>
-          </div>
         </div>
       )}
     </div>
@@ -518,14 +485,14 @@ const QuickViewModal: React.FC<{
   );
 };
 
-const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
+const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultName }) => {
   const { products } = useProductStore();
   const { dishes } = useDishStore();
   const navigate = useNavigate();
   const [quickViewItem, setQuickViewItem] = useState<any>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const handleEditItem = (item: any) => {
     if (item.type === 'product') {
@@ -548,7 +515,7 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
   } = useForm<MealFormValues>({
     resolver: zodResolver(mealFormSchema),
     defaultValues: {
-      name: meal?.name || '',
+      name: meal?.name || defaultName || '',
       description: meal?.description || '',
       items: meal?.items || [],
     },
@@ -612,12 +579,14 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
   };
 
   const sensors = useSensors(useSensor(PointerSensor));
+
   const handleDragStart = (event: DragStartEvent) => {
-    setDraggingId(event.active.id as string);
+    setActiveId(event.active.id as string);
   };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    setDraggingId(null);
+    setActiveId(null);
     if (over && active.id !== over.id) {
       const oldIndex = fields.findIndex((item) => item.id === active.id);
       const newIndex = fields.findIndex((item) => item.id === over.id);
@@ -649,7 +618,7 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
   return (
     <>
       <div className="space-y-6 p-1">
-        <div className="p-6 bg-card border border-border rounded-xl">
+        <div className="p-6 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 border border-border rounded-xl">
           <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Info className="w-4 h-4 text-primary" />
@@ -724,7 +693,7 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
           </div>
         )}
 
-        <div className="p-6 bg-card border border-border rounded-xl">
+        <div className="p-6 bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 border border-border rounded-xl">
           <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Utensils className="w-4 h-4 text-primary" />
@@ -765,34 +734,15 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
                     />
                   </div>
                 </div>
-                <div className="p-2">
+                <div className="p-2 max-h-80 overflow-y-auto">
                   {filteredProducts.length === 0 && filteredDishes.length === 0 ? (
                     <div className="px-3 py-8 text-center text-sm text-muted-foreground">
                       Ничего не найдено
                     </div>
                   ) : (
                     <>
-                      {filteredProducts.length > 0 && (
-                        <div className="mb-2">
-                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
-                            <Component className="w-3.5 h-3.5 text-blue-500" />
-                            Продукты ({filteredProducts.length})
-                          </div>
-                          {filteredProducts.map((product) => (
-                            <button
-                              key={product.id}
-                              type="button"
-                              onClick={() => handleAddItem(product.id, 'product')}
-                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
-                            >
-                              <Component className="w-3.5 h-3.5 text-blue-500" />
-                              {product.name}
-                            </button>
-                          ))}
-                        </div>
-                      )}
                       {filteredDishes.length > 0 && (
-                        <div>
+                        <div className="mb-2">
                           <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
                             <Soup className="w-3.5 h-3.5 text-orange-500" />
                             Блюда ({filteredDishes.length})
@@ -806,6 +756,25 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
                             >
                               <Soup className="w-3.5 h-3.5 text-orange-500" />
                               {dish.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {filteredProducts.length > 0 && (
+                        <div>
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                            <Component className="w-3.5 h-3.5 text-blue-500" />
+                            Продукты ({filteredProducts.length})
+                          </div>
+                          {filteredProducts.map((product) => (
+                            <button
+                              key={product.id}
+                              type="button"
+                              onClick={() => handleAddItem(product.id, 'product')}
+                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                            >
+                              <Component className="w-3.5 h-3.5 text-blue-500" />
+                              {product.name}
                             </button>
                           ))}
                         </div>
@@ -840,7 +809,7 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel }) => {
                     onUpdateWeight={updateItemWeight}
                     onQuickView={setQuickViewItem}
                     onEditItem={handleEditItem}
-                    isDragging={draggingId === field.id}
+                    isDragging={activeId === field.id}
                   />
                 ))}
               </SortableContext>

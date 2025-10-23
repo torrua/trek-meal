@@ -18,7 +18,6 @@ import {
   ChevronDown,
   Flame,
   TrendingUp,
-  Eye,
   Check,
   Hash,
   Beef,
@@ -34,6 +33,7 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -108,44 +108,29 @@ const calculateNutrition = (item: any, products: Product[], dishes: Dish[]) => {
   return null;
 };
 
-const SortableItem: React.FC<{
-  id: string;
-  index: number;
+const ItemContent: React.FC<{
   item: any;
   products: Product[];
   dishes: Dish[];
-  onRemove: (index: number) => void;
-  onUpdateWeight: (index: number, weight: number) => void;
-  onQuickView: (item: any) => void;
-  onEditItem: (item: any) => void;
-  isDragging: boolean;
+  onRemove?: () => void;
+  onUpdateWeight?: (weight: number) => void;
+  onEditItem?: () => void;
+  isDragging?: boolean;
+  showActions?: boolean;
 }> = ({
-  id,
-  index,
   item,
   products,
   dishes,
   onRemove,
   onUpdateWeight,
-  onQuickView,
   onEditItem,
-  isDragging: isGlobalDragging,
+  isDragging,
+  showActions = true,
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id,
-  });
   const [isEditingWeight, setIsEditingWeight] = useState(false);
   const [customWeight, setCustomWeight] = useState(item.weight?.toString() || '');
   const [showPortions, setShowPortions] = useState(false);
   const [showDishIngredients, setShowDishIngredients] = useState(false);
-
-  const style = {
-    transform: isDragging
-      ? `${CSS.Transform.toString(transform)} rotate(5deg)`
-      : CSS.Transform.toString(transform),
-    transition: isDragging ? 'none' : transition,
-    zIndex: isDragging ? 999 : 'auto',
-  };
 
   const selectedItem =
     item.type === 'product'
@@ -168,40 +153,28 @@ const SortableItem: React.FC<{
     if (item.type !== 'product' || !selectedItem) return [];
     return (selectedItem as Product).portions || [];
   }, [item.type, selectedItem]);
+
   const currentPortion = useMemo(() => {
     if (item.type !== 'product' || !item.weight) return null;
     return portions.find((p: ProductPortion) => p.weight === item.weight);
   }, [item.type, item.weight, portions]);
 
   const handlePortionSelect = (portion: ProductPortion) => {
-    onUpdateWeight(index, portion.weight);
+    if (onUpdateWeight) onUpdateWeight(portion.weight);
     setShowPortions(false);
   };
 
   const handleCustomWeightSave = () => {
     const weight = parseInt(customWeight, 10);
-    if (!isNaN(weight) && weight > 0) {
-      onUpdateWeight(index, weight);
+    if (!isNaN(weight) && weight > 0 && onUpdateWeight) {
+      onUpdateWeight(weight);
       setIsEditingWeight(false);
     }
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`bg-card border border-border rounded-lg p-3 transition-all ${
-        isDragging ? 'opacity-80 shadow-2xl scale-105' : ''
-      }`}
-    >
-      <div className="flex items-center gap-2 mb-2">
-        <button
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground p-1"
-        >
-          <GripVertical className="w-4 h-4" />
-        </button>
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {item.type === 'product' ? (
             <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
@@ -210,39 +183,59 @@ const SortableItem: React.FC<{
           )}
           <h4 className="font-medium text-foreground truncate">{selectedItem?.name}</h4>
         </div>
-        <div className="flex items-center gap-1 ml-auto">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => onQuickView(item)}
-            className="h-8 w-8 bg-primary/10 hover:bg-primary/20 text-primary flex-shrink-0"
-            title="Быстрый просмотр"
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => onEditItem(item)}
-            className="h-8 w-8 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 flex-shrink-0"
-            title="Редактировать"
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => onRemove(index)}
-            className="h-8 w-8 bg-danger/10 hover:bg-danger/20 text-danger flex-shrink-0"
-            title="Удалить"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
+        {showActions && (
+          <div className="flex items-center gap-2">
+            {nutrition && (
+              <div className="flex items-center gap-2 h-8 px-2.5 bg-muted/50 rounded-lg border border-border">
+                <div className="flex items-center gap-1">
+                  <Flame className="w-4 h-4 text-orange-600" />
+                  <span className="text-sm font-semibold text-orange-600">
+                    {nutrition.calories}
+                  </span>
+                </div>
+                <div className="w-px h-4 bg-border" />
+                <div className="flex items-center gap-1">
+                  <Beef className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-semibold text-blue-600">{nutrition.proteins}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Droplet className="w-4 h-4 text-yellow-600" />
+                  <span className="text-sm font-semibold text-yellow-600">{nutrition.fats}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Wheat className="w-4 h-4 text-green-600" />
+                  <span className="text-sm font-semibold text-green-600">{nutrition.carbs}</span>
+                </div>
+              </div>
+            )}
+            {onEditItem && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={onEditItem}
+                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600"
+                title="Редактировать"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
+            {onRemove && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={onRemove}
+                className="bg-danger/10 hover:bg-danger/20 text-danger"
+                title="Удалить"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        )}
       </div>
+
       <div className="flex items-start gap-2 flex-wrap">
         {item.type === 'product' && (
           <>
@@ -251,46 +244,65 @@ const SortableItem: React.FC<{
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon"
-                  onClick={() => onUpdateWeight(index, Math.max(10, (item.weight || 100) - 10))}
-                  className="h-8 w-8 bg-muted hover:bg-muted/80 flex-shrink-0"
+                  size="icon-sm"
+                  onClick={() =>
+                    onUpdateWeight && onUpdateWeight(Math.max(10, (item.weight || 100) - 10))
+                  }
+                  className="bg-muted hover:bg-muted/80 flex-shrink-0"
                 >
-                  <span className="text-lg font-semibold">-</span>
+                  <span className="text-base font-semibold">-</span>
                 </Button>
-                <button
-                  type="button"
-                  onClick={() => setShowPortions(!showPortions)}
-                  className="w-[220px] px-3 py-1.5 text-sm bg-background border border-border rounded-lg hover:bg-muted transition-colors flex items-center justify-between"
-                >
-                  <span className="flex items-center gap-2">
-                    <Scale className="w-3.5 h-3.5" />
-                    <span className="font-medium">
-                      {currentPortion ? currentPortion.name : 'Другой'}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowPortions(!showPortions)}
+                    className="w-[200px] px-3 py-1.5 text-sm bg-card border border-border rounded-lg hover:bg-muted transition-colors flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Scale className="w-3.5 h-3.5" />
+                      <span className="font-medium">
+                        {currentPortion ? currentPortion.name : 'Другой'}
+                      </span>
                     </span>
-                  </span>
-                  <span className="text-muted-foreground">({item.weight} г)</span>
-                </button>
+                    <span className="text-muted-foreground">({item.weight} г)</span>
+                  </button>
+                  {showPortions && portions.length > 0 && (
+                    <div className="absolute z-20 mt-1 w-full bg-card border border-border rounded-lg shadow-lg py-1 max-h-60 overflow-auto">
+                      {portions.map((portion: ProductPortion, idx: number) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handlePortionSelect(portion)}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between ${portion.weight === item.weight ? 'bg-primary/10 text-primary' : ''}`}
+                        >
+                          <span className="font-medium">{portion.name}</span>
+                          <span className="text-muted-foreground">{portion.weight} г</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon"
+                  size="icon-sm"
                   onClick={() => {
                     setCustomWeight(item.weight?.toString() || '');
                     setIsEditingWeight(true);
                   }}
-                  className="h-8 w-8 bg-muted hover:bg-muted/80 flex-shrink-0"
+                  className="bg-muted hover:bg-muted/80 flex-shrink-0"
                   title="Указать вес вручную"
                 >
-                  <Edit className="w-3.5 h-3.5" />
+                  <Edit className="w-3 h-3" />
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon"
-                  onClick={() => onUpdateWeight(index, (item.weight || 100) + 10)}
-                  className="h-8 w-8 bg-muted hover:bg-muted/80 flex-shrink-0"
+                  size="icon-sm"
+                  onClick={() => onUpdateWeight && onUpdateWeight((item.weight || 100) + 10)}
+                  className="bg-muted hover:bg-muted/80 flex-shrink-0"
                 >
-                  <span className="text-lg font-semibold">+</span>
+                  <span className="text-base font-semibold">+</span>
                 </Button>
               </div>
             ) : (
@@ -332,48 +344,10 @@ const SortableItem: React.FC<{
             )}
           </>
         )}
-        {nutrition && (
-          <div className="flex items-center gap-3 flex-wrap w-full sm:w-auto sm:ml-auto mt-2 sm:mt-0">
-            <div className="flex items-center gap-1.5 text-sm">
-              <Flame className="w-4 h-4 text-orange-500" />
-              <span className="font-semibold">{nutrition.calories}</span>
-              <span className="text-muted-foreground text-xs">ккал</span>
-            </div>
-            <div className="flex items-center gap-3 text-xs">
-              <div className="flex items-center gap-1">
-                <Beef className="w-3.5 h-3.5 text-blue-500" />
-                <span className="font-semibold text-blue-600">Б: {nutrition.proteins}г</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Droplet className="w-3.5 h-3.5 text-yellow-500" />
-                <span className="font-semibold text-yellow-600">Ж: {nutrition.fats}г</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Wheat className="w-3.5 h-3.5 text-green-500" />
-                <span className="font-semibold text-green-600">У: {nutrition.carbs}г</span>
-              </div>
-            </div>
-          </div>
-        )}
-        {showPortions && portions.length > 0 && (
-          <div className="absolute z-10 mt-1 w-80 bg-card border border-border rounded-lg shadow-lg py-1 max-h-60 overflow-auto">
-            {portions.map((portion: ProductPortion, idx: number) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handlePortionSelect(portion)}
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between ${portion.weight === item.weight ? 'bg-primary/10 text-primary' : ''}`}
-              >
-                <span className="font-medium">{portion.name}</span>
-                <span className="text-muted-foreground">{portion.weight} г</span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {item.type === 'dish' && dishDetails && dishDetails.length > 0 && (
-        <div className="mt-2 border-t border-border pt-2">
+        <div className="border-t border-border pt-2">
           <button
             type="button"
             onClick={() => setShowDishIngredients(!showDishIngredients)}
@@ -406,82 +380,48 @@ const SortableItem: React.FC<{
   );
 };
 
-const QuickViewModal: React.FC<{
+const SortableItem: React.FC<{
+  id: string;
+  index: number;
   item: any;
   products: Product[];
   dishes: Dish[];
-  onClose: () => void;
-}> = ({ item, products, dishes, onClose }) => {
-  const selectedItem =
-    item.type === 'product'
-      ? products.find((p) => p.id === item.itemId)
-      : dishes.find((d) => d.id === item.itemId);
-  if (!selectedItem) return null;
-  const nutrition = calculateNutrition(item, products, dishes);
+  onRemove: (index: number) => void;
+  onUpdateWeight: (index: number, weight: number) => void;
+  onEditItem: (item: any) => void;
+}> = ({ id, index, item, products, dishes, onRemove, onUpdateWeight, onEditItem }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: isDragging ? 'none' : transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   return (
-    <Modal isOpen onClose={onClose} title={selectedItem.name}>
-      <div className="space-y-4">
-        {selectedItem.description && (
-          <div className="p-3 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground">{selectedItem.description}</p>
-          </div>
-        )}
-        {nutrition && (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
-              <div className="flex items-center gap-2 mb-1">
-                <Flame className="w-4 h-4 text-orange-600" />
-                <span className="text-xs text-muted-foreground">Калории</span>
-              </div>
-              <p className="text-2xl font-bold text-orange-600">{nutrition.calories}</p>
-              <p className="text-xs text-muted-foreground">ккал</p>
-            </div>
-            <div className="p-3 bg-muted/50 rounded-lg border border-border">
-              <p className="text-xs text-muted-foreground mb-2">БЖУ</p>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <Beef className="w-3 h-3 text-blue-500" />
-                    <span className="text-blue-600">Белки:</span>
-                  </div>
-                  <span className="font-semibold">{nutrition.proteins}г</span>
-                </div>
-                <div className="flex justify-between items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <Droplet className="w-3 h-3 text-yellow-500" />
-                    <span className="text-yellow-600">Жиры:</span>
-                  </div>
-                  <span className="font-semibold">{nutrition.fats}г</span>
-                </div>
-                <div className="flex justify-between items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <Wheat className="w-3 h-3 text-green-500" />
-                    <span className="text-green-600">Углев.:</span>
-                  </div>
-                  <span className="font-semibold">{nutrition.carbs}г</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {item.type === 'product' && selectedItem && (selectedItem as Product).portions && (
-          <div>
-            <h4 className="text-sm font-medium mb-2">Доступные порции:</h4>
-            <div className="space-y-1">
-              {(selectedItem as Product).portions.map((portion: ProductPortion, idx: number) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm"
-                >
-                  <span>{portion.name}</span>
-                  <span className="text-muted-foreground">{portion.weight} г</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+    <div ref={setNodeRef} style={style} className="bg-card border border-border rounded-lg p-3">
+      <div className="flex items-start gap-2">
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground p-1 mt-0.5 flex-shrink-0"
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <ItemContent
+            item={item}
+            products={products}
+            dishes={dishes}
+            onRemove={() => onRemove(index)}
+            onUpdateWeight={(weight) => onUpdateWeight(index, weight)}
+            onEditItem={() => onEditItem(item)}
+          />
+        </div>
       </div>
-    </Modal>
+    </div>
   );
 };
 
@@ -489,7 +429,6 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
   const { products } = useProductStore();
   const { dishes } = useDishStore();
   const navigate = useNavigate();
-  const [quickViewItem, setQuickViewItem] = useState<any>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -578,7 +517,13 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
     update(index, updatedItem);
   };
 
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -614,6 +559,8 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
     });
     return counts;
   }, [watchItems]);
+
+  const activeItem = activeId ? watchItems.find((item, idx) => fields[idx].id === activeId) : null;
 
   return (
     <>
@@ -807,12 +754,28 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
                     dishes={dishes}
                     onRemove={remove}
                     onUpdateWeight={updateItemWeight}
-                    onQuickView={setQuickViewItem}
                     onEditItem={handleEditItem}
-                    isDragging={activeId === field.id}
                   />
                 ))}
               </SortableContext>
+              <DragOverlay>
+                {activeId && activeItem ? (
+                  <div
+                    className="bg-card border-2 border-primary rounded-lg p-3 shadow-2xl"
+                    style={{
+                      transform: 'rotate(2deg)',
+                      cursor: 'grabbing',
+                    }}
+                  >
+                    <ItemContent
+                      item={activeItem}
+                      products={products}
+                      dishes={dishes}
+                      showActions={false}
+                    />
+                  </div>
+                ) : null}
+              </DragOverlay>
             </DndContext>
             {watchItems.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
@@ -839,14 +802,6 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
           </Button>
         </div>
       </div>
-      {quickViewItem && (
-        <QuickViewModal
-          item={quickViewItem}
-          products={products}
-          dishes={dishes}
-          onClose={() => setQuickViewItem(null)}
-        />
-      )}
     </>
   );
 };

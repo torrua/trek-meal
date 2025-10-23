@@ -12,6 +12,9 @@ import {
   Soup,
   Scale,
   Hash,
+  Beef,
+  Droplet,
+  Wheat,
 } from 'lucide-react';
 import type { Meal, MealPlanItem, Product, Dish } from '../../types';
 import DetailPane from '../../ui/DetailPane';
@@ -162,17 +165,17 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit, openSections, onT
               <p className="text-xs text-muted-foreground">ккал</p>
             </div>
             <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-lg border border-blue-500/20">
-              <div className="w-5 h-5 rounded-full bg-blue-500/30 mb-2" />
+              <Beef className="w-5 h-5 text-blue-600 mb-2" />
               <p className="text-2xl font-bold text-blue-600">{totalNutrition.proteins}</p>
               <p className="text-xs text-muted-foreground">г белков</p>
             </div>
             <div className="p-4 bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 rounded-lg border border-yellow-500/20">
-              <div className="w-5 h-5 rounded-full bg-yellow-500/30 mb-2" />
+              <Droplet className="w-5 h-5 text-yellow-600 mb-2" />
               <p className="text-2xl font-bold text-yellow-600">{totalNutrition.fats}</p>
               <p className="text-xs text-muted-foreground">г жиров</p>
             </div>
             <div className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 rounded-lg border border-green-500/20">
-              <div className="w-5 h-5 rounded-full bg-green-500/30 mb-2" />
+              <Wheat className="w-5 h-5 text-green-600 mb-2" />
               <p className="text-2xl font-bold text-green-600">{totalNutrition.carbs}</p>
               <p className="text-xs text-muted-foreground">г углеводов</p>
             </div>
@@ -271,26 +274,24 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit, openSections, onT
 
                     {/* Nutrition Info */}
                     {nutrition && (
-                      <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-center gap-3 text-xs">
-                        <div className="flex items-center gap-1.5 text-orange-600">
-                          <Flame className="w-3.5 h-3.5" />
-                          <span className="font-semibold">{nutrition.calories}</span>
-                          <span className="text-muted-foreground">ккал</span>
-                        </div>
+                      <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-1">
-                          <span className="text-blue-600 font-semibold">
-                            Б: {nutrition.proteins}г
+                          <Flame className="w-4 h-4 text-orange-600" />
+                          <span className="font-semibold text-orange-600">
+                            {nutrition.calories}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="text-yellow-600 font-semibold">
-                            Ж: {nutrition.fats}г
-                          </span>
+                          <Beef className="w-4 h-4 text-blue-600" />
+                          <span className="font-semibold text-blue-600">{nutrition.proteins}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="text-green-600 font-semibold">
-                            У: {nutrition.carbs}г
-                          </span>
+                          <Droplet className="w-4 h-4 text-yellow-600" />
+                          <span className="font-semibold text-yellow-600">{nutrition.fats}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Wheat className="w-4 h-4 text-green-600" />
+                          <span className="font-semibold text-green-600">{nutrition.carbs}</span>
                         </div>
                       </div>
                     )}
@@ -339,26 +340,24 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit, openSections, onT
                     )}
 
                     {nutrition && (
-                      <div className="flex flex-wrap items-center gap-3 text-xs">
-                        <div className="flex items-center gap-1.5 text-orange-600">
-                          <Flame className="w-3.5 h-3.5" />
-                          <span className="font-semibold">{nutrition.calories}</span>
-                          <span className="text-muted-foreground">ккал</span>
-                        </div>
+                      <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-1">
-                          <span className="text-blue-600 font-semibold">
-                            Б: {nutrition.proteins}г
+                          <Flame className="w-4 h-4 text-orange-600" />
+                          <span className="font-semibold text-orange-600">
+                            {nutrition.calories}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="text-yellow-600 font-semibold">
-                            Ж: {nutrition.fats}г
-                          </span>
+                          <Beef className="w-4 h-4 text-blue-600" />
+                          <span className="font-semibold text-blue-600">{nutrition.proteins}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="text-green-600 font-semibold">
-                            У: {nutrition.carbs}г
-                          </span>
+                          <Droplet className="w-4 h-4 text-yellow-600" />
+                          <span className="font-semibold text-yellow-600">{nutrition.fats}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Wheat className="w-4 h-4 text-green-600" />
+                          <span className="font-semibold text-green-600">{nutrition.carbs}</span>
                         </div>
                       </div>
                     )}
@@ -384,14 +383,13 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit, openSections, onT
         <div className="flex-1 min-w-0">
           <h2 className="text-2xl font-bold text-foreground truncate">{meal.name}</h2>
           {totalNutrition && (
-            <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-3 mt-2 text-sm">
+              <div className="flex items-center gap-1">
                 <Flame className="w-4 h-4 text-orange-600" />
                 <span className="font-semibold text-orange-600">{totalNutrition.calories}</span>
-                <span>ккал</span>
               </div>
               <span className="text-muted-foreground/50">·</span>
-              <span>{meal.items.length} компонентов</span>
+              <span className="text-muted-foreground">{meal.items.length} компонентов</span>
             </div>
           )}
         </div>

@@ -63,12 +63,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             className={cn(
               // Base styles - Notion-inspired
               'flex w-full text-sm transition-all duration-200 notion-focus-ring',
-              'placeholder:text-muted-foreground text-foreground bg-transparent',
+              'placeholder:text-muted-foreground text-foreground',
               'disabled:cursor-not-allowed disabled:opacity-50',
 
               // Variant styles
               variant === 'default' && [
-                'h-10 rounded-lg border border-border bg-background px-4 py-2',
+                'h-10 rounded-lg border border-border bg-card px-4 py-2',
                 'hover:border-border-hover focus:border-primary/60 focus:bg-card',
                 'focus:ring-2 focus:ring-primary/20',
                 error && 'border-danger focus:border-danger focus:ring-danger/20',

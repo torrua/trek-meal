@@ -12,6 +12,8 @@ import {
   CheckCheck,
   LayoutList,
   Grid3X3,
+  Filter,
+  UploadCloud,
 } from 'lucide-react';
 import { useMealStore } from '../stores/useMealStore';
 import { useIsMobile } from '../hooks/useIsMobile';
@@ -152,8 +154,19 @@ const MealsPage: React.FC = () => {
           <div className="flex items-center gap-2">
             {!showMultiSelect ? (
               <>
-                <Button onClick={toggleMultiSelect} variant="secondary" size="default">
-                  Выделить
+                {/* Adding missing filter and import buttons to match trips page pattern */}
+                <Button
+                  onClick={() => console.log('Filters would be implemented here')}
+                  variant="secondary"
+                  size="icon"
+                  title="Фильтры"
+                  aria-label="Показать фильтры"
+                >
+                  <Filter className="w-4 h-4" />
+                </Button>
+
+                <Button variant="secondary" size="icon" title="Импорт" aria-label="Импорт">
+                  <UploadCloud className="w-4 h-4" />
                 </Button>
 
                 {/* View mode toggle button */}
@@ -169,6 +182,17 @@ const MealsPage: React.FC = () => {
                   ) : (
                     <Grid3X3 className="w-4 h-4" />
                   )}
+                </Button>
+
+                {/* Changed multi-select button to icon-only to match trips page */}
+                <Button
+                  onClick={toggleMultiSelect}
+                  variant="secondary"
+                  size="icon"
+                  title="Выделить"
+                  aria-label="Выделить"
+                >
+                  <Check className="w-4 h-4" />
                 </Button>
 
                 <Link to="/meals/new">

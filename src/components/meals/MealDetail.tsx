@@ -1,28 +1,26 @@
 // src/components/meals/MealDetail.tsx
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Edit,
-  List,
+  Info,
   Utensils,
-  Component,
-  Flame,
-  TrendingUp,
-  Soup,
-  Scale,
   Hash,
+  Component,
+  Soup,
+  Flame,
   Beef,
   Droplet,
   Wheat,
+  Weight,
+  Edit,
+  ChevronDown,
 } from 'lucide-react';
-import type { Meal, MealPlanItem, Product, Dish } from '../../types';
-import DetailPane from '../../ui/DetailPane';
-import Button from '../../ui/Button';
-import EntityListItem from '../../ui/EntityListItem';
-import useDishStore from '../../stores/useDishStore';
+import type { Meal, Product, Dish } from '../../types';
 import useProductStore from '../../stores/useProductStore';
-import { dishEntityConfig, productEntityConfig } from '../../config/entityConfig';
+import useDishStore from '../../stores/useDishStore';
+import Button from '../../ui/Button';
+import { calculateNutrition } from './mealFormUtils';
 
 interface MealDetailProps {
   meal: Meal | null;
@@ -31,54 +29,203 @@ interface MealDetailProps {
   onToggleSection: (sectionId: string) => void;
 }
 
-// Helper function to calculate nutrition for an item
-const calculateItemNutrition = (item: MealPlanItem, products: Product[], dishes: Dish[]) => {
-  if (item.type === 'product') {
-    const product = products.find((p) => p.id === item.itemId);
-    if (!product || !item.weight) return null;
+// Read-only version of ItemContent
+const ItemContentReadOnly: React.FC<{
+  item: any;
+  products: Product[];
+  dishes: Dish[];
+  navigate: (path: string) => void;
+}> = ({ item, products, dishes, navigate }) => {
+  const [showDishIngredients, setShowDishIngredients] = useState(false);
 
-    const multiplier = item.weight / 100;
-    return {
-      calories: Math.round(product.calories * multiplier),
-      proteins: Math.round(product.proteins * multiplier * 10) / 10,
-      fats: Math.round(product.fats * multiplier * 10) / 10,
-      carbs: Math.round(product.carbs * multiplier * 10) / 10,
-      weight: item.weight,
-    };
-  }
+  const selectedItem =
+    item.type === 'product'
+      ? products.find((p) => p.id === item.itemId)
+      : dishes.find((d) => d.id === item.itemId);
 
-  if (item.type === 'dish') {
-    const dish = dishes.find((d) => d.id === item.itemId);
-    if (!dish) return null;
+  const nutrition = useMemo(() => {
+    if (item.type === 'product') {
+      const product = products.find((p) => p.id === item.itemId);
+      if (!product || !item.weight) return null;
+      const multiplier = item.weight / 100;
+      return {
+        calories: Math.round(product.calories * multiplier),
+        proteins: Math.round(product.proteins * multiplier * 10) / 10,
+        fats: Math.round(product.fats * multiplier * 10) / 10,
+        carbs: Math.round(product.carbs * multiplier * 10) / 10,
+      };
+    }
+    if (item.type === 'dish') {
+      const dish = dishes.find((d) => d.id === item.itemId);
+      if (!dish) return null;
+      let totalCalories = 0,
+        totalProteins = 0,
+        totalFats = 0,
+        totalCarbs = 0;
+      dish.products.forEach((dishProduct) => {
+        const product = products.find((p) => p.id === dishProduct.productId);
+        if (product) {
+          const weightRatio = dishProduct.weight / 100;
+          totalCalories += (product.calories || 0) * weightRatio;
+          totalProteins += (product.proteins || 0) * weightRatio;
+          totalFats += (product.fats || 0) * weightRatio;
+          totalCarbs += (product.carbs || 0) * weightRatio;
+        }
+      });
+      return {
+        calories: Math.round(totalCalories),
+        proteins: Math.round(totalProteins * 10) / 10,
+        fats: Math.round(totalFats * 10) / 10,
+        carbs: Math.round(totalCarbs * 10) / 10,
+      };
+    }
+    return null;
+  }, [item, products, dishes]);
 
-    return {
-      calories: Math.round(dish.totalCalories),
-      proteins: Math.round(dish.totalProteins * 10) / 10,
-      fats: Math.round(dish.totalFats * 10) / 10,
-      carbs: Math.round(dish.totalCarbs * 10) / 10,
-      weight: null,
-    };
-  }
+  const dishDetails = useMemo(() => {
+    if (item.type !== 'dish' || !selectedItem) return null;
+    const dish = selectedItem as Dish;
+    return dish.products
+      .map((dp) => {
+        const product = products.find((p) => p.id === dp.productId);
+        return product ? { name: product.name, weight: dp.weight } : null;
+      })
+      .filter(Boolean);
+  }, [item.type, selectedItem, products]);
 
-  return null;
+  const portion = useMemo(() => {
+    if (item.type !== 'product' || !item.weight || !selectedItem) return null;
+    return (selectedItem as Product).portions?.find((p) => p.weight === item.weight);
+  }, [item.type, item.weight, selectedItem]);
+
+  const isProduct = item.type === 'product';
+  const isDish = item.type === 'dish';
+
+  const handleClick = () => {
+    if (isProduct) {
+      navigate(`/products?selectedId=${item.itemId}`);
+    } else {
+      navigate(`/dishes?selectedId=${item.itemId}`);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Header: Title + КБЖУ */}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {isProduct ? (
+            <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
+          ) : (
+            <Soup className="w-4 h-4 text-orange-500 flex-shrink-0" />
+          )}
+          <h4
+            className="font-medium text-foreground truncate hover:text-primary cursor-pointer transition-colors"
+            onClick={handleClick}
+          >
+            {selectedItem?.name}
+          </h4>
+        </div>
+        {nutrition && (
+          <div className="flex items-center gap-2 h-8 px-2.5 bg-muted/50 rounded-lg border border-border">
+            <div className="flex items-center gap-1">
+              <Flame className="w-4 h-4 text-orange-600" />
+              <span className="text-sm font-semibold text-orange-600">{nutrition.calories}</span>
+            </div>
+            <div className="w-px h-4 bg-border" />
+            <div className="flex items-center gap-1">
+              <Beef className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-semibold text-blue-600">{nutrition.proteins}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Droplet className="w-4 h-4 text-yellow-600" />
+              <span className="text-sm font-semibold text-yellow-600">{nutrition.fats}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Wheat className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-600">{nutrition.carbs}</span>
+            </div>
+            {item.weight && (
+              <>
+                <div className="w-px h-4 bg-border" />
+                <div className="flex items-center gap-1">
+                  <Weight className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-semibold text-muted-foreground">{item.weight}</span>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Weight Display - only shown for products */}
+      {isProduct && item.weight && (
+        <div className="pt-2 border-t border-border/50">
+          <div className="flex items-center gap-2 px-3 py-2 text-sm bg-card border border-border rounded-lg">
+            <Weight className="w-4 h-4 text-muted-foreground" />
+            <span className="font-medium text-muted-foreground">
+              {portion ? portion.name : 'Другая порция'}
+            </span>
+            <span className="text-muted-foreground">({item.weight} г)</span>
+          </div>
+        </div>
+      )}
+
+      {/* Dish Ingredients */}
+      {isDish && dishDetails && dishDetails.length > 0 && (
+        <div className="pt-2 border-t border-border/50">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDishIngredients(!showDishIngredients);
+            }}
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full"
+          >
+            <ChevronDown
+              className={`w-3.5 h-3.5 transition-transform ${showDishIngredients ? 'rotate-180' : ''}`}
+            />
+            <span>Состав блюда ({dishDetails.length})</span>
+          </button>
+          {showDishIngredients && (
+            <div className="mt-2 space-y-1">
+              {dishDetails.map((ingredient: any, idx: number) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between px-2 py-1 bg-muted/20 rounded text-xs"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Component className="w-3 h-3 text-blue-500" />
+                    <span className="text-foreground">{ingredient.name}</span>
+                  </span>
+                  <span className="text-muted-foreground font-medium text-xs">
+                    <Weight className="w-3 h-3 inline mr-1" />
+                    {ingredient.weight}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
-const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit, openSections, onToggleSection }) => {
-  const navigate = useNavigate();
-  const { dishes } = useDishStore();
+const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit }) => {
   const { products } = useProductStore();
+  const { dishes } = useDishStore();
+  const navigate = useNavigate();
 
-  // Calculate total nutrition
+  const watchItems = meal?.items || [];
+
   const totalNutrition = useMemo(() => {
-    if (!meal) return null;
-
-    let calories = 0;
-    let proteins = 0;
-    let fats = 0;
-    let carbs = 0;
-
-    meal.items.forEach((item) => {
-      const nutrition = calculateItemNutrition(item, products, dishes);
+    let calories = 0,
+      proteins = 0,
+      fats = 0,
+      carbs = 0;
+    watchItems.forEach((item) => {
+      const nutrition = calculateNutrition(item, products, dishes);
       if (nutrition) {
         calories += nutrition.calories;
         proteins += nutrition.proteins;
@@ -86,282 +233,127 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit, openSections, onT
         carbs += nutrition.carbs;
       }
     });
-
     return {
       calories: Math.round(calories),
       proteins: Math.round(proteins * 10) / 10,
       fats: Math.round(fats * 10) / 10,
       carbs: Math.round(carbs * 10) / 10,
     };
-  }, [meal, products, dishes]);
-
-  // Count items by type
-  const itemCounts = useMemo(() => {
-    if (!meal) return { products: 0, dishes: 0 };
-
-    const counts = { products: 0, dishes: 0 };
-    meal.items.forEach((item) => {
-      if (item.type === 'product') counts.products++;
-      else counts.dishes++;
-    });
-    return counts;
-  }, [meal]);
+  }, [watchItems, products, dishes]);
 
   if (!meal) return null;
 
-  const sections = [
-    {
-      id: 'main',
-      title: 'Основное',
-      icon: List,
-      actionButton: (
-        <Button size="sm" variant="ghost" onClick={onEdit} title="Редактировать приём пищи">
-          <Edit className="w-4 h-4" />
-        </Button>
-      ),
-      content: (
+  return (
+    <div className="space-y-6 p-1">
+      <div className="p-6 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 border border-border rounded-xl">
+        <div className="flex items-center justify-between gap-3 mb-4 pb-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Info className="w-4 h-4 text-primary" />
+            </div>
+            <h2 className="text-lg font-semibold">Основная информация</h2>
+          </div>
+          <Button type="button" variant="primary" onClick={onEdit} icon={Edit}>
+            Редактировать
+          </Button>
+        </div>
         <div className="space-y-4">
+          {/* Name - read only */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Название приёма пищи
+            </label>
+            <div className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground">
+              {meal.name}
+            </div>
+          </div>
+
+          {/* Description - read only */}
           {meal.description && (
-            <div className="p-4 bg-muted/50 rounded-lg border border-border">
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Краткое описание
+              </label>
+              <div className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap">
                 {meal.description}
-              </p>
+              </div>
             </div>
           )}
-
-          {/* Stats Overview */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-card rounded-lg border border-border">
-              <div className="flex items-center gap-2 mb-1">
-                <Hash className="w-4 h-4 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Всего компонентов</span>
-              </div>
-              <p className="text-2xl font-bold text-foreground">{meal.items.length}</p>
-            </div>
-            <div className="p-3 bg-card rounded-lg border border-border">
-              <div className="flex items-center gap-2 mb-1">
-                <Component className="w-4 h-4 text-blue-500" />
-                <Soup className="w-4 h-4 text-orange-500" />
-              </div>
-              <p className="text-sm font-medium text-foreground">
-                {itemCounts.products} продуктов · {itemCounts.dishes} блюд
-              </p>
-            </div>
-          </div>
         </div>
-      ),
-    },
-    {
-      id: 'nutrition',
-      title: 'Пищевая ценность',
-      icon: TrendingUp,
-      content: totalNutrition && (
-        <div className="space-y-4">
-          {/* Total Nutrition Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="p-4 bg-gradient-to-br from-orange-500/10 to-orange-500/5 rounded-lg border border-orange-500/20">
-              <Flame className="w-5 h-5 text-orange-600 mb-2" />
-              <p className="text-2xl font-bold text-orange-600">{totalNutrition.calories}</p>
-              <p className="text-xs text-muted-foreground">ккал</p>
+      </div>
+
+      <div className="p-6 bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 border border-border rounded-xl">
+        <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Utensils className="w-4 h-4 text-primary" />
             </div>
-            <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 rounded-lg border border-blue-500/20">
-              <Beef className="w-5 h-5 text-blue-600 mb-2" />
-              <p className="text-2xl font-bold text-blue-600">{totalNutrition.proteins}</p>
-              <p className="text-xs text-muted-foreground">г белков</p>
-            </div>
-            <div className="p-4 bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 rounded-lg border border-yellow-500/20">
-              <Droplet className="w-5 h-5 text-yellow-600 mb-2" />
-              <p className="text-2xl font-bold text-yellow-600">{totalNutrition.fats}</p>
-              <p className="text-xs text-muted-foreground">г жиров</p>
-            </div>
-            <div className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 rounded-lg border border-green-500/20">
-              <Wheat className="w-5 h-5 text-green-600 mb-2" />
-              <p className="text-2xl font-bold text-green-600">{totalNutrition.carbs}</p>
-              <p className="text-xs text-muted-foreground">г углеводов</p>
-            </div>
+            <h2 className="text-lg font-semibold">Состав</h2>
+            {watchItems.length > 0 && (
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Hash className="w-3.5 h-3.5" />
+                {watchItems.length}
+              </span>
+            )}
           </div>
 
-          {/* Nutrition Bar Chart */}
-          <div className="p-4 bg-muted/30 rounded-lg border border-border">
-            <h4 className="text-sm font-medium mb-3">Распределение БЖУ</h4>
-            <div className="space-y-3">
-              {/* Proteins Bar */}
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-blue-600 font-medium">Белки</span>
-                  <span className="text-muted-foreground">{totalNutrition.proteins}г</span>
+          {watchItems.length > 0 && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg border border-border">
+              <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-1">
+                  <Flame className="w-3.5 h-3.5 text-orange-600" />
+                  <span className="font-semibold text-orange-600">{totalNutrition.calories}</span>
                 </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-500 rounded-full"
-                    style={{
-                      width: `${Math.min((totalNutrition.proteins / (totalNutrition.proteins + totalNutrition.fats + totalNutrition.carbs)) * 100, 100)}%`,
-                    }}
-                  />
+                <div className="w-px h-4 bg-border" />
+                <div className="flex items-center gap-1">
+                  <Beef className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="font-semibold text-blue-600">{totalNutrition.proteins}</span>
                 </div>
-              </div>
-
-              {/* Fats Bar */}
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-yellow-600 font-medium">Жиры</span>
-                  <span className="text-muted-foreground">{totalNutrition.fats}г</span>
+                <div className="flex items-center gap-1">
+                  <Droplet className="w-3.5 h-3.5 text-yellow-600" />
+                  <span className="font-semibold text-yellow-600">{totalNutrition.fats}</span>
                 </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-yellow-500 rounded-full"
-                    style={{
-                      width: `${Math.min((totalNutrition.fats / (totalNutrition.proteins + totalNutrition.fats + totalNutrition.carbs)) * 100, 100)}%`,
-                    }}
-                  />
+                <div className="flex items-center gap-1">
+                  <Wheat className="w-3.5 h-3.5 text-green-600" />
+                  <span className="font-semibold text-green-600">{totalNutrition.carbs}</span>
                 </div>
               </div>
-
-              {/* Carbs Bar */}
-              <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-green-600 font-medium">Углеводы</span>
-                  <span className="text-muted-foreground">{totalNutrition.carbs}г</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-green-500 rounded-full"
-                    style={{
-                      width: `${Math.min((totalNutrition.carbs / (totalNutrition.proteins + totalNutrition.fats + totalNutrition.carbs)) * 100, 100)}%`,
-                    }}
-                  />
-                </div>
+              <div className="w-px h-4 bg-border" />
+              <div className="flex items-center gap-1">
+                <Weight className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="font-semibold text-muted-foreground text-sm">
+                  {watchItems.reduce(
+                    (total, item) => total + (item.type === 'product' ? item.weight : 0),
+                    0
+                  )}
+                </span>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      ),
-    },
-    {
-      id: 'items',
-      title: 'Состав',
-      icon: Utensils,
-      content: (
+
         <div className="space-y-3">
-          {meal.items.length > 0 ? (
-            meal.items.map((item: MealPlanItem) => {
-              const nutrition = calculateItemNutrition(item, products, dishes);
-
-              if (item.type === 'dish') {
-                const dish = dishes.find((d) => d.id === item.itemId);
-                if (!dish) return null;
-                const listItemConfig = dishEntityConfig.views.listItem;
-
-                return (
-                  <div
-                    key={item.instanceId}
-                    className="bg-card border border-border rounded-lg p-3 hover:border-primary/50 transition-colors"
-                  >
-                    <EntityListItem
-                      title={listItemConfig.title(dish)}
-                      icon={dishEntityConfig.getIcon(dish)}
-                      borderColor={dishEntityConfig.getBorderColor(dish)}
-                      details={listItemConfig.details?.(dish)}
-                      menuItems={[
-                        {
-                          label: 'Открыть блюдо',
-                          icon: Component,
-                          onClick: () => navigate(`/dishes?selectedId=${dish.id}`),
-                        },
-                      ]}
-                      onClick={() => navigate(`/dishes?selectedId=${dish.id}`)}
-                    />
-
-                    {/* Nutrition Info */}
-                    {nutrition && (
-                      <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-1">
-                          <Flame className="w-4 h-4 text-orange-600" />
-                          <span className="font-semibold text-orange-600">
-                            {nutrition.calories}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Beef className="w-4 h-4 text-blue-600" />
-                          <span className="font-semibold text-blue-600">{nutrition.proteins}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Droplet className="w-4 h-4 text-yellow-600" />
-                          <span className="font-semibold text-yellow-600">{nutrition.fats}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Wheat className="w-4 h-4 text-green-600" />
-                          <span className="font-semibold text-green-600">{nutrition.carbs}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              // product
-              const product = products.find((p) => p.id === item.itemId);
-              if (!product) return null;
-              const listItemConfig = productEntityConfig.views.listItem;
-
-              // Find portion name if weight matches
-              const portion = product.portions?.find((p) => p.weight === item.weight);
+          {watchItems.length > 0 ? (
+            watchItems.map((item, index) => {
+              const isProduct = item.type === 'product';
+              const bgColor = isProduct
+                ? 'bg-blue-500/5 hover:bg-blue-500/10'
+                : 'bg-orange-500/5 hover:bg-orange-500/10';
+              const borderColor = isProduct
+                ? 'border-blue-500/20 hover:border-blue-500/40'
+                : 'border-orange-500/20 hover:border-orange-500/40';
 
               return (
                 <div
-                  key={item.instanceId}
-                  className="bg-card border border-border rounded-lg p-3 hover:border-primary/50 transition-colors"
+                  key={item.instanceId || `${item.type}-${item.itemId}-${index}`}
+                  className={`${bgColor} border ${borderColor} rounded-lg p-3 transition-all duration-200 hover:shadow-sm`}
                 >
-                  <EntityListItem
-                    title={product.name}
-                    icon={productEntityConfig.getIcon(product)}
-                    borderColor={productEntityConfig.getBorderColor(product)}
-                    details={listItemConfig.details?.(product)}
-                    menuItems={[
-                      {
-                        label: 'Открыть продукт',
-                        icon: Component,
-                        onClick: () => navigate(`/products?selectedId=${product.id}`),
-                      },
-                    ]}
-                    onClick={() => navigate(`/products?selectedId=${product.id}`)}
+                  <ItemContentReadOnly
+                    item={item}
+                    products={products}
+                    dishes={dishes}
+                    navigate={navigate}
                   />
-
-                  {/* Weight and Nutrition Info */}
-                  <div className="mt-3 pt-3 border-t border-border">
-                    {item.weight && (
-                      <div className="flex items-center gap-2 mb-2 text-sm">
-                        <Scale className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="font-medium">
-                          {portion ? portion.name : 'Другая порция'}
-                        </span>
-                        <span className="text-muted-foreground">({item.weight} г)</span>
-                      </div>
-                    )}
-
-                    {nutrition && (
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-1">
-                          <Flame className="w-4 h-4 text-orange-600" />
-                          <span className="font-semibold text-orange-600">
-                            {nutrition.calories}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Beef className="w-4 h-4 text-blue-600" />
-                          <span className="font-semibold text-blue-600">{nutrition.proteins}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Droplet className="w-4 h-4 text-yellow-600" />
-                          <span className="font-semibold text-yellow-600">{nutrition.fats}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Wheat className="w-4 h-4 text-green-600" />
-                          <span className="font-semibold text-green-600">{nutrition.carbs}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               );
             })
@@ -373,32 +365,8 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit, openSections, onT
             </div>
           )}
         </div>
-      ),
-    },
-  ];
-
-  return (
-    <DetailPane sections={sections} openSections={openSections} onToggleSection={onToggleSection}>
-      <div className="flex justify-between items-start">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-2xl font-bold text-foreground truncate">{meal.name}</h2>
-          {totalNutrition && (
-            <div className="flex items-center gap-3 mt-2 text-sm">
-              <div className="flex items-center gap-1">
-                <Flame className="w-4 h-4 text-orange-600" />
-                <span className="font-semibold text-orange-600">{totalNutrition.calories}</span>
-              </div>
-              <span className="text-muted-foreground/50">·</span>
-              <span className="text-muted-foreground">{meal.items.length} компонентов</span>
-            </div>
-          )}
-        </div>
-        <Button variant="secondary" onClick={onEdit} className="flex-shrink-0">
-          <Edit className="w-4 h-4 sm:mr-2" />
-          <span className="hidden sm:inline">Изменить</span>
-        </Button>
       </div>
-    </DetailPane>
+    </div>
   );
 };
 

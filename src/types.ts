@@ -106,7 +106,7 @@ export type TripData = Omit<Trip, 'id' | 'createdAt' | 'status' | 'selectedMeals
 
 export type SubmitDishAction = 'add_as_new' | 'replace' | 'create_or_update';
 
-// --- НОВЫЙ ТИП: Экземпляр приема пищи ---
+// --- НОВЫЙ ТИП: Экземпляр приёма пищи ---
 export interface MealInstance {
   instanceId: string;
   title: string;

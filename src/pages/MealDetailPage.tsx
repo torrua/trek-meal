@@ -7,6 +7,7 @@ import type { MealData } from '../types';
 import { ArrowLeft, Utensils } from 'lucide-react';
 import Button from '../ui/Button';
 import MealDetail from '../components/meals/MealDetail';
+import { generateDefaultMealName } from '../components/meals/mealUtils';
 
 const MealDetailPage: React.FC = () => {
   const { mealId } = useParams<{ mealId: string }>();
@@ -25,7 +26,7 @@ const MealDetailPage: React.FC = () => {
   if (!isNew && !meal) {
     return (
       <div className="text-center p-8">
-        <h2 className="text-xl text-danger">Прием пищи не найден</h2>
+        <h2 className="text-xl text-danger">Приём пищи не найден</h2>
         <Link to="/meals">
           <Button variant="secondary">Вернуться к списку</Button>
         </Link>
@@ -47,13 +48,13 @@ const MealDetailPage: React.FC = () => {
   };
 
   // Generate default name for new meal
-  const defaultMealName = isNew ? `Прием пищи #${meals.length + 1}` : undefined;
+  const defaultMealName = isNew ? generateDefaultMealName(meals.length) : undefined;
 
   return (
     <div className="p-6 bg-background min-h-screen">
       <div className="max-w-4xl mx-auto">
         <Button variant="ghost" onClick={() => navigate('/meals')} className="mb-6">
-          <ArrowLeft className="w-4 h-4 mr-2" />К списку приемов пищи
+          <ArrowLeft className="w-4 h-4 mr-2" />К списку приёмов пищи
         </Button>
 
         {isNew || isEditMode ? (
@@ -64,11 +65,11 @@ const MealDetailPage: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  {isNew ? 'Создание приема пищи' : 'Редактирование приема пищи'}
+                  {isNew ? 'Создание приёма пищи' : 'Редактирование приёма пищи'}
                 </h1>
                 <p className="text-muted-foreground">
                   {isNew
-                    ? 'Создайте новый шаблон для быстрого добавления в раскладку.'
+                    ? 'Создайте новый приём пищи для быстрого добавления в раскладку.'
                     : 'Измените детали существующего шаблона.'}
                 </p>
               </div>
@@ -93,7 +94,7 @@ const MealDetailPage: React.FC = () => {
           />
         ) : (
           <div className="text-center p-8">
-            <h2 className="text-xl text-danger">Прием пищи не найден</h2>
+            <h2 className="text-xl text-danger">Приём пищи не найден</h2>
             <Link to="/meals">
               <Button variant="secondary">Вернуться к списку</Button>
             </Link>

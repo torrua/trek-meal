@@ -27,7 +27,7 @@ export const getMealName = (mealNumber: number, totalMeals: number): string => {
     4: ['Завтрак', 'Перекус', 'Обед', 'Ужин'],
     5: ['Завтрак', 'Перекус', 'Обед', 'Полдник', 'Ужин'],
   };
-  return names[totalMeals]?.[mealNumber - 1] || `Прием пищи ${mealNumber}`;
+  return names[totalMeals]?.[mealNumber - 1] || `Приём пищи ${mealNumber}`;
 };
 
 export const formatDate = (dateString: string): string => {

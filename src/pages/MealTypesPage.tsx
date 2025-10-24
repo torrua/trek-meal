@@ -137,9 +137,9 @@ const MealTypesPage: React.FC = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success(`Данные типа приема пищи "${mealType.name}" экспортированы!`);
+      toast.success(`Данные типа приёма пищи "${mealType.name}" экспортированы!`);
     } catch (error) {
-      console.error('Ошибка при экспорте данных типа приема пищи:', error);
+      console.error('Ошибка при экспорте данных типа приёма пищи:', error);
       toast.error('Произошла ошибка при экспорте.');
     }
   }, []);
@@ -159,7 +159,7 @@ const MealTypesPage: React.FC = () => {
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
-            Типы приемов пищи
+            Типы приёмов пищи
           </h1>
           <div className="flex items-center gap-2">
             {!showMultiSelect ? (
@@ -390,7 +390,7 @@ const MealTypesPage: React.FC = () => {
                     <Utensils className="w-10 h-10 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-medium text-foreground mb-2">
-                    Выберите тип приема пищи
+                    Выберите тип приёма пищи
                   </h3>
                   <p className="text-muted-foreground">
                     Выберите тип из списка, чтобы увидеть подробную информацию
@@ -416,7 +416,7 @@ const MealTypesPage: React.FC = () => {
         isOpen={!!typeToDelete}
         onClose={() => setTypeToDelete(null)}
         onConfirm={handleDeleteConfirm}
-        title="Удалить тип приема пищи"
+        title="Удалить тип приёма пищи"
         confirmText="Удалить"
         cancelText="Отмена"
         variant="danger"

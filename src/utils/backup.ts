@@ -387,8 +387,8 @@ export const exportEquipmentCategoryToJson = (category: EquipmentCategory) => {
 };
 
 /**
- * Экспортирует данные одного типа приема пищи в JSON файл.
- * @param mealType - Объект типа приема пищи для экспорта.
+ * Экспортирует данные одного типа приёма пищи в JSON файл.
+ * @param mealType - Объект типа приёма пищи для экспорта.
  */
 export const exportMealTypeToJson = (mealType: MealType) => {
   try {
@@ -405,9 +405,9 @@ export const exportMealTypeToJson = (mealType: MealType) => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    toast.success(`Данные типа приема пищи "${mealType.name}" экспортированы!`);
+    toast.success(`Данные типа приёма пищи "${mealType.name}" экспортированы!`);
   } catch (error) {
-    console.error('Ошибка при экспорте данных типа приема пищи:', error);
+    console.error('Ошибка при экспорте данных типа приёма пищи:', error);
     toast.error('Произошла ошибка при экспорте.');
   }
 };
@@ -621,8 +621,8 @@ export const exportBulkEquipmentCategoriesToJson = (categories: EquipmentCategor
 };
 
 /**
- * Экспортирует выбранные типы приемов пищи в JSON файл.
- * @param mealTypes - Массив типов приемов пищи для экспорта.
+ * Экспортирует выбранные типы приёмов пищи в JSON файл.
+ * @param mealTypes - Массив типов приёмов пищи для экспорта.
  */
 export const exportBulkMealTypesToJson = (mealTypes: MealType[]) => {
   try {
@@ -639,9 +639,9 @@ export const exportBulkMealTypesToJson = (mealTypes: MealType[]) => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    toast.success(`Экспортировано ${mealTypes.length} типов приемов пищи!`);
+    toast.success(`Экспортировано ${mealTypes.length} типов приёмов пищи!`);
   } catch (error) {
-    console.error('Ошибка при экспорте типов приемов пищи:', error);
+    console.error('Ошибка при экспорте типов приёмов пищи:', error);
     toast.error('Произошла ошибка при экспорте.');
   }
 };

@@ -351,7 +351,7 @@ export const categoryEntityConfig: EntityConfig<Category> = {
   ],
 };
 
-// --- Конфигурация для "Типа приема пищи" (MealType) ---
+// --- Конфигурация для "Типа приёма пищи" (MealType) ---
 export const mealTypeEntityConfig: EntityConfig<CustomMealType> = {
   getIcon: () => Utensils,
   getIconColor: () => 'text-gray-500',

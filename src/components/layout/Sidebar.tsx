@@ -24,12 +24,12 @@ const dbNavigation = [
   { path: '/products', label: 'Продукты', icon: Component },
   { path: '/dishes', label: 'Блюда', icon: Soup },
   { path: '/equipment', label: 'Снаряжение', icon: Backpack },
-  { path: '/meals', label: 'Приемы пищи', icon: Utensils },
+  { path: '/meals', label: 'Приёмы пищи', icon: Utensils },
 ];
 
 const categoriesNavigation = [
   { path: '/categories', label: 'Категории продуктов', icon: Tag },
-  { path: '/meal-types', label: 'Типы приемов пищи', icon: Utensils },
+  { path: '/meal-types', label: 'Типы приёмов пищи', icon: Utensils },
   { path: '/equipment-categories', label: 'Категории снаряжения', icon: Layers },
 ];
 

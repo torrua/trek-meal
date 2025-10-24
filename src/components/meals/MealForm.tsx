@@ -16,6 +16,8 @@ import {
   Beef,
   Droplet,
   Wheat,
+  Scale,
+  Weight,
 } from 'lucide-react';
 import {
   DndContext,
@@ -149,24 +151,33 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
   }, [watchItems, products, dishes]);
 
   const handleAddItem = (itemId: number, type: 'product' | 'dish') => {
-    let defaultWeight = undefined;
+    let defaultWeight = 100; // Default weight for both products and dishes
     if (type === 'product') {
       const product = products.find((p) => p.id === itemId);
       defaultWeight = product && product.portions.length > 0 ? product.portions[0].weight : 100;
+    } else if (type === 'dish') {
+      // For dishes, we can calculate the total weight of all ingredients as default
+      const dish = dishes.find((d) => d.id === itemId);
+      if (dish) {
+        defaultWeight = dish.products.reduce((sum, p) => sum + p.weight, 0) || 100;
+      }
     }
     append({
       instanceId: `${type}-${Date.now()}`,
       type,
       itemId,
-      weight: type === 'product' ? defaultWeight : undefined,
+      weight: defaultWeight,
     });
     setShowAddMenu(false);
     setSearchQuery('');
   };
 
   const updateItemWeight = (index: number, weight: number) => {
-    const updatedItem = { ...watchItems[index], weight };
-    update(index, updatedItem);
+    // Only allow weight updates for products, not dishes
+    if (watchItems[index].type === 'product') {
+      const updatedItem = { ...watchItems[index], weight };
+      update(index, updatedItem);
+    }
   };
 
   const sensors = useSensors(
@@ -222,7 +233,7 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
               render={({ field }) => (
                 <Input
                   {...field}
-                  label="Название приема пищи"
+                  label="Название приёма пищи"
                   error={errors.name?.message}
                   placeholder="Например, Завтрак, Обед, Ужин..."
                   autoFocus
@@ -279,6 +290,13 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
                     <Wheat className="w-3.5 h-3.5 text-green-600" />
                     <span className="font-semibold text-green-600">{totalNutrition.carbs}</span>
                   </div>
+                </div>
+                <div className="w-px h-4 bg-border" />
+                <div className="flex items-center gap-1">
+                  <Weight className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="font-semibold text-muted-foreground text-sm">
+                    {watchItems.reduce((total, item) => total + (item.weight || 0), 0)}
+                  </span>
                 </div>
               </div>
             )}
@@ -378,13 +396,7 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
               </SortableContext>
               <DragOverlay>
                 {activeId && activeItem ? (
-                  <div
-                    className="bg-card border-2 border-primary rounded-lg p-3 shadow-2xl"
-                    style={{
-                      transform: 'rotate(2deg)',
-                      cursor: 'grabbing',
-                    }}
-                  >
+                  <div className="bg-card border border-border rounded-lg p-3 shadow-lg opacity-100">
                     <ItemContent
                       item={activeItem}
                       products={products}
@@ -416,7 +428,7 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
             Отмена
           </Button>
           <Button type="button" variant="primary" onClick={processSubmit} icon={Utensils}>
-            {meal ? 'Сохранить изменения' : 'Создать прием пищи'}
+            {meal ? 'Сохранить изменения' : 'Создать приём пищи'}
           </Button>
         </div>
       </div>

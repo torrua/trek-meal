@@ -115,7 +115,7 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit, openSections, onT
       title: 'Основное',
       icon: List,
       actionButton: (
-        <Button size="sm" variant="ghost" onClick={onEdit} title="Редактировать прием пищи">
+        <Button size="sm" variant="ghost" onClick={onEdit} title="Редактировать приём пищи">
           <Edit className="w-4 h-4" />
         </Button>
       ),

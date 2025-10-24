@@ -1,8 +1,7 @@
 // src/pages/MealsPage.tsx
 import React, { useMemo, useState, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
-  Plus,
   Utensils,
   Trash2,
   Copy,
@@ -26,6 +25,8 @@ import Modal from '../ui/Modal';
 import ConfirmModal from '../ui/ConfirmModal';
 import MealForm from '../components/meals/MealForm';
 import MealDetail from '../components/meals/MealDetail';
+
+import CreateMealButton from '../components/meals/CreateMealButton';
 
 const MealsPage: React.FC = () => {
   const { meals, addMeal, updateMeal, removeMeal } = useMealStore();
@@ -144,7 +145,7 @@ const MealsPage: React.FC = () => {
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
-            Приемы пищи
+            Приёмы пищи
           </h1>
           <div className="flex items-center gap-2">
             {!showMultiSelect ? (
@@ -190,12 +191,7 @@ const MealsPage: React.FC = () => {
                   <Check className="w-4 h-4" />
                 </Button>
 
-                <Link to="/meals/new">
-                  <Button variant="primary" size="default">
-                    <Plus className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Создать прием пищи</span>
-                  </Button>
-                </Link>
+                <CreateMealButton onClick={() => navigate('/meals/new')} />
               </>
             ) : (
               <div className="flex items-center gap-2">
@@ -315,7 +311,7 @@ const MealsPage: React.FC = () => {
                   <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Utensils className="w-10 h-10 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium text-foreground mb-2">Выберите прием пищи</h3>
+                  <h3 className="text-lg font-medium text-foreground mb-2">Выберите приём пищи</h3>
                   <p className="text-muted-foreground">
                     Кликните на карточку для просмотра подробной информации.
                   </p>
@@ -327,16 +323,17 @@ const MealsPage: React.FC = () => {
       ) : (
         <div className="text-center py-16 px-6 text-muted-foreground">
           <Utensils className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <h3 className="text-lg font-medium text-foreground">Приемов пищи пока нет</h3>
+          <h3 className="text-lg font-medium text-foreground">Приёмов пищи пока нет</h3>
           <p className="text-sm text-muted-foreground mt-2">
             Создайте первый шаблон, чтобы быстро добавлять его в раскладки.
           </p>
-          <Link to="/meals/new" className="mt-4 inline-block">
-            <Button variant="primary">
-              <Plus className="w-4 h-4 mr-2" />
-              Создать прием пищи
-            </Button>
-          </Link>
+          <div className="mt-4 inline-block">
+            <CreateMealButton
+              onClick={() => navigate('/meals/new')}
+              variant="primary"
+              showText={true}
+            />
+          </div>
         </div>
       )}
 
@@ -371,7 +368,7 @@ const MealsPage: React.FC = () => {
       <Modal
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
-        title={editingMeal ? 'Редактирование приема пищи' : 'Новый прием пищи'}
+        title={editingMeal ? 'Редактирование приёма пищи' : 'Новый приём пищи'}
       >
         <MealForm
           meal={editingMeal}
@@ -390,7 +387,7 @@ const MealsPage: React.FC = () => {
         confirmText="Удалить"
       >
         <p>
-          Удалить прием пищи <span className="font-bold">{mealToDelete?.name}</span>?
+          Удалить приём пищи <span className="font-bold">{mealToDelete?.name}</span>?
         </p>
       </ConfirmModal>
 
@@ -404,10 +401,10 @@ const MealsPage: React.FC = () => {
         confirmText="Удалить"
       >
         <p>
-          Вы уверены, что хотите удалить {selectedMealIds.length} приемов пищи?
+          Вы уверены, что хотите удалить {selectedMealIds.length} приёмов пищи?
           <br />
           <span className="text-sm text-muted-foreground mt-2 block">
-            Это действие нельзя отменить. Все данные о приемах пищи будут потеряны.
+            Это действие нельзя отменить. Все данные о приёмах пищи будут потеряны.
           </span>
         </p>
       </ConfirmModal>

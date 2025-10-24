@@ -51,7 +51,7 @@ const useMealTypesStore = create<MealTypesState>()(
           return;
         }
         if (get().mealTypes.some((mt) => mt.name.toLowerCase() === trimmedName.toLowerCase())) {
-          toast.error('Такой прием пищи уже существует.');
+          toast.error('Такой приём пищи уже существует.');
           return;
         }
         const newMealType: MealType = {
@@ -99,7 +99,7 @@ const useMealTypesStore = create<MealTypesState>()(
           set((state) => ({
             mealTypes: state.mealTypes.filter((mt) => mt.id !== id),
           }));
-          toast.error(`Прием пищи "${mealTypeToDelete.name}" удален.`);
+          toast.error(`Приём пищи "${mealTypeToDelete.name}" удален.`);
         }
       },
 
@@ -112,7 +112,7 @@ const useMealTypesStore = create<MealTypesState>()(
             name: `${mealTypeToClone.name} (Копия)`,
           };
           set((state) => ({ mealTypes: [...state.mealTypes, clonedMealType] }));
-          toast.success(`Прием пищи "${mealTypeToClone.name}" клонирован.`);
+          toast.success(`Приём пищи "${mealTypeToClone.name}" клонирован.`);
         }
       },
 

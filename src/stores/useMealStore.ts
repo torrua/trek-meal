@@ -27,25 +27,25 @@ export const useMealStore = create<MealStore>()(
           meals: [...state.meals, newMeal],
           nextId: state.nextId + 1,
         }));
-        toast.success(`Прием пищи "${newMeal.name}" создан`);
+        toast.success(`Приём пищи "${newMeal.name}" создан`);
         return newMeal;
       },
       updateMeal: (id, mealData) => {
         set((state) => ({
           meals: state.meals.map((meal) => (meal.id === id ? { ...meal, ...mealData } : meal)),
         }));
-        toast.success('Прием пищи обновлен');
+        toast.success('Приём пищи обновлен');
       },
       removeMeal: (id) => {
         const mealToRemove = get().meals.find((m) => m.id === id);
         if (!mealToRemove) return;
 
-        // Здесь в будущем можно добавить проверку, используется ли этот прием пищи в каких-либо походах
+        // Здесь в будущем можно добавить проверку, используется ли этот приём пищи в каких-либо походах
 
         set((state) => ({
           meals: state.meals.filter((meal) => meal.id !== id),
         }));
-        toast.success(`Прием пищи "${mealToRemove.name}" удален`);
+        toast.success(`Приём пищи "${mealToRemove.name}" удален`);
       },
       getMealById: (id) => {
         return get().meals.find((m) => m.id === id);

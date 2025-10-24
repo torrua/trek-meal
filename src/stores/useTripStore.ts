@@ -91,7 +91,7 @@ const useTripStore = create<TripState>()(
             return {
               instanceId: `${day}-${mealTypeId}-${Date.now()}-${Math.random()}`,
               mealTypeId,
-              title: mealType?.name || `Прием пищи ${mealTypeId}`,
+              title: mealType?.name || `Приём пищи ${mealTypeId}`,
             };
           });
         }
@@ -258,7 +258,7 @@ const useTripStore = create<TripState>()(
             };
           }),
         }));
-        toast.success('Прием пищи обновлен.');
+        toast.success('Приём пищи обновлен.');
       },
 
       reorderMealsInDay: (tripId, day, fromIndex, toIndex) => {

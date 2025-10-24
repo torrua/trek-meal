@@ -8,6 +8,7 @@ import {
   Droplet,
   Wheat,
   Scale,
+  Weight,
   ChevronDown,
   Edit,
   Check,
@@ -176,6 +177,17 @@ const ItemContent: React.FC<ItemContentProps> = ({
                   <Wheat className="w-4 h-4 text-green-600" />
                   <span className="text-sm font-semibold text-green-600">{nutrition.carbs}</span>
                 </div>
+                {item.weight && (
+                  <>
+                    <div className="w-px h-4 bg-border" />
+                    <div className="flex items-center gap-1">
+                      <Weight className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-semibold text-muted-foreground">
+                        {item.weight}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             )}
             {onEditItem && (
@@ -206,7 +218,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
         )}
       </div>
 
-      {/* Portion Selection (Products only) */}
+      {/* Weight Display - only shown for products */}
       {isProduct && (
         <div className="pt-2 border-t border-border/50">
           {!isEditingWeight ? (
@@ -229,13 +241,13 @@ const ItemContent: React.FC<ItemContentProps> = ({
                   className="w-full px-3 py-2 text-sm bg-card border border-border rounded-lg hover:bg-muted hover:border-primary/30 transition-all flex items-center justify-between group"
                 >
                   <span className="flex items-center gap-2">
-                    <Scale className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium">
+                    <Weight className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-medium text-muted-foreground">
                       {currentPortion ? currentPortion.name : 'Другой'}
                     </span>
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">({item.weight} г)</span>
+                    <span className="text-muted-foreground">({item.weight})</span>
                     <ChevronDown
                       className={`w-4 h-4 text-muted-foreground transition-transform ${showPortions ? 'rotate-180' : ''}`}
                     />
@@ -251,7 +263,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
                         className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between ${portion.weight === item.weight ? 'bg-primary/10 text-primary' : ''}`}
                       >
                         <span className="font-medium">{portion.name}</span>
-                        <span className="text-muted-foreground">{portion.weight} г</span>
+                        <span className="text-muted-foreground text-sm">{portion.weight}</span>
                       </button>
                     ))}
                   </div>
@@ -344,7 +356,10 @@ const ItemContent: React.FC<ItemContentProps> = ({
                     <Component className="w-3 h-3 text-blue-500" />
                     <span className="text-foreground">{ingredient.name}</span>
                   </span>
-                  <span className="text-muted-foreground font-medium">{ingredient.weight}г</span>
+                  <span className="text-muted-foreground font-medium text-xs">
+                    <Weight className="w-3 h-3 inline mr-1" />
+                    {ingredient.weight}
+                  </span>
                 </div>
               ))}
             </div>

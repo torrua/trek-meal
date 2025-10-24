@@ -24,7 +24,7 @@ const MealTypeDetailPage: React.FC = () => {
     return (
       <div className="p-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-xl text-danger">Тип приема пищи не найден</h2>
+          <h2 className="text-xl text-danger">Тип приёма пищи не найден</h2>
           <Button onClick={() => navigate('/meal-types')} variant="secondary" className="mt-4">
             Вернуться к списку
           </Button>
@@ -76,11 +76,11 @@ const MealTypeDetailPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              {isNew ? 'Новый тип приема пищи' : 'Редактирование типа приема пищи'}
+              {isNew ? 'Новый тип приёма пищи' : 'Редактирование типа приёма пищи'}
             </h1>
             <p className="text-muted-foreground">
               {isNew
-                ? 'Создайте новый тип для организации приемов пищи.'
+                ? 'Создайте новый тип для организации приёмов пищи.'
                 : 'Обновите данные существующего типа.'}
             </p>
           </div>

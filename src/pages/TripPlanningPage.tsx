@@ -201,7 +201,7 @@ const MealSlot: React.FC<{
           <div
             {...dragHandleProps}
             className="cursor-move touch-none flex items-center gap-1 p-1 rounded hover:bg-muted/50 transition-colors notion-focus-ring"
-            title="Перетащить прием пищи"
+            title="Перетащить приём пищи"
           >
             <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
           </div>
@@ -243,7 +243,7 @@ const MealSlot: React.FC<{
             variant="ghost"
             onClick={() => onEditMeal(day, meal)}
             className="text-muted-foreground hover:text-primary hover:bg-primary/10 flex-shrink-0"
-            title="Редактировать прием пищи"
+            title="Редактировать приём пищи"
           >
             <Pencil className="w-3.5 h-3.5" />
           </Button>
@@ -252,7 +252,7 @@ const MealSlot: React.FC<{
             variant="ghost"
             onClick={() => onRemoveMeal(day, meal.instanceId)}
             className="text-muted-foreground hover:text-danger hover:bg-danger/10 flex-shrink-0"
-            title="Удалить прием пищи"
+            title="Удалить приём пищи"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
@@ -716,7 +716,7 @@ function TripPlanningPage() {
               content: (
                 <div className="space-y-4">
                   <DropdownSelect
-                    label="Добавить прием пищи"
+                    label="Добавить приём пищи"
                     icon={Plus}
                     options={mealTemplates.map((template) => ({
                       value: template.id.toString(),
@@ -733,13 +733,13 @@ function TripPlanningPage() {
                         }
                       }
                     }}
-                    placeholder="Добавить готовый прием пищи"
+                    placeholder="Добавить готовый приём пищи"
                   />
 
                   {dayMeals.length === 0 ? (
                     <div className="text-center py-8 px-4 border-2 border-dashed notion-border-strong rounded-lg">
                       <p className="text-sm text-muted-foreground">
-                        В этом дне еще нет приемов пищи. Используйте кнопку выше, чтобы добавить
+                        В этом дне еще нет приёмов пищи. Используйте кнопку выше, чтобы добавить
                         готовый шаблон.
                       </p>
                     </div>
@@ -819,7 +819,7 @@ function TripPlanningPage() {
                   План питания
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Планирование рациона по дням и приемам пищи
+                  Планирование рациона по дням и приёмам пищи
                 </p>
               </div>
             </div>
@@ -845,7 +845,7 @@ function TripPlanningPage() {
       <Modal
         isOpen={!!editingMeal}
         onClose={() => setEditingMeal(null)}
-        title="Редактировать прием пищи"
+        title="Редактировать приём пищи"
       >
         {editingMeal && (
           <EditMealForm

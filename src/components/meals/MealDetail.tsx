@@ -29,7 +29,64 @@ interface MealDetailProps {
   onToggleSection: (sectionId: string) => void;
 }
 
+interface CollapsibleSectionProps {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  isOpen: boolean;
+  onToggle: (id: string) => void;
+  actionButton?: React.ReactNode;
+  summaryContent?: React.ReactNode;
+  headerContent?: React.ReactNode;
+  gradientFrom?: string;
+  gradientVia?: string;
+  gradientTo?: string;
+}
+
 // Read-only version of ItemContent
+const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
+  id,
+  title,
+  icon,
+  children,
+  isOpen,
+  onToggle,
+  actionButton,
+  summaryContent,
+  headerContent,
+  gradientFrom = 'from-blue-500/5',
+  gradientVia = 'via-purple-500/5',
+  gradientTo = 'to-pink-500/5',
+}) => {
+  return (
+    <div
+      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-hidden`}
+    >
+      <div
+        className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={() => onToggle(id)}
+      >
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
+            {icon}
+          </div>
+          <h2 className="text-lg font-semibold truncate">{title}</h2>
+          {summaryContent && <div className="ml-2 flex-shrink-0">{summaryContent}</div>}
+        </div>
+        <div className="flex items-center gap-2">
+          {actionButton}
+          {headerContent}
+          <ChevronDown
+            className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          />
+        </div>
+      </div>
+      {isOpen && <div className="p-6 pt-0">{children}</div>}
+    </div>
+  );
+};
+
 const ItemContentReadOnly: React.FC<{
   item: any;
   products: Product[];
@@ -212,7 +269,7 @@ const ItemContentReadOnly: React.FC<{
   );
 };
 
-const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit }) => {
+const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit, openSections, onToggleSection }) => {
   const { products } = useProductStore();
   const { dishes } = useDishStore();
   const navigate = useNavigate();
@@ -243,21 +300,27 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit }) => {
 
   if (!meal) return null;
 
+  const isBasicInfoOpen = openSections.includes('basic-info');
+  const isCompositionOpen = openSections.includes('composition');
+
   return (
     <div className="space-y-6 p-1">
-      <div className="p-6 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 border border-border rounded-xl">
-        <div className="flex items-center justify-between gap-3 mb-4 pb-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <Info className="w-4 h-4 text-primary" />
-            </div>
-            <h2 className="text-lg font-semibold">Основная информация</h2>
-          </div>
+      <CollapsibleSection
+        id="basic-info"
+        title="Основная информация"
+        icon={<Info className="w-4 h-4 text-primary" />}
+        isOpen={isBasicInfoOpen}
+        onToggle={onToggleSection}
+        actionButton={
           <Button type="button" variant="primary" onClick={onEdit} icon={Edit}>
             Редактировать
           </Button>
-        </div>
-        <div className="space-y-4">
+        }
+        gradientFrom="from-blue-500/5"
+        gradientVia="via-purple-500/5"
+        gradientTo="to-pink-500/5"
+      >
+        <div className="space-y-4 pt-4">
           {/* Name - read only */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
@@ -280,25 +343,25 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit }) => {
             </div>
           )}
         </div>
-      </div>
+      </CollapsibleSection>
 
-      <div className="p-6 bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 border border-border rounded-xl">
-        <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
-          <div className="flex items-center gap-3 flex-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <Utensils className="w-4 h-4 text-primary" />
-            </div>
-            <h2 className="text-lg font-semibold">Состав</h2>
-            {watchItems.length > 0 && (
-              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Hash className="w-3.5 h-3.5" />
-                {watchItems.length}
-              </span>
-            )}
-          </div>
-
-          {watchItems.length > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg border border-border">
+      <CollapsibleSection
+        id="composition"
+        title="Состав"
+        icon={<Utensils className="w-4 h-4 text-primary" />}
+        isOpen={isCompositionOpen}
+        onToggle={onToggleSection}
+        summaryContent={
+          watchItems.length > 0 && (
+            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Hash className="w-3.5 h-3.5" />
+              {watchItems.length}
+            </span>
+          )
+        }
+        headerContent={
+          watchItems.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg border border-border">
               <div className="flex items-center gap-2 text-sm">
                 <div className="flex items-center gap-1">
                   <Flame className="w-3.5 h-3.5 text-orange-600" />
@@ -329,43 +392,48 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit }) => {
                 </span>
               </div>
             </div>
-          )}
-        </div>
+          )
+        }
+        gradientFrom="from-orange-500/5"
+        gradientVia="via-yellow-500/5"
+        gradientTo="to-green-500/5"
+      >
+        <div className="space-y-4 pt-4">
+          <div className="space-y-3">
+            {watchItems.length > 0 ? (
+              watchItems.map((item, index) => {
+                const isProduct = item.type === 'product';
+                const bgColor = isProduct
+                  ? 'bg-blue-500/5 hover:bg-blue-500/10'
+                  : 'bg-orange-500/5 hover:bg-orange-500/10';
+                const borderColor = isProduct
+                  ? 'border-blue-500/20 hover:border-blue-500/40'
+                  : 'border-orange-500/20 hover:border-orange-500/40';
 
-        <div className="space-y-3">
-          {watchItems.length > 0 ? (
-            watchItems.map((item, index) => {
-              const isProduct = item.type === 'product';
-              const bgColor = isProduct
-                ? 'bg-blue-500/5 hover:bg-blue-500/10'
-                : 'bg-orange-500/5 hover:bg-orange-500/10';
-              const borderColor = isProduct
-                ? 'border-blue-500/20 hover:border-blue-500/40'
-                : 'border-orange-500/20 hover:border-orange-500/40';
-
-              return (
-                <div
-                  key={item.instanceId || `${item.type}-${item.itemId}-${index}`}
-                  className={`${bgColor} border ${borderColor} rounded-lg p-3 transition-all duration-200 hover:shadow-sm`}
-                >
-                  <ItemContentReadOnly
-                    item={item}
-                    products={products}
-                    dishes={dishes}
-                    navigate={navigate}
-                  />
-                </div>
-              );
-            })
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">Пусто</p>
-              <p className="text-xs mt-1">Добавьте продукты или блюда</p>
-            </div>
-          )}
+                return (
+                  <div
+                    key={item.instanceId || `${item.type}-${item.itemId}-${index}`}
+                    className={`${bgColor} border ${borderColor} rounded-lg p-3 transition-all duration-200 hover:shadow-sm`}
+                  >
+                    <ItemContentReadOnly
+                      item={item}
+                      products={products}
+                      dishes={dishes}
+                      navigate={navigate}
+                    />
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">Пусто</p>
+                <p className="text-xs mt-1">Добавьте продукты или блюда</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </CollapsibleSection>
     </div>
   );
 };

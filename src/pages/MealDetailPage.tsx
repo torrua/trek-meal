@@ -53,7 +53,7 @@ const MealDetailPage: React.FC = () => {
   return (
     <div className="p-6 bg-background min-h-screen">
       <div className="max-w-4xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate('/meals')} className="mb-6">
+        <Button variant="ghost" onClick={() => navigate('/meals')} className="mb-6 -ml-2">
           <ArrowLeft className="w-4 h-4 mr-2" />К списку приёмов пищи
         </Button>
 
@@ -82,16 +82,18 @@ const MealDetailPage: React.FC = () => {
             />
           </>
         ) : meal ? (
-          <MealDetail
-            meal={meal}
-            onEdit={handleEdit}
-            openSections={openSections}
-            onToggleSection={(id) =>
-              setOpenSections((prev) =>
-                prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-              )
-            }
-          />
+          <div className="-mt-2">
+            <MealDetail
+              meal={meal}
+              onEdit={handleEdit}
+              openSections={openSections}
+              onToggleSection={(id) =>
+                setOpenSections((prev) =>
+                  prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+                )
+              }
+            />
+          </div>
         ) : (
           <div className="text-center p-8">
             <h2 className="text-xl text-danger">Приём пищи не найден</h2>

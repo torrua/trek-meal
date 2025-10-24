@@ -304,7 +304,7 @@ const MealDetail: React.FC<MealDetailProps> = ({ meal, onEdit, openSections, onT
   const isCompositionOpen = openSections.includes('composition');
 
   return (
-    <div className="space-y-6 p-1">
+    <div className="space-y-6 pl-1">
       <CollapsibleSection
         id="basic-info"
         title="Основная информация"

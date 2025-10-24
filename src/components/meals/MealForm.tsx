@@ -272,12 +272,12 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
 
             {watchItems.length > 0 && (
               <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg border border-border">
-                <TrendingUp className="w-4 h-4 text-primary" />
                 <div className="flex items-center gap-2 text-sm">
                   <div className="flex items-center gap-1">
                     <Flame className="w-3.5 h-3.5 text-orange-600" />
                     <span className="font-semibold text-orange-600">{totalNutrition.calories}</span>
                   </div>
+                  <div className="w-px h-4 bg-border" />
                   <div className="flex items-center gap-1">
                     <Beef className="w-3.5 h-3.5 text-blue-600" />
                     <span className="font-semibold text-blue-600">{totalNutrition.proteins}</span>

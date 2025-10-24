@@ -477,9 +477,11 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
   const { products } = useProductStore();
   const { dishes } = useDishStore();
   const navigate = useNavigate();
-  const [showAddMenu, setShowAddMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [showNutritionSummary, setShowNutritionSummary] = useState(true);
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const searchInputRef = useRef<HTMLDivElement>(null);
 
   const handleEditItem = (item: any) => {
     if (item.type === 'product') {
@@ -509,6 +511,20 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
   });
   const { fields, append, remove, move, update } = useFieldArray({ control, name: 'items' });
   const watchItems = watch('items');
+
+  // Close search dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
+        setShowAddMenu(false);
+      }
+    };
+
+    if (showAddMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showAddMenu]);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
@@ -649,88 +665,63 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
           </div>
         </div>
 
-        {watchItems.length > 0 && (
-          <div className="p-4 bg-gradient-to-r from-orange-500/10 via-blue-500/10 to-green-500/10 rounded-xl border border-border">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                <h3 className="font-semibold text-sm">Итого по приему пищи</h3>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Component className="w-3.5 h-3.5" />
-                <span>{itemCounts.products}</span>
-                <Soup className="w-3.5 h-3.5 ml-2" />
-                <span>{itemCounts.dishes}</span>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="text-center p-3 bg-card rounded-lg">
-                <Flame className="w-5 h-5 text-orange-600 mx-auto mb-1" />
-                <p className="text-2xl font-bold text-orange-600">{totalNutrition.calories}</p>
-                <p className="text-xs text-muted-foreground">ккал</p>
-              </div>
-              <div className="text-center p-3 bg-card rounded-lg">
-                <Beef className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                <p className="text-2xl font-bold text-blue-600">{totalNutrition.proteins}</p>
-                <p className="text-xs text-muted-foreground">г белков</p>
-              </div>
-              <div className="text-center p-3 bg-card rounded-lg">
-                <Droplet className="w-5 h-5 text-yellow-600 mx-auto mb-1" />
-                <p className="text-2xl font-bold text-yellow-600">{totalNutrition.fats}</p>
-                <p className="text-xs text-muted-foreground">г жиров</p>
-              </div>
-              <div className="text-center p-3 bg-card rounded-lg">
-                <Wheat className="w-5 h-5 text-green-600 mx-auto mb-1" />
-                <p className="text-2xl font-bold text-green-600">{totalNutrition.carbs}</p>
-                <p className="text-xs text-muted-foreground">г углев.</p>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="p-6 bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 border border-border rounded-xl">
-          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <Utensils className="w-4 h-4 text-primary" />
+          <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <Utensils className="w-4 h-4 text-primary" />
+              </div>
+              <h2 className="text-lg font-semibold">Состав</h2>
+              {watchItems.length > 0 && (
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Hash className="w-3.5 h-3.5" />
+                  {watchItems.length}
+                </span>
+              )}
             </div>
-            <h2 className="text-lg font-semibold flex-1">Состав</h2>
+
             {watchItems.length > 0 && (
-              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Hash className="w-3.5 h-3.5" />
-                {watchItems.length}
-              </span>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg border border-border">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-1">
+                    <Flame className="w-3.5 h-3.5 text-orange-600" />
+                    <span className="font-semibold text-orange-600">{totalNutrition.calories}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Beef className="w-3.5 h-3.5 text-blue-600" />
+                    <span className="font-semibold text-blue-600">{totalNutrition.proteins}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Droplet className="w-3.5 h-3.5 text-yellow-600" />
+                    <span className="font-semibold text-yellow-600">{totalNutrition.fats}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Wheat className="w-3.5 h-3.5 text-green-600" />
+                    <span className="font-semibold text-green-600">{totalNutrition.carbs}</span>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 
-          <div className="relative mb-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowAddMenu(!showAddMenu)}
-              className="w-full border-2 border-dashed hover:border-primary hover:bg-primary/5"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Добавить продукт или блюдо
-              <ChevronDown className="w-3 h-3 ml-auto" />
-            </Button>
+          <div className="relative mb-4" ref={searchInputRef}>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setShowAddMenu(true)}
+                placeholder="Найти продукт или блюдо..."
+                className="w-full pl-10 pr-3 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/60 transition-all"
+              />
+            </div>
 
             {showAddMenu && (
-              <div className="absolute z-10 w-full mt-2 bg-card border border-border rounded-lg shadow-lg overflow-hidden">
-                <div className="sticky top-0 bg-card p-3 border-b border-border">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Поиск продуктов и блюд..."
-                      className="w-full pl-9 pr-3 py-2 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                      autoFocus
-                    />
-                  </div>
-                </div>
+              <div className="absolute z-20 w-full mt-2 bg-card border border-border rounded-lg shadow-lg overflow-hidden">
                 <div className="p-2 max-h-80 overflow-y-auto">
-                  {filteredProducts.length === 0 && filteredDishes.length === 0 ? (
+                  {filteredDishes.length === 0 && filteredProducts.length === 0 ? (
                     <div className="px-3 py-8 text-center text-sm text-muted-foreground">
                       Ничего не найдено
                     </div>
@@ -747,7 +738,7 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
                               key={dish.id}
                               type="button"
                               onClick={() => handleAddItem(dish.id, 'dish')}
-                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
                             >
                               <Soup className="w-3.5 h-3.5 text-orange-500" />
                               {dish.name}
@@ -766,7 +757,7 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
                               key={product.id}
                               type="button"
                               onClick={() => handleAddItem(product.id, 'product')}
-                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2"
+                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
                             >
                               <Component className="w-3.5 h-3.5 text-blue-500" />
                               {product.name}

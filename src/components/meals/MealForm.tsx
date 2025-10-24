@@ -7,7 +7,6 @@ import { z } from 'zod';
 import {
   Utensils,
   Info,
-  Plus,
   Search,
   TrendingUp,
   Hash,
@@ -17,13 +16,6 @@ import {
   Beef,
   Droplet,
   Wheat,
-  Edit,
-  Trash2,
-  GripVertical,
-  Scale,
-  ChevronDown,
-  Check,
-  X,
 } from 'lucide-react';
 import {
   DndContext,
@@ -35,15 +27,13 @@ import {
   DragStartEvent,
   DragOverlay,
 } from '@dnd-kit/core';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import type { Meal, MealData, MealPlanItem, Product, Dish, ProductPortion } from '../../types';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import type { Meal, MealData, MealPlanItem } from '../../types';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import Button from '../../ui/Button';
-import Modal from '../../ui/Modal';
 import SortableItemComponent from './SortableItem';
 import { calculateNutrition } from './mealFormUtils';
 import ItemContent from './ItemContent';

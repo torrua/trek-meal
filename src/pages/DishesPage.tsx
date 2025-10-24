@@ -15,13 +15,12 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
-  DownloadCloud,
 } from 'lucide-react';
 import useDishStore from '../stores/useDishStore';
 import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
-import type { Dish, DishData, SubmitDishAction } from '../types';
+import type { Dish } from '../types';
 import EntityCard from '../ui/EntityCard';
 import DishDetail from '../components/dishes/DishDetail';
 // Editing moved to dedicated page

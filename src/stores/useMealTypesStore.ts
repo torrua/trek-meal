@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import useTripStore from './useTripStore';
-import type { MealType as BaseMealType, MealData } from '../types';
+import type { MealType as BaseMealType } from '../types';
 
 export interface MealType extends BaseMealType {
   // Keep the existing properties and add repeatable

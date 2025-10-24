@@ -5,7 +5,6 @@ import { Palette } from 'lucide-react';
 import type { CategoryData } from '../../types';
 import Input from '../../ui/Input';
 import Button from '../../ui/Button';
-import DynamicIcon from '../../ui/DynamicIcon';
 import FormField from '../../ui/FormField';
 
 interface CategoryFormProps {

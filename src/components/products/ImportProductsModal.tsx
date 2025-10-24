@@ -24,7 +24,7 @@ const ImportProductsModal: React.FC<ImportProductsModalProps> = ({
   onClose,
   fileContent,
 }) => {
-  const { categories, addCategory } = useCategoryStore();
+  const { categories } = useCategoryStore();
   const { products: existingProducts, addMultipleProducts } = useProductStore();
 
   const [stagedProducts, setStagedProducts] = useState<StagedProduct[]>([]);

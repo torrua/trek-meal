@@ -15,7 +15,6 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
-  DownloadCloud,
 } from 'lucide-react';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
@@ -375,8 +374,6 @@ const EquipmentCategoriesPage: React.FC = () => {
                 onExport: () => handleExport(category),
                 onDelete: () => handleRequestDelete(category),
               });
-
-              const context = { equipmentCount };
 
               return (
                 <EntityCard

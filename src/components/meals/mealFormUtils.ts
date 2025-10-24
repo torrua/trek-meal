@@ -1,5 +1,5 @@
 // src/components/meals/mealFormUtils.ts
-import type { Meal, Product, Dish } from '../../types';
+import type { Product, Dish } from '../../types';
 
 export const calculateNutrition = (item: any, products: Product[], dishes: Dish[]) => {
   if (item.type === 'product') {

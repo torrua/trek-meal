@@ -39,7 +39,6 @@ const SortableItem: React.FC<SortableItemProps> = ({
   };
 
   const isProduct = item.type === 'product';
-  const isDish = item.type === 'dish';
 
   // Light background colors for visual distinction
   const bgColor = isProduct

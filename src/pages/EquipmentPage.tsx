@@ -16,7 +16,6 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
-  DownloadCloud,
 } from 'lucide-react';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';

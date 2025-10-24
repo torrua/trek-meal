@@ -16,7 +16,6 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
-  DownloadCloud,
 } from 'lucide-react';
 import useMealTypesStore from '../stores/useMealTypesStore';
 import { exportBulkMealTypesToJson, importDataFromJson } from '../utils/backup';

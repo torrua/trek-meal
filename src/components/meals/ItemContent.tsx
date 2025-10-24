@@ -1,6 +1,5 @@
 // src/components/meals/ItemContent.tsx
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Component,
   Soup,
@@ -26,7 +25,6 @@ interface ItemContentProps {
   onRemove?: () => void;
   onUpdateWeight?: (weight: number) => void;
   onEditItem?: () => void;
-  isDragging?: boolean;
   showActions?: boolean;
 }
 
@@ -37,7 +35,6 @@ const ItemContent: React.FC<ItemContentProps> = ({
   onRemove,
   onUpdateWeight,
   onEditItem,
-  isDragging,
   showActions = true,
 }) => {
   const [isEditingWeight, setIsEditingWeight] = useState(false);

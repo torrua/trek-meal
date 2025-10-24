@@ -17,12 +17,6 @@ interface AddParticipantsModalProps {
   tripId: number | null;
 }
 
-type ParticipantOption = {
-  value: string;
-  label: string;
-  isDisabled?: boolean;
-};
-
 const AddParticipantsModal: React.FC<AddParticipantsModalProps> = ({ isOpen, onClose, tripId }) => {
   const { trips, addParticipantsToTrip } = useTripStore();
   const { participants: allParticipants } = useParticipantStore();

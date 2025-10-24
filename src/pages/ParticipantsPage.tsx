@@ -16,7 +16,6 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
-  DownloadCloud,
 } from 'lucide-react';
 import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
 import { useParticipantsManagement } from '../hooks/useParticipantsManagement';

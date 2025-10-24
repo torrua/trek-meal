@@ -68,7 +68,6 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [showNutritionSummary, setShowNutritionSummary] = useState(true);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const searchInputRef = useRef<HTMLDivElement>(null);
 
@@ -199,19 +198,10 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
     const mealData: MealData = {
       name,
       description,
-      items: watchItems.map(({ instanceId, ...item }) => item) as MealPlanItem[],
+      items: watchItems.map(({ instanceId: _, ...item }) => item) as MealPlanItem[],
     };
     onSubmit(mealData);
   };
-
-  const itemCounts = useMemo(() => {
-    const counts = { products: 0, dishes: 0 };
-    watchItems.forEach((item) => {
-      if (item.type === 'product') counts.products++;
-      else counts.dishes++;
-    });
-    return counts;
-  }, [watchItems]);
 
   const activeItem = activeId ? watchItems.find((item, idx) => fields[idx].id === activeId) : null;
 

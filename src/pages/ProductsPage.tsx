@@ -21,7 +21,7 @@ import { toast } from 'react-hot-toast';
 import useProductStore from '../stores/useProductStore';
 import useCategoryStore from '../stores/useCategoryStore';
 import useSearchStore from '../stores/useSearchStore';
-import type { Product, ProductData, ImportedJsonData, Category } from '../types';
+import type { Product, ImportedJsonData, Category } from '../types';
 import EntityCard from '../ui/EntityCard';
 import ProductDetail from '../components/products/ProductDetail';
 // ProductForm removed from this page (editing navigates to dedicated page)

@@ -77,37 +77,6 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
     return 'участников';
   }, [selectedCount]);
 
-  const customFormatOptionLabel = (option: TripOption) => (
-    <div className="flex items-center justify-between w-full py-1">
-      <div className="min-w-0 flex-1">
-        <div className="font-medium truncate text-foreground">{option.trip.name}</div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-          <div className="flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            <span>{formatDate(option.trip.startDate)}</span>
-          </div>
-          {option.trip.destination && (
-            <div className="flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              <span className="truncate max-w-[120px]">{option.trip.destination}</span>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center gap-1 text-xs text-muted-foreground ml-3 flex-shrink-0">
-        <Users className="w-3 h-3" />
-        <span>{option.trip.participants.length}</span>
-      </div>
-    </div>
-  );
-
-  React.useEffect(() => {
-    if (!isOpen) {
-      setSelectedTrip(null);
-      setIsSubmitting(false);
-    }
-  }, [isOpen]);
-
   return (
     <Modal
       isOpen={isOpen}

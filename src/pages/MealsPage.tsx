@@ -48,11 +48,6 @@ const MealsPage: React.FC = () => {
     [activeId, meals]
   );
 
-  const handleAddNew = useCallback(() => {
-    setEditingMeal(null);
-    setShowFormModal(true);
-  }, []);
-
   const handleEdit = useCallback(
     (meal: Meal) => {
       navigate(`/meals/${meal.id}/edit`);

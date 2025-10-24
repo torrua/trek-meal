@@ -18,7 +18,6 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
-  DownloadCloud,
 } from 'lucide-react';
 import { useTripsManagement } from '../hooks/useTripsManagement';
 import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
@@ -34,7 +33,6 @@ import { tripEntityConfig } from '../config/entityConfig';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { formatDate } from '../utils';
 import { exportBulkTripsToJson, importDataFromJson } from '../utils/backup';
-import type { Trip } from '../types';
 
 const TripsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -61,7 +59,6 @@ const TripsPage: React.FC = () => {
     setAddParticipantModalOpen,
     setTripToDelete,
 
-    handleAddNew,
     handleEdit,
     handleClone,
     handleExport,
@@ -128,10 +125,6 @@ const TripsPage: React.FC = () => {
 
   const selectAllTrips = () => {
     setSelectedTripIds(filteredTrips.map((trip) => trip.id));
-  };
-
-  const clearSelection = () => {
-    setSelectedTripIds([]);
   };
 
   // Exit multi-select mode completely

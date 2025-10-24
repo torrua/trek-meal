@@ -390,7 +390,7 @@ const ItemContent: React.FC<{
               {dishDetails.map((ingredient: any, idx: number) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between px-2 py-1 bg-muted/20 rounded text-xs"
+                  className="flex items-center justify-between px-2 py-1 bg-muted/2 rounded text-xs"
                 >
                   <span className="flex items-center gap-1.5">
                     <Component className="w-3 h-3 text-blue-500" />

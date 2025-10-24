@@ -9,6 +9,7 @@ interface CreateMealButtonProps {
   size?: 'default' | 'sm' | 'lg' | 'icon' | 'icon-sm';
   className?: string;
   showText?: boolean;
+  disabled?: boolean;
 }
 
 const CreateMealButton: React.FC<CreateMealButtonProps> = ({
@@ -17,9 +18,16 @@ const CreateMealButton: React.FC<CreateMealButtonProps> = ({
   size = 'default',
   className = '',
   showText = true,
+  disabled = false,
 }) => {
   return (
-    <Button variant={variant} size={size} onClick={onClick} className={className}>
+    <Button
+      variant={variant}
+      size={size}
+      onClick={onClick}
+      className={className}
+      disabled={disabled}
+    >
       <Plus className="w-4 h-4 sm:mr-2" />
       {showText && <span className="hidden sm:inline">Создать приём пищи</span>}
     </Button>

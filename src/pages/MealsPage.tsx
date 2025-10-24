@@ -1,4 +1,3 @@
-// src/pages/MealsPage.tsx
 import React, { useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -25,7 +24,6 @@ import Modal from '../ui/Modal';
 import ConfirmModal from '../ui/ConfirmModal';
 import MealForm from '../components/meals/MealForm';
 import MealDetail from '../components/meals/MealDetail';
-
 import CreateMealButton from '../components/meals/CreateMealButton';
 
 const MealsPage: React.FC = () => {
@@ -34,10 +32,18 @@ const MealsPage: React.FC = () => {
   const navigate = useNavigate();
   const { viewMode, toggleViewMode } = useViewMode('meals');
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [detailEditTrigger, setDetailEditTrigger] = useState(0);
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
+  const [creatingMeal, setCreatingMeal] = useState(false);
+  const [isDetailEditing, setIsDetailEditing] = useState(false);
   const [mealToDelete, setMealToDelete] = useState<Meal | null>(null);
-  const [openSections, setOpenSections] = useState<string[]>(['main', 'items']);
+  const [createSubmitTrigger, setCreateSubmitTrigger] = useState(0);
+  const [createCancelTrigger, setCreateCancelTrigger] = useState(0);
+  const [editSubmitTrigger, setEditSubmitTrigger] = useState(0);
+  const [editCancelTrigger, setEditCancelTrigger] = useState(0);
+  // use section ids that MealDetail expects
+  const [openSections, setOpenSections] = useState<string[]>(['basic-info', 'composition']);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   // Multi-selection state
@@ -49,11 +55,20 @@ const MealsPage: React.FC = () => {
     [activeId, meals]
   );
 
-  const handleEdit = useCallback(
-    (meal: Meal) => {
-      navigate(`/meals/${meal.id}/edit`);
+  const handleEdit = useCallback((meal: Meal) => {
+    setActiveId(meal.id);
+    setIsDetailEditing(true);
+    setOpenSections((prev) => (prev.includes('basic-info') ? prev : [...prev, 'basic-info']));
+    setDetailEditTrigger((t) => t + 1);
+  }, []);
+
+  const handleInlineCreate = useCallback(
+    (formData: MealData) => {
+      const created = addMeal(formData);
+      setActiveId(created.id);
+      setCreatingMeal(false);
     },
-    [navigate]
+    [addMeal]
   );
 
   const handleFormSubmit = useCallback(
@@ -72,30 +87,25 @@ const MealsPage: React.FC = () => {
 
   const handleRequestDelete = useCallback((meal: Meal) => setMealToDelete(meal), []);
   const handleConfirmDelete = useCallback(() => {
-    if (mealToDelete) {
-      if (mealToDelete.id === activeId) setActiveId(null);
-      removeMeal(mealToDelete.id);
-      setMealToDelete(null);
-    }
+    if (!mealToDelete) return;
+    if (mealToDelete.id === activeId) setActiveId(null);
+    removeMeal(mealToDelete.id);
+    setMealToDelete(null);
   }, [mealToDelete, activeId, removeMeal]);
 
   // Multi-selection handlers
   const toggleMultiSelect = () => {
-    setShowMultiSelect(!showMultiSelect);
-    if (showMultiSelect) {
-      setSelectedMealIds([]);
-    }
+    setShowMultiSelect((s) => !s);
+    if (showMultiSelect) setSelectedMealIds([]);
   };
 
   const toggleMealSelection = (mealId: number) => {
     setSelectedMealIds((prev: number[]) =>
-      prev.includes(mealId) ? prev.filter((id: number) => id !== mealId) : [...prev, mealId]
+      prev.includes(mealId) ? prev.filter((id) => id !== mealId) : [...prev, mealId]
     );
   };
 
-  const selectAllMeals = () => {
-    setSelectedMealIds(meals.map((meal: Meal) => meal.id));
-  };
+  const selectAllMeals = () => setSelectedMealIds(meals.map((meal: Meal) => meal.id));
 
   // Exit multi-select mode completely
   const exitMultiSelectMode = () => {
@@ -129,16 +139,14 @@ const MealsPage: React.FC = () => {
   };
 
   // Function to transform meal details to match EntityCard's DetailItem type
-  const getMealDetails = (meal: Meal) => {
-    return [
-      {
-        key: 'items',
-        icon: mealEntityConfig.getIcon(meal),
-        text: meal.items.length,
-        title: 'Компоненты',
-      },
-    ];
-  };
+  const getMealDetails = (meal: Meal) => [
+    {
+      key: 'items',
+      icon: mealEntityConfig.getIcon(meal),
+      text: meal.items.length,
+      title: 'Компоненты',
+    },
+  ];
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -191,7 +199,38 @@ const MealsPage: React.FC = () => {
                   <Check className="w-4 h-4" />
                 </Button>
 
-                <CreateMealButton onClick={() => navigate('/meals/new')} />
+                {creatingMeal || isDetailEditing ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="primary"
+                      onClick={() => {
+                        if (creatingMeal) setCreateSubmitTrigger((t) => t + 1);
+                        else setEditSubmitTrigger((t) => t + 1);
+                      }}
+                    >
+                      Сохранить
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        if (creatingMeal) setCreateCancelTrigger((t) => t + 1);
+                        else setEditCancelTrigger((t) => t + 1);
+                      }}
+                    >
+                      Отмена
+                    </Button>
+                  </div>
+                ) : (
+                  <CreateMealButton
+                    onClick={() => {
+                      if (isDetailEditing) return;
+                      setCreatingMeal(true);
+                      setActiveId(null);
+                      setOpenSections(['basic-info', 'composition']);
+                    }}
+                    disabled={isDetailEditing}
+                  />
+                )}
               </>
             ) : (
               <div className="flex items-center gap-2">
@@ -261,9 +300,12 @@ const MealsPage: React.FC = () => {
                 })
                 .map((action) => ({
                   ...action,
+                  // if another meal is being edited, disable other card actions
+                  disabled: isDetailEditing && meal.id !== activeId,
                   onClick: (e: React.MouseEvent) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    if (isDetailEditing && meal.id !== activeId) return;
                     if (action.label === 'Редактировать') {
                       handleEdit(meal);
                     } else if (action.label === 'Удалить') {
@@ -282,8 +324,10 @@ const MealsPage: React.FC = () => {
                   borderColor={mealEntityConfig.getBorderColor(meal)}
                   isSelected={activeId === meal.id}
                   isMultiSelected={selectedMealIds.includes(meal.id)}
-                  onSelect={() => setActiveId(meal.id)}
-                  onMultiSelect={() => toggleMealSelection(meal.id)}
+                  onSelect={
+                    isDetailEditing && meal.id !== activeId ? undefined : () => setActiveId(meal.id)
+                  }
+                  onMultiSelect={isDetailEditing ? undefined : () => toggleMealSelection(meal.id)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                   viewMode={viewMode}
@@ -294,16 +338,33 @@ const MealsPage: React.FC = () => {
 
           {/* Detail (desktop) */}
           <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
-            {selectedMeal ? (
+            {creatingMeal ? (
+              <div className="pl-1">
+                <MealForm
+                  meal={null}
+                  onSubmit={handleInlineCreate}
+                  onCancel={() => setCreatingMeal(false)}
+                  inline
+                  focusName
+                  externalSubmitTrigger={createSubmitTrigger}
+                  externalCancelTrigger={createCancelTrigger}
+                />
+              </div>
+            ) : selectedMeal ? (
               <MealDetail
                 meal={selectedMeal}
                 onEdit={() => selectedMeal && navigate(`/meals/${selectedMeal.id}/edit`)}
+                editTrigger={detailEditTrigger}
                 openSections={openSections}
                 onToggleSection={(id) =>
                   setOpenSections((prev) =>
                     prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
                   )
                 }
+                onStartEdit={() => setIsDetailEditing(true)}
+                onFinishEdit={() => setIsDetailEditing(false)}
+                editSubmitTrigger={editSubmitTrigger}
+                editCancelTrigger={editCancelTrigger}
               />
             ) : (
               <div className="h-full flex items-start justify-center pt-16">
@@ -321,7 +382,7 @@ const MealsPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="text-center py-16 px-6 text-muted-foreground">
+        <div className="h-full flex flex-col items-center justify-center py-16">
           <Utensils className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-medium text-foreground">Приёмов пищи пока нет</h3>
           <p className="text-sm text-muted-foreground mt-2">
@@ -329,7 +390,11 @@ const MealsPage: React.FC = () => {
           </p>
           <div className="mt-4 inline-block">
             <CreateMealButton
-              onClick={() => navigate('/meals/new')}
+              onClick={() => {
+                setCreatingMeal(true);
+                setActiveId(null);
+                setOpenSections(['basic-info', 'composition']);
+              }}
               variant="primary"
               showText={true}
             />
@@ -359,6 +424,10 @@ const MealsPage: React.FC = () => {
                   prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
                 )
               }
+              onStartEdit={() => setIsDetailEditing(true)}
+              onFinishEdit={() => setIsDetailEditing(false)}
+              editSubmitTrigger={editSubmitTrigger}
+              editCancelTrigger={editCancelTrigger}
             />
           </Modal>
         </div>

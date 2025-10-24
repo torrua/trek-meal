@@ -64,7 +64,26 @@ interface MealFormProps {
   defaultName?: string;
 }
 
-const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultName }) => {
+interface MealFormUXProps extends MealFormProps {
+  /** If true, the form is rendered inline (not in a modal) and should use shorter button labels */
+  inline?: boolean;
+  /** If true, focus name input on mount */
+  focusName?: boolean;
+  /** External triggers to programmatically submit or cancel the form */
+  externalSubmitTrigger?: number;
+  externalCancelTrigger?: number;
+}
+
+const MealForm: React.FC<MealFormUXProps> = ({
+  meal,
+  onSubmit,
+  onCancel,
+  defaultName,
+  inline = false,
+  focusName = false,
+  externalSubmitTrigger,
+  externalCancelTrigger,
+}) => {
   const { products } = useProductStore();
   const { dishes } = useDishStore();
   const navigate = useNavigate();
@@ -101,6 +120,15 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
   });
   const { fields, append, remove, move, update } = useFieldArray({ control, name: 'items' });
   const watchItems = watch('items');
+
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (focusName && nameInputRef.current) {
+      // small timeout to ensure input is mounted
+      setTimeout(() => nameInputRef.current && nameInputRef.current.focus(), 50);
+    }
+  }, [focusName]);
 
   // Close search dropdown when clicking outside
   useEffect(() => {
@@ -214,6 +242,34 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
     onSubmit(mealData);
   };
 
+  // If parent wants to submit programmatically, react to trigger changes
+  const externalSubmitRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (typeof externalSubmitTrigger === 'number') {
+      if (
+        externalSubmitRef.current !== undefined &&
+        externalSubmitRef.current !== externalSubmitTrigger
+      ) {
+        processSubmit();
+      }
+      externalSubmitRef.current = externalSubmitTrigger;
+    }
+  }, [externalSubmitTrigger]);
+
+  // External cancel trigger
+  const externalCancelRef = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (typeof externalCancelTrigger === 'number') {
+      if (
+        externalCancelRef.current !== undefined &&
+        externalCancelRef.current !== externalCancelTrigger
+      ) {
+        onCancel();
+      }
+      externalCancelRef.current = externalCancelTrigger;
+    }
+  }, [externalCancelTrigger]);
+
   const activeItem = activeId ? watchItems.find((item, idx) => fields[idx].id === activeId) : null;
 
   return (
@@ -236,7 +292,7 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
                   label="Название приёма пищи"
                   error={errors.name?.message}
                   placeholder="Например, Завтрак, Обед, Ужин..."
-                  autoFocus
+                  ref={nameInputRef}
                 />
               )}
             />
@@ -428,7 +484,13 @@ const MealForm: React.FC<MealFormProps> = ({ meal, onSubmit, onCancel, defaultNa
             Отмена
           </Button>
           <Button type="button" variant="primary" onClick={processSubmit} icon={Utensils}>
-            {meal ? 'Сохранить изменения' : 'Создать приём пищи'}
+            {inline
+              ? meal
+                ? 'Сохранить'
+                : 'Создать'
+              : meal
+                ? 'Сохранить изменения'
+                : 'Создать приём пищи'}
           </Button>
         </div>
       </div>

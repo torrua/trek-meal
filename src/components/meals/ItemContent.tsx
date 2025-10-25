@@ -7,7 +7,6 @@ import {
   Beef,
   Droplet,
   Wheat,
-  Scale,
   Weight,
   ChevronDown,
   Edit,
@@ -42,6 +41,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
   const [customWeight, setCustomWeight] = useState(item.weight?.toString() || '');
   const [showPortions, setShowPortions] = useState(false);
   const [showDishIngredients, setShowDishIngredients] = useState(false);
+  const [showNutrition, setShowNutrition] = useState(false);
   const portionDropdownRef = useRef<HTMLDivElement>(null);
 
   const selectedItem =
@@ -88,7 +88,6 @@ const ItemContent: React.FC<ItemContentProps> = ({
     return null;
   }, [item, products, dishes]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -142,9 +141,18 @@ const ItemContent: React.FC<ItemContentProps> = ({
   const isProduct = item.type === 'product';
   const isDish = item.type === 'dish';
 
+  // Calculate dish weight
+  const dishWeight = useMemo(() => {
+    if (item.type !== 'dish' || !selectedItem) return 0;
+    const dish = selectedItem as Dish;
+    return dish.products.reduce((sum, dp) => sum + dp.weight, 0);
+  }, [item.type, selectedItem]);
+
+  const displayWeight = isProduct ? item.weight : dishWeight;
+
   return (
     <div className="space-y-3">
-      {/* Header: Title + КБЖУ + Actions */}
+      {/* Header: Title + Expandable КБЖУ + Actions */}
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {isProduct ? (
@@ -156,39 +164,60 @@ const ItemContent: React.FC<ItemContentProps> = ({
         </div>
         {showActions && (
           <div className="flex items-center gap-2">
-            {nutrition && (
-              <div className="flex items-center gap-2 h-8 px-2.5 bg-muted/50 rounded-lg border border-border">
-                <div className="flex items-center gap-1">
-                  <Flame className="w-4 h-4 text-orange-600" />
-                  <span className="text-sm font-semibold text-orange-600">
-                    {nutrition.calories}
-                  </span>
-                </div>
-                <div className="w-px h-4 bg-border" />
-                <div className="flex items-center gap-1">
-                  <Beef className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-semibold text-blue-600">{nutrition.proteins}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Droplet className="w-4 h-4 text-yellow-600" />
-                  <span className="text-sm font-semibold text-yellow-600">{nutrition.fats}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Wheat className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-semibold text-green-600">{nutrition.carbs}</span>
-                </div>
-                {item.weight && (
+            {/* Expandable nutrition block */}
+            {nutrition && displayWeight && (
+              <button
+                onClick={() => setShowNutrition(!showNutrition)}
+                className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-lg border border-border hover:bg-muted transition-all"
+              >
+                {showNutrition ? (
                   <>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
+                    <div className="flex items-center gap-1">
+                      <Flame className="w-4 h-4 text-orange-600" />
+                      <span className="text-sm font-semibold text-orange-600">
+                        {nutrition.calories}
+                      </span>
+                    </div>
+                    <div className="w-px h-4 bg-border" />
+                    <div className="flex items-center gap-1">
+                      <Beef className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-semibold text-blue-600">
+                        {nutrition.proteins}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Droplet className="w-4 h-4 text-yellow-600" />
+                      <span className="text-sm font-semibold text-yellow-600">
+                        {nutrition.fats}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Wheat className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-semibold text-green-600">
+                        {nutrition.carbs}
+                      </span>
+                    </div>
                     <div className="w-px h-4 bg-border" />
                     <div className="flex items-center gap-1">
                       <Weight className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm font-semibold text-muted-foreground">
-                        {item.weight}
+                        {displayWeight}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
+                    <div className="flex items-center gap-1">
+                      <Weight className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-semibold text-muted-foreground">
+                        {displayWeight}
                       </span>
                     </div>
                   </>
                 )}
-              </div>
+              </button>
             )}
             {onEditItem && (
               <Button

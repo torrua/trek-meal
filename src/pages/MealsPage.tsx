@@ -64,11 +64,16 @@ const MealsPage: React.FC = () => {
 
   const handleInlineCreate = useCallback(
     (formData: MealData) => {
-      const created = addMeal(formData);
+      // Add default name if empty
+      const dataWithName = {
+        ...formData,
+        name: formData.name.trim() || `Приём пищи #${meals.length + 1}`,
+      };
+      const created = addMeal(dataWithName);
       setActiveId(created.id);
       setCreatingMeal(false);
     },
-    [addMeal]
+    [addMeal, meals.length]
   );
 
   const handleFormSubmit = useCallback(
@@ -288,7 +293,7 @@ const MealsPage: React.FC = () => {
         </div>
       </div>
 
-      {meals.length > 0 ? (
+      {meals.length > 0 || creatingMeal ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* List */}
           <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)]">

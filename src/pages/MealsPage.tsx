@@ -81,13 +81,18 @@ const MealsPage: React.FC = () => {
       if (editingMeal) {
         updateMeal(editingMeal.id, formData);
       } else {
-        const created = addMeal(formData);
+        // Add default name if empty
+        const dataWithName = {
+          ...formData,
+          name: formData.name.trim() || `Приём пищи #${meals.length + 1}`,
+        };
+        const created = addMeal(dataWithName);
         setActiveId(created.id);
       }
       setShowFormModal(false);
       setEditingMeal(null);
     },
-    [editingMeal, addMeal, updateMeal]
+    [editingMeal, addMeal, updateMeal, meals.length]
   );
 
   const handleRequestDelete = useCallback((meal: Meal) => setMealToDelete(meal), []);
@@ -155,7 +160,7 @@ const MealsPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-6 sm:mb-8 px-4 sm:px-6">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
             Приёмы пищи

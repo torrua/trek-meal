@@ -362,12 +362,18 @@ const MealForm: React.FC<MealFormProps> = ({
             />
           </div>
 
-          {showAddMenu && (
+          {showAddMenu && searchInputRef.current && (
             <div
               ref={dropdownRef}
-              className="absolute z-20 w-full mt-2 bg-card border border-border rounded-lg shadow-lg overflow-hidden animate-notion-fade"
+              className="fixed z-[1000] bg-card border border-border rounded-lg shadow-2xl overflow-hidden"
+              style={{
+                top: `${searchInputRef.current.getBoundingClientRect().bottom + 8}px`,
+                left: `${searchInputRef.current.getBoundingClientRect().left}px`,
+                width: `${searchInputRef.current.getBoundingClientRect().width}px`,
+                maxHeight: '300px',
+              }}
             >
-              <div className="p-2 max-h-80 overflow-y-auto notion-scrollbar">
+              <div className="p-2 overflow-y-auto">
                 {filteredDishes.length === 0 && filteredProducts.length === 0 ? (
                   <div className="px-3 py-8 text-center text-sm text-muted-foreground">
                     Ничего не найдено
@@ -443,7 +449,7 @@ const MealForm: React.FC<MealFormProps> = ({
             </SortableContext>
             <DragOverlay>
               {activeId && activeItem ? (
-                <div className="bg-card border-2 border-primary rounded-lg p-3 shadow-2xl opacity-95">
+                <div className="bg-card border-2 border-primary rounded-lg p-3 shadow-2xl opacity-95 z-50">
                   <ItemContent
                     item={activeItem}
                     products={products}

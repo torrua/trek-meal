@@ -128,6 +128,7 @@ const MealForm: React.FC<MealFormProps> = ({
 
       if (!isInsideSearchArea && !isInsideDropdown) {
         setShowAddMenu(false);
+        setSearchQuery('');
       }
     };
 
@@ -143,12 +144,16 @@ const MealForm: React.FC<MealFormProps> = ({
       const timer = setTimeout(() => {
         document.addEventListener('mousedown', handleClickOutside);
         document.addEventListener('keydown', handleEscapeKey);
+
+        // Prevent body scroll when dropdown is open
+        document.body.classList.add('dropdown-open');
       }, 100);
 
       return () => {
         clearTimeout(timer);
         document.removeEventListener('mousedown', handleClickOutside);
         document.removeEventListener('keydown', handleEscapeKey);
+        document.body.classList.remove('dropdown-open');
       };
     }
   }, [showAddMenu]);
@@ -373,7 +378,18 @@ const MealForm: React.FC<MealFormProps> = ({
                 maxHeight: '300px',
               }}
             >
-              <div className="p-2 overflow-y-auto">
+              <div
+                className="p-2 h-[300px] fixed-dropdown-scrollbar"
+                tabIndex={0}
+                onWheel={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  // Прокрутка будет работать автоматически благодаря overflow-y-auto
+                }}
+                onTouchMove={(e) => {
+                  e.stopPropagation();
+                }}
+              >
                 {filteredDishes.length === 0 && filteredProducts.length === 0 ? (
                   <div className="px-3 py-8 text-center text-sm text-muted-foreground">
                     Ничего не найдено

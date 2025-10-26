@@ -239,8 +239,36 @@ select {
   font-family: inherit;
 }
 
-/* Notion-style dividers */
-.notion-divider {
-  border-color: rgb(var(--border));
-  opacity: 0.6;
+/* Fixed dropdown scrollbar */
+.fixed-dropdown-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--muted-foreground) / 0.3) transparent;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.fixed-dropdown-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.fixed-dropdown-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fixed-dropdown-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.fixed-dropdown-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--muted-foreground) / 0.6);
+  background-clip: padding-box;
+}
+
+/* Prevent body scroll when dropdown is open */
+body.dropdown-open {
+  overflow: hidden !important;
 }

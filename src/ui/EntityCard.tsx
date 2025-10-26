@@ -93,7 +93,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
         <div className="flex min-w-0 flex-1 items-start gap-3">
           {/* LOGIC CHANGE: Checkbox replaces the icon */}
           {showMultiSelect ? (
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -104,7 +104,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
                   'flex h-5 w-5 items-center justify-center rounded border transition-all duration-200',
                   isMultiSelected
                     ? 'bg-primary border-primary text-primary-foreground'
-                    : 'border-border bg-card hover:border-border-hover'
+                    : 'border-primary/40 bg-card hover:border-primary/60'
                 )}
                 aria-label={isMultiSelected ? 'Снять выделение' : 'Выделить'}
               >

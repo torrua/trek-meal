@@ -80,7 +80,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           <h2 className="text-lg font-semibold truncate">{title}</h2>
           {summaryContent && <div className="ml-2 flex-shrink-0">{summaryContent}</div>}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-[200px] justify-end">
           {actionButton}
           {headerContent}
           <ChevronDown

@@ -6,7 +6,8 @@ import {
   Copy,
   Share,
   X,
-  Check,
+  Save,
+  CheckSquare,
   CheckCheck,
   LayoutList,
   Grid3X3,
@@ -27,7 +28,7 @@ import MealDetail from '../components/meals/MealDetail';
 import CreateMealButton from '../components/meals/CreateMealButton';
 
 const MealsPage: React.FC = () => {
-  const { meals, addMeal, updateMeal, removeMeal } = useMealStore();
+  const { meals, addMeal, updateMeal, removeMeal, getNextMealId } = useMealStore();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { viewMode, toggleViewMode } = useViewMode('meals');
@@ -42,11 +43,9 @@ const MealsPage: React.FC = () => {
   const [createCancelTrigger, setCreateCancelTrigger] = useState(0);
   const [editSubmitTrigger, setEditSubmitTrigger] = useState(0);
   const [editCancelTrigger, setEditCancelTrigger] = useState(0);
-  // use section ids that MealDetail expects
   const [openSections, setOpenSections] = useState<string[]>(['basic-info', 'composition']);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
-  // Multi-selection state
   const [selectedMealIds, setSelectedMealIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
 
@@ -64,16 +63,15 @@ const MealsPage: React.FC = () => {
 
   const handleInlineCreate = useCallback(
     (formData: MealData) => {
-      // Add default name if empty
       const dataWithName = {
         ...formData,
-        name: formData.name.trim() || `Приём пищи #${meals.length + 1}`,
+        name: formData.name.trim() || `Приём пищи ${getNextMealId()}`,
       };
       const created = addMeal(dataWithName);
       setActiveId(created.id);
       setCreatingMeal(false);
     },
-    [addMeal, meals.length]
+    [addMeal, getNextMealId]
   );
 
   const handleFormSubmit = useCallback(
@@ -81,10 +79,9 @@ const MealsPage: React.FC = () => {
       if (editingMeal) {
         updateMeal(editingMeal.id, formData);
       } else {
-        // Add default name if empty
         const dataWithName = {
           ...formData,
-          name: formData.name.trim() || `Приём пищи #${meals.length + 1}`,
+          name: formData.name.trim() || `Приём пищи ${getNextMealId()}`,
         };
         const created = addMeal(dataWithName);
         setActiveId(created.id);
@@ -92,7 +89,7 @@ const MealsPage: React.FC = () => {
       setShowFormModal(false);
       setEditingMeal(null);
     },
-    [editingMeal, addMeal, updateMeal, meals.length]
+    [editingMeal, addMeal, updateMeal, getNextMealId]
   );
 
   const handleRequestDelete = useCallback((meal: Meal) => setMealToDelete(meal), []);
@@ -103,7 +100,6 @@ const MealsPage: React.FC = () => {
     setMealToDelete(null);
   }, [mealToDelete, activeId, removeMeal]);
 
-  // Multi-selection handlers
   const toggleMultiSelect = () => {
     setShowMultiSelect((s) => !s);
     if (showMultiSelect) setSelectedMealIds([]);
@@ -117,13 +113,11 @@ const MealsPage: React.FC = () => {
 
   const selectAllMeals = () => setSelectedMealIds(meals.map((meal: Meal) => meal.id));
 
-  // Exit multi-select mode completely
   const exitMultiSelectMode = () => {
     setShowMultiSelect(false);
     setSelectedMealIds([]);
   };
 
-  // Bulk action handlers
   const handleBulkDelete = () => {
     if (selectedMealIds.length === 0) return;
     setShowBulkDeleteConfirm(true);
@@ -148,7 +142,6 @@ const MealsPage: React.FC = () => {
     console.log(`Exporting meals: ${selectedMealIds.join(', ')}`);
   };
 
-  // Function to transform meal details to match EntityCard's DetailItem type
   const getMealDetails = (meal: Meal) => [
     {
       key: 'items',
@@ -168,7 +161,6 @@ const MealsPage: React.FC = () => {
           <div className="flex items-center gap-2">
             {!showMultiSelect ? (
               <>
-                {/* Adding missing filter and import buttons to match trips page pattern */}
                 <Button
                   onClick={() => console.log('Filters would be implemented here')}
                   variant="secondary"
@@ -183,7 +175,6 @@ const MealsPage: React.FC = () => {
                   <UploadCloud className="w-4 h-4" />
                 </Button>
 
-                {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
                   variant="secondary"
@@ -198,7 +189,6 @@ const MealsPage: React.FC = () => {
                   )}
                 </Button>
 
-                {/* Changed multi-select button to icon-only to match trips page */}
                 <Button
                   onClick={toggleMultiSelect}
                   variant="secondary"
@@ -206,41 +196,18 @@ const MealsPage: React.FC = () => {
                   title="Выделить"
                   aria-label="Выделить"
                 >
-                  <Check className="w-4 h-4" />
+                  <CheckSquare className="w-4 h-4" />
                 </Button>
 
-                {creatingMeal || isDetailEditing ? (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="primary"
-                      onClick={() => {
-                        if (creatingMeal) setCreateSubmitTrigger((t) => t + 1);
-                        else setEditSubmitTrigger((t) => t + 1);
-                      }}
-                    >
-                      Сохранить
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        if (creatingMeal) setCreateCancelTrigger((t) => t + 1);
-                        else setEditCancelTrigger((t) => t + 1);
-                      }}
-                    >
-                      Отмена
-                    </Button>
-                  </div>
-                ) : (
-                  <CreateMealButton
-                    onClick={() => {
-                      if (isDetailEditing) return;
-                      setCreatingMeal(true);
-                      setActiveId(null);
-                      setOpenSections(['basic-info', 'composition']);
-                    }}
-                    disabled={isDetailEditing}
-                  />
-                )}
+                <CreateMealButton
+                  onClick={() => {
+                    if (isDetailEditing) return;
+                    setCreatingMeal(true);
+                    setActiveId(null);
+                    setOpenSections(['basic-info', 'composition']);
+                  }}
+                  disabled={isDetailEditing || creatingMeal}
+                />
               </>
             ) : (
               <div className="flex items-center gap-2">
@@ -300,7 +267,6 @@ const MealsPage: React.FC = () => {
 
       {meals.length > 0 || creatingMeal ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          {/* List */}
           <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)]">
             {meals.map((meal) => {
               const actions = mealEntityConfig
@@ -310,7 +276,6 @@ const MealsPage: React.FC = () => {
                 })
                 .map((action) => ({
                   ...action,
-                  // if another meal is being edited, disable other card actions
                   disabled: isDetailEditing && meal.id !== activeId,
                   onClick: (e: React.MouseEvent) => {
                     e.preventDefault();
@@ -346,7 +311,6 @@ const MealsPage: React.FC = () => {
             })}
           </div>
 
-          {/* Detail (desktop) */}
           <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {creatingMeal ? (
               <div className="pl-1">
@@ -412,7 +376,6 @@ const MealsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Detail modal (mobile) */}
       {isMobile && activeId !== null && (
         <div className="lg:hidden">
           <Modal
@@ -443,7 +406,6 @@ const MealsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Form modal */}
       <Modal
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
@@ -456,7 +418,6 @@ const MealsPage: React.FC = () => {
         />
       </Modal>
 
-      {/* Confirm delete */}
       <ConfirmModal
         isOpen={!!mealToDelete}
         onClose={() => setMealToDelete(null)}
@@ -470,7 +431,6 @@ const MealsPage: React.FC = () => {
         </p>
       </ConfirmModal>
 
-      {/* Bulk delete confirmation */}
       <ConfirmModal
         isOpen={showBulkDeleteConfirm}
         onClose={() => setShowBulkDeleteConfirm(false)}

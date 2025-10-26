@@ -315,6 +315,7 @@ const MealsPage: React.FC = () => {
                   onMultiSelect={isCardDisabled ? undefined : () => toggleMealSelection(meal.id)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
+                  variant="meal"
                 />
               ) : (
                 <EntityCard
@@ -331,6 +332,7 @@ const MealsPage: React.FC = () => {
                   onMultiSelect={isCardDisabled ? undefined : () => toggleMealSelection(meal.id)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
+                  variant="meal"
                   // viewMode prop is removed
                 />
               );

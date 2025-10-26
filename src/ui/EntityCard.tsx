@@ -37,42 +37,46 @@ interface EntityCardProps {
   linkTo?: string;
   description?: string;
   showMultiSelect?: boolean;
+  variant?: 'neutral' | 'meal' | 'info' | 'composition';
 }
 
 const EntityCard: React.FC<EntityCardProps> = ({
   title,
   subtitle,
   icon: Icon,
-  iconColor,
+  iconColor: _iconColor,
   details,
   menuItems,
   isSelected,
   isMultiSelected,
   onSelect,
   onMultiSelect,
-  borderColor,
+  borderColor: _borderColor,
   className,
   'data-testid': testId,
   linkTo,
   description,
   showMultiSelect = false,
+  variant = 'neutral',
 }) => {
+  const gradientByVariant: Record<NonNullable<EntityCardProps['variant']>, string> = {
+    neutral: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
+    info: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
+    composition: 'bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5',
+    meal: 'bg-gradient-to-br from-orange-500/5 via-amber-500/5 to-blue-500/5',
+  };
+
   const cardClasses = cn(
-    'block rounded-xl border p-4 transition-all duration-200 cursor-pointer relative border-l-[3px]',
-    'notion-shadow-xs hover:notion-shadow-sm',
+    'block rounded-xl border border-border p-6 transition-all duration-200 cursor-pointer relative',
+    gradientByVariant[variant],
     {
       // Selected state
-      'border-primary/40 bg-primary/5 hover:bg-primary/8 hover:border-primary/60 notion-shadow-sm border-l-primary':
-        isSelected,
+      'border-primary/50 bg-primary/10 hover:bg-primary/15 hover:border-primary/60': isSelected,
       // Default state
-      'border-border bg-card hover:bg-card-hover hover:border-border-hover border-l-border':
-        !isSelected,
+      'hover:bg-card-hover hover:border-border-hover': !isSelected,
     },
     className
   );
-
-  // Apply custom border color via inline style for higher precedence
-  const cardStyle = borderColor && !isSelected ? { borderLeftColor: borderColor } : {};
 
   const cardContent = (
     <>
@@ -99,24 +103,14 @@ const EntityCard: React.FC<EntityCardProps> = ({
               </button>
             </div>
           ) : (
-            <div
-              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors duration-200"
-              style={iconColor ? { backgroundColor: `${iconColor}1A` } : undefined}
-            >
-              {typeof Icon === 'function' ? (
-                <Icon />
-              ) : (
-                <Icon
-                  className="h-5 w-5 text-primary"
-                  style={iconColor ? { color: iconColor } : undefined}
-                />
-              )}
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors duration-200">
+              {typeof Icon === 'function' ? <Icon /> : <Icon className="h-4 w-4 text-primary" />}
             </div>
           )}
 
           <div className="min-w-0 flex-1">
             <h3
-              className="truncate text-base font-medium leading-snug text-foreground"
+              className="truncate text-lg font-semibold leading-snug text-foreground"
               title={title}
             >
               {title}
@@ -195,22 +189,16 @@ const EntityCard: React.FC<EntityCardProps> = ({
     'data-testid': testId,
   };
 
-  const borderStyle = borderColor
-    ? {
-        borderLeft: `3px solid ${borderColor}`,
-      }
-    : {};
-
   if (linkTo) {
     return (
-      <Link to={linkTo} className={cardClasses} style={cardStyle}>
+      <Link to={linkTo} className={cardClasses}>
         {cardContent}
       </Link>
     );
   }
 
   return (
-    <div className={cardClasses} style={cardStyle} {...interactiveProps}>
+    <div className={cardClasses} {...interactiveProps}>
       {cardContent}
     </div>
   );

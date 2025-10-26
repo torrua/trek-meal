@@ -17,12 +17,13 @@ interface EntityListItemProps {
   showMultiSelect?: boolean;
   borderColor?: string;
   'data-testid'?: string;
+  variant?: 'neutral' | 'meal' | 'info' | 'composition';
 }
 
 const EntityListItem: React.FC<EntityListItemProps> = ({
   title,
   icon: Icon,
-  iconColor,
+  iconColor: _iconColor,
   details,
   menuItems,
   isSelected,
@@ -30,21 +31,26 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
   onSelect,
   onMultiSelect,
   showMultiSelect = false,
-  borderColor,
+  borderColor: _borderColor,
   'data-testid': testId,
+  variant = 'neutral',
 }) => {
+  const gradientByVariant: Record<NonNullable<EntityListItemProps['variant']>, string> = {
+    neutral: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
+    info: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
+    composition: 'bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5',
+    meal: 'bg-gradient-to-br from-orange-500/5 via-amber-500/5 to-blue-500/5',
+  };
+
   const itemClasses = cn(
-    'group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all duration-200 border-l-[3px]',
+    'group flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left transition-all duration-200',
+    gradientByVariant[variant],
     {
-      'border-primary/40 bg-primary/5 hover:bg-primary/8 hover:border-primary/60 border-l-primary':
-        isSelected,
-      'border-border bg-card hover:bg-card-hover hover:border-border-hover border-l-border':
-        !isSelected,
+      'border-primary/50 bg-primary/10 hover:bg-primary/15 hover:border-primary/60': isSelected,
+      'hover:bg-card-hover hover:border-border-hover': !isSelected,
       'cursor-pointer': !!onSelect,
     }
   );
-
-  const itemStyle = borderColor && !isSelected ? { borderLeftColor: borderColor } : {};
 
   const interactiveProps = onSelect
     ? {
@@ -64,7 +70,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
     : {};
 
   return (
-    <div data-testid={testId} className={itemClasses} style={itemStyle} {...interactiveProps}>
+    <div data-testid={testId} className={itemClasses} {...interactiveProps}>
       {/* LOGIC CHANGE: Checkbox replaces the icon */}
       {showMultiSelect ? (
         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
@@ -86,11 +92,8 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
           </button>
         </div>
       ) : (
-        <div
-          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10"
-          style={iconColor ? { backgroundColor: `${iconColor}1A` } : {}}
-        >
-          <Icon className="h-4 w-4 text-primary" style={iconColor ? { color: iconColor } : {}} />
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <Icon className="h-4 w-4 text-primary" />
         </div>
       )}
 

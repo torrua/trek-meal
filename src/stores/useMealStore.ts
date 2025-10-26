@@ -11,6 +11,7 @@ interface MealStore {
   updateMeal: (id: number, mealData: Partial<MealData>) => void;
   removeMeal: (id: number) => void;
   getMealById: (id: number) => Meal | undefined;
+  getNextMealId: () => number;
 }
 
 export const useMealStore = create<MealStore>()(
@@ -49,6 +50,9 @@ export const useMealStore = create<MealStore>()(
       },
       getMealById: (id) => {
         return get().meals.find((m) => m.id === id);
+      },
+      getNextMealId: () => {
+        return get().nextId;
       },
     }),
     {

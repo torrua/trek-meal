@@ -302,7 +302,7 @@ const MealForm: React.FC<MealFormProps> = ({
   const activeItem = activeId ? watchItems.find((item, idx) => fields[idx].id === activeId) : null;
 
   return (
-    <div className="space-y-6 p-1">
+    <div className="space-y-6">
       <div className="p-6 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 border border-border rounded-xl">
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
           <div className="flex items-center gap-3">
@@ -320,7 +320,7 @@ const MealForm: React.FC<MealFormProps> = ({
             </Button>
           </div>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-4 pt-4">
           <Controller
             name="name"
             control={control}
@@ -490,7 +490,7 @@ const MealForm: React.FC<MealFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 pt-4">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}

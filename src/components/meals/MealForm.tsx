@@ -114,6 +114,7 @@ const MealForm: React.FC<MealFormProps> = ({
     formState: { errors },
     watch,
     setValue,
+    clearErrors,
   } = useForm<MealFormValues>({
     resolver: zodResolver(validationSchema),
     defaultValues: {
@@ -132,6 +133,15 @@ const MealForm: React.FC<MealFormProps> = ({
 
   const { fields, append, remove, move, update } = useFieldArray({ control, name: 'items' });
   const watchItems = watch('items');
+
+  const [validationErrors, setValidationErrors] = useState<{ name?: string; items?: string }>({});
+
+  useEffect(() => {
+    if (validationErrors.items && (watchItems?.length || 0) > 0) {
+      setValidationErrors((prev) => ({ ...prev, items: undefined }));
+      clearErrors('items');
+    }
+  }, [watchItems?.length, validationErrors.items, clearErrors, setValidationErrors]);
 
   useEffect(() => {
     if (showAddMenu && searchInputRef.current) {
@@ -299,8 +309,6 @@ const MealForm: React.FC<MealFormProps> = ({
     }
   };
 
-  const [validationErrors, setValidationErrors] = useState<{ name?: string; items?: string }>({});
-
   const processSubmit = useCallback(() => {
     const name = watch('name');
     const description = watch('description');
@@ -340,7 +348,7 @@ const MealForm: React.FC<MealFormProps> = ({
       items: watchItems.map(({ instanceId: _, ...item }) => item) as MealPlanItem[],
     };
     onSubmit(mealData);
-  }, [watch, watchItems, onSubmit, meals, meal?.id]);
+  }, [watch, watchItems, onSubmit, meals, meal?.id, setValidationErrors]);
 
   return (
     <div className="space-y-6">

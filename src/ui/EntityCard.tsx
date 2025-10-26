@@ -1,8 +1,11 @@
-import React from 'react';
+// EntityCard.tsx - обновленная версия
+
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import cn from 'classnames';
 import { MoreHorizontal, Check, Flame, Beef, Droplet, Wheat, Weight, Hash } from 'lucide-react';
 import DropdownMenu from './DropdownMenu';
+import './entityCard.css';
 
 export interface MenuItem {
   label: string;
@@ -31,6 +34,7 @@ interface EntityCardProps {
   isMultiSelected?: boolean;
   onSelect?: () => void;
   onMultiSelect?: (selected: boolean) => void;
+  onRequestMultiSelectMode?: () => void;
   borderColor?: string;
   className?: string;
   'data-testid'?: string;
@@ -59,6 +63,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
   isMultiSelected,
   onSelect,
   onMultiSelect,
+  onRequestMultiSelectMode,
   borderColor: _borderColor,
   className,
   'data-testid': testId,
@@ -68,6 +73,52 @@ const EntityCard: React.FC<EntityCardProps> = ({
   variant = 'neutral',
   nutrition,
 }) => {
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const nutritionRef = useRef<HTMLDivElement | null>(null);
+  const [showBju, setShowBju] = useState(true);
+  const measureTimeoutRef = useRef<number>();
+
+  useEffect(() => {
+    const el = nutritionRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      // Отменяем предыдущий таймаут, чтобы избежать множественных измерений
+      if (measureTimeoutRef.current) {
+        window.clearTimeout(measureTimeoutRef.current);
+      }
+
+      // Debounce: измеряем через небольшую задержку
+      measureTimeoutRef.current = window.setTimeout(() => {
+        // Проверяем, помещается ли полная версия
+        const testDiv = el.cloneNode(true) as HTMLElement;
+        testDiv.style.position = 'absolute';
+        testDiv.style.visibility = 'hidden';
+        testDiv.style.width = `${el.clientWidth}px`;
+        testDiv.classList.add('show-bju');
+        el.parentElement?.appendChild(testDiv);
+
+        const fits = testDiv.scrollWidth <= testDiv.clientWidth + 2; // +2px погрешность
+        el.parentElement?.removeChild(testDiv);
+
+        setShowBju(fits);
+      }, 50);
+    };
+
+    // Первоначальное измерение
+    measure();
+
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+
+    return () => {
+      ro.disconnect();
+      if (measureTimeoutRef.current) {
+        window.clearTimeout(measureTimeoutRef.current);
+      }
+    };
+  }, [nutrition]);
+
   const gradientByVariant: Record<NonNullable<EntityCardProps['variant']>, string> = {
     neutral: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
     info: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
@@ -79,9 +130,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
     'block rounded-xl border border-border p-6 transition-all duration-200 cursor-pointer relative',
     gradientByVariant[variant],
     {
-      // Selected state
       'border-primary/50 bg-primary/10 hover:bg-primary/15 hover:border-primary/60': isSelected,
-      // Default state
       'hover:bg-card-hover hover:border-border-hover': !isSelected,
     },
     className
@@ -90,8 +139,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
   const cardContent = (
     <>
       <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-start gap-3">
-          {/* LOGIC CHANGE: Checkbox replaces the icon */}
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           {showMultiSelect ? (
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
               <button
@@ -112,7 +160,14 @@ const EntityCard: React.FC<EntityCardProps> = ({
               </button>
             </div>
           ) : (
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors duration-200">
+            <div
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors duration-200"
+              onDoubleClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRequestMultiSelectMode?.();
+              }}
+            >
               {typeof Icon === 'function' ? <Icon /> : <Icon className="h-4 w-4 text-primary" />}
             </div>
           )}
@@ -172,12 +227,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
       {nutrition && (
         <div className="mt-3 border-t border-border pt-3">
-          <div
-            className={cn(
-              'grid w-full gap-2 text-sm justify-items-center',
-              typeof nutrition.itemsCount === 'number' ? 'grid-cols-6' : 'grid-cols-5'
-            )}
-          >
+          <div ref={nutritionRef} className={cn('cq-nutrition text-sm', showBju && 'show-bju')}>
             {typeof nutrition.itemsCount === 'number' && (
               <div className="flex items-center gap-1">
                 <Hash className="w-3.5 h-3.5 text-muted-foreground" />
@@ -192,21 +242,21 @@ const EntityCard: React.FC<EntityCardProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="bju items-center gap-1">
               <Beef className="w-3.5 h-3.5 text-blue-600" />
               <span className="font-semibold text-blue-600">
                 {Math.round(nutrition.proteins * 10) / 10}
               </span>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="bju items-center gap-1">
               <Droplet className="w-3.5 h-3.5 text-yellow-600" />
               <span className="font-semibold text-yellow-600">
                 {Math.round(nutrition.fats * 10) / 10}
               </span>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="bju items-center gap-1">
               <Wheat className="w-3.5 h-3.5 text-green-600" />
               <span className="font-semibold text-green-600">
                 {Math.round(nutrition.carbs * 10) / 10}
@@ -253,14 +303,14 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
   if (linkTo) {
     return (
-      <Link to={linkTo} className={cardClasses}>
+      <Link to={linkTo} ref={cardRef} className={cn(cardClasses, 'cq-card')}>
         {cardContent}
       </Link>
     );
   }
 
   return (
-    <div className={cardClasses} {...interactiveProps}>
+    <div ref={cardRef} className={cn(cardClasses, 'cq-card')} {...interactiveProps}>
       {cardContent}
     </div>
   );

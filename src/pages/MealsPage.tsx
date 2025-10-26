@@ -332,6 +332,12 @@ const MealsPage: React.FC = () => {
                   isMultiSelected={selectedMealIds.includes(meal.id)}
                   onSelect={isCardDisabled ? undefined : () => setActiveId(meal.id)}
                   onMultiSelect={isCardDisabled ? undefined : () => toggleMealSelection(meal.id)}
+                  onRequestMultiSelectMode={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedMealIds([meal.id]);
+                    }
+                  }}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                   variant="meal"
@@ -351,6 +357,12 @@ const MealsPage: React.FC = () => {
                   isMultiSelected={selectedMealIds.includes(meal.id)}
                   onSelect={isCardDisabled ? undefined : () => setActiveId(meal.id)}
                   onMultiSelect={isCardDisabled ? undefined : () => toggleMealSelection(meal.id)}
+                  onRequestMultiSelectMode={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedMealIds([meal.id]);
+                    }
+                  }}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                   variant="meal"

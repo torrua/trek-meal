@@ -1,0 +1,34 @@
+/* Container Queries for EntityCard */
+.cq-card {
+  container-type: inline-size;
+}
+
+/* Nutrition grid defaults: small widths */
+.cq-nutrition {
+  display: grid;
+  width: 100%;
+  gap: 0.25rem; /* tighter spacing so metrics fit longer */
+  justify-items: center;
+  grid-auto-flow: column; /* keep a single row */
+  align-items: center;
+  white-space: nowrap; /* avoid wrapping inside cells */
+  font-variant-numeric: tabular-nums;
+}
+/* Compact (hidden B/J/U): count auto | kcal fixed | weight auto */
+.cq-nutrition.has-items-count { grid-template-columns: auto 3.25rem auto; }
+.cq-nutrition.no-items-count { grid-template-columns: 3.25rem auto; }
+.cq-nutrition .bju { display: none; }
+
+/* When JS toggles .show-bju, expand to full set and display B/J/U */
+.cq-nutrition.show-bju.has-items-count { grid-template-columns: auto 3.25rem 3.25rem 3.25rem 3.25rem auto; }
+.cq-nutrition.show-bju.no-items-count { grid-template-columns: 3.25rem 3.25rem 3.25rem 3.25rem auto; }
+.cq-nutrition.show-bju .bju { display: flex; }
+
+/* Mid widths: hide B/J/U and collapse to 3/2 columns */
+/* Large containers: show full set in one row */
+@container (min-width: 1000px) {
+  .cq-nutrition.has-items-count { grid-template-columns: auto 4.5rem 4.5rem 4.5rem 4.5rem auto; }
+  .cq-nutrition.no-items-count { grid-template-columns: 4.5rem 4.5rem 4.5rem 4.5rem auto; }
+  .cq-nutrition.no-items-count { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .cq-nutrition .bju { display: flex; }
+}

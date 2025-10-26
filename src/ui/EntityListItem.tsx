@@ -23,6 +23,7 @@ interface EntityListItemProps {
     weight: number;
     itemsCount?: number;
   };
+  onRequestMultiSelectMode?: () => void;
 }
 
 const EntityListItem: React.FC<EntityListItemProps> = ({
@@ -40,6 +41,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
   'data-testid': testId,
   variant = 'neutral',
   nutrition,
+  onRequestMultiSelectMode,
 }) => {
   const gradientByVariant: Record<NonNullable<EntityListItemProps['variant']>, string> = {
     neutral: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
@@ -98,7 +100,14 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
           </button>
         </div>
       ) : (
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+        <div
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10"
+          onDoubleClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRequestMultiSelectMode?.();
+          }}
+        >
           <Icon className="h-4 w-4 text-primary" />
         </div>
       )}

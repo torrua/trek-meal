@@ -241,10 +241,32 @@ select {
 
 /* Fixed dropdown scrollbar */
 .fixed-dropdown-scrollbar {
+  overflow-y: auto;
+  max-height: 300px;
   scrollbar-width: thin;
   scrollbar-color: rgb(var(--muted-foreground) / 0.3) transparent;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  /* Force hardware acceleration */
+  transform: translateZ(0);
+  will-change: scroll-position;
+  /* Ensure proper stacking */
+  position: relative;
+  z-index: 1;
+  /* Additional properties for better scrolling */
+  scroll-behavior: smooth;
+}
+
+/* Additional styles for absolute positioned dropdowns */
+.absolute-dropdown-scrollbar {
+  @apply fixed-dropdown-scrollbar;
+}
+
+/* Fixed dropdown container - ensures proper stacking */
+.fixed-dropdown-container {
+  position: fixed !important;
+  z-index: 9999 !important;
+  pointer-events: auto !important;
 }
 
 .fixed-dropdown-scrollbar::-webkit-scrollbar {
@@ -271,4 +293,17 @@ select {
 /* Prevent body scroll when dropdown is open */
 body.dropdown-open {
   overflow: hidden !important;
+}
+
+body.dropdown-open html {
+  overflow: hidden !important;
+}
+
+/* Restore normal overflow when dropdown is closed */
+body:not(.dropdown-open) main {
+  overflow-y: auto !important;
+}
+
+body:not(.dropdown-open) .max-w-screen-2xl {
+  overflow: visible !important;
 }

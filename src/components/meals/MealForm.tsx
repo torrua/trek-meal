@@ -80,6 +80,7 @@ const MealForm: React.FC<MealFormProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const nameInputRef = useRef<HTMLInputElement | null>(null);
   const searchInputRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -119,6 +120,46 @@ const MealForm: React.FC<MealFormProps> = ({
   });
   const { fields, append, remove, move, update } = useFieldArray({ control, name: 'items' });
   const watchItems = watch('items');
+
+  useEffect(() => {
+    if (showAddMenu && searchInputRef.current) {
+      const rect = searchInputRef.current.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+      setDropdownPosition({
+        top: rect.bottom + scrollTop + 8,
+        left: rect.left + scrollLeft,
+        width: rect.width,
+      });
+    }
+  }, [showAddMenu]);
+
+  useEffect(() => {
+    if (!showAddMenu) return;
+
+    const handlePositionUpdate = () => {
+      if (searchInputRef.current) {
+        const rect = searchInputRef.current.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+        setDropdownPosition({
+          top: rect.bottom + scrollTop + 8,
+          left: rect.left + scrollLeft,
+          width: rect.width,
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handlePositionUpdate, true);
+    window.addEventListener('resize', handlePositionUpdate);
+
+    return () => {
+      window.removeEventListener('scroll', handlePositionUpdate, true);
+      window.removeEventListener('resize', handlePositionUpdate);
+    };
+  }, [showAddMenu]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -370,22 +411,27 @@ const MealForm: React.FC<MealFormProps> = ({
           {showAddMenu && searchInputRef.current && (
             <div
               ref={dropdownRef}
-              className="fixed z-[1000] bg-card border border-border rounded-lg shadow-2xl overflow-hidden"
+              className="fixed-dropdown-container bg-card border border-border rounded-lg shadow-2xl overflow-hidden"
               style={{
-                top: `${searchInputRef.current.getBoundingClientRect().bottom + 8}px`,
-                left: `${searchInputRef.current.getBoundingClientRect().left}px`,
-                width: `${searchInputRef.current.getBoundingClientRect().width}px`,
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+                width: `${dropdownPosition.width}px`,
                 maxHeight: '300px',
+              }}
+              onWheel={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                const scrollContainer = dropdownRef.current?.querySelector(
+                  '.absolute-dropdown-scrollbar'
+                ) as HTMLElement;
+                if (scrollContainer) {
+                  scrollContainer.scrollTop += e.deltaY;
+                }
               }}
             >
               <div
-                className="p-2 h-[300px] fixed-dropdown-scrollbar"
+                className="p-2 absolute-dropdown-scrollbar"
                 tabIndex={0}
-                onWheel={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  // Прокрутка будет работать автоматически благодаря overflow-y-auto
-                }}
                 onTouchMove={(e) => {
                   e.stopPropagation();
                 }}

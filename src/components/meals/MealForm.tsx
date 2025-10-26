@@ -378,10 +378,10 @@ const MealForm: React.FC<MealFormProps> = ({
                     meal ? 'Например, Завтрак, Обед, Ужин...' : 'Приём пищи (можно изменить)'
                   }
                   autoFocus
-                  className={`w-full px-3 py-2 bg-input border ${
+                  className={`w-full px-3 py-2.5 bg-card border ${
                     validationErrors.name || errors.name?.message
                       ? 'border-danger focus:ring-danger/50'
-                      : 'border-input-border focus:ring-primary/50'
+                      : 'border-border focus:ring-primary/50'
                   } rounded-lg text-sm focus:outline-none focus:ring-2 transition-all`}
                 />
                 {(validationErrors.name || errors.name?.message) && (

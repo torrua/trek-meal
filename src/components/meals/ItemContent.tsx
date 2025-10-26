@@ -323,12 +323,12 @@ const ItemContent: React.FC<ItemContentProps> = ({
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Input
+              <input
                 type="number"
                 value={customWeight}
                 onChange={(e) => setCustomWeight(e.target.value)}
                 placeholder="Вес в граммах"
-                className="flex-1 text-sm"
+                className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 min="1"
                 autoFocus
                 onKeyDown={(e) => {
@@ -342,17 +342,24 @@ const ItemContent: React.FC<ItemContentProps> = ({
                   }
                 }}
               />
-              <Button type="button" variant="primary" size="sm" onClick={handleCustomWeightSave}>
+              <Button
+                type="button"
+                variant="primary"
+                size="icon-sm"
+                onClick={handleCustomWeightSave}
+                title="Подтвердить"
+              >
                 <Check className="w-3.5 h-3.5" />
               </Button>
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => {
                   setCustomWeight(item.weight?.toString() || '');
                   setIsEditingWeight(false);
                 }}
+                title="Отмена"
               >
                 <X className="w-3.5 h-3.5" />
               </Button>

@@ -311,8 +311,8 @@ const MealDetail: React.FC<MealDetailProps> = ({
   onToggleSection,
   onStartEdit,
   onFinishEdit,
-  editSubmitTrigger,
-  editCancelTrigger,
+  editSubmitTrigger: _editSubmitTrigger,
+  editCancelTrigger: _editCancelTrigger,
 }) => {
   const { products } = useProductStore();
   const { dishes } = useDishStore();
@@ -411,10 +411,8 @@ const MealDetail: React.FC<MealDetailProps> = ({
             meal={meal}
             onSubmit={handleSave}
             onCancel={handleCancelEdit}
-            inline
-            focusName
-            externalSubmitTrigger={editSubmitTrigger}
-            externalCancelTrigger={editCancelTrigger}
+            inline={true}
+            focusName={true}
           />
         </div>
       ) : (

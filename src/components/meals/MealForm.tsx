@@ -1,5 +1,5 @@
-// src/components/meals/MealForm.tsx
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+// src/components/meals/MealForm.tsx - Improved version
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,7 +8,6 @@ import {
   Utensils,
   Info,
   Search,
-  TrendingUp,
   Hash,
   Component,
   Soup,
@@ -16,7 +15,6 @@ import {
   Beef,
   Droplet,
   Wheat,
-  Scale,
   Weight,
 } from 'lucide-react';
 import {
@@ -62,27 +60,19 @@ interface MealFormProps {
   onSubmit: (data: MealData) => void;
   onCancel: () => void;
   defaultName?: string;
-}
-
-interface MealFormUXProps extends MealFormProps {
   /** If true, the form is rendered inline (not in a modal) and should use shorter button labels */
   inline?: boolean;
   /** If true, focus name input on mount */
   focusName?: boolean;
-  /** External triggers to programmatically submit or cancel the form */
-  externalSubmitTrigger?: number;
-  externalCancelTrigger?: number;
 }
 
-const MealForm: React.FC<MealFormUXProps> = ({
+const MealForm: React.FC<MealFormProps> = ({
   meal,
   onSubmit,
   onCancel,
   defaultName,
   inline = false,
   focusName = false,
-  externalSubmitTrigger,
-  externalCancelTrigger,
 }) => {
   const { products } = useProductStore();
   const { dishes } = useDishStore();
@@ -90,9 +80,18 @@ const MealForm: React.FC<MealFormUXProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
   const searchInputRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleEditItem = (item: any) => {
+  useEffect(() => {
+    if (focusName && nameInputRef.current) {
+      // small timeout to ensure input is mounted
+      setTimeout(() => nameInputRef.current && nameInputRef.current.focus(), 50);
+    }
+  }, [focusName]);
+
+  const handleEditItem = (item: { type: 'product' | 'dish'; itemId: number }) => {
     if (item.type === 'product') {
       const product = products.find((p) => p.id === item.itemId);
       if (product) {
@@ -121,26 +120,36 @@ const MealForm: React.FC<MealFormUXProps> = ({
   const { fields, append, remove, move, update } = useFieldArray({ control, name: 'items' });
   const watchItems = watch('items');
 
-  const nameInputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (focusName && nameInputRef.current) {
-      // small timeout to ensure input is mounted
-      setTimeout(() => nameInputRef.current && nameInputRef.current.focus(), 50);
-    }
-  }, [focusName]);
-
-  // Close search dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isInsideSearchArea = searchInputRef.current?.contains(target);
+      const isInsideDropdown = dropdownRef.current?.contains(target);
+
+      if (!isInsideSearchArea && !isInsideDropdown) {
         setShowAddMenu(false);
       }
     };
 
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowAddMenu(false);
+        setSearchQuery('');
+      }
+    };
+
     if (showAddMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      // Small delay to avoid closing immediately when clicking on input
+      const timer = setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscapeKey);
+      }, 100);
+
+      return () => {
+        clearTimeout(timer);
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscapeKey);
+      };
     }
   }, [showAddMenu]);
 
@@ -179,12 +188,11 @@ const MealForm: React.FC<MealFormUXProps> = ({
   }, [watchItems, products, dishes]);
 
   const handleAddItem = (itemId: number, type: 'product' | 'dish') => {
-    let defaultWeight = 100; // Default weight for both products and dishes
+    let defaultWeight = 100;
     if (type === 'product') {
       const product = products.find((p) => p.id === itemId);
       defaultWeight = product && product.portions.length > 0 ? product.portions[0].weight : 100;
     } else if (type === 'dish') {
-      // For dishes, we can calculate the total weight of all ingredients as default
       const dish = dishes.find((d) => d.id === itemId);
       if (dish) {
         defaultWeight = dish.products.reduce((sum, p) => sum + p.weight, 0) || 100;
@@ -200,8 +208,10 @@ const MealForm: React.FC<MealFormUXProps> = ({
     setSearchQuery('');
   };
 
-  const updateItemWeight = (index: number, weight: number) => {
-    // Only allow weight updates for products, not dishes
+  const updateItemWeight: (index: number, weight: number) => void = (
+    index: number,
+    weight: number
+  ) => {
     if (watchItems[index].type === 'product') {
       const updatedItem = { ...watchItems[index], weight };
       update(index, updatedItem);
@@ -211,7 +221,7 @@ const MealForm: React.FC<MealFormUXProps> = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5,
       },
     })
   );
@@ -230,7 +240,7 @@ const MealForm: React.FC<MealFormUXProps> = ({
     }
   };
 
-  const processSubmit = () => {
+  const processSubmit = useCallback(() => {
     const name = watch('name');
     const description = watch('description');
     if (!name.trim() || watchItems.length === 0) return;
@@ -240,262 +250,240 @@ const MealForm: React.FC<MealFormUXProps> = ({
       items: watchItems.map(({ instanceId: _, ...item }) => item) as MealPlanItem[],
     };
     onSubmit(mealData);
-  };
-
-  // If parent wants to submit programmatically, react to trigger changes
-  const externalSubmitRef = useRef<number | undefined>(undefined);
-  useEffect(() => {
-    if (typeof externalSubmitTrigger === 'number') {
-      if (
-        externalSubmitRef.current !== undefined &&
-        externalSubmitRef.current !== externalSubmitTrigger
-      ) {
-        processSubmit();
-      }
-      externalSubmitRef.current = externalSubmitTrigger;
-    }
-  }, [externalSubmitTrigger]);
-
-  // External cancel trigger
-  const externalCancelRef = useRef<number | undefined>(undefined);
-  useEffect(() => {
-    if (typeof externalCancelTrigger === 'number') {
-      if (
-        externalCancelRef.current !== undefined &&
-        externalCancelRef.current !== externalCancelTrigger
-      ) {
-        onCancel();
-      }
-      externalCancelRef.current = externalCancelTrigger;
-    }
-  }, [externalCancelTrigger]);
+  }, [watch, watchItems, onSubmit]);
 
   const activeItem = activeId ? watchItems.find((item, idx) => fields[idx].id === activeId) : null;
 
   return (
-    <>
-      <div className="space-y-6 p-1">
-        <div className="p-6 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 border border-border rounded-xl">
-          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
+    <div className="space-y-6 p-1">
+      <div className="p-6 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 border border-border rounded-xl">
+        <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
+          <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Info className="w-4 h-4 text-primary" />
             </div>
             <h2 className="text-lg font-semibold">Основная информация</h2>
           </div>
-          <div className="space-y-4">
-            <Controller
-              name="name"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  label="Название приёма пищи"
-                  error={errors.name?.message}
-                  placeholder="Например, Завтрак, Обед, Ужин..."
-                  ref={nameInputRef}
-                />
-              )}
-            />
-            <Controller
-              name="description"
-              control={control}
-              render={({ field }) => (
-                <Textarea
-                  {...field}
-                  label="Краткое описание"
-                  rows={3}
-                  placeholder="Добавьте заметки или комментарии..."
-                />
-              )}
-            />
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="ghost" onClick={onCancel}>
+              Отмена
+            </Button>
+            <Button type="button" variant="primary" onClick={processSubmit} icon={Utensils}>
+              {meal ? 'Сохранить изменения' : 'Создать приём пищи'}
+            </Button>
           </div>
         </div>
+        <div className="space-y-4">
+          <Controller
+            name="name"
+            control={control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                label="Название приёма пищи"
+                error={errors.name?.message}
+                placeholder="Например, Завтрак, Обед, Ужин..."
+                autoFocus
+              />
+            )}
+          />
+          <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+              <Textarea
+                {...field}
+                label="Краткое описание"
+                rows={3}
+                placeholder="Добавьте заметки или комментарии..."
+              />
+            )}
+          />
+        </div>
+      </div>
 
-        <div className="p-6 bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 border border-border rounded-xl">
-          <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
-            <div className="flex items-center gap-3 flex-1">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                <Utensils className="w-4 h-4 text-primary" />
-              </div>
-              <h2 className="text-lg font-semibold">Состав</h2>
-              {watchItems.length > 0 && (
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Hash className="w-3.5 h-3.5" />
-                  {watchItems.length}
-                </span>
-              )}
+      <div className="p-6 bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 border border-border rounded-xl">
+        <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Utensils className="w-4 h-4 text-primary" />
             </div>
-
+            <h2 className="text-lg font-semibold">Состав</h2>
             {watchItems.length > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg border border-border">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="flex items-center gap-1">
-                    <Flame className="w-3.5 h-3.5 text-orange-600" />
-                    <span className="font-semibold text-orange-600">{totalNutrition.calories}</span>
-                  </div>
-                  <div className="w-px h-4 bg-border" />
-                  <div className="flex items-center gap-1">
-                    <Beef className="w-3.5 h-3.5 text-blue-600" />
-                    <span className="font-semibold text-blue-600">{totalNutrition.proteins}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Droplet className="w-3.5 h-3.5 text-yellow-600" />
-                    <span className="font-semibold text-yellow-600">{totalNutrition.fats}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Wheat className="w-3.5 h-3.5 text-green-600" />
-                    <span className="font-semibold text-green-600">{totalNutrition.carbs}</span>
-                  </div>
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Hash className="w-3.5 h-3.5" />
+                {watchItems.length}
+              </span>
+            )}
+          </div>
+
+          {watchItems.length > 0 && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg border border-border">
+              <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-1">
+                  <Flame className="w-3.5 h-3.5 text-orange-600" />
+                  <span className="font-semibold text-orange-600">{totalNutrition.calories}</span>
                 </div>
                 <div className="w-px h-4 bg-border" />
                 <div className="flex items-center gap-1">
-                  <Weight className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="font-semibold text-muted-foreground text-sm">
-                    {watchItems.reduce((total, item) => total + (item.weight || 0), 0)}
-                  </span>
+                  <Beef className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="font-semibold text-blue-600">{totalNutrition.proteins}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Droplet className="w-3.5 h-3.5 text-yellow-600" />
+                  <span className="font-semibold text-yellow-600">{totalNutrition.fats}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Wheat className="w-3.5 h-3.5 text-green-600" />
+                  <span className="font-semibold text-green-600">{totalNutrition.carbs}</span>
                 </div>
               </div>
-            )}
-          </div>
-
-          <div className="relative mb-4" ref={searchInputRef}>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setShowAddMenu(true)}
-                placeholder="Найти продукт или блюдо..."
-                className="w-full pl-10 pr-3 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/60 transition-all"
-              />
+              <div className="w-px h-4 bg-border" />
+              <div className="flex items-center gap-1">
+                <Weight className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="font-semibold text-muted-foreground text-sm">
+                  {watchItems.reduce((total, item) => total + (item.weight || 0), 0)}
+                </span>
+              </div>
             </div>
-
-            {showAddMenu && (
-              <div className="absolute z-20 w-full mt-2 bg-card border border-border rounded-lg shadow-lg overflow-hidden">
-                <div className="p-2 max-h-80 overflow-y-auto">
-                  {filteredDishes.length === 0 && filteredProducts.length === 0 ? (
-                    <div className="px-3 py-8 text-center text-sm text-muted-foreground">
-                      Ничего не найдено
-                    </div>
-                  ) : (
-                    <>
-                      {filteredDishes.length > 0 && (
-                        <div className="mb-2">
-                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
-                            <Soup className="w-3.5 h-3.5 text-orange-500" />
-                            Блюда ({filteredDishes.length})
-                          </div>
-                          {filteredDishes.map((dish) => (
-                            <button
-                              key={dish.id}
-                              type="button"
-                              onClick={() => handleAddItem(dish.id, 'dish')}
-                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
-                            >
-                              <Soup className="w-3.5 h-3.5 text-orange-500" />
-                              {dish.name}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      {filteredProducts.length > 0 && (
-                        <div>
-                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
-                            <Component className="w-3.5 h-3.5 text-blue-500" />
-                            Продукты ({filteredProducts.length})
-                          </div>
-                          {filteredProducts.map((product) => (
-                            <button
-                              key={product.id}
-                              type="button"
-                              onClick={() => handleAddItem(product.id, 'product')}
-                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
-                            >
-                              <Component className="w-3.5 h-3.5 text-blue-500" />
-                              {product.name}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={fields.map((f) => f.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {fields.map((field, index) => (
-                  <SortableItemComponent
-                    key={field.id}
-                    id={field.id}
-                    index={index}
-                    item={watchItems[index]}
-                    products={products}
-                    dishes={dishes}
-                    onRemove={remove}
-                    onUpdateWeight={updateItemWeight}
-                    onEditItem={handleEditItem}
-                  />
-                ))}
-              </SortableContext>
-              <DragOverlay>
-                {activeId && activeItem ? (
-                  <div className="bg-card border border-border rounded-lg p-3 shadow-lg opacity-100">
-                    <ItemContent
-                      item={activeItem}
-                      products={products}
-                      dishes={dishes}
-                      showActions={false}
-                    />
-                  </div>
-                ) : null}
-              </DragOverlay>
-            </DndContext>
-            {watchItems.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">Добавьте продукты или блюда</p>
-                <p className="text-xs mt-1">Перетаскивайте элементы для изменения порядка</p>
-              </div>
-            )}
-            {errors.items && (
-              <p className="text-sm text-danger mt-2 flex items-center gap-2">
-                <Info className="w-4 h-4" />
-                {errors.items.message || errors.items.root?.message}
-              </p>
-            )}
-          </div>
+          )}
         </div>
 
+        <div className="relative mb-4" ref={searchInputRef}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setShowAddMenu(true)}
+              placeholder="Найти продукт или блюдо..."
+              className="w-full pl-10 pr-3 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/60 transition-all"
+            />
+          </div>
+
+          {showAddMenu && (
+            <div
+              ref={dropdownRef}
+              className="absolute z-20 w-full mt-2 bg-card border border-border rounded-lg shadow-lg overflow-hidden animate-notion-fade"
+            >
+              <div className="p-2 max-h-80 overflow-y-auto notion-scrollbar">
+                {filteredDishes.length === 0 && filteredProducts.length === 0 ? (
+                  <div className="px-3 py-8 text-center text-sm text-muted-foreground">
+                    Ничего не найдено
+                  </div>
+                ) : (
+                  <>
+                    {filteredDishes.length > 0 && (
+                      <div className="mb-2">
+                        <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                          <Soup className="w-3.5 h-3.5 text-orange-500" />
+                          Блюда ({filteredDishes.length})
+                        </div>
+                        {filteredDishes.map((dish) => (
+                          <button
+                            key={dish.id}
+                            type="button"
+                            onClick={() => handleAddItem(dish.id, 'dish')}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
+                          >
+                            <Soup className="w-3.5 h-3.5 text-orange-500" />
+                            {dish.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {filteredProducts.length > 0 && (
+                      <div>
+                        <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                          <Component className="w-3.5 h-3.5 text-blue-500" />
+                          Продукты ({filteredProducts.length})
+                        </div>
+                        {filteredProducts.map((product) => (
+                          <button
+                            key={product.id}
+                            type="button"
+                            onClick={() => handleAddItem(product.id, 'product')}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
+                          >
+                            <Component className="w-3.5 h-3.5 text-blue-500" />
+                            {product.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+              {fields.map((field, index) => (
+                <SortableItemComponent
+                  key={field.id}
+                  id={field.id}
+                  index={index}
+                  item={watchItems[index]}
+                  products={products}
+                  dishes={dishes}
+                  onRemove={remove}
+                  onUpdateWeight={updateItemWeight}
+                  onEditItem={handleEditItem}
+                />
+              ))}
+            </SortableContext>
+            <DragOverlay>
+              {activeId && activeItem ? (
+                <div className="bg-card border-2 border-primary rounded-lg p-3 shadow-2xl opacity-95">
+                  <ItemContent
+                    item={activeItem}
+                    products={products}
+                    dishes={dishes}
+                    showActions={false}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+          {watchItems.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">Добавьте продукты или блюда</p>
+              <p className="text-xs mt-1">Перетаскивайте элементы для изменения порядка</p>
+            </div>
+          )}
+          {errors.items && (
+            <p className="text-sm text-danger mt-2 flex items-center gap-2">
+              <Info className="w-4 h-4" />
+              {errors.items.message || errors.items.root?.message}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Buttons moved to header when in inline mode */}
+      {!inline && (
         <div className="flex justify-end gap-3 pt-4 border-t border-border">
           <Button type="button" variant="ghost" onClick={onCancel}>
             Отмена
           </Button>
           <Button type="button" variant="primary" onClick={processSubmit} icon={Utensils}>
-            {inline
-              ? meal
-                ? 'Сохранить'
-                : 'Создать'
-              : meal
-                ? 'Сохранить изменения'
-                : 'Создать приём пищи'}
+            {meal ? 'Сохранить изменения' : 'Создать приём пищи'}
           </Button>
         </div>
-      </div>
-    </>
+      )}
+    </div>
   );
 };
 
+export type { MealFormProps };
 export default MealForm;

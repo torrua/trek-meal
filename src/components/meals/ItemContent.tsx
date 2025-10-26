@@ -379,15 +379,15 @@ const ItemContent: React.FC<ItemContentProps> = ({
               {dishDetails.map((ingredient: any, idx: number) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between px-2 py-1 bg-muted/2 rounded text-xs"
+                  className="flex items-center justify-between px-3 py-1.5 bg-card border border-border rounded text-xs"
                 >
                   <span className="flex items-center gap-1.5">
-                    <Component className="w-3 h-3 text-blue-500" />
-                    <span className="text-foreground">{ingredient.name}</span>
+                    <Component className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-muted-foreground font-medium">{ingredient.name}</span>
                   </span>
-                  <span className="text-muted-foreground font-medium text-xs">
-                    <Weight className="w-3 h-3 inline mr-1" />
-                    {ingredient.weight}
+                  <span className="text-muted-foreground font-medium text-xs flex items-center gap-1">
+                    <Weight className="w-3 h-3" />
+                    {ingredient.weight} г
                   </span>
                 </div>
               ))}

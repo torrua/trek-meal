@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import cn from 'classnames';
-import { MoreHorizontal, Check } from 'lucide-react';
+import { MoreHorizontal, Check, Flame, Beef, Droplet, Wheat, Weight, Hash } from 'lucide-react';
 import DropdownMenu from './DropdownMenu';
 
 export interface MenuItem {
@@ -38,6 +38,14 @@ interface EntityCardProps {
   description?: string;
   showMultiSelect?: boolean;
   variant?: 'neutral' | 'meal' | 'info' | 'composition';
+  nutrition?: {
+    calories: number;
+    proteins: number;
+    fats: number;
+    carbs: number;
+    weight: number;
+    itemsCount?: number;
+  };
 }
 
 const EntityCard: React.FC<EntityCardProps> = ({
@@ -58,6 +66,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
   description,
   showMultiSelect = false,
   variant = 'neutral',
+  nutrition,
 }) => {
   const gradientByVariant: Record<NonNullable<EntityCardProps['variant']>, string> = {
     neutral: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
@@ -158,6 +167,59 @@ const EntityCard: React.FC<EntityCardProps> = ({
               </div>
             ))}
           </dl>
+        </div>
+      )}
+
+      {nutrition && (
+        <div className="mt-3 border-t border-border pt-3">
+          <div
+            className={cn(
+              'grid w-full gap-2 text-sm justify-items-center',
+              typeof nutrition.itemsCount === 'number' ? 'grid-cols-6' : 'grid-cols-5'
+            )}
+          >
+            {typeof nutrition.itemsCount === 'number' && (
+              <div className="flex items-center gap-1">
+                <Hash className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="font-semibold text-muted-foreground">{nutrition.itemsCount}</span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-1">
+              <Flame className="w-3.5 h-3.5 text-orange-600" />
+              <span className="font-semibold text-orange-600">
+                {Math.round(nutrition.calories)}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <Beef className="w-3.5 h-3.5 text-blue-600" />
+              <span className="font-semibold text-blue-600">
+                {Math.round(nutrition.proteins * 10) / 10}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <Droplet className="w-3.5 h-3.5 text-yellow-600" />
+              <span className="font-semibold text-yellow-600">
+                {Math.round(nutrition.fats * 10) / 10}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <Wheat className="w-3.5 h-3.5 text-green-600" />
+              <span className="font-semibold text-green-600">
+                {Math.round(nutrition.carbs * 10) / 10}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <Weight className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="font-semibold text-muted-foreground">
+                {Math.round(nutrition.weight)}
+              </span>
+            </div>
+          </div>
         </div>
       )}
     </>

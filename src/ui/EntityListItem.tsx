@@ -1,6 +1,6 @@
 import React from 'react';
 import cn from 'classnames';
-import { MoreHorizontal, Check } from 'lucide-react';
+import { MoreHorizontal, Check, Flame, Weight, Hash } from 'lucide-react';
 import type { MenuItem } from './EntityCard';
 import DropdownMenu from './DropdownMenu';
 
@@ -18,6 +18,11 @@ interface EntityListItemProps {
   borderColor?: string;
   'data-testid'?: string;
   variant?: 'neutral' | 'meal' | 'info' | 'composition';
+  nutrition?: {
+    calories: number;
+    weight: number;
+    itemsCount?: number;
+  };
 }
 
 const EntityListItem: React.FC<EntityListItemProps> = ({
@@ -34,6 +39,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
   borderColor: _borderColor,
   'data-testid': testId,
   variant = 'neutral',
+  nutrition,
 }) => {
   const gradientByVariant: Record<NonNullable<EntityListItemProps['variant']>, string> = {
     neutral: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
@@ -108,6 +114,31 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
                 <div className="font-medium">{detail}</div>
               </React.Fragment>
             ))}
+          </div>
+        )}
+
+        {nutrition && (
+          <div className="ml-auto flex items-center gap-2 text-xs">
+            {typeof nutrition.itemsCount === 'number' && (
+              <div className="flex items-center gap-1">
+                <Hash className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="font-semibold text-muted-foreground">{nutrition.itemsCount}</span>
+              </div>
+            )}
+            <div className="w-px h-4 bg-border" />
+            <div className="flex items-center gap-1">
+              <Flame className="w-3.5 h-3.5 text-orange-600" />
+              <span className="font-semibold text-orange-600">
+                {Math.round(nutrition.calories)}
+              </span>
+            </div>
+            <div className="w-px h-4 bg-border" />
+            <div className="flex items-center gap-1">
+              <Weight className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="font-semibold text-muted-foreground">
+                {Math.round(nutrition.weight)}
+              </span>
+            </div>
           </div>
         )}
       </div>

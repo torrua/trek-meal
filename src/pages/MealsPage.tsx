@@ -14,6 +14,8 @@ import {
   UploadCloud,
 } from 'lucide-react';
 import { useMealStore } from '../stores/useMealStore';
+import useProductStore from '../stores/useProductStore';
+import useDishStore from '../stores/useDishStore';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useViewMode } from '../hooks/useViewMode';
 import type { Meal, MealData } from '../types';
@@ -21,6 +23,7 @@ import Button from '../ui/Button';
 import EntityCard from '../ui/EntityCard';
 import EntityListItem from '../ui/EntityListItem'; // <<-- 1. Импортируем новый компонент
 import { mealEntityConfig } from '../config/mealEntityConfig';
+import { calculateNutrition } from '../components/meals/mealFormUtils';
 import Modal from '../ui/Modal';
 import ConfirmModal from '../ui/ConfirmModal';
 import MealForm from '../components/meals/MealForm';
@@ -30,6 +33,8 @@ import { generateUniqueMealName } from '../components/meals/mealFormUtils';
 
 const MealsPage: React.FC = () => {
   const { meals, addMeal, updateMeal, removeMeal, getNextMealId } = useMealStore();
+  const { products } = useProductStore();
+  const { dishes } = useDishStore();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { viewMode, toggleViewMode } = useViewMode('meals', 'default');
@@ -151,14 +156,7 @@ const MealsPage: React.FC = () => {
     console.log(`Exporting meals: ${selectedMealIds.join(', ')}`);
   };
 
-  const getMealDetails = (meal: Meal) => [
-    {
-      key: 'items',
-      icon: mealEntityConfig.getIcon(meal),
-      text: meal.items.length,
-      title: 'Компоненты',
-    },
-  ];
+  // details are no longer shown on cards; counts are included in nutrition block
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -278,6 +276,30 @@ const MealsPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)]">
             {meals.map((meal) => {
+              // Compute totals for nutrition and weight
+              let totalCalories = 0,
+                totalProteins = 0,
+                totalFats = 0,
+                totalCarbs = 0,
+                totalWeight = 0;
+
+              meal.items.forEach((item) => {
+                const n = calculateNutrition(item as any, products, dishes);
+                if (n) {
+                  totalCalories += n.calories;
+                  totalProteins += n.proteins;
+                  totalFats += n.fats;
+                  totalCarbs += n.carbs;
+                }
+                if (item.type === 'product') {
+                  totalWeight += (item as any).weight || 0;
+                } else if (item.type === 'dish') {
+                  const dish = dishes.find((d) => d.id === item.itemId);
+                  if (dish) {
+                    totalWeight += dish.products.reduce((sum, p) => sum + p.weight, 0);
+                  }
+                }
+              });
               const actions = mealEntityConfig
                 .getActions({
                   onEdit: () => handleEdit(meal),
@@ -306,8 +328,6 @@ const MealsPage: React.FC = () => {
                   key={meal.id}
                   title={mealEntityConfig.views.card.title(meal)}
                   icon={mealEntityConfig.getIcon(meal)}
-                  iconColor="#6b7280"
-                  details={[`${meal.items.length} комп.`]}
                   borderColor={mealEntityConfig.getBorderColor(meal)}
                   isSelected={activeId === meal.id}
                   isMultiSelected={selectedMealIds.includes(meal.id)}
@@ -316,15 +336,17 @@ const MealsPage: React.FC = () => {
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                   variant="meal"
+                  nutrition={{
+                    calories: Math.round(totalCalories),
+                    weight: Math.round(totalWeight),
+                    itemsCount: meal.items.length,
+                  }}
                 />
               ) : (
                 <EntityCard
                   key={meal.id}
                   title={mealEntityConfig.views.card.title(meal)}
-                  subtitle={`${meal.items.length} комп.`}
                   icon={mealEntityConfig.getIcon(meal)}
-                  iconColor="#6b7280"
-                  details={getMealDetails(meal)}
                   borderColor={mealEntityConfig.getBorderColor(meal)}
                   isSelected={activeId === meal.id}
                   isMultiSelected={selectedMealIds.includes(meal.id)}
@@ -333,6 +355,14 @@ const MealsPage: React.FC = () => {
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                   variant="meal"
+                  nutrition={{
+                    calories: Math.round(totalCalories),
+                    proteins: Math.round(totalProteins * 10) / 10,
+                    fats: Math.round(totalFats * 10) / 10,
+                    carbs: Math.round(totalCarbs * 10) / 10,
+                    weight: Math.round(totalWeight),
+                    itemsCount: meal.items.length,
+                  }}
                   // viewMode prop is removed
                 />
               );

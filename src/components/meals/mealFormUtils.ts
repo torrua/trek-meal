@@ -65,3 +65,19 @@ export const isMealNameUnique = (
 export const generateDefaultMealName = (nextId: number): string => {
   return `Приём пищи №${nextId}`;
 };
+
+// Helper to generate unique name with timestamp fallback
+export const generateUniqueMealName = (meals: Meal[], nextId: number): string => {
+  const baseName = `Приём пищи №${nextId}`;
+
+  // Check if this name already exists
+  const nameExists = meals.some((meal) => meal.name === baseName);
+
+  if (!nameExists) {
+    return baseName;
+  }
+
+  // If it exists, add timestamp suffix to ensure uniqueness
+  const timestamp = Date.now().toString().slice(-4);
+  return `${baseName}-${timestamp}`;
+};

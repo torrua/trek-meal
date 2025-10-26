@@ -26,6 +26,7 @@ import ConfirmModal from '../ui/ConfirmModal';
 import MealForm from '../components/meals/MealForm';
 import MealDetail from '../components/meals/MealDetail';
 import CreateMealButton from '../components/meals/CreateMealButton';
+import { generateDefaultMealName } from '../components/meals/mealFormUtils';
 
 const MealsPage: React.FC = () => {
   const { meals, addMeal, updateMeal, removeMeal, getNextMealId } = useMealStore();
@@ -61,7 +62,7 @@ const MealsPage: React.FC = () => {
   }, []);
 
   const generateMealName = useCallback(() => {
-    return `Приём пищи ${getNextMealId()}`;
+    return generateDefaultMealName(getNextMealId());
   }, [getNextMealId]);
 
   // Generate name when starting to create a new meal

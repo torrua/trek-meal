@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Meal, MealData } from '../types';
 import { toast } from 'react-hot-toast';
+import { isMealNameUnique } from '../components/meals/mealFormUtils';
 
 interface MealStore {
   meals: Meal[];
@@ -20,6 +21,14 @@ export const useMealStore = create<MealStore>()(
       meals: [],
       nextId: 1,
       addMeal: (mealData) => {
+        const existingMeals = get().meals;
+
+        // Check if meal name is unique
+        if (!isMealNameUnique(mealData.name, existingMeals)) {
+          toast.error(`Приём пищи с названием "${mealData.name}" уже существует`);
+          throw new Error(`Приём пищи с названием "${mealData.name}" уже существует`);
+        }
+
         const newMeal: Meal = {
           id: get().nextId,
           ...mealData,
@@ -32,6 +41,15 @@ export const useMealStore = create<MealStore>()(
         return newMeal;
       },
       updateMeal: (id, mealData) => {
+        const existingMeals = get().meals;
+        const currentMeal = existingMeals.find((m) => m.id === id);
+
+        // Check if meal name is unique (excluding current meal)
+        if (mealData.name && currentMeal && !isMealNameUnique(mealData.name, existingMeals, id)) {
+          toast.error(`Приём пищи с названием "${mealData.name}" уже существует`);
+          throw new Error(`Приём пищи с названием "${mealData.name}" уже существует`);
+        }
+
         set((state) => ({
           meals: state.meals.map((meal) => (meal.id === id ? { ...meal, ...mealData } : meal)),
         }));

@@ -1,7 +1,13 @@
 // src/components/meals/mealFormUtils.ts
-import type { Product, Dish } from '../../types';
+import type { Product, Dish, Meal } from '../../types';
 
-export const calculateNutrition = (item: any, products: Product[], dishes: Dish[]) => {
+type NutritionItem = {
+  type: 'product' | 'dish';
+  itemId: number;
+  weight?: number;
+};
+
+export const calculateNutrition = (item: NutritionItem, products: Product[], dishes: Dish[]) => {
   if (item.type === 'product') {
     const product = products.find((p) => p.id === item.itemId);
     if (!product || !item.weight) return null;
@@ -38,4 +44,24 @@ export const calculateNutrition = (item: any, products: Product[], dishes: Dish[
     };
   }
   return null;
+};
+
+export const isMealNameUnique = (
+  name: string,
+  existingMeals: Meal[],
+  excludeId?: number
+): boolean => {
+  if (!name || !name.trim()) return true; // Empty names are allowed
+
+  const normalizedName = name.trim().toLowerCase();
+  return !existingMeals.some((meal) => {
+    // Skip the current meal being edited
+    if (excludeId && meal.id === excludeId) return false;
+
+    return meal.name.trim().toLowerCase() === normalizedName;
+  });
+};
+
+export const generateDefaultMealName = (nextId: number): string => {
+  return `Приём пищи №${nextId}`;
 };

@@ -7,7 +7,7 @@ import type { MealData } from '../types';
 import { ArrowLeft, Utensils } from 'lucide-react';
 import Button from '../ui/Button';
 import MealDetail from '../components/meals/MealDetail';
-import { generateDefaultMealName } from '../components/meals/mealUtils';
+import { generateDefaultMealName } from '../components/meals/mealFormUtils';
 
 const MealDetailPage: React.FC = () => {
   const { mealId } = useParams<{ mealId: string }>();
@@ -18,7 +18,7 @@ const MealDetailPage: React.FC = () => {
 
   const numericId = !isNew && mealId ? parseInt(mealId, 10) : null;
 
-  const { getMealById, addMeal, updateMeal, meals } = useMealStore();
+  const { getMealById, addMeal, updateMeal, getNextMealId } = useMealStore();
 
   const meal = useMemo(() => (numericId ? getMealById(numericId) : null), [numericId, getMealById]);
   const [openSections, setOpenSections] = useState<string[]>(['main', 'items']);
@@ -48,7 +48,7 @@ const MealDetailPage: React.FC = () => {
   };
 
   // Generate default name for new meal
-  const defaultMealName = isNew ? generateDefaultMealName(meals.length) : undefined;
+  const defaultMealName = isNew ? generateDefaultMealName(getNextMealId()) : undefined;
 
   return (
     <div className="p-6 bg-background min-h-screen">

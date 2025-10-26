@@ -1,133 +1,134 @@
-// src/ui/EntityListItem.tsx
-
 import React from 'react';
 import cn from 'classnames';
+import { MoreHorizontal, Check } from 'lucide-react';
 import type { MenuItem } from './EntityCard';
+import DropdownMenu from './DropdownMenu';
 
 interface EntityListItemProps {
   title: string;
   icon: React.ElementType;
+  iconColor?: string;
   details?: (string | React.ReactNode)[];
   menuItems?: MenuItem[];
-  onClick?: () => void;
+  isSelected?: boolean;
+  isMultiSelected?: boolean;
+  onSelect?: () => void;
+  onMultiSelect?: (selected: boolean) => void;
+  showMultiSelect?: boolean;
   borderColor?: string;
-  tag?: {
-    text: string;
-    color?: string;
-  };
   'data-testid'?: string;
 }
 
 const EntityListItem: React.FC<EntityListItemProps> = ({
   title,
   icon: Icon,
+  iconColor,
   details,
   menuItems,
-  onClick,
+  isSelected,
+  isMultiSelected,
+  onSelect,
+  onMultiSelect,
+  showMultiSelect = false,
   borderColor,
-  tag,
   'data-testid': testId,
 }) => {
-  const hasMenu = menuItems && menuItems.length > 0;
+  const itemClasses = cn(
+    'group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all duration-200 border-l-[3px]',
+    {
+      'border-primary/40 bg-primary/5 hover:bg-primary/8 hover:border-primary/60 border-l-primary':
+        isSelected,
+      'border-border bg-card hover:bg-card-hover hover:border-border-hover border-l-border':
+        !isSelected,
+      'cursor-pointer': !!onSelect,
+    }
+  );
+
+  const itemStyle = borderColor && !isSelected ? { borderLeftColor: borderColor } : {};
+
+  const interactiveProps = onSelect
+    ? {
+        onClick: (e: React.MouseEvent) => {
+          if (showMultiSelect && onMultiSelect) {
+            e.preventDefault();
+            e.stopPropagation();
+            onMultiSelect(!isMultiSelected);
+          } else {
+            onSelect();
+          }
+        },
+        role: 'button',
+        tabIndex: 0,
+        'aria-pressed': isSelected,
+      }
+    : {};
 
   return (
-    <div
-      data-testid={testId}
-      onClick={onClick}
-      className={cn(
-        // Base styling with Notion-style hover effects
-        'group relative rounded-lg border transition-all duration-150',
-        'bg-card border-border hover:bg-card-hover hover:border-border-hover',
-
-        // Interactive states
-        onClick && 'cursor-pointer',
-
-        // Padding
-        'p-3'
+    <div data-testid={testId} className={itemClasses} style={itemStyle} {...interactiveProps}>
+      {/* LOGIC CHANGE: Checkbox replaces the icon */}
+      {showMultiSelect ? (
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onMultiSelect?.(!isMultiSelected);
+            }}
+            className={cn(
+              'flex h-5 w-5 items-center justify-center rounded border transition-all duration-200',
+              isMultiSelected
+                ? 'bg-primary border-primary text-primary-foreground'
+                : 'border-border bg-card hover:border-border-hover'
+            )}
+            aria-label={isMultiSelected ? 'Снять выделение' : 'Выделить'}
+          >
+            {isMultiSelected && <Check className="h-4 w-4" />}
+          </button>
+        </div>
+      ) : (
+        <div
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10"
+          style={iconColor ? { backgroundColor: `${iconColor}1A` } : {}}
+        >
+          <Icon className="h-4 w-4 text-primary" style={iconColor ? { color: iconColor } : {}} />
+        </div>
       )}
-      style={{
-        borderLeftWidth: borderColor ? '3px' : undefined,
-        borderLeftColor: borderColor || undefined,
-      }}
-      tabIndex={onClick ? 0 : undefined}
-      role={onClick ? 'button' : undefined}
-      onKeyDown={
-        onClick
-          ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onClick();
-              }
-            }
-          : undefined
-      }
-    >
-      <div className="flex items-center gap-3 min-h-[1.5rem]">
-        {/* Icon */}
-        <div className="flex-shrink-0 w-8 h-8 rounded-md bg-muted/60 border border-border flex items-center justify-center">
-          <Icon className="w-4 h-4 text-muted-foreground" />
-        </div>
 
-        {/* Title and Tag */}
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <h3 className="text-sm font-medium text-foreground truncate">{title}</h3>
-
-          {/* Tag */}
-          {tag && (
-            <span
-              className="px-2 py-0.5 text-[11px] font-medium rounded-full flex-shrink-0"
-              style={{
-                backgroundColor: tag.color || '#3b82f6',
-                color: '#ffffff',
-              }}
-            >
-              {tag.text}
-            </span>
-          )}
-        </div>
-
-        {/* Details */}
+      {/* Основной контент */}
+      <div className="flex min-w-0 flex-1 items-center gap-4">
+        <h3 className="truncate text-sm font-medium text-foreground">{title}</h3>
         {details && details.length > 0 && (
-          <div className="hidden sm:flex items-center gap-3 text-[12px] text-muted-foreground flex-shrink-0">
+          <div className="hidden flex-shrink-0 items-center gap-3 text-xs text-muted-foreground md:flex">
             {details.map((detail, index) => (
               <React.Fragment key={index}>
-                {index > 0 && <span className="text-muted-foreground/40 select-none">•</span>}
+                {index > 0 && <span className="select-none text-muted-foreground/40">•</span>}
                 <div className="font-medium">{detail}</div>
               </React.Fragment>
             ))}
           </div>
         )}
-
-        {/* Action Menu */}
-        {hasMenu && (
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 flex-shrink-0">
-            {menuItems.map((item) => (
-              <button
-                key={item.label}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!item.disabled) {
-                    item.onClick(e);
-                  }
-                }}
-                disabled={item.disabled}
-                className={cn(
-                  'p-1.5 rounded-md transition-all duration-200',
-                  'hover:bg-muted/60 active:scale-95',
-                  item.disabled && 'opacity-50 cursor-not-allowed',
-                  item.className
-                    ? 'text-danger hover:bg-danger/10'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-                title={item.label}
-                aria-label={item.label}
-              >
-                <item.icon className="w-4 h-4" />
-              </button>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Меню действий */}
+      {menuItems && menuItems.length > 0 && (
+        <div className="ml-auto pl-2">
+          <DropdownMenu
+            items={menuItems}
+            trigger={
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="rounded-lg p-2 text-muted-foreground transition-all duration-200 hover:bg-muted/60 hover:text-foreground group-hover:opacity-100 lg:opacity-0"
+                aria-label="More options"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            }
+          />
+        </div>
+      )}
     </div>
   );
 };

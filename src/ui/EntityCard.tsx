@@ -1,5 +1,3 @@
-// src/ui/EntityCard.tsx
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import cn from 'classnames';
@@ -39,7 +37,6 @@ interface EntityCardProps {
   linkTo?: string;
   description?: string;
   showMultiSelect?: boolean;
-  viewMode?: 'default' | 'compact'; // Added viewMode prop
 }
 
 const EntityCard: React.FC<EntityCardProps> = ({
@@ -59,34 +56,31 @@ const EntityCard: React.FC<EntityCardProps> = ({
   linkTo,
   description,
   showMultiSelect = false,
-  viewMode = 'default', // Default to default view
 }) => {
-  const isCompact = viewMode === 'compact';
-
   const cardClasses = cn(
-    // Base styles with refined Notion aesthetics
-    'block rounded-xl border transition-all duration-200 cursor-pointer relative',
+    'block rounded-xl border p-4 transition-all duration-200 cursor-pointer relative border-l-[3px]',
     'notion-shadow-xs hover:notion-shadow-sm',
-    isCompact ? 'p-3' : 'p-4',
-    // Selected state
     {
-      'border-primary/40 bg-primary/5 hover:bg-primary/8 hover:border-primary/60 notion-shadow-sm':
+      // Selected state
+      'border-primary/40 bg-primary/5 hover:bg-primary/8 hover:border-primary/60 notion-shadow-sm border-l-primary':
         isSelected,
-      'border-border bg-card hover:bg-card-hover hover:border-border-hover': !isSelected,
+      // Default state
+      'border-border bg-card hover:bg-card-hover hover:border-border-hover border-l-border':
+        !isSelected,
     },
-    // Custom border color
-    borderColor && !isSelected ? `border-[${borderColor}]/20 hover:border-[${borderColor}]/40` : '',
-    borderColor && isSelected ? `border-[${borderColor}]/50 hover:border-[${borderColor}]/70` : '',
     className
   );
 
+  // Apply custom border color via inline style for higher precedence
+  const cardStyle = borderColor && !isSelected ? { borderLeftColor: borderColor } : {};
+
   const cardContent = (
     <>
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-3">
-          {/* Multi-select checkbox */}
-          {showMultiSelect && (
-            <div className="flex items-center justify-center">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          {/* LOGIC CHANGE: Checkbox replaces the icon */}
+          {showMultiSelect ? (
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center">
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -94,66 +88,48 @@ const EntityCard: React.FC<EntityCardProps> = ({
                   onMultiSelect?.(!isMultiSelected);
                 }}
                 className={cn(
-                  'flex items-center justify-center rounded border transition-all duration-200',
-                  isCompact ? 'w-4 h-4' : 'w-5 h-5',
+                  'flex h-5 w-5 items-center justify-center rounded border transition-all duration-200',
                   isMultiSelected
                     ? 'bg-primary border-primary text-primary-foreground'
                     : 'border-border bg-card hover:border-border-hover'
                 )}
                 aria-label={isMultiSelected ? 'Снять выделение' : 'Выделить'}
               >
-                {isMultiSelected && <Check className={isCompact ? 'w-3 h-3' : 'w-4 h-4'} />}
+                {isMultiSelected && <Check className="h-4 w-4" />}
               </button>
             </div>
+          ) : (
+            <div
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-colors duration-200"
+              style={iconColor ? { backgroundColor: `${iconColor}1A` } : undefined}
+            >
+              {typeof Icon === 'function' ? (
+                <Icon />
+              ) : (
+                <Icon
+                  className="h-5 w-5 text-primary"
+                  style={iconColor ? { color: iconColor } : undefined}
+                />
+              )}
+            </div>
           )}
 
-          <div
-            className={cn(
-              'flex flex-shrink-0 items-center justify-center rounded-xl transition-colors duration-200',
-              'bg-primary/10',
-              isCompact ? 'h-8 w-8' : 'h-10 w-10'
+          <div className="min-w-0 flex-1">
+            <h3
+              className="truncate text-base font-medium leading-snug text-foreground"
+              title={title}
+            >
+              {title}
+            </h3>
+            {subtitle && (
+              <div className="mt-0.5 text-sm leading-snug text-muted-foreground">{subtitle}</div>
             )}
-            style={iconColor ? { backgroundColor: `${iconColor}1A` } : undefined}
-          >
-            {typeof Icon === 'function' ? (
-              <Icon />
-            ) : (
-              <Icon
-                className={cn('text-primary', isCompact ? 'w-4 h-4' : 'w-5 h-5')}
-                style={iconColor ? { color: iconColor } : undefined}
-              />
+            {description && (
+              <p className="mt-1 truncate text-sm leading-relaxed text-muted-foreground">
+                {description}
+              </p>
             )}
           </div>
-
-          {isCompact ? (
-            // Compact view - only title and icon
-            <div className="min-w-0 flex-1">
-              <h3
-                className="text-base font-medium text-foreground truncate leading-snug"
-                title={title}
-              >
-                {title}
-              </h3>
-            </div>
-          ) : (
-            // Default view - full content
-            <div className="min-w-0 flex-1">
-              <h3
-                className="text-base font-medium text-foreground truncate leading-snug"
-                title={title}
-              >
-                {title}
-              </h3>
-              {subtitle && (
-                <div className="text-sm text-muted-foreground mt-0.5 leading-snug">{subtitle}</div>
-              )}
-              {description && (
-                <p className="text-sm text-muted-foreground mt-1 truncate leading-relaxed">
-                  {description}
-                </p>
-              )}
-            </div>
-          )}
         </div>
 
         {menuItems && menuItems.length > 0 && (
@@ -165,24 +141,24 @@ const EntityCard: React.FC<EntityCardProps> = ({
                   e.preventDefault();
                   e.stopPropagation();
                 }}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-lg transition-all duration-200 notion-focus-ring"
+                className="notion-focus-ring rounded-lg p-2 text-muted-foreground transition-all duration-200 hover:bg-muted/60 hover:text-foreground"
                 aria-label="More options"
               >
-                <MoreHorizontal className={isCompact ? 'w-3 h-3' : 'w-4 h-4'} />
+                <MoreHorizontal className="h-4 w-4" />
               </button>
             }
           />
         )}
       </div>
 
-      {!isCompact && details && details.length > 0 && (
+      {details && details.length > 0 && (
         <div className="mt-4 border-t border-border/60 pt-4">
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
             {details.map((item) => (
               <div key={item.key} className="flex items-center gap-2" title={item.title}>
-                <item.icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <item.icon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                 <dt className="sr-only">{item.key}</dt>
-                <dd className={cn('text-foreground/90 truncate font-medium', item.className)}>
+                <dd className={cn('truncate font-medium text-foreground/90', item.className)}>
                   {item.text}
                 </dd>
               </div>
@@ -195,10 +171,10 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
   const interactiveProps = {
     onClick: (e: React.MouseEvent) => {
-      if (showMultiSelect && e.shiftKey) {
+      if (showMultiSelect && onMultiSelect) {
         e.preventDefault();
         e.stopPropagation();
-        onMultiSelect?.(!isMultiSelected);
+        onMultiSelect(!isMultiSelected);
       } else {
         onSelect?.();
       }
@@ -227,14 +203,14 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
   if (linkTo) {
     return (
-      <Link to={linkTo} className={cardClasses} style={borderStyle}>
+      <Link to={linkTo} className={cardClasses} style={cardStyle}>
         {cardContent}
       </Link>
     );
   }
 
   return (
-    <div className={cardClasses} style={borderStyle} {...interactiveProps}>
+    <div className={cardClasses} style={cardStyle} {...interactiveProps}>
       {cardContent}
     </div>
   );

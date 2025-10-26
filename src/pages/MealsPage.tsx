@@ -4,14 +4,14 @@ import {
   Utensils,
   Trash2,
   Copy,
-  Share,
+  Upload,
   X,
   CheckSquare,
   CheckCheck,
   LayoutList,
   Grid3X3,
   Filter,
-  UploadCloud,
+  Download,
 } from 'lucide-react';
 import { useMealStore } from '../stores/useMealStore';
 import useProductStore from '../stores/useProductStore';
@@ -179,7 +179,7 @@ const MealsPage: React.FC = () => {
                 </Button>
 
                 <Button variant="secondary" size="icon" title="Импорт" aria-label="Импорт">
-                  <UploadCloud className="w-4 h-4" />
+                  <Download className="w-4 h-4" />
                 </Button>
 
                 <Button
@@ -218,9 +218,8 @@ const MealsPage: React.FC = () => {
               </>
             ) : (
               <div className="flex items-center gap-2 h-9 min-w-[320px] justify-end">
-                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                  <span>{selectedMealIds.length}</span>
-                  <span className="text-primary/70">из {meals.length} выделено</span>
+                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center">
+                  <span>{`${selectedMealIds.length} из ${meals.length} выделено`}</span>
                 </div>
 
                 <Button
@@ -250,7 +249,7 @@ const MealsPage: React.FC = () => {
                     disabled={selectedMealIds.length === 0}
                     title="Экспорт"
                   >
-                    <Share className="w-4 h-4" />
+                    <Upload className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="danger"

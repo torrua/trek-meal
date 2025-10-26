@@ -1,4 +1,4 @@
-// src/ui/Button.tsx
+// src/ui/Button.tsx - ОБНОВЛЕННЫЙ КОД
 
 import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -25,8 +25,8 @@ const buttonVariants = cva(
           'active:scale-[0.98] active:translate-y-0',
         ],
         ghost: [
-          'text-muted-foreground',
-          'hover:text-foreground hover:bg-muted/60',
+          'text-muted-foreground border border-transparent', // Добавили прозрачную рамку
+          'hover:text-foreground hover:bg-muted/60 hover:border-border', // При наведении делаем рамку видимой
           'active:scale-[0.98]',
         ],
         outline: [

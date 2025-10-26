@@ -1,4 +1,5 @@
-// src/components/meals/ItemContent.tsx
+// src/components/meals/ItemContent.tsx - ФИНАЛЬНАЯ ВЕРСИЯ
+
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
   Component,
@@ -141,7 +142,6 @@ const ItemContent: React.FC<ItemContentProps> = ({
   const isProduct = item.type === 'product';
   const isDish = item.type === 'dish';
 
-  // Calculate dish weight
   const dishWeight = useMemo(() => {
     if (item.type !== 'dish' || !selectedItem) return 0;
     const dish = selectedItem as Dish;
@@ -164,7 +164,6 @@ const ItemContent: React.FC<ItemContentProps> = ({
         </div>
         {showActions && (
           <div className="flex items-center gap-2">
-            {/* Expandable nutrition block */}
             {nutrition && displayWeight && (
               <button
                 onClick={() => setShowNutrition(!showNutrition)}
@@ -342,15 +341,19 @@ const ItemContent: React.FC<ItemContentProps> = ({
                   }
                 }}
               />
+
+              {/* --- ИЗМЕНЕНИЕ ЗДЕСЬ --- */}
               <Button
                 type="button"
-                variant="primary"
+                variant="ghost"
                 size="icon-sm"
                 onClick={handleCustomWeightSave}
+                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600"
                 title="Подтвердить"
               >
-                <Check className="w-3.5 h-3.5" />
+                <Check className="w-4 h-4" />
               </Button>
+
               <Button
                 type="button"
                 variant="ghost"

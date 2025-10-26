@@ -3,32 +3,66 @@
   container-type: inline-size;
 }
 
-/* Nutrition grid defaults: small widths */
+/* Nutrition grid: равномерное распределение по всей ширине */
 .cq-nutrition {
-  display: grid;
+  display: flex;
   width: 100%;
-  gap: 0.25rem; /* tighter spacing so metrics fit longer */
-  justify-items: center;
-  grid-auto-flow: column; /* keep a single row */
+  gap: 0.5rem;
+  justify-content: space-between; /* Растягиваем на всю ширину */
   align-items: center;
-  white-space: nowrap; /* avoid wrapping inside cells */
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  transition: opacity 0.2s ease;
 }
-/* Compact (hidden B/J/U): count auto | kcal fixed | weight auto */
-.cq-nutrition.has-items-count { grid-template-columns: auto 3.25rem auto; }
-.cq-nutrition.no-items-count { grid-template-columns: 3.25rem auto; }
-.cq-nutrition .bju { display: none; }
 
-/* When JS toggles .show-bju, expand to full set and display B/J/U */
-.cq-nutrition.show-bju.has-items-count { grid-template-columns: auto 3.25rem 3.25rem 3.25rem 3.25rem auto; }
-.cq-nutrition.show-bju.no-items-count { grid-template-columns: 3.25rem 3.25rem 3.25rem 3.25rem auto; }
-.cq-nutrition.show-bju .bju { display: flex; }
+/* Каждый элемент - не сжимается */
+.cq-nutrition > div {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0; /* Не сжимаем элементы */
+}
 
-/* Mid widths: hide B/J/U and collapse to 3/2 columns */
-/* Large containers: show full set in one row */
-@container (min-width: 1000px) {
-  .cq-nutrition.has-items-count { grid-template-columns: auto 4.5rem 4.5rem 4.5rem 4.5rem auto; }
-  .cq-nutrition.no-items-count { grid-template-columns: 4.5rem 4.5rem 4.5rem 4.5rem auto; }
-  .cq-nutrition.no-items-count { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .cq-nutrition .bju { display: flex; }
+/* Иконки не сжимаются */
+.cq-nutrition svg {
+  flex-shrink: 0;
+}
+
+/* БЖУ элементы скрыты по умолчанию */
+.cq-nutrition .bju {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Когда места достаточно - показываем БЖУ плавно */
+.cq-nutrition.show-bju .bju {
+  display: flex;
+  opacity: 1;
+}
+
+/* Для очень узких карточек - уменьшаем gap между элементами */
+@container (max-width: 280px) {
+  .cq-nutrition {
+    gap: 0.25rem;
+  }
+  .cq-nutrition > div {
+    gap: 0.15rem;
+  }
+}
+
+/* EntityListItem - блок nutrition исчезает целиком при нехватке места */
+.entity-list-item-nutrition {
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
+  /* Фиксируем размеры, чтобы ничего не сжималось */
+  flex-shrink: 0;
+}
+
+/* На средних экранах скрываем nutrition целиком без изменения размера */
+@media (max-width: 768px) {
+  .entity-list-item-nutrition {
+    display: none;
+  }
 }

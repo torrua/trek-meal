@@ -79,7 +79,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
 
   return (
     <div data-testid={testId} className={itemClasses} {...interactiveProps}>
-      {/* LOGIC CHANGE: Checkbox replaces the icon */}
+      {/* Checkbox или иконка */}
       {showMultiSelect ? (
         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
           <button
@@ -114,9 +114,12 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
 
       {/* Основной контент */}
       <div className="flex min-w-0 flex-1 items-center gap-4">
-        <h3 className="truncate text-sm font-medium text-foreground">{title}</h3>
+        {/* Заголовок с максимальным приоритетом - занимает всё доступное пространство */}
+        <h3 className="truncate text-sm font-medium text-foreground flex-1">{title}</h3>
+
+        {/* Details - скрываются на средних экранах */}
         {details && details.length > 0 && (
-          <div className="hidden flex-shrink-0 items-center gap-3 text-xs text-muted-foreground md:flex">
+          <div className="hidden flex-shrink-0 items-center gap-3 text-xs text-muted-foreground lg:flex">
             {details.map((detail, index) => (
               <React.Fragment key={index}>
                 {index > 0 && <span className="select-none text-muted-foreground/40">•</span>}
@@ -126,25 +129,28 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
           </div>
         )}
 
+        {/* Nutrition - сохраняет размер до момента исчезновения */}
         {nutrition && (
-          <div className="ml-auto flex items-center gap-2 text-xs">
+          <div className="flex items-center gap-2 text-xs flex-shrink-0 entity-list-item-nutrition">
             {typeof nutrition.itemsCount === 'number' && (
-              <div className="flex items-center gap-1">
-                <Hash className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="font-semibold text-muted-foreground">{nutrition.itemsCount}</span>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <Hash className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                <span className="font-semibold text-muted-foreground whitespace-nowrap">
+                  {nutrition.itemsCount}
+                </span>
               </div>
             )}
-            <div className="w-px h-4 bg-border" />
-            <div className="flex items-center gap-1">
-              <Flame className="w-3.5 h-3.5 text-orange-600" />
-              <span className="font-semibold text-orange-600">
+            <div className="w-px h-4 bg-border flex-shrink-0" />
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <Flame className="w-3.5 h-3.5 text-orange-600 flex-shrink-0" />
+              <span className="font-semibold text-orange-600 whitespace-nowrap">
                 {Math.round(nutrition.calories)}
               </span>
             </div>
-            <div className="w-px h-4 bg-border" />
-            <div className="flex items-center gap-1">
-              <Weight className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="font-semibold text-muted-foreground">
+            <div className="w-px h-4 bg-border flex-shrink-0" />
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <Weight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+              <span className="font-semibold text-muted-foreground whitespace-nowrap">
                 {Math.round(nutrition.weight)}
               </span>
             </div>
@@ -154,7 +160,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
 
       {/* Меню действий */}
       {menuItems && menuItems.length > 0 && (
-        <div className="ml-auto pl-2">
+        <div className="flex-shrink-0">
           <DropdownMenu
             items={menuItems}
             trigger={

@@ -1,5 +1,3 @@
-// EntityCard.tsx - обновленная версия
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import cn from 'classnames';
@@ -52,6 +50,22 @@ interface EntityCardProps {
   };
 }
 
+// Глобальное состояние для синхронизации всех карточек
+let globalShowBjuCard = true;
+const cardListeners = new Set<(show: boolean) => void>();
+
+const subscribeToShowBjuCard = (callback: (show: boolean) => void) => {
+  cardListeners.add(callback);
+  return () => cardListeners.delete(callback);
+};
+
+const setGlobalShowBjuCard = (show: boolean) => {
+  if (globalShowBjuCard !== show) {
+    globalShowBjuCard = show;
+    cardListeners.forEach((callback) => callback(show));
+  }
+};
+
 const EntityCard: React.FC<EntityCardProps> = ({
   title,
   subtitle,
@@ -75,22 +89,25 @@ const EntityCard: React.FC<EntityCardProps> = ({
 }) => {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const nutritionRef = useRef<HTMLDivElement | null>(null);
-  const [showBju, setShowBju] = useState(true);
+  const [showBju, setShowBju] = useState(globalShowBjuCard);
   const measureTimeoutRef = useRef<number>();
+
+  // Подписываемся на глобальные изменения
+  useEffect(() => {
+    return subscribeToShowBjuCard(setShowBju);
+  }, []);
 
   useEffect(() => {
     const el = nutritionRef.current;
-    if (!el) return;
+    if (!el || !nutrition) return;
 
     const measure = () => {
-      // Отменяем предыдущий таймаут, чтобы избежать множественных измерений
       if (measureTimeoutRef.current) {
         window.clearTimeout(measureTimeoutRef.current);
       }
 
-      // Debounce: измеряем через небольшую задержку
       measureTimeoutRef.current = window.setTimeout(() => {
-        // Проверяем, помещается ли полная версия
+        // Проверяем, помещается ли полная версия с БЖУ
         const testDiv = el.cloneNode(true) as HTMLElement;
         testDiv.style.position = 'absolute';
         testDiv.style.visibility = 'hidden';
@@ -98,14 +115,13 @@ const EntityCard: React.FC<EntityCardProps> = ({
         testDiv.classList.add('show-bju');
         el.parentElement?.appendChild(testDiv);
 
-        const fits = testDiv.scrollWidth <= testDiv.clientWidth + 2; // +2px погрешность
+        const fits = testDiv.scrollWidth <= testDiv.clientWidth + 2;
         el.parentElement?.removeChild(testDiv);
 
-        setShowBju(fits);
+        setGlobalShowBjuCard(fits);
       }, 50);
     };
 
-    // Первоначальное измерение
     measure();
 
     const ro = new ResizeObserver(measure);
@@ -230,41 +246,41 @@ const EntityCard: React.FC<EntityCardProps> = ({
           <div ref={nutritionRef} className={cn('cq-nutrition text-sm', showBju && 'show-bju')}>
             {typeof nutrition.itemsCount === 'number' && (
               <div className="flex items-center gap-1">
-                <Hash className="w-3.5 h-3.5 text-muted-foreground" />
+                <Hash className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                 <span className="font-semibold text-muted-foreground">{nutrition.itemsCount}</span>
               </div>
             )}
 
             <div className="flex items-center gap-1">
-              <Flame className="w-3.5 h-3.5 text-orange-600" />
+              <Flame className="w-3.5 h-3.5 text-orange-600 flex-shrink-0" />
               <span className="font-semibold text-orange-600">
                 {Math.round(nutrition.calories)}
               </span>
             </div>
 
             <div className="bju items-center gap-1">
-              <Beef className="w-3.5 h-3.5 text-blue-600" />
+              <Beef className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
               <span className="font-semibold text-blue-600">
                 {Math.round(nutrition.proteins * 10) / 10}
               </span>
             </div>
 
             <div className="bju items-center gap-1">
-              <Droplet className="w-3.5 h-3.5 text-yellow-600" />
+              <Droplet className="w-3.5 h-3.5 text-yellow-600 flex-shrink-0" />
               <span className="font-semibold text-yellow-600">
                 {Math.round(nutrition.fats * 10) / 10}
               </span>
             </div>
 
             <div className="bju items-center gap-1">
-              <Wheat className="w-3.5 h-3.5 text-green-600" />
+              <Wheat className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
               <span className="font-semibold text-green-600">
                 {Math.round(nutrition.carbs * 10) / 10}
               </span>
             </div>
 
             <div className="flex items-center gap-1">
-              <Weight className="w-3.5 h-3.5 text-muted-foreground" />
+              <Weight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
               <span className="font-semibold text-muted-foreground">
                 {Math.round(nutrition.weight)}
               </span>

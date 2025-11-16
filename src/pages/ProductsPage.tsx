@@ -212,12 +212,12 @@ const ProductsPage: React.FC = () => {
         aria-hidden="true"
         tabIndex={-1}
       />
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-6 sm:mb-8 px-4 sm:px-2">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
             Продукты
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-[320px] justify-end">
             {!showMultiSelect ? (
               <>
                 <Button

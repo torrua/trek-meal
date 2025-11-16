@@ -1,6 +1,6 @@
 // src/components/meals/CreateMealButton.tsx
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { CirclePlus } from 'lucide-react';
 import Button from '../../ui/Button';
 
 interface CreateMealButtonProps {
@@ -28,7 +28,7 @@ const CreateMealButton: React.FC<CreateMealButtonProps> = ({
       className={className}
       disabled={disabled}
     >
-      <Plus className="w-4 h-4 sm:mr-2" />
+      <CirclePlus className="w-4 h-4 sm:mr-2" />
       {showText && <span className="hidden sm:inline">Создать приём пищи</span>}
     </Button>
   );

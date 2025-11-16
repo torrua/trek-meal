@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import useDishStore from '../../stores/useDishStore';
+import useProductStore from '../../stores/useProductStore';
 import useTripStore from '../../stores/useTripStore';
 import useSearchStore from '../../stores/useSearchStore';
 import type { Dish, DishData, SubmitDishAction } from '../../types';
@@ -113,6 +114,23 @@ const DishesContent: React.FC<DishesContentProps> = ({ setAddHandler }) => {
             </div>
           ) : (
             filteredDishes.map((dish) => {
+              // Calculate nutrition and totalWeight for the dish so card details render correctly
+              const nutrition = { calories: 0, proteins: 0, fats: 0, carbs: 0 };
+              let totalWeight = 0;
+              dish.products.forEach((dishProduct) => {
+                const product = useProductStore
+                  .getState()
+                  .products.find((p: any) => p.id === dishProduct.productId);
+                if (product) {
+                  const ratio = dishProduct.weight / 100;
+                  nutrition.calories += (product.calories || 0) * ratio;
+                  nutrition.proteins += (product.proteins || 0) * ratio;
+                  nutrition.fats += (product.fats || 0) * ratio;
+                  nutrition.carbs += (product.carbs || 0) * ratio;
+                  totalWeight += dishProduct.weight;
+                }
+              });
+
               const cardConfig = dishEntityConfig.views.card;
               const menuItems = dishEntityConfig.getActions({
                 onEdit: () => handleEdit(dish),
@@ -130,7 +148,9 @@ const DishesContent: React.FC<DishesContentProps> = ({ setAddHandler }) => {
                   key={dish.id}
                   title={cardConfig.title(dish)}
                   icon={dishEntityConfig.getIcon(dish)}
-                  details={detailsWithKeys}
+                  details={cardConfig
+                    .details(dish, { nutrition, totalWeight })
+                    .map((detail, idx) => ({ ...detail, key: detail.title || `detail-${idx}` }))}
                   menuItems={menuItems}
                   isSelected={activeId === dish.id}
                   onSelect={() => setActiveId(dish.id)}

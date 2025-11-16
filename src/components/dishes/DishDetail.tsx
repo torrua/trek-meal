@@ -77,7 +77,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 }) => {
   return (
     <div
-      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-visible`}
+      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-hidden`}
     >
       <div
         className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -98,7 +98,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           />
         </div>
       </div>
-      {isOpen && <div className="p-6 pt-0 overflow-visible">{children}</div>}
+      {isOpen && <div className="p-6 pt-0">{children}</div>}
     </div>
   );
 };

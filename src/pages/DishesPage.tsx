@@ -8,13 +8,13 @@ import {
   Filter,
   Trash2,
   Copy,
-  Share,
+  Download,
+  Upload,
   X,
-  Check,
+  CheckSquare,
   CheckCheck,
   LayoutList,
   Grid3X3,
-  UploadCloud,
 } from 'lucide-react';
 import useDishStore from '../stores/useDishStore';
 import useTripStore from '../stores/useTripStore';
@@ -22,6 +22,7 @@ import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Dish } from '../types';
 import EntityCard from '../ui/EntityCard';
+import EntityListItem from '../ui/EntityListItem';
 import DishDetail from '../components/dishes/DishDetail';
 // Editing moved to dedicated page
 import Button from '../ui/Button';
@@ -38,23 +39,21 @@ const DishesPage: React.FC = () => {
   const { isDishInUse } = useTripStore();
   const { products: allProducts } = useProductStore();
   const { searchTerm } = useSearchStore();
+  const { viewMode, toggleViewMode } = useViewMode('dishes');
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [detailEditTrigger, setDetailEditTrigger] = useState(0);
   const [isDetailEditing, setIsDetailEditing] = useState(false);
   const [dishToDelete, setDishToDelete] = useState<Dish | null>(null);
   const [openSections, setOpenSections] = useState<string[]>(['basic-info', 'products']);
-  const [editSubmitTrigger, setEditSubmitTrigger] = useState(0);
-  const [editCancelTrigger, setEditCancelTrigger] = useState(0);
+  const [_editSubmitTrigger, _setEditSubmitTrigger] = useState(0);
+  const [_editCancelTrigger, _setEditCancelTrigger] = useState(0);
 
   // Multi-selection state
   const [selectedDishIds, setSelectedDishIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
   // Add state for bulk delete confirmation
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
-
-  // View mode state
-  const { viewMode, toggleViewMode } = useViewMode('dishes');
 
   const handleToggleSection = useCallback((sectionId: string) => {
     setOpenSections((prev) =>
@@ -235,12 +234,12 @@ const DishesPage: React.FC = () => {
         tabIndex={-1}
       />
       {/* Header and buttons */}
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-6 sm:mb-8 px-4 sm:px-2">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
             Блюда
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-[320px] justify-end">
             {!showMultiSelect ? (
               <>
                 <Button
@@ -262,10 +261,9 @@ const DishesPage: React.FC = () => {
                   title="Импорт"
                   aria-label="Импорт"
                 >
-                  <UploadCloud className="w-4 h-4" />
+                  <Download className="w-4 h-4" />
                 </Button>
 
-                {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
                   variant="secondary"
@@ -287,8 +285,9 @@ const DishesPage: React.FC = () => {
                   title="Выделить"
                   aria-label="Выделить"
                 >
-                  <Check className="w-4 h-4" />
+                  <CheckSquare className="w-4 h-4" />
                 </Button>
+
                 <Button
                   onClick={handleAddNew}
                   variant="primary"
@@ -300,10 +299,9 @@ const DishesPage: React.FC = () => {
                 </Button>
               </>
             ) : (
-              <div className="flex items-center gap-2">
-                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
-                  <span>{selectedDishIds.length}</span>
-                  <span className="text-primary/70">из {filteredDishes.length} выделено</span>
+              <div className="flex items-center gap-2 h-9 min-w-[320px] justify-end">
+                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center">
+                  <span>{`${selectedDishIds.length} из ${filteredDishes.length} выделено`}</span>
                 </div>
 
                 <Button
@@ -333,7 +331,7 @@ const DishesPage: React.FC = () => {
                     disabled={selectedDishIds.length === 0}
                     title="Экспорт"
                   >
-                    <Share className="w-4 h-4" />
+                    <Upload className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="danger"
@@ -357,7 +355,7 @@ const DishesPage: React.FC = () => {
 
       {filteredDishes.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)]">
             {filteredDishes.map((dish) => {
               const { nutrition, totalWeight } = calculateDishNutrition(dish);
               const cardConfig = dishEntityConfig.views.card;
@@ -389,7 +387,32 @@ const DishesPage: React.FC = () => {
 
               const isCardDisabled = isDetailEditing && dish.id !== activeId;
 
-              return (
+              return viewMode === 'compact' ? (
+                <EntityListItem
+                  key={dish.id}
+                  title={cardConfig.title(dish)}
+                  icon={dishEntityConfig.getIcon(dish)}
+                  borderColor={dishEntityConfig.getBorderColor(dish)}
+                  isSelected={activeId === dish.id}
+                  isMultiSelected={selectedDishIds.includes(dish.id)}
+                  onSelect={isCardDisabled ? undefined : () => setActiveId(dish.id)}
+                  onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
+                  onRequestMultiSelectMode={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedDishIds([dish.id]);
+                    }
+                  }}
+                  menuItems={actions}
+                  showMultiSelect={showMultiSelect}
+                  variant="meal"
+                  nutrition={{
+                    calories: Math.round(nutrition.calories),
+                    weight: Math.round(totalWeight),
+                    itemsCount: dish.products.length,
+                  }}
+                />
+              ) : (
                 <EntityCard
                   key={dish.id}
                   title={cardConfig.title(dish)}
@@ -402,6 +425,15 @@ const DishesPage: React.FC = () => {
                       ...detail,
                       key: `dish-detail-${index}`,
                     }))}
+                  variant="meal"
+                  nutrition={{
+                    calories: Math.round(nutrition.calories),
+                    proteins: Math.round(nutrition.proteins * 10) / 10,
+                    fats: Math.round(nutrition.fats * 10) / 10,
+                    carbs: Math.round(nutrition.carbs * 10) / 10,
+                    weight: Math.round(totalWeight),
+                    itemsCount: dish.products.length,
+                  }}
                   isSelected={activeId === dish.id}
                   isMultiSelected={selectedDishIds.includes(dish.id)}
                   onSelect={isCardDisabled ? undefined : () => setActiveId(dish.id)}
@@ -409,13 +441,12 @@ const DishesPage: React.FC = () => {
                   borderColor={dishEntityConfig.getBorderColor(dish)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
-                  viewMode={viewMode}
                 />
               );
             })}
           </div>
 
-          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
+          <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {selectedDish ? (
               <DishDetail
                 dish={selectedDish}
@@ -425,8 +456,8 @@ const DishesPage: React.FC = () => {
                 onToggleSection={handleToggleSection}
                 onStartEdit={() => setIsDetailEditing(true)}
                 onFinishEdit={() => setIsDetailEditing(false)}
-                editSubmitTrigger={editSubmitTrigger}
-                editCancelTrigger={editCancelTrigger}
+                editSubmitTrigger={_editSubmitTrigger}
+                editCancelTrigger={_editCancelTrigger}
               />
             ) : (
               <div className="h-full flex items-start justify-center pt-16">

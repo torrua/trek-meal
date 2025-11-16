@@ -23,8 +23,8 @@ const mainNavigation = [
 const dbNavigation = [
   { path: '/products', label: 'Продукты', icon: Component },
   { path: '/dishes', label: 'Блюда', icon: Soup },
-  { path: '/equipment', label: 'Снаряжение', icon: Backpack },
   { path: '/meals', label: 'Приёмы пищи', icon: Utensils },
+  { path: '/equipment', label: 'Снаряжение', icon: Backpack },
 ];
 
 const categoriesNavigation = [
@@ -56,7 +56,9 @@ const NavLinkItem = ({
     )}
     end
   >
-    <item.icon className="w-4 h-4 flex-shrink-0" />
+    <div className="w-6 flex items-center justify-center flex-shrink-0">
+      <item.icon className="w-4 h-4" />
+    </div>
     <span className="truncate">{item.label}</span>
   </NavLink>
 );

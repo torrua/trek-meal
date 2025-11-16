@@ -28,8 +28,9 @@ import {
   Component,
   Flame,
   Soup,
-  Scale,
+  Weight,
   User,
+  Scale,
   ExternalLink,
   Tag,
   Utensils,
@@ -393,22 +394,8 @@ export const dishEntityConfig: EntityConfig<Dish> = {
   views: {
     card: {
       title: (dish) => dish.name,
-      subtitle: (dish, context) =>
-        `${dish.products.length} комп. / ${context?.totalWeight as number} г`,
-      details: (dish, context) => [
-        {
-          key: 'calories',
-          icon: Flame,
-          text: `${(context?.nutrition as any).calories} ккал`,
-          title: 'Калорийность',
-        },
-        {
-          key: 'weight',
-          icon: Scale,
-          text: `${context?.totalWeight as number} г`,
-          title: 'Общий вес',
-        },
-      ],
+      subtitle: () => null,
+      details: () => [],
     },
     listItem: {
       title: (d) => d.name,

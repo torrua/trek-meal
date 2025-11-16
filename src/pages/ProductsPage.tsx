@@ -1,7 +1,7 @@
 // src/pages/ProductsPage.tsx
 
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   CirclePlus,
   Filter,
@@ -16,15 +16,15 @@ import {
   LayoutList,
   Grid3X3,
 } from 'lucide-react';
-import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
+import { useViewMode } from '../hooks/useViewMode';
 import { toast } from 'react-hot-toast';
 import useProductStore from '../stores/useProductStore';
 import useCategoryStore from '../stores/useCategoryStore';
 import useSearchStore from '../stores/useSearchStore';
-import type { Product, ImportedJsonData, Category } from '../types';
+import type { Product, ImportedJsonData, Category, ProductData } from '../types';
 import EntityCard from '../ui/EntityCard';
 import ProductDetail from '../components/products/ProductDetail';
-// ProductForm removed from this page (editing navigates to dedicated page)
+import ProductForm from '../components/products/ProductForm';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import ImportProductsModal from '../components/products/ImportProductsModal';
@@ -35,14 +35,14 @@ import { productEntityConfig } from '../config/entityConfig';
 import { exportProductToJson, exportBulkProductsToJson } from '../utils/backup';
 
 const ProductsPage: React.FC = () => {
-  const { products, deleteProduct } = useProductStore();
-  const navigate = useNavigate();
+  const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
   const { categories } = useCategoryStore();
   const { searchTerm } = useSearchStore();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [activeId, setActiveId] = useState<number | null>(null);
-  // Editing is performed on dedicated ProductDetailPage
+  const [detailEditTrigger, setDetailEditTrigger] = useState(0);
+  const [creatingProduct, setCreatingProduct] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [isImportModalOpen, setImportModalOpen] = useState(false);
@@ -51,12 +51,11 @@ const ProductsPage: React.FC = () => {
 
   const [filters, setFilters] = useState<ProductFilters>({ categoryIds: [] });
 
-  // Multi-selection state
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
-  // View mode state
-  const { viewMode, toggleViewMode } = useViewMode('products'); // Use the new hook
+  const { viewMode, toggleViewMode } = useViewMode('products');
 
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
@@ -66,12 +65,9 @@ const ProductsPage: React.FC = () => {
     }
   }, [searchParams, products, setSearchParams]);
 
-  // No outside click handler needed with inline filters panel
-
   const filteredProducts = useMemo(() => {
     return products
       .filter((p) => {
-        // Фильтрация по категориям
         const categoryMatch =
           filters.categoryIds.length === 0 ||
           (p.categoryId && filters.categoryIds.includes(String(p.categoryId)));
@@ -92,14 +88,21 @@ const ProductsPage: React.FC = () => {
   );
 
   const handleAddNew = useCallback(() => {
-    navigate('/products/new');
-  }, [navigate]);
+    setCreatingProduct(true);
+    setActiveId(null);
+  }, []);
 
-  const handleEdit = useCallback(
-    (product: Product) => {
-      navigate(`/products/${product.id}`);
+  const handleEdit = useCallback((product: Product) => {
+    setActiveId(product.id);
+    setDetailEditTrigger((prev) => prev + 1);
+  }, []);
+
+  const handleInlineCreate = useCallback(
+    (formData: ProductData) => {
+      addProduct(formData);
+      setCreatingProduct(false);
     },
-    [navigate]
+    [addProduct]
   );
 
   const handleRequestDelete = useCallback((product: Product) => {
@@ -113,8 +116,6 @@ const ProductsPage: React.FC = () => {
       setProductToDelete(null);
     }
   };
-
-  // Form submission is handled in ProductDetailPage
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -136,7 +137,6 @@ const ProductsPage: React.FC = () => {
 
   const hasActiveFilters = useMemo(() => filters.categoryIds.length > 0, [filters]);
 
-  // Multi-selection handlers
   const toggleMultiSelect = () => {
     setShowMultiSelect(!showMultiSelect);
     if (showMultiSelect) {
@@ -156,48 +156,36 @@ const ProductsPage: React.FC = () => {
     setSelectedProductIds(filteredProducts.map((product: Product) => product.id));
   };
 
-  // Exit multi-select mode completely
   const exitMultiSelectMode = () => {
     setShowMultiSelect(false);
     setSelectedProductIds([]);
   };
 
-  // Add state for bulk delete confirmation
-  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
-
-  // Bulk action handlers
   const handleBulkDelete = () => {
     if (selectedProductIds.length === 0) return;
-    // Show confirmation modal
     setShowBulkDeleteConfirm(true);
   };
 
   const handleConfirmBulkDelete = () => {
-    // Delete all selected products directly using the store function
     selectedProductIds.forEach((id) => {
       if (id === activeId) setActiveId(null);
       deleteProduct(id);
     });
-    // Exit multi-select mode
     exitMultiSelectMode();
     setShowBulkDeleteConfirm(false);
   };
 
   const handleBulkClone = () => {
     if (selectedProductIds.length === 0) return;
-
     console.log(`Cloning products: ${selectedProductIds.join(', ')}`);
   };
 
   const handleBulkExport = () => {
     if (selectedProductIds.length === 0) return;
-
-    // Get selected products and export them
     const selectedProducts = filteredProducts.filter((p) => selectedProductIds.includes(p.id));
     exportBulkProductsToJson(selectedProducts);
   };
 
-  // Individual product actions
   const handleClone = useCallback((product: Product) => {
     const { cloneProduct } = useProductStore.getState();
     cloneProduct(product.id);
@@ -256,7 +244,6 @@ const ProductsPage: React.FC = () => {
                   <UploadCloud className="w-4 h-4" />
                 </Button>
 
-                {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
                   variant="secondary"
@@ -341,14 +328,13 @@ const ProductsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Фильтры */}
       {showFilters && (
         <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border notion-shadow-xs p-4 sm:p-5">
           <ProductFiltersComponent filters={filters} onFiltersChange={setFilters} />
         </div>
       )}
 
-      {filteredProducts.length > 0 ? (
+      {filteredProducts.length > 0 || creatingProduct ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar">
             {filteredProducts.map((product) => {
@@ -379,17 +365,26 @@ const ProductsPage: React.FC = () => {
                   onMultiSelect={() => toggleProductSelection(product.id)}
                   borderColor={productEntityConfig.getBorderColor(product, { category })}
                   showMultiSelect={showMultiSelect}
-                  viewMode={viewMode} // Pass viewMode to EntityCard
+                  viewMode={viewMode}
                 />
               );
             })}
           </div>
 
           <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
-            {selectedProduct ? (
+            {creatingProduct ? (
+              <div className="pl-1">
+                <ProductForm
+                  product={null}
+                  onSubmit={handleInlineCreate}
+                  onCancel={() => setCreatingProduct(false)}
+                />
+              </div>
+            ) : selectedProduct ? (
               <ProductDetail
                 product={selectedProduct}
                 onEdit={() => selectedProduct && handleEdit(selectedProduct)}
+                editTrigger={detailEditTrigger}
               />
             ) : (
               <div className="h-full flex items-start justify-center pt-16">
@@ -421,8 +416,6 @@ const ProductsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Editing handled via ProductDetailPage routes */}
-
       <ConfirmModal
         isOpen={!!productToDelete}
         onClose={() => setProductToDelete(null)}
@@ -437,7 +430,6 @@ const ProductsPage: React.FC = () => {
         </p>
       </ConfirmModal>
 
-      {/* Bulk delete confirmation */}
       <ConfirmModal
         isOpen={showBulkDeleteConfirm}
         onClose={() => setShowBulkDeleteConfirm(false)}

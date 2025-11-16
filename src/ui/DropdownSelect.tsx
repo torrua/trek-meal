@@ -226,7 +226,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
           <div
             style={{ minWidth: `${minMenuWidth}px` }}
             className={cn(
-              'absolute z-50 top-full left-0 mt-2 w-max max-w-xs',
+              'absolute z-[9999] top-full left-0 mt-2 w-max max-w-xs',
               'bg-card border border-border rounded-xl notion-shadow-lg',
               'py-2 overflow-hidden notion-scale-in'
             )}
@@ -250,49 +250,51 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
               </div>
             )}
 
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => {
-                const checked = isMulti
-                  ? selectedValues.includes(option.value)
-                  : (value as string) === option.value;
-                return (
-                  <button
-                    type="button"
-                    key={option.value}
-                    onClick={() => handleOptionSelect(option.value)}
-                    disabled={option.disabled}
-                    className={cn(
-                      'w-full px-4 py-2.5 text-left text-sm transition-all duration-150 flex items-center gap-3',
-                      'notion-bg-hover',
-                      checked && 'bg-primary/10 text-primary font-semibold',
-                      option.disabled && 'text-muted-foreground/50 cursor-not-allowed',
-                      !option.disabled && 'text-foreground hover:text-foreground'
-                    )}
-                    role="option"
-                    aria-selected={checked}
-                  >
-                    {/* Option icon */}
-                    {option.icon ? (
-                      <option.icon className="w-4 h-4 flex-shrink-0" />
-                    ) : (
-                      <div className="w-4 h-4 flex-shrink-0" />
-                    )}
+            <div className="max-h-[320px] overflow-y-auto">
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((option) => {
+                  const checked = isMulti
+                    ? selectedValues.includes(option.value)
+                    : (value as string) === option.value;
+                  return (
+                    <button
+                      type="button"
+                      key={option.value}
+                      onClick={() => handleOptionSelect(option.value)}
+                      disabled={option.disabled}
+                      className={cn(
+                        'w-full px-4 py-2.5 text-left text-sm transition-all duration-150 flex items-center gap-3',
+                        'notion-bg-hover',
+                        checked && 'bg-primary/10 text-primary font-semibold',
+                        option.disabled && 'text-muted-foreground/50 cursor-not-allowed',
+                        !option.disabled && 'text-foreground hover:text-foreground'
+                      )}
+                      role="option"
+                      aria-selected={checked}
+                    >
+                      {/* Option icon */}
+                      {option.icon ? (
+                        <option.icon className="w-4 h-4 flex-shrink-0" />
+                      ) : (
+                        <div className="w-4 h-4 flex-shrink-0" />
+                      )}
 
-                    {/* Option label */}
-                    <div className="flex-1 truncate font-medium">{option.label}</div>
+                      {/* Option label */}
+                      <div className="flex-1 truncate font-medium">{option.label}</div>
 
-                    {/* Selected indicator */}
-                    {checked && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
-                  </button>
-                );
-              })
-            ) : (
-              <div className="px-4 py-6 text-center">
-                <p className="text-sm text-muted-foreground">
-                  {searchTerm ? 'Ничего не найдено' : 'Нет доступных опций'}
-                </p>
-              </div>
-            )}
+                      {/* Selected indicator */}
+                      {checked && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="px-4 py-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {searchTerm ? 'Ничего не найдено' : 'Нет доступных опций'}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

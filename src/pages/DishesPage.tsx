@@ -40,9 +40,12 @@ const DishesPage: React.FC = () => {
   const { searchTerm } = useSearchStore();
 
   const [activeId, setActiveId] = useState<number | null>(null);
-  // Editing handled via DishDetailPage routes
+  const [detailEditTrigger, setDetailEditTrigger] = useState(0);
+  const [isDetailEditing, setIsDetailEditing] = useState(false);
   const [dishToDelete, setDishToDelete] = useState<Dish | null>(null);
-  const [openSections, setOpenSections] = useState<string[]>(['main', 'products', 'trips']);
+  const [openSections, setOpenSections] = useState<string[]>(['basic-info', 'products']);
+  const [editSubmitTrigger, setEditSubmitTrigger] = useState(0);
+  const [editCancelTrigger, setEditCancelTrigger] = useState(0);
 
   // Multi-selection state
   const [selectedDishIds, setSelectedDishIds] = useState<number[]>([]);
@@ -77,12 +80,12 @@ const DishesPage: React.FC = () => {
     navigate('/dishes/new');
   }, [navigate]);
 
-  const handleEdit = useCallback(
-    (dish: Dish) => {
-      navigate(`/dishes/${dish.id}/edit`);
-    },
-    [navigate]
-  );
+  const handleEdit = useCallback((dish: Dish) => {
+    setActiveId(dish.id);
+    setIsDetailEditing(true);
+    setOpenSections((prev) => (prev.includes('basic-info') ? prev : [...prev, 'basic-info']));
+    setDetailEditTrigger((t) => t + 1);
+  }, []);
 
   const handleRequestDelete = useCallback(
     (dish: Dish) => {
@@ -99,7 +102,10 @@ const DishesPage: React.FC = () => {
 
   const handleConfirmDelete = () => {
     if (dishToDelete) {
-      if (dishToDelete.id === activeId) setActiveId(null);
+      if (dishToDelete.id === activeId) {
+        setActiveId(null);
+        setIsDetailEditing(false);
+      }
       deleteDish(dishToDelete.id);
       setDishToDelete(null);
     }
@@ -139,7 +145,10 @@ const DishesPage: React.FC = () => {
   const handleConfirmBulkDelete = () => {
     // Delete all selected dishes directly using the store function
     selectedDishIds.forEach((id) => {
-      if (id === activeId) setActiveId(null);
+      if (id === activeId) {
+        setActiveId(null);
+        setIsDetailEditing(false);
+      }
       deleteDish(id);
     });
     // Exit multi-select mode
@@ -235,7 +244,9 @@ const DishesPage: React.FC = () => {
             {!showMultiSelect ? (
               <>
                 <Button
-                  onClick={() => setOpenSections((s) => (s.length ? [] : ['main', 'products']))}
+                  onClick={() =>
+                    setOpenSections((s) => (s.length ? [] : ['basic-info', 'products']))
+                  }
                   variant="secondary"
                   size="icon"
                   title="Фильтры"
@@ -278,7 +289,12 @@ const DishesPage: React.FC = () => {
                 >
                   <Check className="w-4 h-4" />
                 </Button>
-                <Button onClick={handleAddNew} variant="primary" size="default">
+                <Button
+                  onClick={handleAddNew}
+                  variant="primary"
+                  size="default"
+                  disabled={isDetailEditing}
+                >
                   <CirclePlus className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Добавить блюдо</span>
                 </Button>
@@ -345,12 +361,33 @@ const DishesPage: React.FC = () => {
             {filteredDishes.map((dish) => {
               const { nutrition, totalWeight } = calculateDishNutrition(dish);
               const cardConfig = dishEntityConfig.views.card;
-              const actions = dishEntityConfig.getActions({
-                onEdit: () => handleEdit(dish),
-                onClone: () => handleClone(dish),
-                onExport: () => handleExport(dish),
-                onDelete: () => handleRequestDelete(dish),
-              });
+              const actions = dishEntityConfig
+                .getActions({
+                  onEdit: () => handleEdit(dish),
+                  onClone: () => handleClone(dish),
+                  onExport: () => handleExport(dish),
+                  onDelete: () => handleRequestDelete(dish),
+                })
+                .map((action) => ({
+                  ...action,
+                  disabled: isDetailEditing && dish.id !== activeId,
+                  onClick: (e: React.MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isDetailEditing && dish.id !== activeId) return;
+                    if (action.label === 'Редактировать') {
+                      handleEdit(dish);
+                    } else if (action.label === 'Удалить') {
+                      handleRequestDelete(dish);
+                    } else if (action.label === 'Клонировать') {
+                      handleClone(dish);
+                    } else if (action.label === 'Экспорт') {
+                      handleExport(dish);
+                    }
+                  },
+                }));
+
+              const isCardDisabled = isDetailEditing && dish.id !== activeId;
 
               return (
                 <EntityCard
@@ -367,8 +404,8 @@ const DishesPage: React.FC = () => {
                     }))}
                   isSelected={activeId === dish.id}
                   isMultiSelected={selectedDishIds.includes(dish.id)}
-                  onSelect={() => setActiveId(dish.id)}
-                  onMultiSelect={() => toggleDishSelection(dish.id)}
+                  onSelect={isCardDisabled ? undefined : () => setActiveId(dish.id)}
+                  onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
                   borderColor={dishEntityConfig.getBorderColor(dish)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
@@ -383,8 +420,13 @@ const DishesPage: React.FC = () => {
               <DishDetail
                 dish={selectedDish}
                 onEdit={() => selectedDish && handleEdit(selectedDish)}
+                editTrigger={detailEditTrigger}
                 openSections={openSections}
                 onToggleSection={handleToggleSection}
+                onStartEdit={() => setIsDetailEditing(true)}
+                onFinishEdit={() => setIsDetailEditing(false)}
+                editSubmitTrigger={editSubmitTrigger}
+                editCancelTrigger={editCancelTrigger}
               />
             ) : (
               <div className="h-full flex items-start justify-center pt-16">

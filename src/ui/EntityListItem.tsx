@@ -1,14 +1,21 @@
+// src/ui/EntityListItem.tsx
+
 import React from 'react';
 import cn from 'classnames';
-import { MoreHorizontal, Check, Flame, Weight, Hash } from 'lucide-react';
+import { MoreHorizontal, Check } from 'lucide-react';
 import type { MenuItem } from './EntityCard';
 import DropdownMenu from './DropdownMenu';
 
+export interface MetaItem {
+  icon: React.ElementType;
+  text: string | number | null | undefined;
+  tooltip?: string;
+  className?: string;
+}
+
 interface EntityListItemProps {
   title: string;
-  icon: React.ElementType;
-  iconColor?: string;
-  details?: (string | React.ReactNode)[];
+  meta?: MetaItem[];
   menuItems?: MenuItem[];
   isSelected?: boolean;
   isMultiSelected?: boolean;
@@ -18,19 +25,12 @@ interface EntityListItemProps {
   borderColor?: string;
   'data-testid'?: string;
   variant?: 'neutral' | 'meal' | 'info' | 'composition';
-  nutrition?: {
-    calories: number;
-    weight: number;
-    itemsCount?: number;
-  };
   onRequestMultiSelectMode?: () => void;
 }
 
 const EntityListItem: React.FC<EntityListItemProps> = ({
   title,
-  icon: Icon,
-  iconColor: _iconColor,
-  details,
+  meta = [],
   menuItems,
   isSelected,
   isMultiSelected,
@@ -40,22 +40,22 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
   borderColor: _borderColor,
   'data-testid': testId,
   variant = 'neutral',
-  nutrition,
   onRequestMultiSelectMode,
 }) => {
   const gradientByVariant: Record<NonNullable<EntityListItemProps['variant']>, string> = {
-    neutral: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
-    info: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
-    composition: 'bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5',
-    meal: 'bg-gradient-to-br from-orange-500/5 via-amber-500/5 to-blue-500/5',
+    neutral: 'bg-gradient-to-r from-blue-50 to-white dark:from-blue-900/10 dark:to-transparent',
+    info: 'bg-gradient-to-r from-purple-50 to-white dark:from-purple-900/10 dark:to-transparent',
+    composition:
+      'bg-gradient-to-r from-green-50 to-white dark:from-green-900/10 dark:to-transparent',
+    meal: 'bg-gradient-to-r from-orange-50 to-white dark:from-orange-900/10 dark:to-transparent',
   };
 
   const itemClasses = cn(
-    'group flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left transition-all duration-200',
+    'group flex w-full items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5 text-left transition-all duration-200',
     gradientByVariant[variant],
     {
-      'border-primary/50 bg-primary/10 hover:bg-primary/15 hover:border-primary/60': isSelected,
-      'hover:bg-card-hover hover:border-border-hover': !isSelected,
+      'border-primary/50 bg-primary/5 ring-1 ring-primary/20': isSelected,
+      'hover:bg-card-hover hover:border-border-hover hover:shadow-sm': !isSelected,
       'cursor-pointer': !!onSelect,
     }
   );
@@ -71,6 +71,17 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
             onSelect();
           }
         },
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelect();
+          }
+        },
+        onDoubleClick: (e: React.MouseEvent) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onRequestMultiSelectMode?.();
+        },
         role: 'button',
         tabIndex: 0,
         'aria-pressed': isSelected,
@@ -79,88 +90,70 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
 
   return (
     <div data-testid={testId} className={itemClasses} {...interactiveProps}>
-      {/* Checkbox или иконка */}
-      {showMultiSelect ? (
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onMultiSelect?.(!isMultiSelected);
-            }}
-            className={cn(
-              'flex h-5 w-5 items-center justify-center rounded border transition-all duration-200',
-              isMultiSelected
-                ? 'bg-primary border-primary text-primary-foreground'
-                : 'border-border bg-card hover:border-border-hover'
-            )}
-            aria-label={isMultiSelected ? 'Снять выделение' : 'Выделить'}
-          >
-            {isMultiSelected && <Check className="h-4 w-4" />}
-          </button>
-        </div>
-      ) : (
-        <div
-          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10"
-          onDoubleClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRequestMultiSelectMode?.();
-          }}
-        >
-          <Icon className="h-4 w-4 text-primary" />
-        </div>
-      )}
-
-      {/* Основной контент */}
-      <div className="flex min-w-0 flex-1 items-center gap-4">
-        {/* Заголовок с максимальным приоритетом - занимает всё доступное пространство */}
-        <h3 className="truncate text-sm font-medium text-foreground flex-1">{title}</h3>
-
-        {/* Details - скрываются на средних экранах */}
-        {details && details.length > 0 && (
-          <div className="hidden flex-shrink-0 items-center gap-3 text-xs text-muted-foreground lg:flex">
-            {details.map((detail, index) => (
-              <React.Fragment key={index}>
-                {index > 0 && <span className="select-none text-muted-foreground/40">•</span>}
-                <div className="font-medium">{detail}</div>
-              </React.Fragment>
-            ))}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        {/* Checkbox */}
+        {showMultiSelect && (
+          <div className="flex-shrink-0">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onMultiSelect?.(!isMultiSelected);
+              }}
+              className={cn(
+                'flex h-5 w-5 items-center justify-center rounded border transition-all duration-200',
+                isMultiSelected
+                  ? 'bg-primary border-primary text-primary-foreground'
+                  : 'border-border bg-background/50 hover:border-primary/50'
+              )}
+              aria-label={isMultiSelected ? 'Снять выделение' : 'Выделить'}
+            >
+              {isMultiSelected && <Check className="h-3.5 w-3.5" />}
+            </button>
           </div>
         )}
 
-        {/* Nutrition - сохраняет размер до момента исчезновения */}
-        {nutrition && (
-          <div className="flex items-center gap-2 text-xs flex-shrink-0 entity-list-item-nutrition">
-            {typeof nutrition.itemsCount === 'number' && (
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <Hash className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                <span className="font-semibold text-muted-foreground whitespace-nowrap">
-                  {nutrition.itemsCount}
-                </span>
-              </div>
-            )}
-            <div className="w-px h-4 bg-border flex-shrink-0" />
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <Flame className="w-3.5 h-3.5 text-orange-600 flex-shrink-0" />
-              <span className="font-semibold text-orange-600 whitespace-nowrap">
-                {Math.round(nutrition.calories)}
-              </span>
-            </div>
-            <div className="w-px h-4 bg-border flex-shrink-0" />
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <Weight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-              <span className="font-semibold text-muted-foreground whitespace-nowrap">
-                {Math.round(nutrition.weight)}
-              </span>
-            </div>
+        {/* TITLE */}
+        <div
+          className="truncate font-medium text-sm text-foreground flex-1 tracking-tight"
+          title={title}
+        >
+          {title}
+        </div>
+
+        {/* META DATA */}
+        {meta.length > 0 && (
+          <div className="hidden sm:flex items-center gap-4 flex-shrink-0 ml-auto mr-2">
+            {meta.map((item, index) => {
+              // Если значения нет, не рендерим ничего
+              if (!item.text && item.text !== 0) return null;
+
+              return (
+                <div
+                  key={index}
+                  className={cn(
+                    'flex items-center gap-1.5 text-xs font-medium text-foreground',
+                    item.className
+                  )}
+                  title={item.tooltip}
+                >
+                  <item.icon
+                    className={cn(
+                      'w-3.5 h-3.5',
+                      item.className ? 'opacity-90' : 'text-muted-foreground'
+                    )}
+                  />
+                  <span className="tabular-nums">{item.text}</span>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Меню действий */}
+      {/* MENU */}
       {menuItems && menuItems.length > 0 && (
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 pl-1">
           <DropdownMenu
             items={menuItems}
             trigger={
@@ -169,8 +162,8 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
                   e.preventDefault();
                   e.stopPropagation();
                 }}
-                className="rounded-lg p-2 text-muted-foreground transition-all duration-200 hover:bg-muted/60 hover:text-foreground group-hover:opacity-100 lg:opacity-0"
-                aria-label="More options"
+                className="h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground/70 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                aria-label="Меню действий"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </button>

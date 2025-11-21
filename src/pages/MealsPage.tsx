@@ -1,3 +1,5 @@
+// src/pages/MealsPage.tsx
+
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,6 +14,9 @@ import {
   Grid3X3,
   Filter,
   Download,
+  Flame,
+  Weight,
+  Hash,
 } from 'lucide-react';
 import { useMealStore } from '../stores/useMealStore';
 import useProductStore from '../stores/useProductStore';
@@ -21,7 +26,7 @@ import { useViewMode } from '../hooks/useViewMode';
 import type { Meal, MealData } from '../types';
 import Button from '../ui/Button';
 import EntityCard from '../ui/EntityCard';
-import EntityListItem from '../ui/EntityListItem'; // <<-- 1. Импортируем новый компонент
+import EntityListItem, { MetaItem } from '../ui/EntityListItem';
 import { mealEntityConfig } from '../config/mealEntityConfig';
 import { calculateNutrition } from '../components/meals/mealFormUtils';
 import Modal from '../ui/Modal';
@@ -155,8 +160,6 @@ const MealsPage: React.FC = () => {
     if (selectedMealIds.length === 0) return;
     console.log(`Exporting meals: ${selectedMealIds.join(', ')}`);
   };
-
-  // details are no longer shown on cards; counts are included in nutrition block
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -321,12 +324,32 @@ const MealsPage: React.FC = () => {
 
               const isCardDisabled = isDetailEditing && meal.id !== activeId;
 
-              // <<-- 2. Условный рендеринг здесь
+              const metaItems: MetaItem[] = [
+                {
+                  icon: Hash,
+                  text: meal.items.length,
+                  tooltip: 'Количество компонентов',
+                  className: 'text-muted-foreground',
+                },
+                {
+                  icon: Flame,
+                  text: Math.round(totalCalories),
+                  className: 'text-orange-600',
+                  tooltip: 'Калории',
+                },
+                {
+                  icon: Weight,
+                  text: Math.round(totalWeight),
+                  tooltip: 'Общий вес',
+                  className: 'text-foreground',
+                },
+              ];
+
               return viewMode === 'compact' ? (
                 <EntityListItem
                   key={meal.id}
                   title={mealEntityConfig.views.card.title(meal)}
-                  icon={mealEntityConfig.getIcon(meal)}
+                  meta={metaItems}
                   borderColor={mealEntityConfig.getBorderColor(meal)}
                   isSelected={activeId === meal.id}
                   isMultiSelected={selectedMealIds.includes(meal.id)}
@@ -341,11 +364,6 @@ const MealsPage: React.FC = () => {
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                   variant="meal"
-                  nutrition={{
-                    calories: Math.round(totalCalories),
-                    weight: Math.round(totalWeight),
-                    itemsCount: meal.items.length,
-                  }}
                 />
               ) : (
                 <EntityCard
@@ -374,7 +392,6 @@ const MealsPage: React.FC = () => {
                     weight: Math.round(totalWeight),
                     itemsCount: meal.items.length,
                   }}
-                  // viewMode prop is removed
                 />
               );
             })}

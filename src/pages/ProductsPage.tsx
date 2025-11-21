@@ -15,6 +15,10 @@ import {
   CheckCheck,
   LayoutList,
   Grid3X3,
+  Flame,
+  Zap,
+  Droplet,
+  Wheat,
 } from 'lucide-react';
 import { useViewMode } from '../hooks/useViewMode';
 import { toast } from 'react-hot-toast';
@@ -23,7 +27,7 @@ import useCategoryStore from '../stores/useCategoryStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Product, ImportedJsonData, Category, ProductData } from '../types';
 import EntityCard from '../ui/EntityCard';
-import EntityListItem from '../ui/EntityListItem';
+import EntityListItem, { MetaItem } from '../ui/EntityListItem';
 import ProductDetail from '../components/products/ProductDetail';
 import ProductForm from '../components/products/ProductForm';
 import Button from '../ui/Button';
@@ -43,7 +47,6 @@ const ProductsPage: React.FC = () => {
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [detailEditTrigger, setDetailEditTrigger] = useState(0);
-  const [isDetailEditing, setIsDetailEditing] = useState(false);
   const [creatingProduct, setCreatingProduct] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -348,11 +351,38 @@ const ProductsPage: React.FC = () => {
                 onDelete: () => handleRequestDelete(product),
               });
 
+              const metaItems: MetaItem[] = [
+                {
+                  icon: Flame,
+                  text: Math.round(product.calories || 0),
+                  className: 'text-orange-600',
+                  tooltip: 'Ккал',
+                },
+                {
+                  icon: Zap,
+                  text: Math.round((product.proteins || 0) * 10) / 10,
+                  className: 'text-blue-600',
+                  tooltip: 'Белки',
+                },
+                {
+                  icon: Droplet,
+                  text: Math.round((product.fats || 0) * 10) / 10,
+                  className: 'text-yellow-600',
+                  tooltip: 'Жиры',
+                },
+                {
+                  icon: Wheat,
+                  text: Math.round((product.carbs || 0) * 10) / 10,
+                  className: 'text-green-600',
+                  tooltip: 'Углеводы',
+                },
+              ];
+
               return viewMode === 'compact' ? (
                 <EntityListItem
                   key={product.id}
                   title={cardConfig.title(product)}
-                  icon={productEntityConfig.getIcon(product)}
+                  meta={metaItems}
                   borderColor={productEntityConfig.getBorderColor(product, { category })}
                   isSelected={activeId === product.id}
                   isMultiSelected={selectedProductIds.includes(product.id)}
@@ -367,10 +397,6 @@ const ProductsPage: React.FC = () => {
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                   variant="neutral"
-                  nutrition={{
-                    calories: Math.round(product.calories || 0),
-                    weight: Math.round((product.weight || 0) * 100) / 100,
-                  }}
                 />
               ) : (
                 <EntityCard
@@ -379,24 +405,19 @@ const ProductsPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(product, { category })}
                   icon={productEntityConfig.getIcon(product)}
                   iconColor={productEntityConfig.getIconColor?.(product, { category })}
-                  details={cardConfig.details(product).map((detail, index) => ({
-                    ...detail,
-                    key: `product-detail-${index}`,
-                  }))}
+                  details={[]}
                   variant="neutral"
                   nutrition={{
                     calories: Math.round(product.calories || 0),
-                    proteins: Math.round((product.proteins || 0) * 10) / 10,
-                    fats: Math.round((product.fats || 0) * 10) / 10,
-                    carbs: Math.round((product.carbs || 0) * 10) / 10,
-                    weight: Math.round((product.weight || 0) * 100) / 100,
+                    proteins: Math.round(product.proteins || 0),
+                    fats: Math.round(product.fats || 0),
+                    carbs: Math.round(product.carbs || 0),
+                    weight: 100,
                   }}
                   isSelected={activeId === product.id}
                   isMultiSelected={selectedProductIds.includes(product.id)}
-                  onSelect={isDetailEditing ? undefined : () => setActiveId(product.id)}
-                  onMultiSelect={
-                    isDetailEditing ? undefined : () => toggleProductSelection(product.id)
-                  }
+                  onSelect={() => setActiveId(product.id)}
+                  onMultiSelect={() => toggleProductSelection(product.id)}
                   onRequestMultiSelectMode={() => {
                     if (!showMultiSelect) {
                       setShowMultiSelect(true);

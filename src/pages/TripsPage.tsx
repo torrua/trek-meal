@@ -20,7 +20,7 @@ import {
   UploadCloud,
 } from 'lucide-react';
 import { useTripsManagement } from '../hooks/useTripsManagement';
-import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
+import { useViewMode } from '../hooks/useViewMode';
 import useTripStore from '../stores/useTripStore';
 import TripFiltersComponent from '../components/trips/TripFiltersComponent';
 import TripDetail from '../components/trips/TripDetail';
@@ -29,6 +29,7 @@ import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import AddParticipantsModal from '../components/trips/AddParticipantsModal';
 import EntityCard from '../ui/EntityCard';
+import EntityListItem, { MetaItem } from '../ui/EntityListItem';
 import { tripEntityConfig } from '../config/entityConfig';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { formatDate } from '../utils';
@@ -38,27 +39,21 @@ const TripsPage: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
-  const { viewMode, toggleViewMode } = useViewMode('trips'); // Use the new hook
+  const { viewMode, toggleViewMode } = useViewMode('trips');
   const {
-    // state
     activeId,
     filters,
     showFilters,
     tripToDelete,
     isAddParticipantModalOpen,
-
-    // data
     filteredTrips,
     selectedTrip,
     hasActiveFilters,
-
-    // setters/actions
     setActiveId,
     setFilters,
     setShowFilters,
     setAddParticipantModalOpen,
     setTripToDelete,
-
     handleEdit,
     handleClone,
     handleExport,
@@ -68,16 +63,11 @@ const TripsPage: React.FC = () => {
     handleSelectTrip,
   } = useTripsManagement();
 
-  // Get the delete function directly from the store
   const { deleteTrip } = useTripStore();
-
-  // Multi-selection state
   const [selectedTripIds, setSelectedTripIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
-  // Add state for bulk delete confirmation
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
-  // Function to transform trip details to match EntityCard's DetailItem type
   const getTripDetails = (trip: any) => {
     const details = [
       {
@@ -109,7 +99,6 @@ const TripsPage: React.FC = () => {
     return details;
   };
 
-  // Multi-selection handlers
   const toggleMultiSelect = () => {
     setShowMultiSelect(!showMultiSelect);
     if (showMultiSelect) {
@@ -127,45 +116,36 @@ const TripsPage: React.FC = () => {
     setSelectedTripIds(filteredTrips.map((trip) => trip.id));
   };
 
-  // Exit multi-select mode completely
   const exitMultiSelectMode = () => {
     setShowMultiSelect(false);
     setSelectedTripIds([]);
   };
 
-  // Bulk action handlers
   const handleBulkDelete = () => {
     if (selectedTripIds.length === 0) return;
-    // Show confirmation modal
     setShowBulkDeleteConfirm(true);
   };
 
   const handleConfirmBulkDelete = () => {
-    // Delete all selected trips directly using the store function
     selectedTripIds.forEach((id) => {
       if (id === activeId) setActiveId(null);
       deleteTrip(id);
     });
-    // Exit multi-select mode
     exitMultiSelectMode();
     setShowBulkDeleteConfirm(false);
   };
 
   const handleBulkClone = () => {
     if (selectedTripIds.length === 0) return;
-
     console.log(`Cloning trips: ${selectedTripIds.join(', ')}`);
   };
 
   const handleBulkExport = () => {
     if (selectedTripIds.length === 0) return;
-
-    // Get selected trips and export them
     const selectedTrips = filteredTrips.filter((trip) => selectedTripIds.includes(trip.id));
     exportBulkTripsToJson(selectedTrips);
   };
 
-  // Import functionality
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -185,7 +165,6 @@ const TripsPage: React.FC = () => {
         aria-hidden="true"
         tabIndex={-1}
       />
-      {/* Заголовок и действия */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
@@ -218,7 +197,6 @@ const TripsPage: React.FC = () => {
                   <UploadCloud className="w-4 h-4" />
                 </Button>
 
-                {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
                   variant="secondary"
@@ -303,7 +281,6 @@ const TripsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Фильтры */}
       {showFilters && (
         <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border notion-shadow-xs p-4 sm:p-5">
           <TripFiltersComponent filters={filters} onFiltersChange={setFilters} />
@@ -312,7 +289,6 @@ const TripsPage: React.FC = () => {
 
       {filteredTrips.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          {/* Список походов */}
           <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar">
             {filteredTrips.map((trip) => {
               const cardConfig = tripEntityConfig.views.card;
@@ -323,7 +299,50 @@ const TripsPage: React.FC = () => {
                 onDelete: () => handleRequestDelete(trip),
               });
 
-              return (
+              const metaItems: MetaItem[] = [];
+
+              if (trip.startDate) {
+                metaItems.push({
+                  icon: Calendar,
+                  text: formatDate(trip.startDate),
+                  tooltip: 'Дата начала',
+                  className: 'text-foreground',
+                });
+              }
+
+              if (trip.destination) {
+                metaItems.push({
+                  icon: MapPin,
+                  text: trip.destination,
+                  tooltip: 'Место назначения',
+                  className: 'text-foreground',
+                });
+              }
+
+              if (trip.participants.length > 0) {
+                metaItems.push({
+                  icon: Users,
+                  text: trip.participants.length,
+                  tooltip: 'Участников',
+                  className: 'text-foreground',
+                });
+              }
+
+              return viewMode === 'compact' ? (
+                <EntityListItem
+                  key={trip.id}
+                  title={cardConfig.title(trip)}
+                  meta={metaItems}
+                  borderColor={tripEntityConfig.getBorderColor(trip)}
+                  menuItems={actions}
+                  isSelected={activeId === trip.id}
+                  isMultiSelected={selectedTripIds.includes(trip.id)}
+                  onSelect={() => handleSelectTrip(trip.id)}
+                  onMultiSelect={() => toggleTripSelection(trip.id)}
+                  showMultiSelect={showMultiSelect}
+                  variant="neutral"
+                />
+              ) : (
                 <EntityCard
                   key={trip.id}
                   title={cardConfig.title(trip)}
@@ -338,13 +357,12 @@ const TripsPage: React.FC = () => {
                   onMultiSelect={() => toggleTripSelection(trip.id)}
                   borderColor={tripEntityConfig.getBorderColor(trip)}
                   showMultiSelect={showMultiSelect}
-                  viewMode={viewMode} // Pass viewMode to EntityCard
+                  variant="neutral"
                 />
               );
             })}
           </div>
 
-          {/* Детали похода */}
           <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {selectedTrip ? (
               <TripDetail
@@ -367,7 +385,6 @@ const TripsPage: React.FC = () => {
             )}
           </div>
 
-          {/* Модальное окно деталей для мобильных устройств */}
           {isMobile && activeId !== null && (
             <Modal
               isOpen={activeId !== null}
@@ -407,9 +424,6 @@ const TripsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Editing handled via TripDetailPage routes */}
-
-      {/* Подтверждение удаления */}
       <ConfirmModal
         isOpen={!!tripToDelete}
         onClose={() => setTripToDelete(null)}
@@ -428,14 +442,12 @@ const TripsPage: React.FC = () => {
         </p>
       </ConfirmModal>
 
-      {/* Модальное окно добавления участников */}
       <AddParticipantsModal
         isOpen={isAddParticipantModalOpen}
         onClose={() => setAddParticipantModalOpen(false)}
         tripId={activeId}
       />
 
-      {/* Bulk delete confirmation */}
       <ConfirmModal
         isOpen={showBulkDeleteConfirm}
         onClose={() => setShowBulkDeleteConfirm(false)}

@@ -1,3 +1,5 @@
+// src/ui/EntityCard.tsx
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import cn from 'classnames';
@@ -48,9 +50,10 @@ interface EntityCardProps {
     weight: number;
     itemsCount?: number;
   };
+  viewMode?: 'default' | 'compact';
 }
 
-// Глобальное состояние для синхронизации всех карточек
+// Глобальное состояние для синхронизации отображения БЖУ
 let globalShowBjuCard = true;
 const cardListeners = new Set<(show: boolean) => void>();
 
@@ -92,7 +95,6 @@ const EntityCard: React.FC<EntityCardProps> = ({
   const [showBju, setShowBju] = useState(globalShowBjuCard);
   const measureTimeoutRef = useRef<number>();
 
-  // Подписываемся на глобальные изменения
   useEffect(() => {
     return subscribeToShowBjuCard(setShowBju);
   }, []);
@@ -107,7 +109,6 @@ const EntityCard: React.FC<EntityCardProps> = ({
       }
 
       measureTimeoutRef.current = window.setTimeout(() => {
-        // Проверяем, помещается ли полная версия с БЖУ
         const testDiv = el.cloneNode(true) as HTMLElement;
         testDiv.style.position = 'absolute';
         testDiv.style.visibility = 'hidden';
@@ -123,15 +124,12 @@ const EntityCard: React.FC<EntityCardProps> = ({
     };
 
     measure();
-
     const ro = new ResizeObserver(measure);
     ro.observe(el);
 
     return () => {
       ro.disconnect();
-      if (measureTimeoutRef.current) {
-        window.clearTimeout(measureTimeoutRef.current);
-      }
+      if (measureTimeoutRef.current) window.clearTimeout(measureTimeoutRef.current);
     };
   }, [nutrition]);
 
@@ -143,19 +141,22 @@ const EntityCard: React.FC<EntityCardProps> = ({
   };
 
   const cardClasses = cn(
-    'block rounded-xl border border-border p-6 transition-all duration-200 cursor-pointer relative',
+    'group relative flex flex-col rounded-xl border border-border p-4 transition-all duration-200 cursor-pointer bg-card',
     gradientByVariant[variant],
     {
-      'border-primary/50 bg-primary/10 hover:bg-primary/15 hover:border-primary/60': isSelected,
-      'hover:bg-card-hover hover:border-border-hover': !isSelected,
+      'border-primary/50 bg-primary/5': isSelected,
+      'hover:bg-card-hover hover:border-border-hover notion-shadow-xs hover:notion-shadow-sm':
+        !isSelected,
     },
     className
   );
 
   const cardContent = (
     <>
-      <div className="flex items-start justify-between gap-2">
+      {/* Header: Icon + Title + Menu */}
+      <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
+          {/* Icon / Checkbox Area */}
           {showMultiSelect ? (
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
               <button
@@ -172,7 +173,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
                 )}
                 aria-label={isMultiSelected ? 'Снять выделение' : 'Выделить'}
               >
-                {isMultiSelected && <Check className="h-4 w-4" />}
+                {isMultiSelected && <Check className="h-3.5 w-3.5" />}
               </button>
             </div>
           ) : (
@@ -188,51 +189,61 @@ const EntityCard: React.FC<EntityCardProps> = ({
             </div>
           )}
 
+          {/* Title & Subtitle */}
           <div className="min-w-0 flex-1">
             <h3
-              className="truncate text-lg font-semibold leading-snug text-foreground"
+              className="truncate text-sm font-semibold leading-tight text-foreground"
               title={title}
             >
               {title}
             </h3>
             {subtitle && (
-              <div className="mt-0.5 text-sm leading-snug text-muted-foreground">{subtitle}</div>
-            )}
-            {description && (
-              <p className="mt-1 truncate text-sm leading-relaxed text-muted-foreground">
-                {description}
-              </p>
+              <div className="mt-0.5 text-xs text-muted-foreground truncate">{subtitle}</div>
             )}
           </div>
         </div>
 
+        {/* Menu Button */}
         {menuItems && menuItems.length > 0 && (
-          <DropdownMenu
-            items={menuItems}
-            trigger={
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                className="notion-focus-ring rounded-lg p-2 text-muted-foreground transition-all duration-200 hover:bg-muted/60 hover:text-foreground"
-                aria-label="More options"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            }
-          />
+          <div className="flex-shrink-0 -mr-1.5 -mt-1.5">
+            <DropdownMenu
+              items={menuItems}
+              trigger={
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100 lg:opacity-0 focus:opacity-100"
+                  aria-label="Меню действий"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              }
+            />
+          </div>
         )}
       </div>
 
+      {/* Description */}
+      {description && (
+        <p className="mb-3 line-clamp-2 text-xs text-muted-foreground/80 leading-relaxed">
+          {description}
+        </p>
+      )}
+
+      {/* Details Footer - No Border */}
       {details && details.length > 0 && (
-        <div className="mt-4 border-t border-border/60 pt-4">
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
+        <div className="mt-auto pt-1">
+          <dl className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-xs">
             {details.map((item) => (
-              <div key={item.key} className="flex items-center gap-2" title={item.title}>
-                <item.icon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                <dt className="sr-only">{item.key}</dt>
-                <dd className={cn('truncate font-medium text-foreground/90', item.className)}>
+              <div
+                key={item.key}
+                className="flex items-center gap-1.5 overflow-hidden"
+                title={item.title}
+              >
+                <item.icon className="h-3 w-3 flex-shrink-0 text-muted-foreground/70" />
+                <dd className={cn('truncate font-medium text-foreground/80', item.className)}>
                   {item.text}
                 </dd>
               </div>
@@ -241,47 +252,48 @@ const EntityCard: React.FC<EntityCardProps> = ({
         </div>
       )}
 
+      {/* Nutrition Footer - No Border */}
       {nutrition && (
-        <div className="mt-3 border-t border-border pt-3">
-          <div ref={nutritionRef} className={cn('cq-nutrition text-sm', showBju && 'show-bju')}>
+        <div className="mt-auto pt-1">
+          <div ref={nutritionRef} className={cn('cq-nutrition text-xs', showBju && 'show-bju')}>
             {typeof nutrition.itemsCount === 'number' && (
               <div className="flex items-center gap-1">
-                <Hash className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                <span className="font-semibold text-muted-foreground">{nutrition.itemsCount}</span>
+                <Hash className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                <span className="font-medium text-muted-foreground">{nutrition.itemsCount}</span>
               </div>
             )}
 
             <div className="flex items-center gap-1">
-              <Flame className="w-3.5 h-3.5 text-orange-600 flex-shrink-0" />
-              <span className="font-semibold text-orange-600">
+              <Flame className="w-3 h-3 text-orange-500 flex-shrink-0" />
+              <span className="font-semibold text-orange-600/90">
                 {Math.round(nutrition.calories)}
               </span>
             </div>
 
             <div className="bju items-center gap-1">
-              <Beef className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-              <span className="font-semibold text-blue-600">
+              <Beef className="w-3 h-3 text-blue-500 flex-shrink-0" />
+              <span className="font-medium text-blue-600/90">
                 {Math.round(nutrition.proteins * 10) / 10}
               </span>
             </div>
 
             <div className="bju items-center gap-1">
-              <Droplet className="w-3.5 h-3.5 text-yellow-600 flex-shrink-0" />
-              <span className="font-semibold text-yellow-600">
+              <Droplet className="w-3 h-3 text-yellow-500 flex-shrink-0" />
+              <span className="font-medium text-yellow-600/90">
                 {Math.round(nutrition.fats * 10) / 10}
               </span>
             </div>
 
             <div className="bju items-center gap-1">
-              <Wheat className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
-              <span className="font-semibold text-green-600">
+              <Wheat className="w-3 h-3 text-green-500 flex-shrink-0" />
+              <span className="font-medium text-green-600/90">
                 {Math.round(nutrition.carbs * 10) / 10}
               </span>
             </div>
 
-            <div className="flex items-center gap-1">
-              <Weight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-              <span className="font-semibold text-muted-foreground">
+            <div className="flex items-center gap-1 ml-auto">
+              <Weight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+              <span className="font-medium text-muted-foreground">
                 {Math.round(nutrition.weight)}
               </span>
             </div>

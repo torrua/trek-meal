@@ -16,6 +16,11 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
+  Edit,
+  ExternalLink,
+  Scale,
+  User,
+  Users,
 } from 'lucide-react';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
@@ -23,6 +28,7 @@ import useParticipantStore from '../stores/useParticipantStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Equipment, EquipmentCategory, Participant } from '../types';
 import EntityCard from '../ui/EntityCard';
+import EntityListItem, { MetaItem } from '../ui/EntityListItem';
 import EquipmentFiltersComponent, {
   EquipmentFilters,
 } from '../components/equipment/EquipmentFiltersComponent';
@@ -31,7 +37,6 @@ import ConfirmModal from '../ui/ConfirmModal';
 import DetailPane from '../ui/DetailPane';
 import InfoField from '../ui/InfoField';
 import { equipmentEntityConfig } from '../config/entityConfig';
-import { Edit, ExternalLink, Scale, User, Users } from 'lucide-react';
 import { useViewMode } from '../hooks/useViewMode';
 import {
   exportEquipmentToJson,
@@ -57,13 +62,10 @@ const EquipmentPage: React.FC = () => {
     type: 'all',
   });
 
-  // Multi-selection state
   const [selectedEquipmentIds, setSelectedEquipmentIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
-  // Add state for bulk delete confirmation
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
-  // View mode state
   const { viewMode, toggleViewMode } = useViewMode('equipment');
 
   useEffect(() => {
@@ -95,12 +97,10 @@ const EquipmentPage: React.FC = () => {
   );
 
   const handleAddNew = useCallback(() => {
-    // Navigate to new equipment page
     window.location.href = '/equipment/new';
   }, []);
 
   const handleEdit = useCallback((equipment: Equipment) => {
-    // Navigate to edit equipment page
     window.location.href = `/equipment/${equipment.id}`;
   }, []);
 
@@ -134,7 +134,6 @@ const EquipmentPage: React.FC = () => {
     [filters]
   );
 
-  // Multi-selection handlers
   const toggleMultiSelect = () => {
     setShowMultiSelect(!showMultiSelect);
     if (showMultiSelect) {
@@ -154,47 +153,38 @@ const EquipmentPage: React.FC = () => {
     setSelectedEquipmentIds(filteredEquipment.map((equipmentItem: Equipment) => equipmentItem.id));
   };
 
-  // Exit multi-select mode completely
   const exitMultiSelectMode = () => {
     setShowMultiSelect(false);
     setSelectedEquipmentIds([]);
   };
 
-  // Bulk action handlers
   const handleBulkDelete = () => {
     if (selectedEquipmentIds.length === 0) return;
-    // Show confirmation modal
     setShowBulkDeleteConfirm(true);
   };
 
   const handleConfirmBulkDelete = () => {
-    // Delete all selected equipment directly using the store function
     selectedEquipmentIds.forEach((id) => {
       if (id === activeId) setActiveId(null);
       deleteEquipment(id);
     });
-    // Exit multi-select mode
     exitMultiSelectMode();
     setShowBulkDeleteConfirm(false);
   };
 
   const handleBulkClone = () => {
     if (selectedEquipmentIds.length === 0) return;
-
     console.log(`Cloning equipment: ${selectedEquipmentIds.join(', ')}`);
   };
 
   const handleBulkExport = () => {
     if (selectedEquipmentIds.length === 0) return;
-
-    // Get selected equipment and export them
     const selectedEquipmentItems = filteredEquipment.filter((e) =>
       selectedEquipmentIds.includes(e.id)
     );
     exportBulkEquipmentToJson(selectedEquipmentItems);
   };
 
-  // Import functionality
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -203,7 +193,6 @@ const EquipmentPage: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Individual equipment actions
   const handleClone = useCallback((equipmentItem: Equipment) => {
     const { cloneEquipment } = useEquipmentStore.getState();
     cloneEquipment(equipmentItem.id);
@@ -212,9 +201,7 @@ const EquipmentPage: React.FC = () => {
   const handleExport = useCallback((equipmentItem: Equipment) => {
     try {
       exportEquipmentToJson(equipmentItem);
-      // toast.success('Снаряжение экспортировано');
     } catch (error) {
-      // toast.error('Ошибка при экспорте');
       console.error('Export error:', error);
     }
   }, []);
@@ -230,7 +217,6 @@ const EquipmentPage: React.FC = () => {
         aria-hidden="true"
         tabIndex={-1}
       />
-      {/* Header and buttons */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
@@ -263,7 +249,6 @@ const EquipmentPage: React.FC = () => {
                   <UploadCloud className="w-4 h-4" />
                 </Button>
 
-                {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
                   variant="secondary"
@@ -356,7 +341,7 @@ const EquipmentPage: React.FC = () => {
 
       {filteredEquipment.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3">
+          <div className="lg:col-span-1 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {filteredEquipment.map((equipmentItem) => {
               const category = categories.find(
                 (c: EquipmentCategory) => c.id === equipmentItem.categoryId
@@ -376,7 +361,36 @@ const EquipmentPage: React.FC = () => {
                 formattedWeight: formatWeight(equipmentItem.weight),
               };
 
-              return (
+              const metaItems: MetaItem[] = [
+                {
+                  icon: Scale,
+                  text: formatWeight(equipmentItem.weight),
+                  tooltip: 'Вес',
+                },
+                {
+                  icon: equipmentItem.type === 'personal' ? User : Users,
+                  text: equipmentItem.type === 'personal' ? 'Личное' : 'Общее',
+                  className:
+                    equipmentItem.type === 'personal' ? 'text-blue-600/90' : 'text-purple-600/90',
+                  tooltip: 'Тип снаряжения',
+                },
+              ];
+
+              return viewMode === 'compact' ? (
+                <EntityListItem
+                  key={equipmentItem.id}
+                  title={cardConfig.title(equipmentItem)}
+                  meta={metaItems}
+                  borderColor={equipmentEntityConfig.getBorderColor(equipmentItem, context)}
+                  menuItems={actions}
+                  isSelected={activeId === equipmentItem.id}
+                  isMultiSelected={selectedEquipmentIds.includes(equipmentItem.id)}
+                  onSelect={() => setActiveId(equipmentItem.id)}
+                  onMultiSelect={() => toggleEquipmentSelection(equipmentItem.id)}
+                  showMultiSelect={showMultiSelect}
+                  variant="info"
+                />
+              ) : (
                 <EntityCard
                   key={equipmentItem.id}
                   title={cardConfig.title(equipmentItem)}
@@ -395,13 +409,12 @@ const EquipmentPage: React.FC = () => {
                   borderColor={equipmentEntityConfig.getBorderColor(equipmentItem, context)}
                   data-testid={`equipment-card-${equipmentItem.id}`}
                   showMultiSelect={showMultiSelect}
-                  viewMode={viewMode}
+                  variant="info"
                 />
               );
             })}
           </div>
 
-          {/* Detail panel */}
           <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
             {selectedEquipment ? (
               <DetailPane
@@ -538,7 +551,6 @@ const EquipmentPage: React.FC = () => {
         действие необратимо.
       </ConfirmModal>
 
-      {/* Bulk delete confirmation */}
       <ConfirmModal
         isOpen={showBulkDeleteConfirm}
         onClose={() => setShowBulkDeleteConfirm(false)}

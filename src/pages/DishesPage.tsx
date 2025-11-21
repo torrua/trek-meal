@@ -15,6 +15,11 @@ import {
   CheckCheck,
   LayoutList,
   Grid3X3,
+  Flame,
+  Zap,
+  Droplet,
+  Wheat,
+  Weight,
 } from 'lucide-react';
 import useDishStore from '../stores/useDishStore';
 import useTripStore from '../stores/useTripStore';
@@ -22,9 +27,8 @@ import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Dish } from '../types';
 import EntityCard from '../ui/EntityCard';
-import EntityListItem from '../ui/EntityListItem';
+import EntityListItem, { MetaItem } from '../ui/EntityListItem';
 import DishDetail from '../components/dishes/DishDetail';
-// Editing moved to dedicated page
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import { toast } from 'react-hot-toast';
@@ -52,7 +56,6 @@ const DishesPage: React.FC = () => {
   // Multi-selection state
   const [selectedDishIds, setSelectedDishIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
-  // Add state for bulk delete confirmation
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const handleToggleSection = useCallback((sectionId: string) => {
@@ -128,7 +131,6 @@ const DishesPage: React.FC = () => {
     setSelectedDishIds(filteredDishes.map((dish: Dish) => dish.id));
   };
 
-  // Exit multi-select mode completely
   const exitMultiSelectMode = () => {
     setShowMultiSelect(false);
     setSelectedDishIds([]);
@@ -137,12 +139,10 @@ const DishesPage: React.FC = () => {
   // Bulk action handlers
   const handleBulkDelete = () => {
     if (selectedDishIds.length === 0) return;
-    // Show confirmation modal
     setShowBulkDeleteConfirm(true);
   };
 
   const handleConfirmBulkDelete = () => {
-    // Delete all selected dishes directly using the store function
     selectedDishIds.forEach((id) => {
       if (id === activeId) {
         setActiveId(null);
@@ -150,21 +150,17 @@ const DishesPage: React.FC = () => {
       }
       deleteDish(id);
     });
-    // Exit multi-select mode
     exitMultiSelectMode();
     setShowBulkDeleteConfirm(false);
   };
 
   const handleBulkClone = () => {
     if (selectedDishIds.length === 0) return;
-
     console.log(`Cloning dishes: ${selectedDishIds.join(', ')}`);
   };
 
   const handleBulkExport = () => {
     if (selectedDishIds.length === 0) return;
-
-    // Get selected dishes and export them
     const selectedDishes = filteredDishes.filter((d) => selectedDishIds.includes(d.id));
     exportBulkDishesToJson(selectedDishes);
   };
@@ -194,11 +190,9 @@ const DishesPage: React.FC = () => {
     }
   }, []);
 
-  // Form submission handled in DishDetailPage
-
-  // Helper function to calculate dish nutrition for the card
+  // Helper function to calculate dish nutrition
   const calculateDishNutrition = (dish: Dish) => {
-    const nutrition = { calories: 0, proteins: 0, fats: 0, carbs: 0 }; // ИСПРАВЛЕНИЕ: let -> const
+    const nutrition = { calories: 0, proteins: 0, fats: 0, carbs: 0 };
     let totalWeight = 0;
     dish.products.forEach((dishProduct) => {
       const product = allProducts.find((p) => p.id === dishProduct.productId);
@@ -214,9 +208,9 @@ const DishesPage: React.FC = () => {
     return {
       nutrition: {
         calories: Math.round(nutrition.calories),
-        proteins: Math.round(nutrition.proteins),
-        fats: Math.round(nutrition.fats),
-        carbs: Math.round(nutrition.carbs),
+        proteins: Math.round(nutrition.proteins * 10) / 10,
+        fats: Math.round(nutrition.fats * 10) / 10,
+        carbs: Math.round(nutrition.carbs * 10) / 10,
       },
       totalWeight,
     };
@@ -248,8 +242,8 @@ const DishesPage: React.FC = () => {
                   }
                   variant="secondary"
                   size="icon"
-                  title="Фильтры"
-                  aria-label="Показать фильтры"
+                  title="Развернуть/Свернуть все"
+                  aria-label="Развернуть/Свернуть все"
                 >
                   <Filter className="w-4 h-4" />
                 </Button>
@@ -387,11 +381,45 @@ const DishesPage: React.FC = () => {
 
               const isCardDisabled = isDetailEditing && dish.id !== activeId;
 
+              // Meta items for compact view
+              const metaItems: MetaItem[] = [
+                {
+                  icon: Flame,
+                  text: Math.round(nutrition.calories),
+                  className: 'text-orange-600',
+                  tooltip: 'Ккал',
+                },
+                {
+                  icon: Zap,
+                  text: nutrition.proteins,
+                  className: 'text-blue-600',
+                  tooltip: 'Белки',
+                },
+                {
+                  icon: Droplet,
+                  text: nutrition.fats,
+                  className: 'text-yellow-600',
+                  tooltip: 'Жиры',
+                },
+                {
+                  icon: Wheat,
+                  text: nutrition.carbs,
+                  className: 'text-green-600',
+                  tooltip: 'Углеводы',
+                },
+                {
+                  icon: Weight,
+                  text: Math.round(totalWeight),
+                  className: 'text-foreground',
+                  tooltip: 'Вес',
+                },
+              ];
+
               return viewMode === 'compact' ? (
                 <EntityListItem
                   key={dish.id}
                   title={cardConfig.title(dish)}
-                  icon={dishEntityConfig.getIcon(dish)}
+                  meta={metaItems}
                   borderColor={dishEntityConfig.getBorderColor(dish)}
                   isSelected={activeId === dish.id}
                   isMultiSelected={selectedDishIds.includes(dish.id)}
@@ -406,11 +434,6 @@ const DishesPage: React.FC = () => {
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                   variant="meal"
-                  nutrition={{
-                    calories: Math.round(nutrition.calories),
-                    weight: Math.round(totalWeight),
-                    itemsCount: dish.products.length,
-                  }}
                 />
               ) : (
                 <EntityCard
@@ -419,12 +442,8 @@ const DishesPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(dish, { totalWeight })}
                   icon={dishEntityConfig.getIcon(dish)}
                   iconColor={dishEntityConfig.getIconColor?.(dish)}
-                  details={cardConfig
-                    .details(dish, { nutrition, totalWeight })
-                    .map((detail, index) => ({
-                      ...detail,
-                      key: `dish-detail-${index}`,
-                    }))}
+                  // Pass empty details to avoid duplicates, nutrition footer handles stats
+                  details={[]}
                   variant="meal"
                   nutrition={{
                     calories: Math.round(nutrition.calories),

@@ -16,8 +16,10 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
+  MapPin,
+  Backpack,
 } from 'lucide-react';
-import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
+import { useViewMode } from '../hooks/useViewMode';
 import { useParticipantsManagement } from '../hooks/useParticipantsManagement';
 import useParticipantStore from '../stores/useParticipantStore';
 import useTripStore from '../stores/useTripStore';
@@ -28,6 +30,7 @@ import ParticipantFiltersComponent from '../components/participants/ParticipantF
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard from '../ui/EntityCard';
+import EntityListItem, { MetaItem } from '../ui/EntityListItem';
 import {
   exportParticipantToJson,
   exportBulkParticipantsToJson,
@@ -40,29 +43,20 @@ const ParticipantsPage: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
-    // state
     activeId,
     filters,
-    // showFormModal, // editing via routes now
-    // editingParticipant,
     participantToDelete,
     showFilters,
     isSelectTripModalOpen,
     openSections,
-
-    // data
     filteredParticipants,
     selectedParticipant,
     hasActiveFilters,
-
-    // setters/actions
     setActiveId,
     setFilters,
-    // setShowFormModal,
     setParticipantToDelete,
     setShowFilters,
     setSelectTripModalOpen,
-
     handleToggleSection,
     handleAddNew,
     handleClone,
@@ -72,24 +66,15 @@ const ParticipantsPage: React.FC = () => {
     handleConfirmAddToTrip,
   } = useParticipantsManagement();
 
-  // Get the delete function directly from the store
   const { deleteParticipant } = useParticipantStore();
-
-  // Multi-selection state
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
-  // Add state for bulk delete confirmation
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const { viewMode, toggleViewMode } = useViewMode('participants');
 
-  // View mode state
-  const { viewMode, toggleViewMode } = useViewMode('participants'); // Use the new hook
-
-  // Multi-selection handlers
   const toggleMultiSelect = () => {
     setShowMultiSelect(!showMultiSelect);
-    if (showMultiSelect) {
-      setSelectedParticipantIds([]);
-    }
+    if (showMultiSelect) setSelectedParticipantIds([]);
   };
 
   const toggleParticipantSelection = (participantId: number) => {
@@ -104,47 +89,38 @@ const ParticipantsPage: React.FC = () => {
     setSelectedParticipantIds(filteredParticipants.map((p) => p.id));
   };
 
-  // Exit multi-select mode completely
   const exitMultiSelectMode = () => {
     setShowMultiSelect(false);
     setSelectedParticipantIds([]);
   };
 
-  // Bulk action handlers
   const handleBulkDelete = () => {
     if (selectedParticipantIds.length === 0) return;
-    // Show confirmation modal
     setShowBulkDeleteConfirm(true);
   };
 
   const handleConfirmBulkDelete = () => {
-    // Delete all selected participants directly using the store function
     selectedParticipantIds.forEach((id) => {
       if (id === activeId) setActiveId(null);
       deleteParticipant(id);
     });
-    // Exit multi-select mode
     exitMultiSelectMode();
     setShowBulkDeleteConfirm(false);
   };
 
   const handleBulkClone = () => {
     if (selectedParticipantIds.length === 0) return;
-
     console.log(`Cloning participants: ${selectedParticipantIds.join(', ')}`);
   };
 
   const handleBulkExport = () => {
     if (selectedParticipantIds.length === 0) return;
-
-    // Get selected participants and export them
     const selectedParticipants = filteredParticipants.filter((p) =>
       selectedParticipantIds.includes(p.id)
     );
     exportBulkParticipantsToJson(selectedParticipants);
   };
 
-  // Import functionality
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -164,7 +140,6 @@ const ParticipantsPage: React.FC = () => {
         aria-hidden="true"
         tabIndex={-1}
       />
-      {/* Заголовок и кнопки */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
@@ -197,7 +172,6 @@ const ParticipantsPage: React.FC = () => {
                   <UploadCloud className="w-4 h-4" />
                 </Button>
 
-                {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
                   variant="secondary"
@@ -286,7 +260,6 @@ const ParticipantsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Фильтры */}
       {showFilters && (
         <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border notion-shadow-xs p-4 sm:p-5">
           <ParticipantFiltersComponent filters={filters} onFiltersChange={setFilters} />
@@ -295,8 +268,7 @@ const ParticipantsPage: React.FC = () => {
 
       {filteredParticipants.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          {/* Список участников */}
-          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar">
+          <div className="lg:col-span-1 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {filteredParticipants.map((p) => {
               const tripCount = useTripStore
                 .getState()
@@ -314,7 +286,41 @@ const ParticipantsPage: React.FC = () => {
                 onDelete: () => handleRequestDelete(p),
               });
 
-              return (
+              const metaItems: MetaItem[] = [];
+
+              if (tripCount > 0) {
+                metaItems.push({
+                  icon: MapPin,
+                  text: tripCount,
+                  tooltip: 'Количество походов',
+                  className: 'text-foreground',
+                });
+              }
+
+              if (equipmentCount > 0) {
+                metaItems.push({
+                  icon: Backpack,
+                  text: equipmentCount,
+                  tooltip: 'Предметов снаряжения',
+                  className: 'text-foreground',
+                });
+              }
+
+              return viewMode === 'compact' ? (
+                <EntityListItem
+                  key={p.id}
+                  title={cardConfig.title(p)}
+                  meta={metaItems}
+                  borderColor={participantEntityConfig.getBorderColor(p)}
+                  menuItems={actions}
+                  isSelected={activeId === p.id}
+                  isMultiSelected={selectedParticipantIds.includes(p.id)}
+                  onSelect={() => setActiveId(p.id)}
+                  onMultiSelect={() => toggleParticipantSelection(p.id)}
+                  showMultiSelect={showMultiSelect}
+                  variant="info"
+                />
+              ) : (
                 <EntityCard
                   key={p.id}
                   title={cardConfig.title(p)}
@@ -334,7 +340,7 @@ const ParticipantsPage: React.FC = () => {
                   borderColor={participantEntityConfig.getBorderColor(p)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
-                  viewMode={viewMode} // Pass viewMode to EntityCard
+                  variant="info"
                 />
               );
             })}

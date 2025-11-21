@@ -5,13 +5,13 @@ import { useSearchParams } from 'react-router-dom';
 import {
   CirclePlus,
   Filter,
-  UploadCloud,
+  Download,
   Component,
   Trash2,
   Copy,
-  Share,
+  Upload,
   X,
-  Check,
+  CheckSquare,
   CheckCheck,
   LayoutList,
   Grid3X3,
@@ -23,6 +23,7 @@ import useCategoryStore from '../stores/useCategoryStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Product, ImportedJsonData, Category, ProductData } from '../types';
 import EntityCard from '../ui/EntityCard';
+import EntityListItem from '../ui/EntityListItem';
 import ProductDetail from '../components/products/ProductDetail';
 import ProductForm from '../components/products/ProductForm';
 import Button from '../ui/Button';
@@ -42,6 +43,7 @@ const ProductsPage: React.FC = () => {
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [detailEditTrigger, setDetailEditTrigger] = useState(0);
+  const [isDetailEditing, setIsDetailEditing] = useState(false);
   const [creatingProduct, setCreatingProduct] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -241,7 +243,7 @@ const ProductsPage: React.FC = () => {
                   title="Импорт"
                   aria-label="Импорт"
                 >
-                  <UploadCloud className="w-4 h-4" />
+                  <Download className="w-4 h-4" />
                 </Button>
 
                 <Button
@@ -265,7 +267,7 @@ const ProductsPage: React.FC = () => {
                   title="Выделить"
                   aria-label="Выделить"
                 >
-                  <Check className="w-4 h-4" />
+                  <CheckSquare className="w-4 h-4" />
                 </Button>
                 <Button onClick={handleAddNew} variant="primary" size="default">
                   <CirclePlus className="w-4 h-4 sm:mr-2" />
@@ -273,10 +275,9 @@ const ProductsPage: React.FC = () => {
                 </Button>
               </>
             ) : (
-              <div className="flex items-center gap-2">
-                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
-                  <span>{selectedProductIds.length}</span>
-                  <span className="text-primary/70">из {filteredProducts.length} выделено</span>
+              <div className="flex items-center gap-2 h-9 min-w-[320px] justify-end">
+                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center">
+                  <span>{`${selectedProductIds.length} из ${filteredProducts.length} выделено`}</span>
                 </div>
 
                 <Button
@@ -306,7 +307,7 @@ const ProductsPage: React.FC = () => {
                     disabled={selectedProductIds.length === 0}
                     title="Экспорт"
                   >
-                    <Share className="w-4 h-4" />
+                    <Upload className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="danger"
@@ -347,7 +348,31 @@ const ProductsPage: React.FC = () => {
                 onDelete: () => handleRequestDelete(product),
               });
 
-              return (
+              return viewMode === 'compact' ? (
+                <EntityListItem
+                  key={product.id}
+                  title={cardConfig.title(product)}
+                  icon={productEntityConfig.getIcon(product)}
+                  borderColor={productEntityConfig.getBorderColor(product, { category })}
+                  isSelected={activeId === product.id}
+                  isMultiSelected={selectedProductIds.includes(product.id)}
+                  onSelect={() => setActiveId(product.id)}
+                  onMultiSelect={() => toggleProductSelection(product.id)}
+                  onRequestMultiSelectMode={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedProductIds([product.id]);
+                    }
+                  }}
+                  menuItems={actions}
+                  showMultiSelect={showMultiSelect}
+                  variant="neutral"
+                  nutrition={{
+                    calories: Math.round(product.calories || 0),
+                    weight: Math.round((product.weight || 0) * 100) / 100,
+                  }}
+                />
+              ) : (
                 <EntityCard
                   key={product.id}
                   title={cardConfig.title(product)}
@@ -358,14 +383,29 @@ const ProductsPage: React.FC = () => {
                     ...detail,
                     key: `product-detail-${index}`,
                   }))}
-                  menuItems={actions}
+                  variant="neutral"
+                  nutrition={{
+                    calories: Math.round(product.calories || 0),
+                    proteins: Math.round((product.proteins || 0) * 10) / 10,
+                    fats: Math.round((product.fats || 0) * 10) / 10,
+                    carbs: Math.round((product.carbs || 0) * 10) / 10,
+                    weight: Math.round((product.weight || 0) * 100) / 100,
+                  }}
                   isSelected={activeId === product.id}
                   isMultiSelected={selectedProductIds.includes(product.id)}
-                  onSelect={() => setActiveId(product.id)}
-                  onMultiSelect={() => toggleProductSelection(product.id)}
+                  onSelect={isDetailEditing ? undefined : () => setActiveId(product.id)}
+                  onMultiSelect={
+                    isDetailEditing ? undefined : () => toggleProductSelection(product.id)
+                  }
+                  onRequestMultiSelectMode={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedProductIds([product.id]);
+                    }
+                  }}
                   borderColor={productEntityConfig.getBorderColor(product, { category })}
+                  menuItems={actions}
                   showMultiSelect={showMultiSelect}
-                  viewMode={viewMode}
                 />
               );
             })}

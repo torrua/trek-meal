@@ -8,13 +8,11 @@ import TripsPage from './pages/TripsPage';
 import ParticipantsPage from './pages/ParticipantsPage';
 import ProductsPage from './pages/ProductsPage';
 import DishesPage from './pages/DishesPage';
-import DishDetailPage from './pages/DishDetailPage';
 import CategoriesPage from './pages/CategoriesPage';
 import MealTypesPage from './pages/MealTypesPage';
 import EquipmentPage from './pages/EquipmentPage';
 import EquipmentCategoriesPage from './pages/EquipmentCategoriesPage';
 import MealsPage from './pages/MealsPage';
-import MealDetailPage from './pages/MealDetailPage';
 
 function App() {
   return (
@@ -23,8 +21,6 @@ function App() {
         <Route index element={<Navigate to="/trips" replace />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="dishes" element={<DishesPage />} />
-        <Route path="dishes/new" element={<DishDetailPage />} />
-        <Route path="dishes/:dishId/edit" element={<DishDetailPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="meal-types" element={<MealTypesPage />} />
         <Route path="equipment" element={<EquipmentPage />} />
@@ -34,9 +30,6 @@ function App() {
         <Route path="trips/:tripId" element={<TripPlanningPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="meals" element={<MealsPage />} />
-        <Route path="meals/new" element={<MealDetailPage />} />
-        <Route path="meals/:mealId/edit" element={<MealDetailPage />} />
-        <Route path="meals/:mealId" element={<MealDetailPage />} />
         <Route path="*" element={<Navigate to="/trips" replace />} />
       </Route>
     </Routes>

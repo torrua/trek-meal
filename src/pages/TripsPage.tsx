@@ -22,6 +22,7 @@ import {
 import { useTripsManagement } from '../hooks/useTripsManagement';
 import { useViewMode } from '../hooks/useViewMode';
 import useTripStore from '../stores/useTripStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import TripFiltersComponent from '../components/trips/TripFiltersComponent';
 import TripDetail from '../components/trips/TripDetail';
 import Modal from '../ui/Modal';
@@ -30,6 +31,8 @@ import ConfirmModal from '../ui/ConfirmModal';
 import AddParticipantsModal from '../components/trips/AddParticipantsModal';
 import EntityCard from '../ui/EntityCard';
 import EntityListItem, { MetaItem } from '../ui/EntityListItem';
+import TripForm from '../components/trips/TripForm'; // Импорт формы
+import type { Trip } from '../types';
 import { tripEntityConfig } from '../config/entityConfig';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { formatDate } from '../utils';
@@ -40,6 +43,7 @@ const TripsPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const { viewMode, toggleViewMode } = useViewMode('trips');
+  const getVisibleFields = useSettingsStore((state) => state.getVisibleFields);
   const {
     activeId,
     filters,
@@ -54,19 +58,62 @@ const TripsPage: React.FC = () => {
     setShowFilters,
     setAddParticipantModalOpen,
     setTripToDelete,
-    handleEdit,
-    handleClone,
     handleExport,
     handleRequestDelete,
     handleConfirmDelete,
     handleAddParticipant,
-    handleSelectTrip,
+    // handleSelectTrip, // Overridden locally
   } = useTripsManagement();
 
-  const { deleteTrip } = useTripStore();
+  const { deleteTrip, addTrip, updateTrip, cloneTrip } = useTripStore();
   const [selectedTripIds, setSelectedTripIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const visibleFields = getVisibleFields('trips');
+
+  // Локальное состояние для режима редактирования/создания
+  const [isCreating, setIsCreating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleAddNew = () => {
+    setIsCreating(true);
+    setIsEditing(false);
+    setActiveId(null);
+  };
+
+  const handleEditStart = () => {
+    if (selectedTrip) {
+      setIsEditing(true);
+      setIsCreating(false);
+    }
+  };
+
+  const handleFormCancel = () => {
+    setIsCreating(false);
+    setIsEditing(false);
+  };
+
+  const handleFormSubmit = (data: any) => {
+    if (isEditing && selectedTrip) {
+      updateTrip(selectedTrip.id, data);
+      setIsEditing(false);
+    } else {
+      const newId = addTrip(data).id;
+      setIsCreating(false);
+      setActiveId(newId);
+    }
+  };
+
+  const handleClone = (trip: Trip) => {
+    cloneTrip(trip.id);
+  };
+
+  // При выборе похода
+  const onSelectTrip = (id: number) => {
+    setActiveId(id);
+    setIsCreating(false);
+    setIsEditing(false);
+  };
 
   const getTripDetails = (trip: any) => {
     const details = [
@@ -137,13 +184,14 @@ const TripsPage: React.FC = () => {
 
   const handleBulkClone = () => {
     if (selectedTripIds.length === 0) return;
-    console.log(`Cloning trips: ${selectedTripIds.join(', ')}`);
+    const selected = filteredTrips.filter((t) => selectedTripIds.includes(t.id));
+    selected.forEach((t) => handleClone(t));
   };
 
   const handleBulkExport = () => {
     if (selectedTripIds.length === 0) return;
-    const selectedTrips = filteredTrips.filter((trip) => selectedTripIds.includes(trip.id));
-    exportBulkTripsToJson(selectedTrips);
+    const selected = filteredTrips.filter((t) => selectedTripIds.includes(t.id));
+    exportBulkTripsToJson(selected);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,7 +227,6 @@ const TripsPage: React.FC = () => {
                   size="icon"
                   className="relative"
                   title="Фильтры"
-                  aria-label="Показать фильтры"
                 >
                   <Filter className="w-4 h-4" />
                   {hasActiveFilters && (
@@ -192,18 +239,11 @@ const TripsPage: React.FC = () => {
                   size="icon"
                   onClick={() => fileInputRef.current?.click()}
                   title="Импорт"
-                  aria-label="Импорт"
                 >
                   <UploadCloud className="w-4 h-4" />
                 </Button>
 
-                <Button
-                  onClick={toggleViewMode}
-                  variant="secondary"
-                  size="icon"
-                  title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
-                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
-                >
+                <Button onClick={toggleViewMode} variant="secondary" size="icon" title="Вид">
                   {viewMode === 'default' ? (
                     <LayoutList className="w-4 h-4" />
                   ) : (
@@ -216,11 +256,10 @@ const TripsPage: React.FC = () => {
                   variant="secondary"
                   size="icon"
                   title="Выделить"
-                  aria-label="Выделить"
                 >
                   <Check className="w-4 h-4" />
                 </Button>
-                <Button onClick={() => navigate('/trips/new')} variant="primary" size="default">
+                <Button onClick={handleAddNew} variant="primary" size="default">
                   <MapPinPlus className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Создать поход</span>
                 </Button>
@@ -229,7 +268,7 @@ const TripsPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
                   <span>{selectedTripIds.length}</span>
-                  <span className="text-primary/70">из {filteredTrips.length} выделено</span>
+                  <span className="text-primary/70">из {filteredTrips.length}</span>
                 </div>
 
                 <Button
@@ -287,46 +326,53 @@ const TripsPage: React.FC = () => {
         </div>
       )}
 
-      {filteredTrips.length > 0 ? (
+      {filteredTrips.length > 0 || isCreating ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar">
             {filteredTrips.map((trip) => {
               const cardConfig = tripEntityConfig.views.card;
               const actions = tripEntityConfig.getActions({
-                onEdit: () => navigate(`/trips/${trip.id}/edit`),
+                onEdit: () => {
+                  setActiveId(trip.id);
+                  setIsEditing(true);
+                  setIsCreating(false);
+                },
                 onClone: () => handleClone(trip),
                 onExport: () => handleExport(trip),
                 onDelete: () => handleRequestDelete(trip),
               });
 
-              const metaItems: MetaItem[] = [];
+              const metaMap: Record<string, MetaItem | null> = {
+                dates: trip.startDate
+                  ? {
+                      icon: Calendar,
+                      text: formatDate(trip.startDate),
+                      tooltip: 'Дата начала',
+                      className: 'text-foreground',
+                    }
+                  : null,
+                destination: trip.destination
+                  ? {
+                      icon: MapPin,
+                      text: trip.destination,
+                      tooltip: 'Место назначения',
+                      className: 'text-foreground',
+                    }
+                  : null,
+                participants:
+                  trip.participants.length > 0
+                    ? {
+                        icon: Users,
+                        text: trip.participants.length,
+                        tooltip: 'Участников',
+                        className: 'text-foreground',
+                      }
+                    : null,
+              };
 
-              if (trip.startDate) {
-                metaItems.push({
-                  icon: Calendar,
-                  text: formatDate(trip.startDate),
-                  tooltip: 'Дата начала',
-                  className: 'text-foreground',
-                });
-              }
-
-              if (trip.destination) {
-                metaItems.push({
-                  icon: MapPin,
-                  text: trip.destination,
-                  tooltip: 'Место назначения',
-                  className: 'text-foreground',
-                });
-              }
-
-              if (trip.participants.length > 0) {
-                metaItems.push({
-                  icon: Users,
-                  text: trip.participants.length,
-                  tooltip: 'Участников',
-                  className: 'text-foreground',
-                });
-              }
+              const metaItems = visibleFields
+                .map((id) => metaMap[id])
+                .filter((item): item is MetaItem => item !== null);
 
               return viewMode === 'compact' ? (
                 <EntityListItem
@@ -337,7 +383,7 @@ const TripsPage: React.FC = () => {
                   menuItems={actions}
                   isSelected={activeId === trip.id}
                   isMultiSelected={selectedTripIds.includes(trip.id)}
-                  onSelect={() => handleSelectTrip(trip.id)}
+                  onSelect={() => onSelectTrip(trip.id)}
                   onMultiSelect={() => toggleTripSelection(trip.id)}
                   showMultiSelect={showMultiSelect}
                   variant="neutral"
@@ -353,7 +399,7 @@ const TripsPage: React.FC = () => {
                   menuItems={actions}
                   isSelected={activeId === trip.id}
                   isMultiSelected={selectedTripIds.includes(trip.id)}
-                  onSelect={() => handleSelectTrip(trip.id)}
+                  onSelect={() => onSelectTrip(trip.id)}
                   onMultiSelect={() => toggleTripSelection(trip.id)}
                   borderColor={tripEntityConfig.getBorderColor(trip)}
                   showMultiSelect={showMultiSelect}
@@ -364,10 +410,22 @@ const TripsPage: React.FC = () => {
           </div>
 
           <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
-            {selectedTrip ? (
+            {isCreating ? (
+              <div className="pl-1">
+                <TripForm trip={null} onSubmit={handleFormSubmit} onCancel={handleFormCancel} />
+              </div>
+            ) : isEditing && selectedTrip ? (
+              <div className="pl-1">
+                <TripForm
+                  trip={selectedTrip}
+                  onSubmit={handleFormSubmit}
+                  onCancel={handleFormCancel}
+                />
+              </div>
+            ) : selectedTrip ? (
               <TripDetail
                 trip={selectedTrip}
-                onEdit={() => selectedTrip && navigate(`/trips/${selectedTrip.id}/edit`)}
+                onEdit={handleEditStart}
                 onAddParticipant={handleAddParticipant}
               />
             ) : (
@@ -395,8 +453,7 @@ const TripsPage: React.FC = () => {
                 trip={selectedTrip ?? null}
                 onEdit={() => {
                   if (selectedTrip) {
-                    handleEdit(selectedTrip);
-                    setActiveId(null);
+                    handleEditStart();
                   }
                 }}
                 onAddParticipant={handleAddParticipant}
@@ -416,7 +473,7 @@ const TripsPage: React.FC = () => {
               : 'Создайте свой первый поход, чтобы начать планирование'}
           </p>
           {!hasActiveFilters && (
-            <Button onClick={() => navigate('/trips/new')} className="mt-4">
+            <Button onClick={handleAddNew} className="mt-4">
               <MapPinPlus className="w-4 h-4 mr-2" />
               Создать первый поход
             </Button>

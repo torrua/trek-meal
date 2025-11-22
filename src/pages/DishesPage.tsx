@@ -20,11 +20,13 @@ import {
   Droplet,
   Wheat,
   Weight,
+  Beef,
 } from 'lucide-react';
 import useDishStore from '../stores/useDishStore';
 import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import type { Dish } from '../types';
 import EntityCard from '../ui/EntityCard';
 import EntityListItem, { MetaItem } from '../ui/EntityListItem';
@@ -44,6 +46,7 @@ const DishesPage: React.FC = () => {
   const { products: allProducts } = useProductStore();
   const { searchTerm } = useSearchStore();
   const { viewMode, toggleViewMode } = useViewMode('dishes');
+  const getVisibleFields = useSettingsStore((state) => state.getVisibleFields);
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [detailEditTrigger, setDetailEditTrigger] = useState(0);
@@ -53,10 +56,11 @@ const DishesPage: React.FC = () => {
   const [_editSubmitTrigger, _setEditSubmitTrigger] = useState(0);
   const [_editCancelTrigger, _setEditCancelTrigger] = useState(0);
 
-  // Multi-selection state
   const [selectedDishIds, setSelectedDishIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  const visibleFields = getVisibleFields('dishes');
 
   const handleToggleSection = useCallback((sectionId: string) => {
     setOpenSections((prev) =>
@@ -113,7 +117,6 @@ const DishesPage: React.FC = () => {
     }
   };
 
-  // Multi-selection handlers
   const toggleMultiSelect = () => {
     setShowMultiSelect(!showMultiSelect);
     if (showMultiSelect) {
@@ -136,7 +139,6 @@ const DishesPage: React.FC = () => {
     setSelectedDishIds([]);
   };
 
-  // Bulk action handlers
   const handleBulkDelete = () => {
     if (selectedDishIds.length === 0) return;
     setShowBulkDeleteConfirm(true);
@@ -165,7 +167,6 @@ const DishesPage: React.FC = () => {
     exportBulkDishesToJson(selectedDishes);
   };
 
-  // Import functionality
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -174,7 +175,6 @@ const DishesPage: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Individual dish actions
   const handleClone = useCallback((dish: Dish) => {
     const { cloneDish } = useDishStore.getState();
     cloneDish(dish.id);
@@ -190,7 +190,6 @@ const DishesPage: React.FC = () => {
     }
   }, []);
 
-  // Helper function to calculate dish nutrition
   const calculateDishNutrition = (dish: Dish) => {
     const nutrition = { calories: 0, proteins: 0, fats: 0, carbs: 0 };
     let totalWeight = 0;
@@ -227,7 +226,6 @@ const DishesPage: React.FC = () => {
         aria-hidden="true"
         tabIndex={-1}
       />
-      {/* Header and buttons */}
       <div className="mb-6 sm:mb-8 px-4 sm:px-2">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
@@ -381,39 +379,40 @@ const DishesPage: React.FC = () => {
 
               const isCardDisabled = isDetailEditing && dish.id !== activeId;
 
-              // Meta items for compact view
-              const metaItems: MetaItem[] = [
-                {
+              const metaMap: Record<string, MetaItem> = {
+                calories: {
                   icon: Flame,
                   text: Math.round(nutrition.calories),
                   className: 'text-orange-600',
                   tooltip: 'Ккал',
                 },
-                {
-                  icon: Zap,
+                proteins: {
+                  icon: Beef,
                   text: nutrition.proteins,
                   className: 'text-blue-600',
                   tooltip: 'Белки',
                 },
-                {
+                fats: {
                   icon: Droplet,
                   text: nutrition.fats,
                   className: 'text-yellow-600',
                   tooltip: 'Жиры',
                 },
-                {
+                carbs: {
                   icon: Wheat,
                   text: nutrition.carbs,
                   className: 'text-green-600',
                   tooltip: 'Углеводы',
                 },
-                {
+                weight: {
                   icon: Weight,
                   text: Math.round(totalWeight),
                   className: 'text-foreground',
                   tooltip: 'Вес',
                 },
-              ];
+              };
+
+              const metaItems = visibleFields.map((id) => metaMap[id]).filter(Boolean);
 
               return viewMode === 'compact' ? (
                 <EntityListItem
@@ -442,7 +441,6 @@ const DishesPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(dish, { totalWeight })}
                   icon={dishEntityConfig.getIcon(dish)}
                   iconColor={dishEntityConfig.getIconColor?.(dish)}
-                  // Pass empty details to avoid duplicates, nutrition footer handles stats
                   details={[]}
                   variant="meal"
                   nutrition={{
@@ -508,8 +506,6 @@ const DishesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Editing handled via DishDetailPage routes */}
-
       <ConfirmModal
         isOpen={!!dishToDelete}
         onClose={() => setDishToDelete(null)}
@@ -524,7 +520,6 @@ const DishesPage: React.FC = () => {
         </p>
       </ConfirmModal>
 
-      {/* Bulk delete confirmation */}
       <ConfirmModal
         isOpen={showBulkDeleteConfirm}
         onClose={() => setShowBulkDeleteConfirm(false)}

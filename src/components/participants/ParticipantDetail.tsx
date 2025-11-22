@@ -11,6 +11,10 @@ import {
   Award,
   Edit,
   MapPinPlus,
+  FileText,
+  ExternalLink,
+  Trash2,
+  Scale, // Добавлен импорт Scale
 } from 'lucide-react';
 import type { Participant, Trip } from '../../types';
 import useTripStore from '../../stores/useTripStore';
@@ -21,26 +25,25 @@ import { EXPERIENCE_CONFIG } from '../../constants/participants';
 import { useNavigate } from 'react-router-dom';
 import { isFuture, parseISO } from 'date-fns';
 import ConfirmModal from '../../ui/ConfirmModal';
-import DetailPane from '../../ui/DetailPane';
 import Button from '../../ui/Button';
 import InfoField from '../../ui/InfoField';
+import ContentBlock from '../../ui/ContentBlock';
 import EntityListItem from '../../ui/EntityListItem';
 import { tripEntityConfig, equipmentEntityConfig } from '../../config/entityConfig';
+import cn from 'classnames';
 
 interface ParticipantDetailProps {
   participant: Participant | null;
   onAddToTrip: () => void;
   onEdit: () => void;
-  openSections: string[];
-  onToggleSection: (sectionId: string) => void;
+  openSections?: string[];
+  onToggleSection?: (sectionId: string) => void;
 }
 
 const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
   participant,
   onAddToTrip,
   onEdit,
-  openSections,
-  onToggleSection,
 }) => {
   const { trips, removeParticipantFromTrip } = useTripStore();
   const { equipment } = useEquipmentStore();
@@ -90,26 +93,40 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
 
   const experienceInfo = EXPERIENCE_CONFIG[participant.experienceLevel];
 
-  const sections = [
-    {
-      id: 'data',
-      title: 'Данные',
-      icon: User,
-      actionButton: (
-        <Button size="sm" variant="ghost" onClick={onEdit} title="Редактировать участника">
-          <Edit className="w-4 h-4" />
-        </Button>
-      ),
-      content: (
-        <div className="space-y-4">
+  return (
+    <div className="space-y-6 pl-1 pb-10">
+      {/* 1. Основная информация (Blue Variant) */}
+      <ContentBlock
+        title="Основная информация"
+        icon={User}
+        variant="blue"
+        actionButton={
+          <Button size="sm" variant="ghost" onClick={onEdit}>
+            <Edit className="w-4 h-4 mr-2" />
+            Редактировать
+          </Button>
+        }
+      >
+        <div className="space-y-6">
+          {/* Имя и Опыт - Крупно */}
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">
+              Участник
+            </label>
+            <div className="text-xl font-bold text-foreground">{participant.name}</div>
+            <div
+              className={cn(
+                'inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-md text-sm font-medium bg-muted/50',
+                experienceInfo.colorClassName
+              )}
+            >
+              <Award className="w-4 h-4" />
+              {experienceInfo.label}
+            </div>
+          </div>
+
+          {/* Сетка контактов и дат */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <InfoField
-              icon={Award}
-              iconClassName={experienceInfo.colorClassName}
-              label="Опыт"
-              value={experienceInfo.label}
-              valueClassName={experienceInfo.colorClassName}
-            />
             {participant.birthDate && (
               <InfoField
                 icon={Calendar}
@@ -122,68 +139,89 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
             )}
             {participant.email && <InfoField icon={Mail} label="Email" value={participant.email} />}
           </div>
+
+          {/* Заметки */}
           {participant.notes && (
-            <div className="p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider flex items-center gap-2">
+                <FileText className="w-3 h-3" /> Заметки
+              </label>
+              <div className="p-4 bg-white/50 dark:bg-black/20 rounded-lg border border-border/50 text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                 {participant.notes}
-              </p>
+              </div>
             </div>
           )}
         </div>
-      ),
-    },
-    {
-      id: 'trips',
-      title: 'Походы',
-      icon: MapPin,
-      actionButton: (
-        <Button size="sm" variant="ghost" onClick={onAddToTrip} title="Добавить в поход">
-          <MapPinPlus className="w-4 h-4" />
-        </Button>
-      ),
-      content: (
+      </ContentBlock>
+
+      {/* 2. Походы (Orange Variant) */}
+      <ContentBlock
+        title={`Походы (${sortedTrips.length})`}
+        icon={MapPin}
+        variant="orange"
+        actionButton={
+          <Button size="sm" variant="ghost" onClick={onAddToTrip} title="Добавить в поход">
+            <MapPinPlus className="w-4 h-4" />
+          </Button>
+        }
+      >
         <div className="space-y-2">
           {sortedTrips.length > 0 ? (
             sortedTrips.map((trip) => {
               const listItemConfig = tripEntityConfig.views.listItem;
-              const actions = listItemConfig.actions?.({
-                onView: () => navigate(`/trips/${trip.id}`),
-                onRemove: () => setTripToRemove(trip),
-              });
+              const actions = [
+                {
+                  label: 'Открыть поход',
+                  icon: ExternalLink,
+                  onClick: () => navigate(`/trips?selectedId=${trip.id}`),
+                },
+                {
+                  label: 'Убрать из похода',
+                  icon: Trash2,
+                  onClick: () => setTripToRemove(trip),
+                  className: 'text-red-600 dark:text-red-400',
+                },
+              ];
 
               return (
                 <EntityListItem
                   key={trip.id}
                   title={listItemConfig.title(trip)}
-                  icon={tripEntityConfig.getIcon(trip)}
+                  meta={[
+                    { icon: Calendar, text: formatDate(trip.startDate) },
+                    { icon: MapPin, text: trip.destination || '—' },
+                  ]}
                   borderColor={tripEntityConfig.getBorderColor(trip)}
-                  details={listItemConfig.details?.(trip)}
                   menuItems={actions}
-                  onClick={() => navigate(`/trips/${trip.id}`)}
+                  variant="neutral"
                 />
               );
             })
           ) : (
-            <p className="text-sm text-center py-4 text-muted-foreground">Нет походов</p>
+            <div className="text-center py-8 px-4 border-2 border-dashed border-border/50 rounded-lg">
+              <MapPin className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">Нет активных или завершенных походов</p>
+            </div>
           )}
         </div>
-      ),
-    },
-    {
-      id: 'equipment',
-      title: 'Снаряжение',
-      icon: Backpack,
-      actionButton: (
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => navigate('/equipment')}
-          title="Перейти к снаряжению"
-        >
-          <Backpack className="w-4 h-4" />
-        </Button>
-      ),
-      content: (
+      </ContentBlock>
+
+      {/* 3. Снаряжение (Purple Variant) */}
+      <ContentBlock
+        title={`Личное снаряжение (${participantEquipment.length})`}
+        icon={Backpack}
+        variant="purple"
+        actionButton={
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => navigate('/equipment')}
+            title="Перейти к списку снаряжения"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </Button>
+        }
+      >
         <div className="space-y-2">
           {participantEquipment.length > 0 ? (
             participantEquipment.map((equipmentItem) => {
@@ -197,51 +235,38 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
                 <EntityListItem
                   key={equipmentItem.id}
                   title={listItemConfig.title(equipmentItem)}
-                  icon={equipmentEntityConfig.getIcon(equipmentItem)}
                   borderColor={equipmentEntityConfig.getBorderColor(equipmentItem, { category })}
-                  details={listItemConfig.details?.(equipmentItem, {
-                    formattedWeight: formatWeight(equipmentItem.weight),
-                  })}
+                  meta={[{ icon: Scale, text: formatWeight(equipmentItem.weight) }]}
                   menuItems={actions}
-                  onClick={() => navigate(`/equipment?selectedId=${equipmentItem.id}`)}
+                  variant="info"
                 />
               );
             })
           ) : (
-            <p className="text-sm text-center py-4 text-muted-foreground">Нет снаряжения</p>
+            <div className="text-center py-8 px-4 border-2 border-dashed border-border/50 rounded-lg">
+              <Backpack className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">Нет закрепленного личного снаряжения</p>
+            </div>
           )}
         </div>
-      ),
-    },
-  ];
+      </ContentBlock>
 
-  return (
-    <>
-      <DetailPane sections={sections} openSections={openSections} onToggleSection={onToggleSection}>
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground truncate">{participant.name}</h2>
-            <p className="text-muted-foreground">{experienceInfo.label}</p>
-          </div>
-          <Button variant="secondary" onClick={onEdit}>
-            <Edit className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Изменить</span>
-          </Button>
-        </div>
-      </DetailPane>
+      {/* Модалка удаления из похода */}
       <ConfirmModal
         isOpen={!!tripToRemove}
         onClose={() => setTripToRemove(null)}
         onConfirm={handleConfirmRemove}
         title="Убрать из похода?"
         variant="danger"
+        confirmText="Убрать"
       >
         <p>
-          Убрать участника <span className="font-bold">{participant.name}</span> из похода{' '}
+          Вы уверены, что хотите убрать участника{' '}
+          <span className="font-bold">{participant.name}</span> из похода{' '}
           <span className="font-bold">{tripToRemove?.name}</span>?
         </p>
       </ConfirmModal>
-    </>
+    </div>
   );
 };
 

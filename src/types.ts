@@ -177,3 +177,10 @@ export interface TripEquipmentAssignment {
   equipmentId: number;
   quantity: number;
 }
+
+export type EntityType = 'products' | 'dishes' | 'trips' | 'equipment' | 'participants' | 'meals';
+
+export interface FieldConfig {
+  id: string;
+  visible: boolean;
+}

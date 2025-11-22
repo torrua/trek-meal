@@ -24,11 +24,14 @@ import { useParticipantsManagement } from '../hooks/useParticipantsManagement';
 import useParticipantStore from '../stores/useParticipantStore';
 import useTripStore from '../stores/useTripStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
-import type { Trip, Equipment } from '../types';
+import { useSettingsStore } from '../stores/useSettingsStore';
+import type { Trip, Equipment, Participant } from '../types';
 import ParticipantDetail from '../components/participants/ParticipantDetail';
 import ParticipantFiltersComponent from '../components/participants/ParticipantFiltersComponent';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
+import Modal from '../ui/Modal';
+import ParticipantForm from '../components/participants/ParticipantForm';
 import EntityCard from '../ui/EntityCard';
 import EntityListItem, { MetaItem } from '../ui/EntityListItem';
 import {
@@ -38,10 +41,12 @@ import {
 } from '../utils/backup';
 import SelectTripModal from '../components/participants/SelectTripModal';
 import { participantEntityConfig } from '../config/entityConfig';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const ParticipantsPage: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
   const {
     activeId,
     filters,
@@ -58,19 +63,58 @@ const ParticipantsPage: React.FC = () => {
     setShowFilters,
     setSelectTripModalOpen,
     handleToggleSection,
-    handleAddNew,
-    handleClone,
     handleRequestDelete,
     handleConfirmDelete,
     handleAddToTrip,
     handleConfirmAddToTrip,
   } = useParticipantsManagement();
 
-  const { deleteParticipant } = useParticipantStore();
+  const { deleteParticipant, addParticipant, updateParticipant } = useParticipantStore();
+  const getVisibleFields = useSettingsStore((state) => state.getVisibleFields);
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const { viewMode, toggleViewMode } = useViewMode('participants');
+  const visibleFields = getVisibleFields('participants');
+
+  // Локальное состояние для режима создания/редактирования
+  const [isCreating, setIsCreating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleAddNew = () => {
+    setIsCreating(true);
+    setIsEditing(false);
+    setActiveId(null); // Сбрасываем выделение
+  };
+
+  const handleEditStart = () => {
+    if (selectedParticipant) {
+      setIsEditing(true);
+      setIsCreating(false);
+    }
+  };
+
+  const handleFormCancel = () => {
+    setIsCreating(false);
+    setIsEditing(false);
+  };
+
+  const handleFormSubmit = (data: any) => {
+    if (isEditing && selectedParticipant) {
+      updateParticipant(selectedParticipant.id, data);
+      setIsEditing(false);
+    } else {
+      const newParticipant = addParticipant(data);
+      setIsCreating(false);
+      setActiveId(newParticipant.id);
+    }
+  };
+
+  const handleClone = (participant: Participant) => {
+    const { id, ...rest } = participant;
+    const newData = { ...rest, name: `${participant.name} (Копия)` };
+    addParticipant(newData);
+  };
 
   const toggleMultiSelect = () => {
     setShowMultiSelect(!showMultiSelect);
@@ -78,9 +122,9 @@ const ParticipantsPage: React.FC = () => {
   };
 
   const toggleParticipantSelection = (participantId: number) => {
-    setSelectedParticipantIds((prev: number[]) =>
+    setSelectedParticipantIds((prev) =>
       prev.includes(participantId)
-        ? prev.filter((id: number) => id !== participantId)
+        ? prev.filter((id) => id !== participantId)
         : [...prev, participantId]
     );
   };
@@ -110,15 +154,14 @@ const ParticipantsPage: React.FC = () => {
 
   const handleBulkClone = () => {
     if (selectedParticipantIds.length === 0) return;
-    console.log(`Cloning participants: ${selectedParticipantIds.join(', ')}`);
+    const selected = filteredParticipants.filter((p) => selectedParticipantIds.includes(p.id));
+    selected.forEach((p) => handleClone(p));
   };
 
   const handleBulkExport = () => {
     if (selectedParticipantIds.length === 0) return;
-    const selectedParticipants = filteredParticipants.filter((p) =>
-      selectedParticipantIds.includes(p.id)
-    );
-    exportBulkParticipantsToJson(selectedParticipants);
+    const selected = filteredParticipants.filter((p) => selectedParticipantIds.includes(p.id));
+    exportBulkParticipantsToJson(selected);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,6 +170,13 @@ const ParticipantsPage: React.FC = () => {
       importDataFromJson(file);
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // При клике на карточку в списке
+  const onSelectParticipant = (id: number) => {
+    setActiveId(id);
+    setIsCreating(false);
+    setIsEditing(false);
   };
 
   return (
@@ -152,9 +202,7 @@ const ParticipantsPage: React.FC = () => {
                   onClick={() => setShowFilters((s) => !s)}
                   variant="secondary"
                   size="icon"
-                  className="relative"
                   title="Фильтры"
-                  aria-label="Показать фильтры"
                 >
                   <Filter className="w-4 h-4" />
                   {hasActiveFilters && (
@@ -167,18 +215,11 @@ const ParticipantsPage: React.FC = () => {
                   size="icon"
                   onClick={() => fileInputRef.current?.click()}
                   title="Импорт"
-                  aria-label="Импорт"
                 >
                   <UploadCloud className="w-4 h-4" />
                 </Button>
 
-                <Button
-                  onClick={toggleViewMode}
-                  variant="secondary"
-                  size="icon"
-                  title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
-                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
-                >
+                <Button onClick={toggleViewMode} variant="secondary" size="icon" title="Вид">
                   {viewMode === 'default' ? (
                     <LayoutList className="w-4 h-4" />
                   ) : (
@@ -191,14 +232,14 @@ const ParticipantsPage: React.FC = () => {
                   variant="secondary"
                   size="icon"
                   title="Выделить"
-                  aria-label="Выделить"
                 >
                   <Check className="w-4 h-4" />
                 </Button>
                 <Button
-                  onClick={() => navigate('/participants/new')}
+                  onClick={handleAddNew}
                   variant="primary"
                   size="default"
+                  disabled={isCreating || isEditing}
                 >
                   <UserRoundPlus className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Добавить участника</span>
@@ -208,50 +249,36 @@ const ParticipantsPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
                   <span>{selectedParticipantIds.length}</span>
-                  <span className="text-primary/70">из {filteredParticipants.length} выделено</span>
+                  <span className="text-primary/70">из {filteredParticipants.length}</span>
                 </div>
-
+                <Button variant="secondary" size="icon" onClick={selectAllParticipants} title="Все">
+                  <CheckCheck className="w-4 h-4" />
+                </Button>
                 <Button
                   variant="secondary"
                   size="icon"
-                  onClick={selectAllParticipants}
-                  disabled={selectedParticipantIds.length === filteredParticipants.length}
-                  title="Выделить все"
+                  onClick={handleBulkClone}
+                  disabled={!selectedParticipantIds.length}
                 >
-                  <CheckCheck className="w-4 h-4" />
+                  <Copy className="w-4 h-4" />
                 </Button>
-
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    onClick={handleBulkClone}
-                    disabled={selectedParticipantIds.length === 0}
-                    title="Клонировать"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    onClick={handleBulkExport}
-                    disabled={selectedParticipantIds.length === 0}
-                    title="Экспорт"
-                  >
-                    <Share className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="icon"
-                    onClick={handleBulkDelete}
-                    disabled={selectedParticipantIds.length === 0}
-                    title="Удалить"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                <Button onClick={exitMultiSelectMode} variant="ghost" size="icon" title="Закрыть">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  onClick={handleBulkExport}
+                  disabled={!selectedParticipantIds.length}
+                >
+                  <Share className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="danger"
+                  size="icon"
+                  onClick={handleBulkDelete}
+                  disabled={!selectedParticipantIds.length}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+                <Button onClick={exitMultiSelectMode} variant="ghost" size="icon">
                   <X className="w-4 h-4" />
                 </Button>
               </div>
@@ -266,8 +293,9 @@ const ParticipantsPage: React.FC = () => {
         </div>
       )}
 
-      {filteredParticipants.length > 0 ? (
+      {filteredParticipants.length > 0 || isCreating ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          {/* Левая колонка: Список */}
           <div className="lg:col-span-1 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {filteredParticipants.map((p) => {
               const tripCount = useTripStore
@@ -279,32 +307,41 @@ const ParticipantsPage: React.FC = () => {
 
               const cardConfig = participantEntityConfig.views.card;
               const actions = participantEntityConfig.getActions({
-                onEdit: () => navigate(`/participants/${p.id}/edit`),
+                onEdit: () => {
+                  setActiveId(p.id);
+                  setIsEditing(true);
+                  setIsCreating(false);
+                },
                 onAddToTrip: () => handleAddToTrip(p),
                 onClone: () => handleClone(p),
                 onExport: () => exportParticipantToJson(p),
                 onDelete: () => handleRequestDelete(p),
               });
 
-              const metaItems: MetaItem[] = [];
+              const metaMap: Record<string, MetaItem | null> = {
+                trips:
+                  tripCount > 0
+                    ? {
+                        icon: MapPin,
+                        text: tripCount,
+                        tooltip: 'Количество походов',
+                        className: 'text-foreground',
+                      }
+                    : null,
+                equipment:
+                  equipmentCount > 0
+                    ? {
+                        icon: Backpack,
+                        text: equipmentCount,
+                        tooltip: 'Предметов снаряжения',
+                        className: 'text-foreground',
+                      }
+                    : null,
+              };
 
-              if (tripCount > 0) {
-                metaItems.push({
-                  icon: MapPin,
-                  text: tripCount,
-                  tooltip: 'Количество походов',
-                  className: 'text-foreground',
-                });
-              }
-
-              if (equipmentCount > 0) {
-                metaItems.push({
-                  icon: Backpack,
-                  text: equipmentCount,
-                  tooltip: 'Предметов снаряжения',
-                  className: 'text-foreground',
-                });
-              }
+              const metaItems = visibleFields
+                .map((id) => metaMap[id])
+                .filter((item): item is MetaItem => item !== null);
 
               return viewMode === 'compact' ? (
                 <EntityListItem
@@ -315,7 +352,7 @@ const ParticipantsPage: React.FC = () => {
                   menuItems={actions}
                   isSelected={activeId === p.id}
                   isMultiSelected={selectedParticipantIds.includes(p.id)}
-                  onSelect={() => setActiveId(p.id)}
+                  onSelect={() => onSelectParticipant(p.id)}
                   onMultiSelect={() => toggleParticipantSelection(p.id)}
                   showMultiSelect={showMultiSelect}
                   variant="info"
@@ -335,7 +372,7 @@ const ParticipantsPage: React.FC = () => {
                     }))}
                   isSelected={activeId === p.id}
                   isMultiSelected={selectedParticipantIds.includes(p.id)}
-                  onSelect={() => setActiveId(p.id)}
+                  onSelect={() => onSelectParticipant(p.id)}
                   onMultiSelect={() => toggleParticipantSelection(p.id)}
                   borderColor={participantEntityConfig.getBorderColor(p)}
                   menuItems={actions}
@@ -346,14 +383,29 @@ const ParticipantsPage: React.FC = () => {
             })}
           </div>
 
+          {/* Правая колонка: Просмотр или Форма */}
           <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
-            {selectedParticipant ? (
+            {isCreating ? (
+              <div className="pl-1">
+                <ParticipantForm
+                  participant={null}
+                  onSubmit={handleFormSubmit}
+                  onCancel={handleFormCancel}
+                />
+              </div>
+            ) : isEditing && selectedParticipant ? (
+              <div className="pl-1">
+                <ParticipantForm
+                  participant={selectedParticipant}
+                  onSubmit={handleFormSubmit}
+                  onCancel={handleFormCancel}
+                />
+              </div>
+            ) : selectedParticipant ? (
               <ParticipantDetail
                 participant={selectedParticipant}
                 onAddToTrip={() => selectedParticipant && handleAddToTrip(selectedParticipant)}
-                onEdit={() =>
-                  selectedParticipant && navigate(`/participants/${selectedParticipant.id}/edit`)
-                }
+                onEdit={handleEditStart}
                 openSections={openSections}
                 onToggleSection={handleToggleSection}
               />
@@ -365,7 +417,7 @@ const ParticipantsPage: React.FC = () => {
                   </div>
                   <h3 className="text-lg font-medium text-foreground mb-2">Выберите участника</h3>
                   <p className="text-muted-foreground">
-                    Кликните на карточку для просмотра подробной информации.
+                    Кликните на карточку для просмотра информации или создайте нового.
                   </p>
                 </div>
               </div>
@@ -387,8 +439,7 @@ const ParticipantsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Editing handled via Participant detail routes */}
-
+      {/* Модалки подтверждения удаления */}
       <ConfirmModal
         isOpen={!!participantToDelete}
         onClose={() => setParticipantToDelete(null)}
@@ -403,7 +454,6 @@ const ParticipantsPage: React.FC = () => {
         </p>
       </ConfirmModal>
 
-      {/* Bulk delete confirmation */}
       <ConfirmModal
         isOpen={showBulkDeleteConfirm}
         onClose={() => setShowBulkDeleteConfirm(false)}
@@ -412,13 +462,7 @@ const ParticipantsPage: React.FC = () => {
         variant="danger"
         confirmText="Удалить"
       >
-        <p>
-          Вы уверены, что хотите удалить {selectedParticipantIds.length} участников?
-          <br />
-          <span className="text-sm text-muted-foreground mt-2 block">
-            Это действие нельзя отменить. Все данные об участниках будут потеряны.
-          </span>
-        </p>
+        <p>Вы уверены, что хотите удалить {selectedParticipantIds.length} участников?</p>
       </ConfirmModal>
 
       {activeId && (
@@ -429,6 +473,23 @@ const ParticipantsPage: React.FC = () => {
           selectedCount={1}
           selectedIds={[activeId]}
         />
+      )}
+
+      {/* Mobile Detail Modal */}
+      {isMobile && activeId !== null && (
+        <Modal
+          isOpen={activeId !== null}
+          onClose={() => setActiveId(null)}
+          title={selectedParticipant?.name || 'Детали'}
+        >
+          <ParticipantDetail
+            participant={selectedParticipant}
+            onAddToTrip={() => selectedParticipant && handleAddToTrip(selectedParticipant)}
+            onEdit={() => selectedParticipant && handleEditStart()}
+            openSections={openSections}
+            onToggleSection={handleToggleSection}
+          />
+        </Modal>
       )}
     </div>
   );

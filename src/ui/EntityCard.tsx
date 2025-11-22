@@ -53,7 +53,6 @@ interface EntityCardProps {
   viewMode?: 'default' | 'compact';
 }
 
-// Глобальное состояние для синхронизации отображения БЖУ
 let globalShowBjuCard = true;
 const cardListeners = new Set<(show: boolean) => void>();
 
@@ -153,10 +152,9 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
   const cardContent = (
     <>
-      {/* Header: Icon + Title + Menu */}
+      {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          {/* Icon / Checkbox Area */}
           {showMultiSelect ? (
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center">
               <button
@@ -189,7 +187,6 @@ const EntityCard: React.FC<EntityCardProps> = ({
             </div>
           )}
 
-          {/* Title & Subtitle */}
           <div className="min-w-0 flex-1">
             <h3
               className="truncate text-sm font-semibold leading-tight text-foreground"
@@ -203,7 +200,6 @@ const EntityCard: React.FC<EntityCardProps> = ({
           </div>
         </div>
 
-        {/* Menu Button */}
         {menuItems && menuItems.length > 0 && (
           <div className="flex-shrink-0 -mr-1.5 -mt-1.5">
             <DropdownMenu
@@ -232,7 +228,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
         </p>
       )}
 
-      {/* Details Footer - No Border */}
+      {/* Details Footer */}
       {details && details.length > 0 && (
         <div className="mt-auto pt-1">
           <dl className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-xs">
@@ -252,7 +248,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
         </div>
       )}
 
-      {/* Nutrition Footer - No Border */}
+      {/* Nutrition Footer */}
       {nutrition && (
         <div className="mt-auto pt-1">
           <div ref={nutritionRef} className={cn('cq-nutrition text-xs', showBju && 'show-bju')}>

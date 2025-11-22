@@ -26,6 +26,7 @@ import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useParticipantStore from '../stores/useParticipantStore';
 import useSearchStore from '../stores/useSearchStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import type { Equipment, EquipmentCategory, Participant } from '../types';
 import EntityCard from '../ui/EntityCard';
 import EntityListItem, { MetaItem } from '../ui/EntityListItem';
@@ -49,6 +50,7 @@ const EquipmentPage: React.FC = () => {
   const { categories } = useEquipmentCategoryStore();
   const { participants } = useParticipantStore();
   const { searchTerm } = useSearchStore();
+  const getVisibleFields = useSettingsStore((state) => state.getVisibleFields);
   const [searchParams, setSearchParams] = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -67,6 +69,7 @@ const EquipmentPage: React.FC = () => {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const { viewMode, toggleViewMode } = useViewMode('equipment');
+  const visibleFields = getVisibleFields('equipment');
 
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
@@ -361,20 +364,28 @@ const EquipmentPage: React.FC = () => {
                 formattedWeight: formatWeight(equipmentItem.weight),
               };
 
-              const metaItems: MetaItem[] = [
-                {
-                  icon: Scale,
-                  text: formatWeight(equipmentItem.weight),
-                  tooltip: 'Вес',
-                },
-                {
+              const metaMap: Record<string, MetaItem | null> = {
+                weight:
+                  equipmentItem.weight > 0
+                    ? {
+                        icon: Scale,
+                        text: formatWeight(equipmentItem.weight),
+                        tooltip: 'Вес',
+                        className: 'text-foreground',
+                      }
+                    : null,
+                type: {
                   icon: equipmentItem.type === 'personal' ? User : Users,
                   text: equipmentItem.type === 'personal' ? 'Личное' : 'Общее',
                   className:
-                    equipmentItem.type === 'personal' ? 'text-blue-600/90' : 'text-purple-600/90',
+                    equipmentItem.type === 'personal' ? 'text-blue-700' : 'text-purple-700',
                   tooltip: 'Тип снаряжения',
                 },
-              ];
+              };
+
+              const metaItems = visibleFields
+                .map((id) => metaMap[id])
+                .filter((item): item is MetaItem => item !== null);
 
               return viewMode === 'compact' ? (
                 <EntityListItem

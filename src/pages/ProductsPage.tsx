@@ -16,7 +16,7 @@ import {
   LayoutList,
   Grid3X3,
   Flame,
-  Zap,
+  Beef, // ИСПОЛЬЗУЕМ BEEF
   Droplet,
   Wheat,
 } from 'lucide-react';
@@ -25,6 +25,7 @@ import { toast } from 'react-hot-toast';
 import useProductStore from '../stores/useProductStore';
 import useCategoryStore from '../stores/useCategoryStore';
 import useSearchStore from '../stores/useSearchStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import type { Product, ImportedJsonData, Category, ProductData } from '../types';
 import EntityCard from '../ui/EntityCard';
 import EntityListItem, { MetaItem } from '../ui/EntityListItem';
@@ -44,6 +45,7 @@ const ProductsPage: React.FC = () => {
   const { categories } = useCategoryStore();
   const { searchTerm } = useSearchStore();
   const [searchParams, setSearchParams] = useSearchParams();
+  const getVisibleFields = useSettingsStore((state) => state.getVisibleFields);
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [detailEditTrigger, setDetailEditTrigger] = useState(0);
@@ -61,6 +63,7 @@ const ProductsPage: React.FC = () => {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const { viewMode, toggleViewMode } = useViewMode('products');
+  const visibleFields = getVisibleFields('products');
 
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
@@ -150,10 +153,8 @@ const ProductsPage: React.FC = () => {
   };
 
   const toggleProductSelection = (productId: number) => {
-    setSelectedProductIds((prev: number[]) =>
-      prev.includes(productId)
-        ? prev.filter((id: number) => id !== productId)
-        : [...prev, productId]
+    setSelectedProductIds((prev) =>
+      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
     );
   };
 
@@ -351,32 +352,34 @@ const ProductsPage: React.FC = () => {
                 onDelete: () => handleRequestDelete(product),
               });
 
-              const metaItems: MetaItem[] = [
-                {
+              const metaMap: Record<string, MetaItem> = {
+                calories: {
                   icon: Flame,
                   text: Math.round(product.calories || 0),
                   className: 'text-orange-600',
                   tooltip: 'Ккал',
                 },
-                {
-                  icon: Zap,
+                proteins: {
+                  icon: Beef, // Using BEEF
                   text: Math.round((product.proteins || 0) * 10) / 10,
                   className: 'text-blue-600',
                   tooltip: 'Белки',
                 },
-                {
+                fats: {
                   icon: Droplet,
                   text: Math.round((product.fats || 0) * 10) / 10,
                   className: 'text-yellow-600',
                   tooltip: 'Жиры',
                 },
-                {
+                carbs: {
                   icon: Wheat,
                   text: Math.round((product.carbs || 0) * 10) / 10,
                   className: 'text-green-600',
                   tooltip: 'Углеводы',
                 },
-              ];
+              };
+
+              const metaItems = visibleFields.map((id) => metaMap[id]).filter(Boolean);
 
               return viewMode === 'compact' ? (
                 <EntityListItem

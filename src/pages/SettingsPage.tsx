@@ -1,9 +1,10 @@
-// src/components/settings/SettingsPage.tsx
+// src/pages/SettingsPage.tsx
 
 import React, { useRef } from 'react';
-import { Upload, Download, Database } from 'lucide-react';
+import { Upload, Download, Database, LayoutTemplate } from 'lucide-react';
 import { exportDataToJson, importDataFromJson } from '../utils/backup';
 import Button from '../ui/Button';
+import CardViewSettings from '../components/settings/CardViewSettings';
 
 const SettingsPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -23,51 +24,75 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <header className="mb-6 pb-4 border-b">
-        <h2 className="text-2xl font-bold text-foreground">Настройки</h2>
-        <p className="text-sm text-muted-foreground mt-1">Управление данными приложения.</p>
+    <div className="max-w-5xl mx-auto py-8 space-y-10">
+      <header className="pb-6 border-b border-border">
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">Настройки</h1>
+        <p className="text-muted-foreground mt-2 text-lg">
+          Управление внешним видом и данными приложения.
+        </p>
       </header>
-      <div className="bg-card border rounded-lg">
-        <div className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="bg-primary/10 text-primary p-3 rounded-lg flex-shrink-0">
-              <Database className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">
-                Полное резервное копирование
-              </h3>
-              <p className="text-muted-foreground mt-1">
-                Создайте полный снимок всех данных приложения: участники, походы, продукты, блюда,
-                категории продуктов, снаряжение, категории снаряжения, типы приёмов пищи и настройки
-                темы. Резервная копия содержит метаданные и статистику для полного восстановления.
-              </p>
-              <div className="mt-3 text-sm text-muted-foreground">
-                <span className="font-medium">Включает:</span> все данные + метаданные + статистика
-                записей
-              </div>
-            </div>
+
+      {/* Секция: Интерфейс (Новая секция) */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <LayoutTemplate className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Отображение карточек</h2>
+            <p className="text-sm text-muted-foreground">
+              Настройте, какие данные показывать в компактном виде списков.
+            </p>
           </div>
         </div>
-        <div className="bg-muted px-6 py-4 border-t flex flex-col sm:flex-row justify-end items-center gap-3">
-          <Button variant="secondary" onClick={handleImportClick} className="w-full sm:w-auto">
-            <Upload className="h-4 w-4 mr-2" />
-            Импортировать из файла
-          </Button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept=".json"
-            className="hidden"
-          />
-          <Button variant="primary" onClick={exportDataToJson} className="w-full sm:w-auto">
-            <Download className="h-4 w-4 mr-2" />
-            Создать полную резервную копию
-          </Button>
+
+        {/* Компонент настроек полей */}
+        <CardViewSettings />
+      </section>
+
+      {/* Секция: Данные (Существующая секция) */}
+      <section className="space-y-6 pt-10 border-t border-border">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <Database className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Резервное копирование</h2>
+            <p className="text-sm text-muted-foreground">
+              Экспорт и импорт всех данных приложения.
+            </p>
+          </div>
         </div>
-      </div>
+
+        <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+          <div className="p-6">
+            <h3 className="font-medium text-foreground mb-2">Полный экспорт данных</h3>
+            <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">
+              Создайте полный снимок всех ваших данных: участники, походы, продукты, блюда,
+              снаряжение и настройки. Скачанный JSON-файл можно использовать для восстановления
+              данных на этом или другом устройстве.
+            </p>
+          </div>
+
+          <div className="bg-muted/30 px-6 py-4 border-t border-border flex flex-col sm:flex-row justify-end gap-3">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".json"
+              className="hidden"
+            />
+            <Button variant="secondary" onClick={handleImportClick}>
+              <Upload className="h-4 w-4 mr-2" />
+              Импортировать
+            </Button>
+            <Button variant="primary" onClick={exportDataToJson}>
+              <Download className="h-4 w-4 mr-2" />
+              Скачать резервную копию
+            </Button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

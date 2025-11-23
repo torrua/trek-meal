@@ -117,11 +117,23 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
   const [formData, setFormData] = useState<TripData | null>(null);
 
   // Хук для дат (он нужен для логики изменения дат)
-  const { dateRange, days, handleDateRangeChange, handleDaysChange } = useTripDates(formData);
+  const {
+    dateRange,
+    days,
+    handleDateRangeChange,
+    handleDaysChange: _handleDaysChange,
+  } = useTripDates(formData);
 
   useEffect(() => {
     if (trip) {
-      const { id, createdAt, status, selectedMeals, dayMeals, ...data } = trip;
+      const {
+        id: _id,
+        createdAt: _createdAt,
+        status: _status,
+        selectedMeals: _selectedMeals,
+        dayMeals: _dayMeals,
+        ...data
+      } = trip;
       setFormData(data);
     }
   }, [trip]);
@@ -191,7 +203,14 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
 
   const handleCancel = () => {
     if (trip) {
-      const { id, createdAt, status, selectedMeals, dayMeals, ...data } = trip;
+      const {
+        id: _id,
+        createdAt: _createdAt,
+        status: _status,
+        selectedMeals: _selectedMeals,
+        dayMeals: _dayMeals,
+        ...data
+      } = trip;
       setFormData(data);
       // Сброс дат в хуке произойдет автоматически через useEffect(initialData) внутри хука,
       // но нам нужно передать туда новый объект.
@@ -200,8 +219,8 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
     }
   };
 
-  const handleChange = (field: keyof TripData, value: any) => {
-    setFormData((prev) => (prev ? { ...prev, [field]: value } : null));
+  const handleChange = <K extends keyof TripData>(field: K, value: TripData[K]) => {
+    setFormData((prev) => (prev ? ({ ...prev, [field]: value } as TripData) : null));
   };
 
   if (!trip || !formData) return null;
@@ -293,7 +312,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
                     icon={Gauge}
                     options={TRIP_DIFFICULTY_OPTIONS}
                     value={formData.difficulty}
-                    onChange={(val) => handleChange('difficulty', val)}
+                    onChange={(val) => handleChange('difficulty', val as TripData['difficulty'])}
                   />
                 </div>
               </>
@@ -397,11 +416,11 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
                 <EntityListItem
                   key={p.id}
                   title={listItemConfig.title(p)}
-                  icon={participantEntityConfig.getIcon(p)}
-                  borderColor={participantEntityConfig.getBorderColor(p)}
-                  details={listItemConfig.details?.(p)}
+                  meta={(listItemConfig.details?.(p) || [])
+                    .filter((d): d is string => typeof d === 'string')
+                    .map((text) => ({ icon: participantEntityConfig.getIcon(p), text }))}
                   menuItems={actions}
-                  onClick={() => handleNavigateToParticipant(p.id)}
+                  onSelect={() => handleNavigateToParticipant(p.id)}
                   variant="info"
                 />
               );

@@ -7,6 +7,12 @@ import cn from 'classnames';
 interface DropdownOption {
   value: string;
   label: string;
+  /**
+   * Optional label to show in the dropdown menu. If provided, the menu will
+   * display `menuLabel` while the trigger will show `label` (useful when
+   * you want the menu to contain additional context like weights).
+   */
+  menuLabel?: string;
   icon?: React.ComponentType<{ className?: string }>;
   disabled?: boolean;
 }
@@ -279,8 +285,10 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
                         <div className="w-4 h-4 flex-shrink-0" />
                       )}
 
-                      {/* Option label */}
-                      <div className="flex-1 truncate font-medium">{option.label}</div>
+                      {/* Option label for menu (use menuLabel if provided) */}
+                      <div className="flex-1 truncate font-medium">
+                        {option.menuLabel || option.label}
+                      </div>
 
                       {/* Selected indicator */}
                       {checked && <Check className="w-4 h-4 text-primary flex-shrink-0" />}

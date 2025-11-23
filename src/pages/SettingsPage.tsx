@@ -1,13 +1,35 @@
 // src/pages/SettingsPage.tsx
 
 import React, { useRef } from 'react';
-import { Upload, Download, Database, LayoutTemplate } from 'lucide-react';
+import { Upload, Download, Database, LayoutTemplate, Search } from 'lucide-react';
 import { exportDataToJson, importDataFromJson } from '../utils/backup';
 import Button from '../ui/Button';
 import CardViewSettings from '../components/settings/CardViewSettings';
+import { useSettingsStore } from '../stores/useSettingsStore';
 
 const SettingsPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const SearchByCategoryToggle: React.FC = () => {
+    const { searchByCategory, toggleSearchByCategory } = useSettingsStore();
+    return (
+      <div className="mt-4">
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={searchByCategory}
+            onChange={() => toggleSearchByCategory()}
+            className="w-4 h-4"
+          />
+          <span className="text-sm text-foreground">Поиск продуктов по категориям</span>
+        </label>
+        <p className="text-xs text-muted-foreground mt-1">
+          Если включено, поиск продуктов будет также находить продукты по совпадению названия
+          категории.
+        </p>
+      </div>
+    );
+  };
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -48,6 +70,27 @@ const SettingsPage: React.FC = () => {
 
         {/* Компонент настроек полей */}
         <CardViewSettings />
+
+        {/* Поисковые настройки временно внутри интерфейса (перенесено ниже) */}
+      </section>
+
+      {/* Секция: Поиск */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <Search className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Поиск</h2>
+            <p className="text-sm text-muted-foreground">Общие настройки поведения поиска.</p>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+          <div className="p-6">
+            <SearchByCategoryToggle />
+          </div>
+        </div>
       </section>
 
       {/* Секция: Данные (Существующая секция) */}

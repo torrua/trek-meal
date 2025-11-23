@@ -8,10 +8,14 @@ interface SettingsState {
   // Хранит порядок и видимость полей для каждой сущности
   cardViews: Record<EntityType, FieldConfig[]>;
 
+  // Поисковые настройки
+  searchByCategory: boolean;
+
   // Действия
   toggleFieldVisibility: (entity: EntityType, fieldId: string) => void;
   reorderFields: (entity: EntityType, newOrder: FieldConfig[]) => void;
   resetToDefaults: (entity: EntityType) => void;
+  toggleSearchByCategory: () => void;
 
   // Селектор: возвращает только ID видимых полей в нужном порядке
   getVisibleFields: (entity: EntityType) => string[];
@@ -35,6 +39,8 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set, get) => ({
       cardViews: getInitialState(),
+      // По умолчанию поиск по категориям включен
+      searchByCategory: true,
 
       toggleFieldVisibility: (entity, fieldId) =>
         set((state) => {
@@ -69,6 +75,7 @@ export const useSettingsStore = create<SettingsState>()(
         }
         return config.filter((f) => f.visible).map((f) => f.id);
       },
+      toggleSearchByCategory: () => set((state) => ({ searchByCategory: !state.searchByCategory })),
     }),
     {
       name: 'camp-queen-view-settings', // Уникальное имя для localStorage

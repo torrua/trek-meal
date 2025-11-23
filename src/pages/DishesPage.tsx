@@ -16,7 +16,6 @@ import {
   LayoutList,
   Grid3X3,
   Flame,
-  Zap,
   Droplet,
   Wheat,
   Weight,

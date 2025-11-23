@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Dish, DishData, DishProduct, Product } from '../../types';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
+import useCategoryStore from '../../stores/useCategoryStore';
 import useTripStore from '../../stores/useTripStore';
 import Button from '../../ui/Button';
 import EditPortionModal from './EditPortionModal';
@@ -77,7 +78,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 }) => {
   return (
     <div
-      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-hidden`}
+      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-visible`}
     >
       <div
         className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -376,7 +377,14 @@ const DishDetail: React.FC<DishDetailProps> = ({
 
   const handleDeleteProduct = (productIndex: number) => {
     if (isEditing) {
-      setFormProducts(formProducts.filter((_, i) => i !== productIndex));
+      const newList = formProducts.filter((_, i) => i !== productIndex);
+      setFormProducts(newList);
+      if (newList.length === 0) {
+        toast(
+          'Удалён последний продукт — сохранить блюдо нельзя. Добавьте продукт или отмените изменения.',
+          { icon: '⚠️' }
+        );
+      }
     } else {
       removeProductFromDish(dish.id, productIndex);
     }
@@ -446,11 +454,28 @@ const DishDetail: React.FC<DishDetailProps> = ({
   const addProductField = () => setFormProducts([...formProducts, { productId: 0, weight: 0 }]);
 
   // Search and add product logic
+  const { categories } = useCategoryStore();
+  const { searchByCategory } = useSettingsStore();
+
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return allProducts;
     const query = searchQuery.toLowerCase();
+
+    if (searchByCategory) {
+      // Find categories matching query
+      const matchingCategoryIds = categories
+        .filter((c) => c.name.toLowerCase().includes(query))
+        .map((c) => c.id);
+
+      return allProducts.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          (p.categoryId !== null && matchingCategoryIds.includes(p.categoryId))
+      );
+    }
+
     return allProducts.filter((p) => p.name.toLowerCase().includes(query));
-  }, [allProducts, searchQuery]);
+  }, [allProducts, searchQuery, categories, searchByCategory]);
 
   const handleAddProduct = (productId: number) => {
     const product = allProducts.find((p) => p.id === productId);
@@ -722,7 +747,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                           <Component className="w-3.5 h-3.5 text-blue-500" />
                           Продукты ({filteredProducts.length})
                         </div>
-                        <div className="max-h-[280px] overflow-y-auto">
+                        <div>
                           {filteredProducts.map((product) => (
                             <button
                               key={product.id}
@@ -751,10 +776,15 @@ const DishDetail: React.FC<DishDetailProps> = ({
                     const selectedProduct = allProducts.find(
                       (prod: Product) => prod.id === p.productId
                     );
-                    const portionOptions: Array<{ value: string; label: string }> =
+                    const portionOptions: Array<{
+                      value: string;
+                      label: string;
+                      menuLabel?: string;
+                    }> =
                       selectedProduct?.portions.map((portion) => ({
                         value: String(portion.weight),
-                        label: `${portion.name} (${portion.weight} г)`,
+                        label: portion.name,
+                        menuLabel: `${portion.name} (${portion.weight} г)`,
                       })) || [];
                     portionOptions.push({ value: CUSTOM_WEIGHT_VALUE, label: 'Свой вес...' });
 
@@ -766,63 +796,68 @@ const DishDetail: React.FC<DishDetailProps> = ({
                     return (
                       <div
                         key={index}
-                        className="bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 rounded-lg p-3 transition-all duration-200"
+                        className="bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 rounded-lg p-3 transition-all duration-200 hover:shadow-sm"
                       >
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-muted-foreground">
-                              Продукт {index + 1}
-                            </span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => handleDeleteProduct(index)}
-                              className="text-muted-foreground hover:text-danger hover:bg-danger/10"
-                              disabled={formProducts.length === 1}
-                              title="Удалить продукт"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-
-                          <DropdownSelect
-                            label="Продукт"
-                            icon={Component}
-                            options={productOptions}
-                            value={String(p.productId || '')}
-                            onChange={(val) =>
-                              typeof val === 'string' && handleProductChange(index, val)
-                            }
-                            placeholder="Выберите продукт..."
-                          />
-
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div className="md:col-span-2">
-                              <DropdownSelect
-                                label="Порция"
-                                icon={Box}
-                                options={portionOptions}
-                                value={currentPortion?.value || CUSTOM_WEIGHT_VALUE}
-                                onChange={(val) =>
-                                  typeof val === 'string' && handlePortionChange(index, val)
-                                }
-                                disabled={!selectedProduct}
-                                placeholder="Выберите порцию..."
-                              />
+                        <div>
+                          {/* Header: icon + product name + actions */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                              <h4
+                                className="font-medium text-foreground truncate cursor-default"
+                                title={selectedProduct?.name || 'Не выбран'}
+                              >
+                                {selectedProduct?.name || 'Не выбран'}
+                              </h4>
                             </div>
 
-                            <FormField label="Вес (г)" className="w-full">
-                              <Input
-                                type="number"
-                                value={p.weight || ''}
-                                onChange={(e) => handleWeightChange(index, e.target.value)}
-                                required
-                                min="0"
-                                placeholder="Вес (г)"
-                                icon={Weight}
-                              />
-                            </FormField>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => handleDeleteProduct(index)}
+                                className="bg-danger/10 hover:bg-danger/20 text-danger"
+                                title="Удалить продукт"
+                                aria-label={`Удалить продукт ${index + 1}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Separator */}
+                          <div className="pt-3">
+                            <div className="flex items-center gap-3 py-2">
+                              <div className="flex-1">
+                                <DropdownSelect
+                                  icon={Box}
+                                  options={portionOptions}
+                                  value={currentPortion?.value || CUSTOM_WEIGHT_VALUE}
+                                  onChange={(val) =>
+                                    typeof val === 'string' && handlePortionChange(index, val)
+                                  }
+                                  disabled={!selectedProduct}
+                                  placeholder="Выберите порцию..."
+                                  containerClassName=""
+                                />
+                              </div>
+
+                              <div className="w-24">
+                                <FormField>
+                                  <Input
+                                    type="number"
+                                    value={p.weight || ''}
+                                    onChange={(e) => handleWeightChange(index, e.target.value)}
+                                    required
+                                    min="0"
+                                    placeholder="Вес"
+                                    icon={Weight}
+                                    className="text-center text-sm font-medium text-foreground"
+                                  />
+                                </FormField>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -835,16 +870,6 @@ const DishDetail: React.FC<DishDetailProps> = ({
                     <p className="text-xs mt-1">Добавьте продукты</p>
                   </div>
                 )}
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={addProductField}
-                  className="w-full border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 py-4"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Добавить продукт
-                </Button>
               </>
             ) : (
               <>

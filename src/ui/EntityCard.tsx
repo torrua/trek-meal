@@ -58,7 +58,9 @@ const cardListeners = new Set<(show: boolean) => void>();
 
 const subscribeToShowBjuCard = (callback: (show: boolean) => void) => {
   cardListeners.add(callback);
-  return () => cardListeners.delete(callback);
+  return () => {
+    cardListeners.delete(callback);
+  };
 };
 
 const setGlobalShowBjuCard = (show: boolean) => {
@@ -92,7 +94,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
   const cardRef = useRef<HTMLDivElement | null>(null);
   const nutritionRef = useRef<HTMLDivElement | null>(null);
   const [showBju, setShowBju] = useState(globalShowBjuCard);
-  const measureTimeoutRef = useRef<number>();
+  const measureTimeoutRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     return subscribeToShowBjuCard(setShowBju);
@@ -327,7 +329,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
   if (linkTo) {
     return (
-      <Link to={linkTo} ref={cardRef} className={cn(cardClasses, 'cq-card')}>
+      <Link to={linkTo} className={cn(cardClasses, 'cq-card')}>
         {cardContent}
       </Link>
     );

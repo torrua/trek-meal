@@ -1,23 +1,13 @@
 // src/components/products/ProductDetail.tsx
 
 import React, { useState } from 'react';
-import {
-  Package,
-  Thermometer,
-  Flame,
-  Info,
-  Edit,
-  Beef, // Using Beef instead of Zap
-  Droplet,
-  Wheat,
-  BarChart,
-  Scale,
-} from 'lucide-react';
+import { Package, Thermometer, Info, Edit, BarChart, Scale } from 'lucide-react';
 import type { Product, Category, ProductPortion } from '../../types';
 import useCategoryStore from '../../stores/useCategoryStore';
 import Button from '../../ui/Button';
 import ProductForm from './ProductForm';
-import ContentBlock from '../../ui/ContentBlock';
+import DetailPane from '../../ui/DetailPane'; // Используем DetailPane
+import InfoField from '../../ui/InfoField';
 
 interface ProductDetailProps {
   product: Product | null;
@@ -29,136 +19,175 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, onEdit, editTrig
   const { categories } = useCategoryStore();
   const [isEditing, setIsEditing] = useState(false);
 
+  // Состояние для раскрытых секций
+  const [openSections, setOpenSections] = useState<string[]>(['info', 'nutrition', 'portions']);
+
   React.useEffect(() => {
     if (editTrigger && editTrigger > 0) {
       setIsEditing(true);
     }
   }, [editTrigger]);
 
-  if (!product) {
-    return null;
-  }
-
-  const handleSubmit = () => {
-    setIsEditing(false);
-    onEdit();
+  const handleToggleSection = (sectionId: string) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
   };
 
-  const handleCancel = () => {
-    setIsEditing(false);
-  };
+  if (!product) return null;
 
   const category = categories.find((c: Category) => c.id === product.categoryId);
 
   if (isEditing) {
     return (
       <div className="pl-1">
-        <ProductForm product={product} onSubmit={handleSubmit} onCancel={handleCancel} />
+        <ProductForm
+          product={product}
+          onSubmit={() => {
+            setIsEditing(false);
+            onEdit();
+          }}
+          onCancel={() => setIsEditing(false)}
+        />
       </div>
     );
   }
 
-  return (
-    <div className="space-y-6 pl-1 pb-10">
-      <ContentBlock
-        title="Основная информация"
-        icon={Info}
-        variant="blue"
-        actionButton={
-          <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)}>
-            <Edit className="w-4 h-4 mr-2" />
-            Редактировать
-          </Button>
-        }
-      >
+  // Конфигурация секций
+  const sections = [
+    {
+      id: 'info',
+      title: 'Основная информация',
+      icon: Info,
+      content: (
         <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">
-              Название
-            </label>
-            <div className="text-lg font-medium text-foreground">{product.name}</div>
-          </div>
-
-          {category && (
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">
-                Категория
-              </label>
-              <div className="flex items-center gap-2 text-foreground">
-                <span>{category.emoji}</span>
-                <span>{category.name}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <InfoField
+              icon={Package}
+              label="Категория"
+              value={
+                category ? (
+                  <div className="flex items-center gap-2">
+                    <span>{category.emoji}</span>
+                    <span>{category.name}</span>
+                  </div>
+                ) : (
+                  'Без категории'
+                )
+              }
+            />
+            {product.isPerishable && (
+              <div className="flex items-center gap-2 p-3 bg-warning/10 border border-warning/20 rounded-xl">
+                <Thermometer className="w-5 h-5 text-warning" />
+                <span className="text-sm text-warning-foreground font-medium">Скоропортящийся</span>
               </div>
-            </div>
-          )}
-
+            )}
+          </div>
           {product.description && (
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">
+            <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
                 Описание
-              </label>
+              </span>
               <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                 {product.description}
               </p>
             </div>
           )}
-
-          {product.isPerishable && (
-            <div className="flex items-center gap-2 p-3 bg-warning/10 border border-warning/20 rounded-lg mt-2">
-              <Thermometer className="w-4 h-4 text-warning" />
-              <span className="text-sm text-warning-foreground font-medium">
-                Скоропортящийся продукт
-              </span>
+        </div>
+      ),
+    },
+    {
+      id: 'nutrition',
+      title: 'Пищевая ценность (на 100г)',
+      icon: BarChart,
+      content: (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            {
+              label: 'Калории',
+              val: product.calories,
+              color: 'text-orange-600',
+              bg: 'bg-orange-50 dark:bg-orange-900/10',
+            },
+            {
+              label: 'Белки',
+              val: product.proteins,
+              unit: 'г',
+              color: 'text-blue-600',
+              bg: 'bg-blue-50 dark:bg-blue-900/10',
+            },
+            {
+              label: 'Жиры',
+              val: product.fats,
+              unit: 'г',
+              color: 'text-yellow-600',
+              bg: 'bg-yellow-50 dark:bg-yellow-900/10',
+            },
+            {
+              label: 'Углеводы',
+              val: product.carbs,
+              unit: 'г',
+              color: 'text-green-600',
+              bg: 'bg-green-50 dark:bg-green-900/10',
+            },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className={`p-3 rounded-xl border border-border/50 text-center ${item.bg}`}
+            >
+              <div className="text-xs text-muted-foreground mb-1">{item.label}</div>
+              <div className={`text-lg font-bold ${item.color}`}>
+                {item.val}
+                {item.unit}
+              </div>
             </div>
-          )}
+          ))}
         </div>
-      </ContentBlock>
-
-      <ContentBlock title="Пищевая ценность (на 100г)" icon={BarChart} variant="orange">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-4 bg-white/60 dark:bg-black/20 rounded-lg border border-border/50 text-center">
-            <Flame className="w-5 h-5 text-orange-600 mx-auto mb-2" />
-            <div className="text-xs text-muted-foreground mb-1">Калории</div>
-            <div className="text-xl font-bold text-orange-600">{product.calories}</div>
-          </div>
-
-          <div className="p-4 bg-white/60 dark:bg-black/20 rounded-lg border border-border/50 text-center">
-            <Beef className="w-5 h-5 text-blue-600 mx-auto mb-2" />
-            <div className="text-xs text-muted-foreground mb-1">Белки</div>
-            <div className="text-xl font-bold text-blue-600">{product.proteins} г</div>
-          </div>
-
-          <div className="p-4 bg-white/60 dark:bg-black/20 rounded-lg border border-border/50 text-center">
-            <Droplet className="w-5 h-5 text-yellow-600 mx-auto mb-2" />
-            <div className="text-xs text-muted-foreground mb-1">Жиры</div>
-            <div className="text-xl font-bold text-yellow-600">{product.fats} г</div>
-          </div>
-
-          <div className="p-4 bg-white/60 dark:bg-black/20 rounded-lg border border-border/50 text-center">
-            <Wheat className="w-5 h-5 text-green-600 mx-auto mb-2" />
-            <div className="text-xs text-muted-foreground mb-1">Углеводы</div>
-            <div className="text-xl font-bold text-green-600">{product.carbs} г</div>
-          </div>
-        </div>
-      </ContentBlock>
-
-      <ContentBlock title="Порции" icon={Package} variant="purple">
+      ),
+    },
+    {
+      id: 'portions',
+      title: `Порции (${product.portions.length})`,
+      icon: Scale,
+      content: (
         <div className="space-y-2">
           {product.portions.map((portion: ProductPortion, index: number) => (
             <div
               key={index}
-              className="flex items-center justify-between px-4 py-3 bg-card border border-border rounded-lg hover:shadow-sm transition-shadow"
+              className="flex items-center justify-between px-4 py-3 bg-card border border-border rounded-xl hover:shadow-sm transition-shadow"
             >
               <div className="flex items-center gap-3">
                 <Scale className="w-4 h-4 text-muted-foreground" />
                 <span className="font-medium text-foreground">{portion.name}</span>
               </div>
-              <span className="text-sm font-semibold text-muted-foreground bg-muted px-2 py-1 rounded">
+              <span className="text-sm font-semibold text-muted-foreground bg-muted px-2.5 py-1 rounded-md">
                 {portion.weight} г
               </span>
             </div>
           ))}
         </div>
-      </ContentBlock>
+      ),
+    },
+  ];
+
+  return (
+    <div className="h-full pl-1">
+      <DetailPane
+        sections={sections}
+        openSections={openSections}
+        onToggleSection={handleToggleSection}
+      >
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground leading-tight">{product.name}</h2>
+            <p className="text-muted-foreground mt-1">{product.calories} ккал / 100г</p>
+          </div>
+          <Button variant="secondary" onClick={() => setIsEditing(true)}>
+            <Edit className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Изменить</span>
+          </Button>
+        </div>
+      </DetailPane>
     </div>
   );
 };

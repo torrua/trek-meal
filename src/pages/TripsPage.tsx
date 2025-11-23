@@ -31,8 +31,8 @@ import ConfirmModal from '../ui/ConfirmModal';
 import AddParticipantsModal from '../components/trips/AddParticipantsModal';
 import EntityCard from '../ui/EntityCard';
 import EntityListItem, { MetaItem } from '../ui/EntityListItem';
-import TripForm from '../components/trips/TripForm'; // Импорт формы
-import type { Trip } from '../types';
+import TripForm from '../components/trips/TripForm';
+import type { Trip, TripData } from '../types'; // Import TripData
 import { tripEntityConfig } from '../config/entityConfig';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { formatDate } from '../utils';
@@ -62,7 +62,6 @@ const TripsPage: React.FC = () => {
     handleRequestDelete,
     handleConfirmDelete,
     handleAddParticipant,
-    // handleSelectTrip, // Overridden locally
   } = useTripsManagement();
 
   const { deleteTrip, addTrip, updateTrip, cloneTrip } = useTripStore();
@@ -71,7 +70,6 @@ const TripsPage: React.FC = () => {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const visibleFields = getVisibleFields('trips');
 
-  // Локальное состояние для режима редактирования/создания
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -93,14 +91,17 @@ const TripsPage: React.FC = () => {
     setIsEditing(false);
   };
 
-  const handleFormSubmit = (data: any) => {
+  // Use TripData type instead of any
+  const handleFormSubmit = (data: TripData) => {
     if (isEditing && selectedTrip) {
       updateTrip(selectedTrip.id, data);
       setIsEditing(false);
     } else {
-      const newId = addTrip(data).id;
-      setIsCreating(false);
-      setActiveId(newId);
+      const newTrip = addTrip(data);
+      if (newTrip) {
+        setIsCreating(false);
+        setActiveId(newTrip.id);
+      }
     }
   };
 
@@ -108,14 +109,13 @@ const TripsPage: React.FC = () => {
     cloneTrip(trip.id);
   };
 
-  // При выборе похода
   const onSelectTrip = (id: number) => {
     setActiveId(id);
     setIsCreating(false);
     setIsEditing(false);
   };
 
-  const getTripDetails = (trip: any) => {
+  const getTripDetails = (trip: Trip) => {
     const details = [
       {
         key: 'participants',

@@ -15,6 +15,8 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
+  Info,
+  Edit,
 } from 'lucide-react';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
@@ -23,6 +25,7 @@ import type { EquipmentCategory } from '../types';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard from '../ui/EntityCard';
+import DetailPane from '../ui/DetailPane'; // Импортируем DetailPane
 import { equipmentCategoryEntityConfig } from '../config/entityConfig';
 import { useViewMode } from '../hooks/useViewMode';
 import {
@@ -46,11 +49,14 @@ const EquipmentCategoriesPage: React.FC = () => {
   // Multi-selection state
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
-  // Add state for bulk delete confirmation
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   // Active category state
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<EquipmentCategory | null>(null);
+
+  // Detail Pane state
+  const [openSections, setOpenSections] = useState<string[]>(['info']);
 
   const filteredCategories = useMemo(() => {
     return equipmentCategoryStore.categories
@@ -81,7 +87,13 @@ const EquipmentCategoriesPage: React.FC = () => {
     [filters]
   );
 
-  // Multi-selection handlers
+  // Handlers
+  const handleToggleSection = (sectionId: string) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
+  };
+
   const toggleMultiSelect = () => {
     setShowMultiSelect(!showMultiSelect);
     if (showMultiSelect) {
@@ -101,45 +113,36 @@ const EquipmentCategoriesPage: React.FC = () => {
     setSelectedCategoryIds(filteredCategories.map((category: EquipmentCategory) => category.id));
   };
 
-  // Exit multi-select mode completely
   const exitMultiSelectMode = () => {
     setShowMultiSelect(false);
     setSelectedCategoryIds([]);
   };
 
-  // Bulk action handlers
   const handleBulkDelete = () => {
     if (selectedCategoryIds.length === 0) return;
-    // Show confirmation modal
     setShowBulkDeleteConfirm(true);
   };
 
   const handleConfirmBulkDelete = () => {
-    // Delete all selected categories directly using the store function
     selectedCategoryIds.forEach((id) => {
       if (id === activeId) setActiveId(null);
       equipmentCategoryStore.deleteCategory(id);
     });
-    // Exit multi-select mode
     exitMultiSelectMode();
     setShowBulkDeleteConfirm(false);
   };
 
   const handleBulkClone = () => {
     if (selectedCategoryIds.length === 0) return;
-
     console.log(`Cloning equipment categories: ${selectedCategoryIds.join(', ')}`);
   };
 
   const handleBulkExport = () => {
     if (selectedCategoryIds.length === 0) return;
-
-    // Get selected categories and export them
     const selectedCategories = filteredCategories.filter((c) => selectedCategoryIds.includes(c.id));
     exportBulkEquipmentCategoriesToJson(selectedCategories);
   };
 
-  // Import functionality
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -166,7 +169,6 @@ const EquipmentCategoriesPage: React.FC = () => {
 
   const handleRequestDelete = useCallback(
     (category: EquipmentCategory) => {
-      // Check if category has equipment
       const hasEquipment = equipmentStore.equipment.some((e) => e.categoryId === category.id);
       if (hasEquipment) {
         alert('Невозможно удалить категорию, содержащую снаряжение. Сначала удалите снаряжение.');
@@ -177,8 +179,6 @@ const EquipmentCategoriesPage: React.FC = () => {
     [equipmentStore.equipment]
   );
 
-  const [categoryToDelete, setCategoryToDelete] = useState<EquipmentCategory | null>(null);
-
   const handleConfirmDelete = () => {
     if (categoryToDelete) {
       if (categoryToDelete.id === activeId) setActiveId(null);
@@ -187,7 +187,6 @@ const EquipmentCategoriesPage: React.FC = () => {
     }
   };
 
-  // View mode state
   const { viewMode, toggleViewMode } = useViewMode('equipment-categories');
 
   return (
@@ -216,7 +215,6 @@ const EquipmentCategoriesPage: React.FC = () => {
                   size="icon"
                   className="relative"
                   title="Фильтры"
-                  aria-label="Показать фильтры"
                 >
                   <Filter className="w-4 h-4" />
                   {hasActiveFilters && (
@@ -229,18 +227,15 @@ const EquipmentCategoriesPage: React.FC = () => {
                   size="icon"
                   onClick={() => fileInputRef.current?.click()}
                   title="Импорт"
-                  aria-label="Импорт"
                 >
                   <UploadCloud className="w-4 h-4" />
                 </Button>
 
-                {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
                   variant="secondary"
                   size="icon"
                   title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
-                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
                 >
                   {viewMode === 'default' ? (
                     <LayoutList className="w-4 h-4" />
@@ -254,7 +249,6 @@ const EquipmentCategoriesPage: React.FC = () => {
                   variant="secondary"
                   size="icon"
                   title="Выделить"
-                  aria-label="Выделить"
                 >
                   <Check className="w-4 h-4" />
                 </Button>
@@ -402,51 +396,70 @@ const EquipmentCategoriesPage: React.FC = () => {
             })}
           </div>
 
+          {/* Right Column with DetailPane */}
           <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {selectedCategory ? (
-              <div className="bg-card rounded-xl border border-border notion-shadow-xs p-5 sm:p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white notion-shadow-sm"
-                    style={{ backgroundColor: selectedCategory.color }}
-                  >
-                    <Layers className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-foreground">{selectedCategory.name}</h2>
-                    <p className="text-muted-foreground">
-                      {
-                        equipmentStore.equipment.filter((e) => e.categoryId === selectedCategory.id)
-                          .length
-                      }{' '}
-                      единиц снаряжения
-                    </p>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    onClick={() => navigate(`/equipment-categories/${selectedCategory.id}`)}
-                    className="ml-auto"
-                  >
-                    Редактировать
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-4 bg-muted/30 rounded-lg">
-                      <label className="block text-sm font-medium text-muted-foreground mb-1">
-                        Цвет
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-6 h-6 rounded-md"
-                          style={{ backgroundColor: selectedCategory.color }}
-                        />
-                        <span className="font-mono text-sm">{selectedCategory.color}</span>
+              <div className="h-full pl-1">
+                <DetailPane
+                  openSections={openSections}
+                  onToggleSection={handleToggleSection}
+                  sections={[
+                    {
+                      id: 'info',
+                      title: 'Свойства категории',
+                      icon: Info,
+                      content: (
+                        <div className="space-y-4">
+                          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
+                            <label className="block text-sm font-medium text-muted-foreground mb-2">
+                              Цвет метки
+                            </label>
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-8 h-8 rounded-lg border border-border shadow-sm"
+                                style={{ backgroundColor: selectedCategory.color }}
+                              />
+                              <span className="font-mono text-sm bg-background px-2 py-1 rounded border border-border">
+                                {selectedCategory.color}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ),
+                    },
+                  ]}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-white shadow-sm"
+                        style={{ backgroundColor: selectedCategory.color }}
+                      >
+                        <Layers className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-foreground">
+                          {selectedCategory.name}
+                        </h2>
+                        <p className="text-muted-foreground">
+                          {
+                            equipmentStore.equipment.filter(
+                              (e) => e.categoryId === selectedCategory.id
+                            ).length
+                          }{' '}
+                          единиц снаряжения
+                        </p>
                       </div>
                     </div>
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigate(`/equipment-categories/${selectedCategory.id}`)}
+                    >
+                      <Edit className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Изменить</span>
+                    </Button>
                   </div>
-                </div>
+                </DetailPane>
               </div>
             ) : (
               <div className="h-full flex items-start justify-center pt-16">
@@ -495,7 +508,6 @@ const EquipmentCategoriesPage: React.FC = () => {
         </p>
       </ConfirmModal>
 
-      {/* Bulk delete confirmation */}
       <ConfirmModal
         isOpen={showBulkDeleteConfirm}
         onClose={() => setShowBulkDeleteConfirm(false)}

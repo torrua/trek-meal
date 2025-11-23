@@ -16,12 +16,14 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
+  Info,
 } from 'lucide-react';
 import useMealTypesStore from '../stores/useMealTypesStore';
 import { exportBulkMealTypesToJson, importDataFromJson } from '../utils/backup';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard, { MenuItem } from '../ui/EntityCard';
+import DetailPane from '../ui/DetailPane'; // Импортируем DetailPane
 import { useViewMode } from '../hooks/useViewMode';
 
 import type { MealType } from '../types';
@@ -30,15 +32,20 @@ const MealTypesPage: React.FC = () => {
   const { mealTypes, deleteMealType } = useMealTypesStore();
   const { viewMode, toggleViewMode } = useViewMode('meal-types');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [activeId, setActiveId] = useState<number | null>(null);
   const [typeToDelete, setTypeToDelete] = useState<{
     id: number;
     name: string;
     repeatable?: boolean;
   } | null>(null);
+
   // Multi-selection state
   const [selectedMealTypeIds, setSelectedMealTypeIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
+
+  // Detail Pane state
+  const [openSections, setOpenSections] = useState<string[]>(['info']);
 
   const sortedMealTypes = useMemo(() => {
     return [...mealTypes].sort((a, b) => a.name.localeCompare(b.name));
@@ -48,6 +55,11 @@ const MealTypesPage: React.FC = () => {
     () => mealTypes.find((mt) => mt.id === activeId) || null,
     [activeId, mealTypes]
   );
+
+  // Handlers
+  const handleToggleSection = (id: string) => {
+    setOpenSections((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
 
   const handleDeleteRequest = useCallback((mealType: MealType) => {
     setTypeToDelete(mealType);
@@ -61,7 +73,6 @@ const MealTypesPage: React.FC = () => {
     }
   };
 
-  // Multi-selection handlers
   const toggleMultiSelect = () => {
     setShowMultiSelect(!showMultiSelect);
     if (showMultiSelect) {
@@ -81,34 +92,27 @@ const MealTypesPage: React.FC = () => {
     setSelectedMealTypeIds(sortedMealTypes.map((mealType: MealType) => mealType.id));
   };
 
-  // Exit multi-select mode completely
   const exitMultiSelectMode = () => {
     setShowMultiSelect(false);
     setSelectedMealTypeIds([]);
   };
 
-  // Bulk action handlers
   const handleBulkDelete = () => {
     if (selectedMealTypeIds.length === 0) return;
-    // For now, just log the action - would need to implement actual deletion
     console.log(`Deleting meal types: ${selectedMealTypeIds.join(', ')}`);
   };
 
   const handleBulkClone = () => {
     if (selectedMealTypeIds.length === 0) return;
-    // For now, just log the action
     console.log(`Cloning meal types: ${selectedMealTypeIds.join(', ')}`);
   };
 
   const handleBulkExport = () => {
     if (selectedMealTypeIds.length === 0) return;
-
-    // Get selected meal types and export them
     const selectedMealTypes = sortedMealTypes.filter((mt) => selectedMealTypeIds.includes(mt.id));
     exportBulkMealTypesToJson(selectedMealTypes);
   };
 
-  // Import functionality
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -174,13 +178,11 @@ const MealTypesPage: React.FC = () => {
                   <UploadCloud className="w-4 h-4" />
                 </Button>
 
-                {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
                   variant="secondary"
                   size="icon"
                   title={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
-                  aria-label={viewMode === 'default' ? 'Компактный вид' : 'Полный вид'}
                 >
                   {viewMode === 'default' ? (
                     <LayoutList className="w-4 h-4" />
@@ -194,7 +196,6 @@ const MealTypesPage: React.FC = () => {
                   variant="secondary"
                   size="icon"
                   title="Выделить"
-                  aria-label="Выделить"
                 >
                   <Check className="w-4 h-4" />
                 </Button>
@@ -319,69 +320,63 @@ const MealTypesPage: React.FC = () => {
             })}
           </div>
 
-          {/* Detail panel */}
+          {/* Detail panel (Right Column) */}
           <div className="lg:col-span-2">
             {selectedMealType ? (
-              <div className="bg-card rounded-xl border border-border p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <Utensils className="w-8 h-8 text-primary" />
-                    <h2 className="text-xl font-semibold text-foreground">
-                      {selectedMealType.name}
-                    </h2>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => (window.location.href = `/meal-types/${selectedMealType.id}`)}
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Редактировать
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="text-lg font-medium text-foreground mb-3">Информация о типе</h3>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground">
-                          Название
-                        </label>
-                        <p className="text-foreground">{selectedMealType.name}</p>
+              <div className="h-full pl-1">
+                <DetailPane
+                  openSections={openSections}
+                  onToggleSection={handleToggleSection}
+                  sections={[
+                    {
+                      id: 'info',
+                      title: 'Параметры',
+                      icon: Info,
+                      content: (
+                        <div className="space-y-4">
+                          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 bg-background rounded-lg border border-border text-muted-foreground">
+                                <Repeat className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium text-foreground">
+                                  Режим повторения
+                                </h4>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {selectedMealType.repeatable
+                                    ? 'Этот тип можно добавлять несколько раз в один день (например, Перекус).'
+                                    : 'Этот тип обычно используется один раз в день (например, Обед).'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ),
+                    },
+                  ]}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0 text-primary border border-primary/20">
+                        <Utensils className="w-6 h-6" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-muted-foreground">
-                          Повторяемость
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <Repeat className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-foreground">
-                            {selectedMealType.repeatable
-                              ? 'Можно добавлять несколько раз в день'
-                              : 'Один раз в день'}
-                          </span>
-                        </div>
+                        <h2 className="text-2xl font-bold text-foreground">
+                          {selectedMealType.name}
+                        </h2>
+                        <p className="text-muted-foreground">Шаблон приёма пищи</p>
                       </div>
                     </div>
+                    <Button
+                      variant="secondary"
+                      onClick={() => (window.location.href = `/meal-types/${selectedMealType.id}`)}
+                    >
+                      <Edit className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Изменить</span>
+                    </Button>
                   </div>
-
-                  <div>
-                    <h3 className="text-lg font-medium text-foreground mb-3">Использование</h3>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-muted-foreground">
-                          Используется в походах
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <span className="text-foreground">
-                            {/* Simplified for now - will fix the meal type usage logic later */}0
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                </DetailPane>
               </div>
             ) : (
               <div className="h-full flex items-start justify-center pt-16">

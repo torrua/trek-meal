@@ -19,7 +19,7 @@ import {
   Beef,
   Droplet,
   Wheat,
-  Box,
+  PieChart, // Заменили Box на PieChart
 } from 'lucide-react';
 import { useViewMode } from '../hooks/useViewMode';
 import { toast } from 'react-hot-toast';
@@ -379,7 +379,7 @@ const ProductsPage: React.FC = () => {
                   tooltip: 'Углеводы',
                 },
                 portions: {
-                  icon: Box,
+                  icon: PieChart, // Заменили Box на PieChart
                   text: product.portions.length,
                   className: 'text-foreground',
                   tooltip: 'Вариантов порций',
@@ -415,15 +415,22 @@ const ProductsPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(product, { category })}
                   icon={productEntityConfig.getIcon(product)}
                   iconColor={productEntityConfig.getIconColor?.(product, { category })}
-                  // --- ИЗМЕНЕНО: Убрали дублирование порций в details ---
-                  details={[]}
+                  // --- ПЕРЕДАЕМ ПОРЦИИ в details с новой иконкой ---
+                  details={[
+                    {
+                      key: 'portions',
+                      icon: PieChart,
+                      text: product.portions.length,
+                      title: 'Варианты порций',
+                    },
+                  ]}
                   variant="neutral"
                   nutrition={{
                     calories: Math.round(product.calories || 0),
                     proteins: Math.round(product.proteins || 0),
                     fats: Math.round(product.fats || 0),
                     carbs: Math.round(product.carbs || 0),
-                    // Передаем порции только в nutrition для отображения в футере
+                    // Передаем portionCount
                     portionCount: product.portions.length,
                   }}
                   isSelected={activeId === product.id}

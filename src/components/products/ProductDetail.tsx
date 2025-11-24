@@ -12,10 +12,9 @@ import {
   Wheat,
   Thermometer,
   Check,
-  Box,
-  Hash, // 1. Для количества
-  SquareSplitHorizontal, // 2. Для неделимости
-  Package,
+  Hash,
+  PieChart, // Для делимой порции и заголовка
+  Circle, // Для неделимой порции
 } from 'lucide-react';
 import type { Product, Category, ProductPortion } from '../../types';
 import useCategoryStore from '../../stores/useCategoryStore';
@@ -239,7 +238,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
       <CollapsibleSection
         id="portions"
         title="Порции"
-        icon={<Box className="w-4 h-4 text-primary" />}
+        icon={<PieChart className="w-4 h-4 text-primary" />}
         isOpen={openSections.includes('portions')}
         onToggle={handleToggleSection}
         gradientFrom="from-purple-500/5"
@@ -247,7 +246,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
         gradientTo="to-blue-500/5"
         summaryContent={
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Hash className="w-3.5 h-3.5" /> {/* 1. Иконка Hash */}
+            <Hash className="w-3.5 h-3.5" />
             {product.portions.length}
           </span>
         }
@@ -260,7 +259,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
                 className="flex items-center justify-between px-4 py-3 bg-card/50 border border-border rounded-lg hover:bg-card hover:shadow-sm transition-all"
               >
                 <div className="flex items-center gap-3">
-                  {/* 3. Иконка в начале: Box для обычной, SquareSplit для неделимой */}
+                  {/* Иконка: Circle для неделимой, PieChart для делимой */}
                   <div
                     className={cn(
                       'w-8 h-8 rounded-lg flex items-center justify-center border',
@@ -270,9 +269,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
                     )}
                   >
                     {portion.isIndivisible ? (
-                      <SquareSplitHorizontal className="w-4 h-4" />
+                      <Circle className="w-4 h-4" />
                     ) : (
-                      <Package className="w-4 h-4" />
+                      <PieChart className="w-4 h-4" />
                     )}
                   </div>
 

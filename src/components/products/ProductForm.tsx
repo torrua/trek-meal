@@ -1,7 +1,7 @@
 // src/components/products/ProductForm.tsx
 
 import React, { useState, useEffect } from 'react';
-import { Trash2, Plus, Component, Flame, Info, Box, SquareSplitHorizontal } from 'lucide-react'; // Import SquareSplitHorizontal
+import { Trash2, Plus, Component, Flame, Info, PieChart, Circle } from 'lucide-react'; // Импорт новых иконок
 import useCategoryStore from '../../stores/useCategoryStore';
 import useProductStore from '../../stores/useProductStore';
 import Button from '../../ui/Button';
@@ -249,7 +249,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
       <div className="p-6 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-blue-500/5 border border-border rounded-xl">
         <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-            <Box className="w-4 h-4 text-primary" />
+            <PieChart className="w-4 h-4 text-primary" />
           </div>
           <h2 className="text-lg font-semibold">Порции</h2>
         </div>
@@ -296,7 +296,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                     htmlFor={`indivisible-${index}`}
                     className="text-xs text-muted-foreground cursor-pointer flex items-center gap-1 select-none"
                   >
-                    <SquareSplitHorizontal className="w-3 h-3" /> {/* Иконка изменена */}
+                    <Circle className="w-3 h-3" />
                     Неделимая порция
                   </label>
                 </div>

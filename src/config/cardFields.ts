@@ -21,6 +21,7 @@ export const CARD_FIELDS: Record<EntityType, FieldDefinition[]> = {
     { id: 'fats', label: 'Жиры', defaultVisible: true },
     { id: 'carbs', label: 'Углеводы', defaultVisible: true },
     { id: 'weight', label: 'Общий вес', defaultVisible: true },
+    { id: 'items', label: 'Продуктов', defaultVisible: false },
   ],
   trips: [
     { id: 'dates', label: 'Даты', defaultVisible: true },

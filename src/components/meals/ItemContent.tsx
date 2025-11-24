@@ -1,4 +1,4 @@
-// src/components/meals/ItemContent.tsx - ФИНАЛЬНАЯ ВЕРСИЯ
+// src/components/meals/ItemContent.tsx
 
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
@@ -14,10 +14,11 @@ import {
   Check,
   X,
   Trash2,
+  PieChart,
+  Circle,
 } from 'lucide-react';
 import type { Product, Dish, ProductPortion } from '../../types';
 import Button from '../../ui/Button';
-import Input from '../../ui/Input';
 
 interface ItemContentProps {
   item: any;
@@ -150,6 +151,8 @@ const ItemContent: React.FC<ItemContentProps> = ({
 
   const displayWeight = isProduct ? item.weight : dishWeight;
 
+  const CurrentPortionIcon = currentPortion?.isIndivisible ? Circle : PieChart;
+
   return (
     <div className="space-y-3">
       {/* Header: Title + Expandable КБЖУ + Actions */}
@@ -269,7 +272,8 @@ const ItemContent: React.FC<ItemContentProps> = ({
                   className="w-full px-3 py-2 text-sm bg-card border border-border rounded-lg hover:bg-muted hover:border-primary/30 transition-all flex items-center justify-between group"
                 >
                   <span className="flex items-center gap-2">
-                    <Weight className="w-4 h-4 text-muted-foreground" />
+                    {/* 3. Использование динамической иконки в кнопке */}
+                    <CurrentPortionIcon className="w-4 h-4 text-muted-foreground" />
                     <span className="font-medium text-muted-foreground">
                       {currentPortion ? currentPortion.name : 'Другой'}
                     </span>
@@ -283,17 +287,24 @@ const ItemContent: React.FC<ItemContentProps> = ({
                 </button>
                 {showPortions && portions.length > 0 && (
                   <div className="absolute z-20 mt-1 w-full bg-card border border-border rounded-lg shadow-lg py-1 max-h-60 overflow-auto">
-                    {portions.map((portion: ProductPortion, idx: number) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handlePortionSelect(portion)}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between ${portion.weight === item.weight ? 'bg-primary/10 text-primary' : ''}`}
-                      >
-                        <span className="font-medium">{portion.name}</span>
-                        <span className="text-muted-foreground text-sm">{portion.weight}</span>
-                      </button>
-                    ))}
+                    {portions.map((portion: ProductPortion, idx: number) => {
+                      // 4. Определение иконки для каждого элемента списка
+                      const OptionIcon = portion.isIndivisible ? Circle : PieChart;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handlePortionSelect(portion)}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors flex items-center justify-between ${portion.weight === item.weight ? 'bg-primary/10 text-primary' : ''}`}
+                        >
+                          <span className="flex items-center gap-2">
+                            <OptionIcon className="w-3 h-3 opacity-70" />
+                            <span className="font-medium">{portion.name}</span>
+                          </span>
+                          <span className="text-muted-foreground text-sm">{portion.weight}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -341,8 +352,6 @@ const ItemContent: React.FC<ItemContentProps> = ({
                   }
                 }}
               />
-
-              {/* --- ИЗМЕНЕНИЕ ЗДЕСЬ --- */}
               <Button
                 type="button"
                 variant="ghost"
@@ -353,7 +362,6 @@ const ItemContent: React.FC<ItemContentProps> = ({
               >
                 <Check className="w-4 h-4" />
               </Button>
-
               <Button
                 type="button"
                 variant="ghost"

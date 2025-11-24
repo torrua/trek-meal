@@ -1,6 +1,19 @@
-// src/components/database/dishes/DishForm.tsx
+// src/components/dishes/DishForm.tsx
 
 import React, { useState, useEffect } from 'react';
+import {
+  X,
+  Plus,
+  Soup,
+  Component,
+  Scale,
+  ChefHat,
+  PieChart,
+  Circle,
+  Info,
+  Copy,
+  RefreshCw,
+} from 'lucide-react';
 import DropdownSelect from '../../ui/DropdownSelect';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
@@ -10,7 +23,6 @@ import Textarea from '../../ui/Textarea';
 import FormField from '../../ui/FormField';
 import type { Dish, DishData, DishProduct, Product, SubmitDishAction } from '../../types';
 import { toast } from 'react-hot-toast';
-import { X, Plus, Soup, Component, Scale, ChefHat } from 'lucide-react';
 
 interface DishFormProps {
   dish: Dish | null;
@@ -20,7 +32,7 @@ interface DishFormProps {
 }
 
 type ProductOption = { value: string; label: string };
-type PortionOption = { value: string; label: string };
+type PortionOption = { value: string; label: string; icon?: any };
 
 const CUSTOM_WEIGHT_VALUE = '-1';
 
@@ -33,7 +45,8 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
 
   useEffect(() => {
     const initializeState = (sourceDish: Dish, isCloning: boolean) => {
-      setName(sourceDish.name + (isCloning ? ' (копия)' : ''));
+      // Если клонируем, добавляем пометку к имени, чтобы не было конфликта уникальности сразу
+      setName(sourceDish.name + (isCloning ? ' (Вариация)' : ''));
       setDescription(sourceDish.description || '');
       setProducts(JSON.parse(JSON.stringify(sourceDish.products)));
     };
@@ -89,11 +102,15 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
       toast.error('Пожалуйста, укажите название блюда.');
       return null;
     }
+    // При клонировании (dishToClone) мы создаем НОВОЕ блюдо, поэтому проверяем конфликт с существующими
+    // При редактировании (dish) исключаем текущее из проверки
     const isDuplicate = dishes.some(
       (d) => d.name.trim().toLowerCase() === trimmedName.toLowerCase() && d.id !== dish?.id
     );
     if (isDuplicate) {
-      toast.error(`Блюдо с названием "${trimmedName}" уже существует.`);
+      toast.error(
+        `Блюдо с названием "${trimmedName}" уже существует. Пожалуйста, измените название вариации.`
+      );
       return null;
     }
     const validProducts = products.filter((p) => p.productId > 0 && p.weight > 0);
@@ -127,16 +144,29 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
           <div className="flex items-center gap-3 pb-3 border-b notion-border-subtle">
             <Soup className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold text-foreground tracking-tight">
-              Основная информация
+              {dishToClone ? 'Параметры вариации' : 'Основная информация'}
             </h3>
           </div>
 
-          <FormField label="Название блюда" required>
+          {dishToClone && (
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl flex items-start gap-3">
+              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-800 dark:text-blue-200">
+                <p className="font-medium mb-1">Создание новой версии</p>
+                <p>
+                  Вы редактируете копию. Оригинальное блюдо <strong>«{dishToClone.name}»</strong>{' '}
+                  останется без изменений в базе данных.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <FormField label="Название вариации" required>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
-              placeholder="Например, Плов туристический"
+              placeholder="Например, Плов туристический (с тушенкой)"
               className="text-base font-medium"
             />
           </FormField>
@@ -188,13 +218,19 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
               const portionOptions: PortionOption[] =
                 selectedProduct?.portions.map((portion) => ({
                   value: String(portion.weight),
-                  label: `${portion.name} (${portion.weight} г)`,
+                  label: portion.name,
+                  menuLabel: `${portion.name} (${portion.weight} г)`,
+                  icon: portion.isIndivisible ? Circle : PieChart,
                 })) || [];
-              portionOptions.push({ value: CUSTOM_WEIGHT_VALUE, label: 'Свой вес...' });
+              portionOptions.push({
+                value: CUSTOM_WEIGHT_VALUE,
+                label: 'Свой вес...',
+                icon: PieChart,
+              });
 
-              const currentPortion =
-                portionOptions.find((opt) => Number(opt.value) === p.weight) ||
-                portionOptions.find((opt) => opt.value === CUSTOM_WEIGHT_VALUE);
+              const exactMatch = portionOptions.find((opt) => Number(opt.value) === p.weight);
+              const currentPortion = exactMatch || portionOptions[portionOptions.length - 1];
+              const SelectedIcon = currentPortion?.icon || PieChart;
 
               return (
                 <div key={index} className="p-5 bg-muted/20 rounded-xl border notion-border-subtle">
@@ -227,7 +263,7 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
                       <div className="md:col-span-2">
                         <DropdownSelect
                           label="Порция"
-                          icon={Scale}
+                          icon={SelectedIcon}
                           options={portionOptions}
                           value={currentPortion?.value || CUSTOM_WEIGHT_VALUE}
                           onChange={(val) =>
@@ -269,27 +305,33 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
 
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 pt-6 border-t notion-border-subtle">
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            Отмена
-          </Button>
           {dishToClone ? (
-            <>
+            // Интерфейс выбора стратегии при клонировании
+            <div className="flex flex-col sm:flex-row gap-3 w-full justify-end">
               <Button type="button" variant="secondary" onClick={() => handleAction('add_as_new')}>
-                Добавить как новое
+                <Copy className="w-4 h-4 mr-2" />
+                Добавить дополнительно
               </Button>
               <Button type="button" variant="primary" onClick={() => handleAction('replace')}>
-                Заменить в раскладке
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Заменить в этом приёме пищи
+              </Button>
+            </div>
+          ) : (
+            // Стандартный интерфейс сохранения
+            <>
+              <Button type="button" variant="ghost" onClick={onCancel}>
+                Отмена
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => handleAction('create_or_update')}
+              >
+                <Soup className="w-4 h-4 mr-2" />
+                {dish ? 'Сохранить' : 'Создать'}
               </Button>
             </>
-          ) : (
-            <Button
-              type="button"
-              variant="primary"
-              onClick={() => handleAction('create_or_update')}
-            >
-              <Soup className="w-4 h-4 mr-2" />
-              {dish ? 'Сохранить' : 'Создать'}
-            </Button>
           )}
         </div>
       </div>

@@ -20,6 +20,7 @@ import {
   Wheat,
   Weight,
   Beef,
+  Hash,
 } from 'lucide-react';
 import useDishStore from '../stores/useDishStore';
 import useTripStore from '../stores/useTripStore';
@@ -384,6 +385,12 @@ const DishesPage: React.FC = () => {
                   text: Math.round(nutrition.calories),
                   className: 'text-orange-600',
                   tooltip: 'Ккал',
+                },
+                items: {
+                  icon: Hash,
+                  text: dish.products.length,
+                  className: 'text-foreground',
+                  tooltip: 'Продуктов',
                 },
                 proteins: {
                   icon: Beef,

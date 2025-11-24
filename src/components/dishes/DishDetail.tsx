@@ -19,22 +19,28 @@ import {
   Trash2,
   Search,
   Box,
+  PieChart,
+  Circle,
+  AlertTriangle,
+  Save,
+  Copy,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { Dish, DishData, DishProduct, Product, Category } from '../../types';
+import type { Dish, DishData, DishProduct, Product, ProductPortion } from '../../types';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
+import useCategoryStore from '../../stores/useCategoryStore';
 import useTripStore from '../../stores/useTripStore';
-import useCategoryStore from '../../stores/useCategoryStore'; // Добавлено для поиска
-import { useSettingsStore } from '../../stores/useSettingsStore'; // !!! ИСПРАВЛЕНО: Добавлен импорт
+import { useSettingsStore } from '../../stores/useSettingsStore';
 import Button from '../../ui/Button';
 import EditPortionModal from './EditPortionModal';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import FormField from '../../ui/FormField';
 import DropdownSelect from '../../ui/DropdownSelect';
-import { tripEntityConfig } from '../../config/entityConfig';
 import { toast } from 'react-hot-toast';
+import Modal from '../../ui/Modal';
+import { tripEntityConfig } from '../../config/entityConfig';
 
 interface DishDetailProps {
   dish: Dish | null;
@@ -48,6 +54,7 @@ interface DishDetailProps {
   editCancelTrigger?: number;
 }
 
+// --- CollapsibleSection ---
 interface CollapsibleSectionProps {
   id: string;
   title: string;
@@ -105,6 +112,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   );
 };
 
+// --- Read Only Product View ---
 const ProductContentReadOnly: React.FC<{
   dishProduct: DishProduct;
   product: Product;
@@ -113,7 +121,7 @@ const ProductContentReadOnly: React.FC<{
   onView: () => void;
   canRemove: boolean;
 }> = ({ dishProduct, product, onEditPortion, onRemove, onView, canRemove }) => {
-  const [showNutrition, setShowNutrition] = useState(false);
+  const [showNutrition, setShowNutrition] = useState(!canRemove);
 
   const nutrition = useMemo(() => {
     if (!product || !dishProduct.weight) return null;
@@ -130,6 +138,8 @@ const ProductContentReadOnly: React.FC<{
     if (!product || !dishProduct.weight) return null;
     return product.portions?.find((p) => p.weight === dishProduct.weight);
   }, [product, dishProduct.weight]);
+
+  const PortionIcon = portion?.isIndivisible ? Circle : PieChart;
 
   return (
     <div className="space-y-3">
@@ -197,33 +207,35 @@ const ProductContentReadOnly: React.FC<{
               )}
             </button>
           )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditPortion();
-            }}
-            className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600"
-            title="Изменить вес"
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
           {canRemove && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
-              className="bg-danger/10 hover:bg-danger/20 text-danger"
-              title="Удалить продукт"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditPortion();
+                }}
+                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600"
+                title="Изменить вес"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove();
+                }}
+                className="bg-danger/10 hover:bg-danger/20 text-danger"
+                title="Удалить продукт"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -231,7 +243,7 @@ const ProductContentReadOnly: React.FC<{
       {dishProduct.weight && (
         <div className="pt-2 border-t border-border/50">
           <div className="flex items-center gap-2 px-3 py-2 text-sm bg-card border border-border rounded-lg">
-            <Weight className="w-4 h-4 text-muted-foreground" />
+            <PortionIcon className="w-4 h-4 text-muted-foreground" />
             <span className="font-medium text-muted-foreground">
               {portion ? portion.name : 'Другая порция'}
             </span>
@@ -240,6 +252,72 @@ const ProductContentReadOnly: React.FC<{
         </div>
       )}
     </div>
+  );
+};
+
+// --- Editable nutrition block (matches read-only UI) ---
+const EditableProductNutrition: React.FC<{ product: Product | null; weight: number }> = ({
+  product,
+  weight,
+}) => {
+  const [show, setShow] = useState(true);
+
+  if (!product || !weight) return null;
+
+  const multiplier = weight / 100;
+  const nutrition = {
+    calories: Math.round((product.calories || 0) * multiplier),
+    proteins: Math.round((product.proteins || 0) * multiplier * 10) / 10,
+    fats: Math.round((product.fats || 0) * multiplier * 10) / 10,
+    carbs: Math.round((product.carbs || 0) * multiplier * 10) / 10,
+  };
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        setShow(!show);
+      }}
+      className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-lg border border-border hover:bg-muted transition-all text-xs"
+      title={`${nutrition.calories} ккал`}
+      type="button"
+    >
+      {show ? (
+        <>
+          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
+          <div className="flex items-center gap-1">
+            <Flame className="w-4 h-4 text-orange-600" />
+            <span className="text-sm font-semibold text-orange-600">{nutrition.calories}</span>
+          </div>
+          <div className="w-px h-4 bg-border" />
+          <div className="flex items-center gap-1">
+            <Beef className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-semibold text-blue-600">{nutrition.proteins}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Droplet className="w-4 h-4 text-yellow-600" />
+            <span className="text-sm font-semibold text-yellow-600">{nutrition.fats}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Wheat className="w-4 h-4 text-green-600" />
+            <span className="text-sm font-semibold text-green-600">{nutrition.carbs}</span>
+          </div>
+          <div className="w-px h-4 bg-border" />
+          <div className="flex items-center gap-1">
+            <Weight className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-semibold text-muted-foreground">{weight}</span>
+          </div>
+        </>
+      ) : (
+        <>
+          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
+          <div className="flex items-center gap-1">
+            <Weight className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-semibold text-muted-foreground">{weight}</span>
+          </div>
+        </>
+      )}
+    </button>
   );
 };
 
@@ -258,16 +336,15 @@ const DishDetail: React.FC<DishDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { products: allProducts } = useProductStore();
-  const { removeProductFromDish, updateProductInDish, updateDish, dishes } = useDishStore();
+  const { removeProductFromDish, updateProductInDish, updateDish, dishes, addDish } =
+    useDishStore();
   const { getTripsUsingDish } = useTripStore();
-
-  // Добавлено для логики поиска
   const { categories } = useCategoryStore();
-  const { searchByCategory } = useSettingsStore(); // !!! ИСПРАВЛЕНО: Хук теперь используется
+  const { searchByCategory } = useSettingsStore();
 
   const [editingPortionIndex, setEditingPortionIndex] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [showHeaderNutrition, setShowHeaderNutrition] = useState(false);
+  const [showHeaderNutrition, setShowHeaderNutrition] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddMenu, setShowAddMenu] = useState(false);
   const editTriggerRef = useRef<number | undefined>(undefined);
@@ -279,6 +356,16 @@ const DishDetail: React.FC<DishDetailProps> = ({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [formProducts, setFormProducts] = useState<DishProduct[]>([]);
+
+  // Save Modal State
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [saveAsName, setSaveAsName] = useState('');
+
+  // --- ВОТ ЭТИ СТРОКИ БЫЛИ ПРОПУЩЕНЫ ---
+  const isBasicInfoOpen = openSections.includes('basic-info');
+  const isProductsOpen = openSections.includes('products');
+  const isTripsOpen = openSections.includes('trips');
+  // -------------------------------------
 
   useEffect(() => {
     if (typeof editTrigger === 'number') {
@@ -318,32 +405,55 @@ const DishDetail: React.FC<DishDetailProps> = ({
     onFinishEdit?.();
   };
 
-  const validateAndSave = () => {
+  // Check if composition changed
+  const hasCompositionChanged = useMemo(() => {
+    if (!dish) return false;
+    if (dish.products.length !== formProducts.length) return true;
+    return JSON.stringify(dish.products) !== JSON.stringify(formProducts);
+  }, [dish, formProducts]);
+
+  const handlePreSave = () => {
     const trimmedName = name.trim();
     if (!trimmedName) {
-      toast.error('Пожалуйста, укажите название блюда.');
-      return;
-    }
-    const isDuplicate = dishes.some(
-      (d) => d.name.trim().toLowerCase() === trimmedName.toLowerCase() && d.id !== dish.id
-    );
-    if (isDuplicate) {
-      toast.error(`Блюдо с названием "${trimmedName}" уже существует.`);
+      toast.error('Укажите название блюда');
       return;
     }
     const validProducts = formProducts.filter((p) => p.productId > 0 && p.weight > 0);
     if (validProducts.length === 0) {
-      toast.error('Блюдо должно содержать хотя бы один продукт с весом больше нуля.');
+      toast.error('Блюдо должно содержать хотя бы один продукт с весом > 0');
       return;
     }
 
-    const data: DishData = {
-      name: trimmedName,
-      description: description.trim(),
-      products: validProducts,
-    };
+    // If products changed, show modal choice
+    if (hasCompositionChanged) {
+      setSaveAsName(`${trimmedName} (копия)`);
+      setIsSaveModalOpen(true);
+    } else {
+      // Only text changed, simple update
+      updateDish(dish.id, { name: trimmedName, description, products: validProducts });
+      setIsEditing(false);
+      onFinishEdit?.();
+    }
+  };
 
-    updateDish(dish.id, data);
+  const handleConfirmSave = (action: 'replace' | 'new') => {
+    if (!dish) return;
+
+    const validProducts = formProducts.filter((p) => p.productId > 0 && p.weight > 0);
+
+    if (action === 'replace') {
+      updateDish(dish.id, { name, description, products: validProducts });
+      toast.success('Блюдо обновлено');
+    } else {
+      if (!saveAsName.trim()) {
+        toast.error('Введите имя для нового блюда');
+        return;
+      }
+      addDish({ name: saveAsName, description, products: validProducts });
+      toast.success('Создано новое блюдо');
+    }
+
+    setIsSaveModalOpen(false);
     setIsEditing(false);
     onFinishEdit?.();
   };
@@ -354,7 +464,6 @@ const DishDetail: React.FC<DishDetailProps> = ({
   );
 
   const tripsUsingDish = dish ? getTripsUsingDish(dish.id) : [];
-
   const totalWeight = currentProducts.reduce((sum, p) => sum + p.weight, 0);
 
   const totalNutrition = useMemo(() => {
@@ -417,28 +526,22 @@ const DishDetail: React.FC<DishDetailProps> = ({
     navigate(`/trips/${tripId}`);
   };
 
-  // Form handlers
-  const productOptions = allProducts.map((p: Product) => ({
-    value: String(p.id),
-    label: p.name,
-  }));
-
   const handleProductChange = (index: number, selectedValue: string) => {
     const newProducts = [...formProducts];
     const productId = Number(selectedValue) || 0;
     newProducts[index].productId = productId;
     const product = allProducts.find((p: Product) => p.id === productId);
-    newProducts[index].weight = product?.portions?.[0]?.weight || 0;
+    newProducts[index].weight = product?.portions?.[0]?.weight || 100;
     setFormProducts(newProducts);
   };
 
   const handlePortionChange = (index: number, selectedValue: string) => {
-    if (selectedValue !== undefined) {
-      const newProducts = [...formProducts];
-      if (selectedValue !== CUSTOM_WEIGHT_VALUE) {
-        newProducts[index].weight = Number(selectedValue) || 0;
-      }
-      // Если выбран "Свой вес", оставляем текущий вес и позволяем редактировать вручную
+    const newProducts = [...formProducts];
+    if (selectedValue === CUSTOM_WEIGHT_VALUE) {
+      // Logic handled by UI state usually, but here we just keep current weight or set default
+      // User will edit weight manually
+    } else {
+      newProducts[index].weight = Number(selectedValue) || 0;
       setFormProducts(newProducts);
     }
   };
@@ -451,24 +554,19 @@ const DishDetail: React.FC<DishDetailProps> = ({
 
   const addProductField = () => setFormProducts([...formProducts, { productId: 0, weight: 0 }]);
 
-  // Search and add product logic
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return allProducts;
     const query = searchQuery.toLowerCase();
-
-    // Логика поиска по категориям (как в ProductForm)
     if (searchByCategory) {
       const matchingCategoryIds = categories
         .filter((c) => c.name.toLowerCase().includes(query))
         .map((c) => c.id);
-
       return allProducts.filter(
         (p) =>
           p.name.toLowerCase().includes(query) ||
           (p.categoryId !== null && matchingCategoryIds.includes(p.categoryId))
       );
     }
-
     return allProducts.filter((p) => p.name.toLowerCase().includes(query));
   }, [allProducts, searchQuery, categories, searchByCategory]);
 
@@ -487,41 +585,26 @@ const DishDetail: React.FC<DishDetailProps> = ({
       const target = event.target as Node;
       const isInsideSearchArea = searchInputRef.current?.contains(target);
       const isInsideDropdown = dropdownRef.current?.contains(target);
-
       if (!isInsideSearchArea && !isInsideDropdown) {
         setShowAddMenu(false);
         setSearchQuery('');
       }
     };
-
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setShowAddMenu(false);
         setSearchQuery('');
       }
     };
-
     if (showAddMenu) {
-      const timer = setTimeout(() => {
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEscapeKey);
-        document.body.classList.add('dropdown-open');
-      }, 100);
-
-      return () => {
-        clearTimeout(timer);
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('keydown', handleEscapeKey);
-        document.body.classList.remove('dropdown-open');
-      };
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscapeKey);
     }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
   }, [showAddMenu]);
-
-  if (!dish) return null;
-
-  const isBasicInfoOpen = openSections.includes('basic-info');
-  const isProductsOpen = openSections.includes('products');
-  const isTripsOpen = openSections.includes('trips');
 
   const editingProduct =
     editingPortionIndex !== null
@@ -543,6 +626,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
 
   return (
     <div className="space-y-6 pl-1" ref={containerRef}>
+      {/* Basic Info Section */}
       <CollapsibleSection
         id="basic-info"
         title="Основная информация"
@@ -558,12 +642,20 @@ const DishDetail: React.FC<DishDetailProps> = ({
               <Button type="button" variant="ghost" onClick={handleCancelEdit}>
                 Отмена
               </Button>
-              <Button type="button" variant="primary" onClick={validateAndSave} icon={Soup}>
+              <Button type="button" variant="primary" onClick={handlePreSave} icon={Soup}>
                 Сохранить изменения
               </Button>
             </div>
           ) : (
-            <Button type="button" variant="primary" onClick={handleStartEdit} icon={Edit}>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                handleStartEdit();
+              }}
+              icon={Edit}
+            >
               Редактировать
             </Button>
           )
@@ -580,18 +672,17 @@ const DishDetail: React.FC<DishDetailProps> = ({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   autoFocus
-                  placeholder="Например, Плов туристический"
+                  placeholder="Например, Плов"
                   className="text-base font-medium"
                 />
               </FormField>
-
               <FormField label="Описание">
                 <Textarea
                   name="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  placeholder="Описание блюда, способ приготовления, особенности..."
+                  placeholder="Описание..."
                 />
               </FormField>
             </>
@@ -605,7 +696,6 @@ const DishDetail: React.FC<DishDetailProps> = ({
                   {dish.name}
                 </div>
               </div>
-
               {dish.description && (
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
@@ -619,6 +709,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
         </div>
       </CollapsibleSection>
 
+      {/* Products Section */}
       <CollapsibleSection
         id="products"
         title="Состав блюда"
@@ -693,6 +784,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
         gradientTo="to-green-500/5"
       >
         <div className="space-y-4 pt-4">
+          {/* Search for adding products */}
           {isEditing && (
             <div className="relative mb-4" ref={searchInputRef}>
               <div className="relative">
@@ -703,61 +795,30 @@ const DishDetail: React.FC<DishDetailProps> = ({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setShowAddMenu(true)}
                   placeholder="Найти продукт..."
-                  className="w-full pl-10 pr-3 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/60 transition-all"
+                  className="w-full pl-10 pr-3 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 />
               </div>
-
               {showAddMenu && (
                 <div
                   ref={dropdownRef}
-                  className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-2xl overflow-hidden z-[9999]"
-                  style={{
-                    maxHeight: '320px',
-                  }}
-                  onWheel={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    const scrollContainer = dropdownRef.current?.querySelector(
-                      '.absolute-dropdown-scrollbar'
-                    ) as HTMLElement;
-                    if (scrollContainer) {
-                      scrollContainer.scrollTop += e.deltaY;
-                    }
-                  }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto p-1"
                 >
-                  <div
-                    className="p-2 absolute-dropdown-scrollbar"
-                    tabIndex={0}
-                    onTouchMove={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    {filteredProducts.length === 0 ? (
-                      <div className="px-3 py-8 text-center text-sm text-muted-foreground">
-                        Ничего не найдено
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
-                          <Component className="w-3.5 h-3.5 text-blue-500" />
-                          Продукты ({filteredProducts.length})
-                        </div>
-                        <div className="max-h-[280px] overflow-y-auto">
-                          {filteredProducts.map((product) => (
-                            <button
-                              key={product.id}
-                              type="button"
-                              onClick={() => handleAddProduct(product.id)}
-                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
-                            >
-                              <Component className="w-3.5 h-3.5 text-blue-500" />
-                              {product.name}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  {filteredProducts.length === 0 ? (
+                    <div className="p-3 text-center text-sm text-muted-foreground">
+                      Ничего не найдено
+                    </div>
+                  ) : (
+                    filteredProducts.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleAddProduct(p.id)}
+                        className="w-full text-left px-3 py-2 hover:bg-muted rounded flex items-center gap-2 text-sm"
+                      >
+                        <Component className="w-3.5 h-3.5 text-blue-500" /> {p.name}
+                      </button>
+                    ))
+                  )}
                 </div>
               )}
             </div>
@@ -766,147 +827,100 @@ const DishDetail: React.FC<DishDetailProps> = ({
           <div className="space-y-3">
             {isEditing ? (
               <>
-                {formProducts.length > 0 ? (
-                  formProducts.map((p, index) => {
-                    const selectedProduct = allProducts.find(
-                      (prod: Product) => prod.id === p.productId
-                    );
-                    const portionOptions: Array<{
-                      value: string;
-                      label: string;
-                      menuLabel?: string;
-                    }> =
-                      selectedProduct?.portions.map((portion) => ({
-                        value: String(portion.weight),
-                        label: portion.name,
-                        menuLabel: `${portion.name} (${portion.weight} г)`,
-                      })) || [];
-                    portionOptions.push({ value: CUSTOM_WEIGHT_VALUE, label: 'Свой вес...' });
+                {formProducts.map((p, index) => {
+                  const selectedProduct = allProducts.find((prod) => prod.id === p.productId);
+                  const portionOptions =
+                    selectedProduct?.portions.map((port) => ({
+                      value: String(port.weight),
+                      label: port.name,
+                      menuLabel: `${port.name} (${port.weight} g)`,
+                      icon: port.isIndivisible ? Circle : PieChart,
+                    })) || [];
+                  portionOptions.push({
+                    value: CUSTOM_WEIGHT_VALUE,
+                    label: 'Свой вес...',
+                    menuLabel: 'Свой вес...',
+                    icon: PieChart,
+                  });
 
-                    // Определяем текущую порцию: сначала ищем точное совпадение по весу
-                    // Если не найдено, проверяем, есть ли такой вес в списке порций
-                    const exactMatch = portionOptions.find((opt) => Number(opt.value) === p.weight);
-                    const currentPortion = exactMatch || portionOptions[portionOptions.length - 1]; // Последний элемент - это всегда "Свой вес..."
+                  const currentPortion =
+                    portionOptions.find((opt) => Number(opt.value) === p.weight) ||
+                    portionOptions[portionOptions.length - 1];
 
-                    return (
-                      <div
-                        key={index}
-                        className="bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 rounded-lg p-3 transition-all duration-200 hover:shadow-sm"
-                      >
-                        <div>
-                          {/* Header: icon + product name + actions */}
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                              <h4
-                                className="font-medium text-foreground truncate cursor-default"
-                                title={selectedProduct?.name || 'Не выбран'}
-                              >
-                                {selectedProduct?.name || 'Не выбран'}
-                              </h4>
-                            </div>
+                  return (
+                    <div
+                      key={index}
+                      className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-sm flex items-center gap-2">
+                          <Component className="w-3.5 h-3.5 text-blue-500" />{' '}
+                          {selectedProduct?.name || 'Product not found'}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <EditableProductNutrition
+                            product={selectedProduct || null}
+                            weight={p.weight}
+                          />
 
-                            <div className="flex items-center gap-2">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() => handleDeleteProduct(index)}
-                                className="bg-danger/10 hover:bg-danger/20 text-danger"
-                                title="Удалить продукт"
-                                aria-label={`Удалить продукт ${index + 1}`}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Separator */}
-                          <div className="pt-3">
-                            <div className="flex items-center gap-3 py-2">
-                              <div className="flex-1">
-                                <DropdownSelect
-                                  icon={Box}
-                                  options={portionOptions}
-                                  value={currentPortion?.value || CUSTOM_WEIGHT_VALUE}
-                                  onChange={(val) =>
-                                    typeof val === 'string' && handlePortionChange(index, val)
-                                  }
-                                  disabled={!selectedProduct}
-                                  placeholder="Выберите порцию..."
-                                  containerClassName=""
-                                />
-                              </div>
-
-                              <div className="w-24">
-                                <FormField>
-                                  <Input
-                                    type="number"
-                                    value={p.weight || ''}
-                                    onChange={(e) => handleWeightChange(index, e.target.value)}
-                                    required
-                                    min="0"
-                                    placeholder="Вес"
-                                    icon={Weight}
-                                    className="text-center text-sm font-medium text-foreground"
-                                  />
-                                </FormField>
-                              </div>
-                            </div>
-                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => handleDeleteProduct(index)}
+                            className="text-danger hover:bg-danger/10"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
                         </div>
                       </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Soup className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm">Пусто</p>
-                    <p className="text-xs mt-1">Добавьте продукты</p>
-                  </div>
-                )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={addProductField}
-                  className="w-full border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 py-4"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Добавить продукт
-                </Button>
+                      <div className="flex gap-3">
+                        <div className="flex-1">
+                          <DropdownSelect
+                            icon={currentPortion.icon || PieChart}
+                            options={portionOptions}
+                            value={currentPortion.value}
+                            onChange={(val) =>
+                              typeof val === 'string' && handlePortionChange(index, val)
+                            }
+                            placeholder="Порция"
+                          />
+                        </div>
+                        <div className="w-24">
+                          <Input
+                            type="number"
+                            value={p.weight}
+                            onChange={(e) => handleWeightChange(index, e.target.value)}
+                            placeholder="Вес"
+                            className="text-center"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </>
             ) : (
               <>
-                {currentProducts.length > 0 ? (
-                  currentProducts.map((dishProduct, index) => {
-                    const product = allProducts.find((p) => p.id === dishProduct.productId);
-                    if (!product) return null;
-
-                    const canRemove = currentProducts.length > 1;
-
-                    return (
-                      <div
-                        key={index}
-                        className="bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 rounded-lg p-3 transition-all duration-200 hover:shadow-sm"
-                      >
-                        <ProductContentReadOnly
-                          dishProduct={dishProduct}
-                          product={product}
-                          onEditPortion={() => handleEditPortion(index)}
-                          onRemove={() => handleDeleteProduct(index)}
-                          onView={() => handleOpenProduct(product.id)}
-                          canRemove={canRemove}
-                        />
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Soup className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm">Пусто</p>
-                    <p className="text-xs mt-1">Добавьте продукты</p>
-                  </div>
-                )}
+                {currentProducts.map((dishProduct, index) => {
+                  const product = allProducts.find((p) => p.id === dishProduct.productId);
+                  if (!product) return null;
+                  return (
+                    <div
+                      key={index}
+                      className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3 hover:shadow-sm transition-all"
+                    >
+                      <ProductContentReadOnly
+                        dishProduct={dishProduct}
+                        product={product}
+                        onEditPortion={() => handleEditPortion(index)}
+                        onRemove={() => handleDeleteProduct(index)}
+                        onView={() => handleOpenProduct(product.id)}
+                        canRemove={isEditing ? currentProducts.length > 1 : false}
+                      />
+                    </div>
+                  );
+                })}
               </>
             )}
           </div>
@@ -920,52 +934,24 @@ const DishDetail: React.FC<DishDetailProps> = ({
           icon={<MapPin className="w-4 h-4 text-primary" />}
           isOpen={isTripsOpen}
           onToggle={onToggleSection}
-          summaryContent={
-            tripsUsingDish.length > 0 && (
-              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <Hash className="w-3.5 h-3.5" />
-                {tripsUsingDish.length}
-              </span>
-            )
-          }
           gradientFrom="from-purple-500/5"
           gradientVia="via-pink-500/5"
           gradientTo="to-red-500/5"
         >
-          <div className="space-y-4 pt-4">
-            <div className="space-y-3">
-              {tripsUsingDish.map((trip) => {
-                const listItemConfig = tripEntityConfig.views.listItem;
-
-                return (
-                  <div
-                    key={trip.id}
-                    className="bg-purple-500/5 hover:bg-purple-500/10 border border-purple-500/20 hover:border-purple-500/40 rounded-lg p-3 transition-all duration-200 hover:shadow-sm cursor-pointer"
-                    onClick={() => handleViewTrip(trip.id)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        {listItemConfig.icon && (
-                          <listItemConfig.icon className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                        )}
-                        <h4 className="font-medium text-foreground truncate hover:text-primary transition-colors">
-                          {listItemConfig.title(trip)}
-                        </h4>
-                      </div>
-                    </div>
-                    {listItemConfig.details && (
-                      <div className="mt-2 pt-2 border-t border-border/50">
-                        {listItemConfig.details(trip).map((detail, idx) => (
-                          <div key={idx} className="text-xs text-muted-foreground">
-                            {detail.label}: {detail.value}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+          <div className="pt-4 space-y-2">
+            {tripsUsingDish.map((t) => {
+              const listItemConfig = tripEntityConfig.views.listItem;
+              return (
+                <div
+                  key={t.id}
+                  className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg flex items-center gap-2 cursor-pointer hover:bg-purple-500/10"
+                  onClick={() => handleViewTrip(t.id)}
+                >
+                  <MapPin className="w-4 h-4 text-purple-500" />
+                  <span className="font-medium text-sm">{listItemConfig.title(t)}</span>
+                </div>
+              );
+            })}
           </div>
         </CollapsibleSection>
       )}
@@ -977,6 +963,64 @@ const DishDetail: React.FC<DishDetailProps> = ({
         product={editingProduct}
         dishProduct={editingDishProduct}
       />
+
+      {/* Save Strategy Modal */}
+      <Modal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        title="Изменение состава блюда"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-4 bg-warning/10 text-warning-foreground rounded-lg border border-warning/20">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium mb-1">Состав блюда был изменен.</p>
+              <p>
+                Это может повлиять на раскладку в походах, где используется это блюдо. Вы хотите
+                перезаписать текущее блюдо или создать новое?
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-2 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Название нового блюда (для копии)
+              </label>
+              <Input
+                value={saveAsName}
+                onChange={(e) => setSaveAsName(e.target.value)}
+                placeholder="Введите название"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2 pt-2">
+              <Button
+                variant="primary"
+                onClick={() => handleConfirmSave('new')}
+                className="w-full justify-center"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Сохранить как новое блюдо
+              </Button>
+              <div className="relative flex items-center py-2">
+                <div className="flex-grow border-t border-border"></div>
+                <span className="flex-shrink-0 mx-4 text-xs text-muted-foreground">ИЛИ</span>
+                <div className="flex-grow border-t border-border"></div>
+              </div>
+              <Button
+                variant="danger"
+                onClick={() => handleConfirmSave('replace')}
+                className="w-full justify-center bg-red-50 text-red-600 hover:bg-red-100 border-red-200 hover:border-red-300"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Перезаписать текущее (Опасно)
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

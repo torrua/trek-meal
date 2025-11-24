@@ -12,8 +12,8 @@ import {
   Wheat,
   Weight,
   Hash,
-  Box,
-} from 'lucide-react';
+  PieChart,
+} from 'lucide-react'; // Заменили Box на PieChart
 import DropdownMenu from './DropdownMenu';
 import './entityCard.css';
 
@@ -57,9 +57,9 @@ interface EntityCardProps {
     proteins: number;
     fats: number;
     carbs: number;
-    weight?: number; // Для блюд и приемов пищи
-    itemsCount?: number; // Количество ингредиентов (слева)
-    portionCount?: number; // Для продуктов (вместо веса)
+    weight?: number;
+    itemsCount?: number;
+    portionCount?: number;
   };
   viewMode?: 'default' | 'compact';
 }
@@ -300,8 +300,6 @@ const EntityCard: React.FC<EntityCardProps> = ({
               </span>
             </div>
 
-            {/* --- ЛОГИКА ОТОБРАЖЕНИЯ ПРАВОГО УГЛА --- */}
-
             {/* 1. Если передан вес (Блюда, Приемы пищи) */}
             {typeof nutrition.weight === 'number' && (
               <div className="flex items-center gap-1 ml-auto" title="Общий вес">
@@ -316,7 +314,8 @@ const EntityCard: React.FC<EntityCardProps> = ({
             {typeof nutrition.weight === 'undefined' &&
               typeof nutrition.portionCount === 'number' && (
                 <div className="flex items-center gap-1 ml-auto" title="Вариантов порций">
-                  <Box className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                  <PieChart className="w-3 h-3 text-muted-foreground flex-shrink-0" />{' '}
+                  {/* Заменили Box на PieChart */}
                   <span className="font-medium text-muted-foreground">
                     {nutrition.portionCount}
                   </span>

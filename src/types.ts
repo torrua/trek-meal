@@ -32,6 +32,7 @@ export type ParticipantData = Omit<Participant, 'id'>;
 export interface ProductPortion {
   name: string;
   weight: number;
+  isIndivisible?: boolean; // Новое поле
 }
 
 export interface Product {

@@ -13,7 +13,7 @@ export const CARD_FIELDS: Record<EntityType, FieldDefinition[]> = {
     { id: 'proteins', label: 'Белки', defaultVisible: true },
     { id: 'fats', label: 'Жиры', defaultVisible: true },
     { id: 'carbs', label: 'Углеводы', defaultVisible: true },
-    // weight обычно всегда показываем, но можно и его настроить
+    { id: 'portions', label: 'Вариантов порций', defaultVisible: true },
   ],
   dishes: [
     { id: 'calories', label: 'Калории (ккал)', defaultVisible: true },

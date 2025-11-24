@@ -3,7 +3,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import cn from 'classnames';
-import { MoreHorizontal, Check, Flame, Beef, Droplet, Wheat, Weight, Hash } from 'lucide-react';
+import {
+  MoreHorizontal,
+  Check,
+  Flame,
+  Beef,
+  Droplet,
+  Wheat,
+  Weight,
+  Hash,
+  Box,
+} from 'lucide-react';
 import DropdownMenu from './DropdownMenu';
 import './entityCard.css';
 
@@ -47,8 +57,9 @@ interface EntityCardProps {
     proteins: number;
     fats: number;
     carbs: number;
-    weight: number;
-    itemsCount?: number;
+    weight?: number; // Для блюд и приемов пищи
+    itemsCount?: number; // Количество ингредиентов (слева)
+    portionCount?: number; // Для продуктов (вместо веса)
   };
   viewMode?: 'default' | 'compact';
 }
@@ -289,12 +300,28 @@ const EntityCard: React.FC<EntityCardProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-1 ml-auto">
-              <Weight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-              <span className="font-medium text-muted-foreground">
-                {Math.round(nutrition.weight)}
-              </span>
-            </div>
+            {/* --- ЛОГИКА ОТОБРАЖЕНИЯ ПРАВОГО УГЛА --- */}
+
+            {/* 1. Если передан вес (Блюда, Приемы пищи) */}
+            {typeof nutrition.weight === 'number' && (
+              <div className="flex items-center gap-1 ml-auto" title="Общий вес">
+                <Weight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                <span className="font-medium text-muted-foreground">
+                  {Math.round(nutrition.weight)}
+                </span>
+              </div>
+            )}
+
+            {/* 2. Если переданы порции (Продукты), но нет веса */}
+            {typeof nutrition.weight === 'undefined' &&
+              typeof nutrition.portionCount === 'number' && (
+                <div className="flex items-center gap-1 ml-auto" title="Вариантов порций">
+                  <Box className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                  <span className="font-medium text-muted-foreground">
+                    {nutrition.portionCount}
+                  </span>
+                </div>
+              )}
           </div>
         </div>
       )}

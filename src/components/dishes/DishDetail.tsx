@@ -21,11 +21,12 @@ import {
   Box,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { Dish, DishData, DishProduct, Product } from '../../types';
+import type { Dish, DishData, DishProduct, Product, Category } from '../../types';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
-import useCategoryStore from '../../stores/useCategoryStore';
 import useTripStore from '../../stores/useTripStore';
+import useCategoryStore from '../../stores/useCategoryStore'; // Добавлено для поиска
+import { useSettingsStore } from '../../stores/useSettingsStore'; // !!! ИСПРАВЛЕНО: Добавлен импорт
 import Button from '../../ui/Button';
 import EditPortionModal from './EditPortionModal';
 import Input from '../../ui/Input';
@@ -260,6 +261,10 @@ const DishDetail: React.FC<DishDetailProps> = ({
   const { removeProductFromDish, updateProductInDish, updateDish, dishes } = useDishStore();
   const { getTripsUsingDish } = useTripStore();
 
+  // Добавлено для логики поиска
+  const { categories } = useCategoryStore();
+  const { searchByCategory } = useSettingsStore(); // !!! ИСПРАВЛЕНО: Хук теперь используется
+
   const [editingPortionIndex, setEditingPortionIndex] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showHeaderNutrition, setShowHeaderNutrition] = useState(false);
@@ -377,14 +382,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
 
   const handleDeleteProduct = (productIndex: number) => {
     if (isEditing) {
-      const newList = formProducts.filter((_, i) => i !== productIndex);
-      setFormProducts(newList);
-      if (newList.length === 0) {
-        toast(
-          'Удалён последний продукт — сохранить блюдо нельзя. Добавьте продукт или отмените изменения.',
-          { icon: '⚠️' }
-        );
-      }
+      setFormProducts(formProducts.filter((_, i) => i !== productIndex));
     } else {
       removeProductFromDish(dish.id, productIndex);
     }
@@ -454,15 +452,12 @@ const DishDetail: React.FC<DishDetailProps> = ({
   const addProductField = () => setFormProducts([...formProducts, { productId: 0, weight: 0 }]);
 
   // Search and add product logic
-  const { categories } = useCategoryStore();
-  const { searchByCategory } = useSettingsStore();
-
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return allProducts;
     const query = searchQuery.toLowerCase();
 
+    // Логика поиска по категориям (как в ProductForm)
     if (searchByCategory) {
-      // Find categories matching query
       const matchingCategoryIds = categories
         .filter((c) => c.name.toLowerCase().includes(query))
         .map((c) => c.id);
@@ -747,7 +742,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                           <Component className="w-3.5 h-3.5 text-blue-500" />
                           Продукты ({filteredProducts.length})
                         </div>
-                        <div>
+                        <div className="max-h-[280px] overflow-y-auto">
                           {filteredProducts.map((product) => (
                             <button
                               key={product.id}
@@ -870,6 +865,15 @@ const DishDetail: React.FC<DishDetailProps> = ({
                     <p className="text-xs mt-1">Добавьте продукты</p>
                   </div>
                 )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={addProductField}
+                  className="w-full border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 py-4"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Добавить продукт
+                </Button>
               </>
             ) : (
               <>

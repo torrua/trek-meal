@@ -1,7 +1,7 @@
-// src/components/products/ProductForm.tsx - Inline editing version
+// src/components/products/ProductForm.tsx
 
 import React, { useState, useEffect } from 'react';
-import { Trash2, Plus, Component, Flame, Info, Package } from 'lucide-react';
+import { Trash2, Plus, Component, Flame, Info, Box, SquareSplitHorizontal } from 'lucide-react'; // Import SquareSplitHorizontal
 import useCategoryStore from '../../stores/useCategoryStore';
 import useProductStore from '../../stores/useProductStore';
 import Button from '../../ui/Button';
@@ -28,7 +28,7 @@ const INITIAL_STATE: ProductData = {
   isPerishable: false,
   packaging: '',
   categoryId: null,
-  portions: [{ name: 'Стандартная', weight: 100 }],
+  portions: [{ name: 'Стандартная', weight: 100, isIndivisible: false }],
 };
 
 const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }) => {
@@ -42,7 +42,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
       setFormData({
         ...INITIAL_STATE,
         ...data,
-        portions: data.portions?.length ? data.portions : [{ name: 'Стандартная', weight: 100 }],
+        portions: data.portions?.length
+          ? data.portions
+          : [{ name: 'Стандартная', weight: 100, isIndivisible: false }],
       });
     } else {
       setFormData(INITIAL_STATE);
@@ -59,14 +61,21 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePortionChange = (index: number, field: keyof ProductPortion, value: string) => {
+  const handlePortionChange = (
+    index: number,
+    field: keyof ProductPortion,
+    value: string | boolean
+  ) => {
     const newPortions = [...formData.portions];
     newPortions[index] = { ...newPortions[index], [field]: value };
     setFormData((prev) => ({ ...prev, portions: newPortions }));
   };
 
   const addPortion = () => {
-    setFormData((prev) => ({ ...prev, portions: [...prev.portions, { name: '', weight: 0 }] }));
+    setFormData((prev) => ({
+      ...prev,
+      portions: [...prev.portions, { name: '', weight: 0, isIndivisible: false }],
+    }));
   };
 
   const removePortion = (index: number) => {
@@ -181,7 +190,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <Flame className="w-4 h-4 text-primary" />
           </div>
-          <h2 className="text-lg font-semibold">Пищевая ценность (на 100г)</h2>
+          <h2 className="text-lg font-semibold">Пищевая ценность / 100 г.</h2>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
@@ -194,6 +203,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
               min="0"
               step="0.1"
               placeholder="0"
+              className="text-center"
             />
           </FormField>
           <FormField label="Белки (г)">
@@ -205,6 +215,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
               min="0"
               step="0.1"
               placeholder="0"
+              className="text-center"
             />
           </FormField>
           <FormField label="Жиры (г)">
@@ -216,6 +227,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
               min="0"
               step="0.1"
               placeholder="0"
+              className="text-center"
             />
           </FormField>
           <FormField label="Углеводы (г)">
@@ -227,6 +239,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
               min="0"
               step="0.1"
               placeholder="0"
+              className="text-center"
             />
           </FormField>
         </div>
@@ -236,7 +249,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
       <div className="p-6 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-blue-500/5 border border-border rounded-xl">
         <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-            <Package className="w-4 h-4 text-primary" />
+            <Box className="w-4 h-4 text-primary" />
           </div>
           <h2 className="text-lg font-semibold">Порции</h2>
         </div>
@@ -245,37 +258,63 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
           {formData.portions.map((portion, index) => (
             <div
               key={index}
-              className="flex items-end gap-3 p-4 bg-muted/30 rounded-xl border border-border"
+              className="flex items-center gap-3 p-4 bg-muted/30 rounded-xl border border-border"
             >
-              <FormField label="Название порции" className="flex-1">
-                <Input
-                  type="text"
-                  placeholder="Например, 'Малая', 'Большая'"
-                  value={portion.name}
-                  onChange={(e) => handlePortionChange(index, 'name', e.target.value)}
-                />
-              </FormField>
-              <FormField label="Вес (г)" className="w-32 flex-shrink-0">
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={portion.weight}
-                  onChange={(e) => handlePortionChange(index, 'weight', e.target.value)}
-                  required
-                  min="0"
-                />
-              </FormField>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removePortion(index)}
-                disabled={formData.portions.length <= 1}
-                className="text-danger hover:bg-danger/10"
-                title="Удалить порцию"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-end gap-3">
+                  <FormField label="Название" className="flex-1">
+                    <Input
+                      type="text"
+                      placeholder="Например, 'Банка'"
+                      value={portion.name}
+                      onChange={(e) => handlePortionChange(index, 'name', e.target.value)}
+                    />
+                  </FormField>
+                  <FormField label="Вес (г)" className="w-28 flex-shrink-0">
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      value={portion.weight}
+                      onChange={(e) => handlePortionChange(index, 'weight', e.target.value)}
+                      required
+                      min="0"
+                      className="text-center"
+                    />
+                  </FormField>
+                </div>
+
+                {/* Чекбокс Неделимая */}
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id={`indivisible-${index}`}
+                    checked={portion.isIndivisible || false}
+                    onChange={(e) => handlePortionChange(index, 'isIndivisible', e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border border-border text-primary focus:ring-primary"
+                  />
+                  <label
+                    htmlFor={`indivisible-${index}`}
+                    className="text-xs text-muted-foreground cursor-pointer flex items-center gap-1 select-none"
+                  >
+                    <SquareSplitHorizontal className="w-3 h-3" /> {/* Иконка изменена */}
+                    Неделимая порция
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-start h-full">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removePortion(index)}
+                  disabled={formData.portions.length <= 1}
+                  className="text-danger hover:bg-danger/10 mt-6"
+                  title="Удалить порцию"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           ))}
 

@@ -16,9 +16,10 @@ import {
   LayoutList,
   Grid3X3,
   Flame,
-  Beef, // ИСПОЛЬЗУЕМ BEEF
+  Beef,
   Droplet,
   Wheat,
+  Box,
 } from 'lucide-react';
 import { useViewMode } from '../hooks/useViewMode';
 import { toast } from 'react-hot-toast';
@@ -360,7 +361,7 @@ const ProductsPage: React.FC = () => {
                   tooltip: 'Ккал',
                 },
                 proteins: {
-                  icon: Beef, // Using BEEF
+                  icon: Beef,
                   text: Math.round((product.proteins || 0) * 10) / 10,
                   className: 'text-blue-600',
                   tooltip: 'Белки',
@@ -376,6 +377,12 @@ const ProductsPage: React.FC = () => {
                   text: Math.round((product.carbs || 0) * 10) / 10,
                   className: 'text-green-600',
                   tooltip: 'Углеводы',
+                },
+                portions: {
+                  icon: Box,
+                  text: product.portions.length,
+                  className: 'text-foreground',
+                  tooltip: 'Вариантов порций',
                 },
               };
 
@@ -408,6 +415,7 @@ const ProductsPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(product, { category })}
                   icon={productEntityConfig.getIcon(product)}
                   iconColor={productEntityConfig.getIconColor?.(product, { category })}
+                  // --- ИЗМЕНЕНО: Убрали дублирование порций в details ---
                   details={[]}
                   variant="neutral"
                   nutrition={{
@@ -415,7 +423,8 @@ const ProductsPage: React.FC = () => {
                     proteins: Math.round(product.proteins || 0),
                     fats: Math.round(product.fats || 0),
                     carbs: Math.round(product.carbs || 0),
-                    weight: 100,
+                    // Передаем порции только в nutrition для отображения в футере
+                    portionCount: product.portions.length,
                   }}
                   isSelected={activeId === product.id}
                   isMultiSelected={selectedProductIds.includes(product.id)}

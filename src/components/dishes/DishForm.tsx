@@ -1,6 +1,7 @@
 // src/components/dishes/DishForm.tsx
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   X,
   Plus,
@@ -13,6 +14,7 @@ import {
   Info,
   Copy,
   RefreshCw,
+  Edit,
 } from 'lucide-react';
 import DropdownSelect from '../../ui/DropdownSelect';
 import useProductStore from '../../stores/useProductStore';
@@ -37,6 +39,7 @@ type PortionOption = { value: string; label: string; icon?: any };
 const CUSTOM_WEIGHT_VALUE = '-1';
 
 const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCancel }) => {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [products, setProducts] = useState<DishProduct[]>([]);
@@ -64,6 +67,16 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
     setDescription('');
     setProducts([]);
   }, [dish, dishToClone]);
+
+  const confirmProductNavigation = () => {
+    if (!dish) return true;
+    return window.confirm('Несохранённые изменения будут потеряны. Продолжить?');
+  };
+
+  const handleNavigateToProduct = (productId: number) => {
+    if (!confirmProductNavigation()) return;
+    navigate(`/products?selectedId=${productId}`);
+  };
 
   const productOptions: ProductOption[] = allProducts.map((p: Product) => ({
     value: String(p.id),
@@ -239,15 +252,29 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
                       <span className="text-sm font-medium text-muted-foreground">
                         Продукт {index + 1}
                       </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => removeProductField(index)}
-                        className="text-muted-foreground hover:text-danger hover:bg-danger/10"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        {selectedProduct && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => handleNavigateToProduct(selectedProduct.id)}
+                            className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600"
+                            title="Перейти к продукту"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => removeProductField(index)}
+                          className="text-muted-foreground hover:text-danger hover:bg-danger/10"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     <DropdownSelect

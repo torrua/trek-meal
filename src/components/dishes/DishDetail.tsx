@@ -136,9 +136,8 @@ const ProductContentReadOnly: React.FC<{
   product: Product;
   onEditPortion: () => void;
   onRemove: () => void;
-  onView: () => void;
   canRemove: boolean;
-}> = ({ dishProduct, product, onEditPortion, onRemove, onView, canRemove }) => {
+}> = ({ dishProduct, product, onEditPortion, onRemove, canRemove }) => {
   const [showNutrition, setShowNutrition] = useState(!canRemove);
 
   const nutrition = useMemo(() => {
@@ -164,12 +163,7 @@ const ProductContentReadOnly: React.FC<{
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
-          <h4
-            className="font-medium text-foreground truncate hover:text-primary cursor-pointer transition-colors"
-            onClick={onView}
-          >
-            {product.name}
-          </h4>
+          <h4 className="font-medium text-foreground truncate">{product.name}</h4>
         </div>
         <div className="flex items-center gap-2">
           {nutrition && dishProduct.weight && (
@@ -354,6 +348,7 @@ interface SortableProductItemProps {
   onPortionChange: (index: number, value: string) => void;
   onWeightChange: (index: number, value: string) => void;
   onDelete: (index: number) => void;
+  onViewProduct?: (productId: number) => void;
 }
 
 const SortableProductItem: React.FC<SortableProductItemProps> = ({
@@ -365,6 +360,7 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
   onPortionChange,
   onWeightChange,
   onDelete,
+  onViewProduct,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: product.productId,
@@ -397,6 +393,18 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <EditableProductNutrition product={selectedProduct || null} weight={product.weight} />
+          {selectedProduct && onViewProduct && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => onViewProduct(selectedProduct.id)}
+              className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600"
+              title="Перейти к продукту"
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+          )}
           <Button
             type="button"
             variant="ghost"
@@ -642,7 +650,13 @@ const DishDetail: React.FC<DishDetailProps> = ({
     setEditingPortionIndex(null);
   };
 
+  const confirmProductNavigation = () => {
+    if (!isEditing) return true;
+    return window.confirm('Несохранённые изменения будут потеряны. Продолжить?');
+  };
+
   const handleOpenProduct = (productId: number) => {
+    if (!confirmProductNavigation()) return;
     navigate(`/products?selectedId=${productId}`);
   };
 
@@ -1003,6 +1017,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                         onPortionChange={handlePortionChange}
                         onWeightChange={handleWeightChange}
                         onDelete={handleDeleteProduct}
+                        onViewProduct={handleOpenProduct}
                       />
                     );
                   })}
@@ -1023,7 +1038,6 @@ const DishDetail: React.FC<DishDetailProps> = ({
                         product={product}
                         onEditPortion={() => handleEditPortion(index)}
                         onRemove={() => handleDeleteProduct(index)}
-                        onView={() => handleOpenProduct(product.id)}
                         canRemove={isEditing ? currentProducts.length > 1 : false}
                       />
                     </div>

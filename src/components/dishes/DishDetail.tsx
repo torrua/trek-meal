@@ -24,7 +24,25 @@ import {
   AlertTriangle,
   Save,
   Copy,
+  GripVertical,
 } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useNavigate } from 'react-router-dom';
 import type { Dish, DishData, DishProduct, Product, ProductPortion } from '../../types';
 import useProductStore from '../../stores/useProductStore';
@@ -321,6 +339,104 @@ const EditableProductNutrition: React.FC<{ product: Product | null; weight: numb
   );
 };
 
+// --- Sortable Product Item ---
+interface SortableProductItemProps {
+  product: DishProduct;
+  selectedProduct: Product | undefined;
+  portionOptions: Array<{
+    value: string;
+    label: string;
+    menuLabel: string;
+    icon: React.ComponentType<any>;
+  }>;
+  currentPortion: any;
+  index: number;
+  onPortionChange: (index: number, value: string) => void;
+  onWeightChange: (index: number, value: string) => void;
+  onDelete: (index: number) => void;
+}
+
+const SortableProductItem: React.FC<SortableProductItemProps> = ({
+  product,
+  selectedProduct,
+  portionOptions,
+  currentPortion,
+  index,
+  onPortionChange,
+  onWeightChange,
+  onDelete,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: product.productId,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted/50 rounded"
+          >
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <span className="font-medium text-sm flex items-center gap-2">
+            <Component className="w-3.5 h-3.5 text-blue-500" />
+            {selectedProduct?.name || 'Product not found'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <EditableProductNutrition product={selectedProduct || null} weight={product.weight} />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onDelete(index)}
+            className="bg-danger/10 hover:bg-danger/20 text-danger"
+            title="Удалить продукт"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Порция</label>
+          <DropdownSelect
+            value={currentPortion?.value || ''}
+            onChange={(value) => onPortionChange(index, value)}
+            options={portionOptions}
+            placeholder="Выберите порцию..."
+            icon={currentPortion?.icon || PieChart}
+          />
+        </div>
+        <div className="w-24">
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Вес (г)</label>
+          <Input
+            type="number"
+            value={product.weight || ''}
+            onChange={(e) => onWeightChange(index, e.target.value)}
+            placeholder="Вес"
+            className="text-center"
+            min="1"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const CUSTOM_WEIGHT_VALUE = '-1';
 
 const DishDetail: React.FC<DishDetailProps> = ({
@@ -351,6 +467,14 @@ const DishDetail: React.FC<DishDetailProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Form state
   const [name, setName] = useState('');
@@ -550,6 +674,19 @@ const DishDetail: React.FC<DishDetailProps> = ({
     const newProducts = [...formProducts];
     newProducts[index].weight = parseInt(weightStr, 10) || 0;
     setFormProducts(newProducts);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = formProducts.findIndex((p) => p.productId === Number(active.id));
+      const newIndex = formProducts.findIndex((p) => p.productId === Number(over?.id));
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        setFormProducts((items) => arrayMove(items, oldIndex, newIndex));
+      }
+    }
   };
 
   const addProductField = () => setFormProducts([...formProducts, { productId: 0, weight: 0 }]);
@@ -826,80 +963,51 @@ const DishDetail: React.FC<DishDetailProps> = ({
 
           <div className="space-y-3">
             {isEditing ? (
-              <>
-                {formProducts.map((p, index) => {
-                  const selectedProduct = allProducts.find((prod) => prod.id === p.productId);
-                  const portionOptions =
-                    selectedProduct?.portions.map((port) => ({
-                      value: String(port.weight),
-                      label: port.name,
-                      menuLabel: `${port.name} (${port.weight} г)`,
-                      icon: port.isIndivisible ? Circle : PieChart,
-                    })) || [];
-                  portionOptions.push({
-                    value: CUSTOM_WEIGHT_VALUE,
-                    label: 'Свой вес...',
-                    menuLabel: 'Свой вес...',
-                    icon: PieChart,
-                  });
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={formProducts.map((p) => p.productId)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {formProducts.map((p, index) => {
+                    const selectedProduct = allProducts.find((prod) => prod.id === p.productId);
+                    const portionOptions =
+                      selectedProduct?.portions.map((port) => ({
+                        value: String(port.weight),
+                        label: port.name,
+                        menuLabel: `${port.name} (${port.weight} г)`,
+                        icon: port.isIndivisible ? Circle : PieChart,
+                      })) || [];
+                    portionOptions.push({
+                      value: CUSTOM_WEIGHT_VALUE,
+                      label: 'Свой вес...',
+                      menuLabel: 'Свой вес...',
+                      icon: PieChart,
+                    });
 
-                  const currentPortion =
-                    portionOptions.find((opt) => Number(opt.value) === p.weight) ||
-                    portionOptions[portionOptions.length - 1];
+                    const currentPortion =
+                      portionOptions.find((opt) => Number(opt.value) === p.weight) ||
+                      portionOptions[portionOptions.length - 1];
 
-                  return (
-                    <div
-                      key={index}
-                      className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-sm flex items-center gap-2">
-                          <Component className="w-3.5 h-3.5 text-blue-500" />{' '}
-                          {selectedProduct?.name || 'Product not found'}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <EditableProductNutrition
-                            product={selectedProduct || null}
-                            weight={p.weight}
-                          />
-
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => handleDeleteProduct(index)}
-                            className="text-danger hover:bg-danger/10"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <div className="flex-1">
-                          <DropdownSelect
-                            icon={currentPortion.icon || PieChart}
-                            options={portionOptions}
-                            value={currentPortion.value}
-                            onChange={(val) =>
-                              typeof val === 'string' && handlePortionChange(index, val)
-                            }
-                            placeholder="Порция"
-                          />
-                        </div>
-                        <div className="w-24">
-                          <Input
-                            type="number"
-                            value={p.weight}
-                            onChange={(e) => handleWeightChange(index, e.target.value)}
-                            placeholder="Вес"
-                            className="text-center"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </>
+                    return (
+                      <SortableProductItem
+                        key={p.productId}
+                        product={p}
+                        selectedProduct={selectedProduct}
+                        portionOptions={portionOptions}
+                        currentPortion={currentPortion}
+                        index={index}
+                        onPortionChange={handlePortionChange}
+                        onWeightChange={handleWeightChange}
+                        onDelete={handleDeleteProduct}
+                      />
+                    );
+                  })}
+                </SortableContext>
+              </DndContext>
             ) : (
               <>
                 {currentProducts.map((dishProduct, index) => {

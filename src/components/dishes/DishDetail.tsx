@@ -833,7 +833,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                     selectedProduct?.portions.map((port) => ({
                       value: String(port.weight),
                       label: port.name,
-                      menuLabel: `${port.name} (${port.weight} g)`,
+                      menuLabel: `${port.name} (${port.weight} г)`,
                       icon: port.isIndivisible ? Circle : PieChart,
                     })) || [];
                   portionOptions.push({

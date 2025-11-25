@@ -1,5 +1,5 @@
-import React from 'react';
-import { GripVertical, Edit, Trash2, ChefHat, Component } from 'lucide-react';
+import React, { useState } from 'react';
+import { GripVertical, Edit, Trash2, ChefHat, Component, ChevronDown } from 'lucide-react';
 import Button from '../../ui/Button';
 import { Dish, Product } from '../../types';
 
@@ -9,9 +9,10 @@ interface MealItemCardProps {
   weight?: number; // Вес (для продуктов)
   onRemove?: () => void;
   onEdit?: () => void; // Для клонирования блюда или изменения веса
+  onUpdateWeight?: (weight: number) => void; // Только для продуктов
   onToggleExpand?: () => void; // Только для блюд
   isExpanded?: boolean; // Только для блюд
-  dragHandleProps?: any; // Props от dnd-kit
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>; // Props от dnd-kit
   children?: React.ReactNode; // Для вложенного списка состава блюда
 }
 
@@ -26,6 +27,12 @@ const MealItemCard: React.FC<MealItemCardProps> = ({
   dragHandleProps,
   children,
 }) => {
+  const [isExpandedInternal, setIsExpandedInternal] = useState(false);
+
+  // Используем внутреннее состояние или переданное извне
+  const expanded = isExpanded !== undefined ? isExpanded : isExpandedInternal;
+  const handleToggle = onToggleExpand || (() => setIsExpandedInternal(!isExpandedInternal));
+
   if (!itemData)
     return (
       <div className="p-3 border border-danger/20 bg-danger/5 rounded-lg text-danger text-sm">
@@ -45,6 +52,9 @@ const MealItemCard: React.FC<MealItemCardProps> = ({
   const displayWeight = isDish
     ? (itemData as Dish).products.reduce((sum, p) => sum + p.weight, 0)
     : weight;
+
+  // Показываем состав блюда только если это блюдо и есть children
+  const showIngredients = isDish && children;
 
   return (
     <div className={`${bgColor} border ${borderColor} rounded-lg transition-all duration-200`}>
@@ -68,8 +78,8 @@ const MealItemCard: React.FC<MealItemCardProps> = ({
 
         {/* Main Info */}
         <div
-          className="flex-1 min-w-0 cursor-pointer"
-          onClick={isDish ? onToggleExpand : undefined}
+          className={`flex-1 min-w-0 ${showIngredients ? 'cursor-pointer' : ''}`}
+          onClick={showIngredients ? handleToggle : undefined}
         >
           <div className="flex items-baseline justify-between gap-2">
             <h4 className="font-medium text-sm text-foreground truncate">{itemData.name}</h4>
@@ -77,6 +87,14 @@ const MealItemCard: React.FC<MealItemCardProps> = ({
               {displayWeight} г
             </span>
           </div>
+          {showIngredients && (
+            <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+              <ChevronDown
+                className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`}
+              />
+              <span>Состав ({(itemData as Dish).products.length})</span>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
@@ -105,7 +123,7 @@ const MealItemCard: React.FC<MealItemCardProps> = ({
       </div>
 
       {/* Expanded Content (Ingredients for Dish) */}
-      {isDish && isExpanded && children && (
+      {showIngredients && expanded && children && (
         <div className="px-3 pb-3 pt-0 pl-12 space-y-1 border-t border-black/5 dark:border-white/5 mt-1">
           {children}
         </div>

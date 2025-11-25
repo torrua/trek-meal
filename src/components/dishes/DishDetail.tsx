@@ -592,7 +592,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
 
   const currentProducts = useMemo(
     () => (isEditing ? formProducts : dish ? dish.products : []),
-    [isEditing, formProducts, dish?.products]
+    [isEditing, formProducts, dish]
   );
 
   const tripsUsingDish = dish ? getTripsUsingDish(dish.id) : [];
@@ -664,7 +664,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
     navigate(`/trips/${tripId}`);
   };
 
-  const handleProductChange = (index: number, selectedValue: string) => {
+  const _handleProductChange = (index: number, selectedValue: string) => {
     const newProducts = [...formProducts];
     const productId = Number(selectedValue) || 0;
     newProducts[index].productId = productId;
@@ -703,7 +703,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
     }
   };
 
-  const addProductField = () => setFormProducts([...formProducts, { productId: 0, weight: 0 }]);
+  const _addProductField = () => setFormProducts([...formProducts, { productId: 0, weight: 0 }]);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return allProducts;

@@ -1,7 +1,7 @@
 // src/pages/DishesPage.tsx
 
-import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   CirclePlus,
   Soup,
@@ -47,6 +47,7 @@ const DishesPage: React.FC = () => {
   const { searchTerm } = useSearchStore();
   const { viewMode, toggleViewMode } = useViewMode('dishes');
   const getVisibleFields = useSettingsStore((state) => state.getVisibleFields);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [activeId, setActiveId] = useState<number | null>(null);
   const [detailEditTrigger, setDetailEditTrigger] = useState(0);
@@ -61,6 +62,25 @@ const DishesPage: React.FC = () => {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const visibleFields = getVisibleFields('dishes');
+
+  useEffect(() => {
+    const selectedId = searchParams.get('selectedId');
+    if (selectedId && dishes.some((d) => d.id === Number(selectedId))) {
+      setActiveId(Number(selectedId));
+      setSearchParams({}, { replace: true });
+
+      // Прокрутка к карточке блюда
+      setTimeout(() => {
+        const element = document.querySelector(`[data-dish-id="${selectedId}"]`);
+        if (element) {
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        }
+      }, 100);
+    }
+  }, [searchParams, dishes, setSearchParams]);
 
   const handleToggleSection = useCallback((sectionId: string) => {
     setOpenSections((prev) =>
@@ -421,50 +441,54 @@ const DishesPage: React.FC = () => {
               const metaItems = visibleFields.map((id) => metaMap[id]).filter(Boolean);
 
               return viewMode === 'compact' ? (
-                <EntityListItem
-                  key={dish.id}
-                  title={cardConfig.title(dish)}
-                  meta={metaItems}
-                  borderColor={dishEntityConfig.getBorderColor(dish)}
-                  isSelected={activeId === dish.id}
-                  isMultiSelected={selectedDishIds.includes(dish.id)}
-                  onSelect={isCardDisabled ? undefined : () => setActiveId(dish.id)}
-                  onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
-                  onRequestMultiSelectMode={() => {
-                    if (!showMultiSelect) {
-                      setShowMultiSelect(true);
-                      setSelectedDishIds([dish.id]);
-                    }
-                  }}
-                  menuItems={actions}
-                  showMultiSelect={showMultiSelect}
-                  variant="meal"
-                />
+                <div data-dish-id={dish.id}>
+                  <EntityListItem
+                    key={dish.id}
+                    title={cardConfig.title(dish)}
+                    meta={metaItems}
+                    borderColor={dishEntityConfig.getBorderColor(dish)}
+                    isSelected={activeId === dish.id}
+                    isMultiSelected={selectedDishIds.includes(dish.id)}
+                    onSelect={isCardDisabled ? undefined : () => setActiveId(dish.id)}
+                    onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
+                    onRequestMultiSelectMode={() => {
+                      if (!showMultiSelect) {
+                        setShowMultiSelect(true);
+                        setSelectedDishIds([dish.id]);
+                      }
+                    }}
+                    menuItems={actions}
+                    showMultiSelect={showMultiSelect}
+                    variant="meal"
+                  />
+                </div>
               ) : (
-                <EntityCard
-                  key={dish.id}
-                  title={cardConfig.title(dish)}
-                  subtitle={cardConfig.subtitle?.(dish, { totalWeight })}
-                  icon={dishEntityConfig.getIcon(dish)}
-                  iconColor={dishEntityConfig.getIconColor?.(dish)}
-                  details={[]}
-                  variant="meal"
-                  nutrition={{
-                    calories: Math.round(nutrition.calories),
-                    proteins: Math.round(nutrition.proteins * 10) / 10,
-                    fats: Math.round(nutrition.fats * 10) / 10,
-                    carbs: Math.round(nutrition.carbs * 10) / 10,
-                    weight: Math.round(totalWeight),
-                    itemsCount: dish.products.length,
-                  }}
-                  isSelected={activeId === dish.id}
-                  isMultiSelected={selectedDishIds.includes(dish.id)}
-                  onSelect={isCardDisabled ? undefined : () => setActiveId(dish.id)}
-                  onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
-                  borderColor={dishEntityConfig.getBorderColor(dish)}
-                  menuItems={actions}
-                  showMultiSelect={showMultiSelect}
-                />
+                <div data-dish-id={dish.id}>
+                  <EntityCard
+                    key={dish.id}
+                    title={cardConfig.title(dish)}
+                    subtitle={cardConfig.subtitle?.(dish, { totalWeight })}
+                    icon={dishEntityConfig.getIcon(dish)}
+                    iconColor={dishEntityConfig.getIconColor?.(dish)}
+                    details={[]}
+                    variant="meal"
+                    nutrition={{
+                      calories: Math.round(nutrition.calories),
+                      proteins: Math.round(nutrition.proteins * 10) / 10,
+                      fats: Math.round(nutrition.fats * 10) / 10,
+                      carbs: Math.round(nutrition.carbs * 10) / 10,
+                      weight: Math.round(totalWeight),
+                      itemsCount: dish.products.length,
+                    }}
+                    isSelected={activeId === dish.id}
+                    isMultiSelected={selectedDishIds.includes(dish.id)}
+                    onSelect={isCardDisabled ? undefined : () => setActiveId(dish.id)}
+                    onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
+                    borderColor={dishEntityConfig.getBorderColor(dish)}
+                    menuItems={actions}
+                    showMultiSelect={showMultiSelect}
+                  />
+                </div>
               );
             })}
           </div>

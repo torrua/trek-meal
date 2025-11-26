@@ -1,10 +1,9 @@
 // src/components/meals/SortableItem.tsx
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Component, Weight } from 'lucide-react';
 import type { Product, Dish, MealPlanItem } from '../../types';
-import MealItemCard from '../planning/MealItemCard'; // Импортируем новый компонент
+import ItemContent from './ItemContent';
 
 interface SortableItemProps {
   id: string;
@@ -15,6 +14,8 @@ interface SortableItemProps {
   onRemove: (index: number) => void;
   onUpdateWeight: (index: number, weight: number) => void;
   onEditItem: (item: MealPlanItem) => void;
+  showCurrentPortion?: boolean;
+  onTogglePortion?: () => void;
 }
 
 const SortableItem: React.FC<SortableItemProps> = ({
@@ -26,8 +27,10 @@ const SortableItem: React.FC<SortableItemProps> = ({
   onRemove,
   onUpdateWeight,
   onEditItem,
+  showCurrentPortion = false,
+  onTogglePortion,
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { setNodeRef, transform, transition, isDragging } = useSortable({
     id,
   });
 
@@ -38,57 +41,28 @@ const SortableItem: React.FC<SortableItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const itemData =
-    item.type === 'product'
-      ? products.find((p) => p.id === item.itemId)
-      : dishes.find((d) => d.id === item.itemId);
-
-  // Получаем состав блюда для отображения
-  const dishIngredients = useMemo(() => {
-    if (item.type !== 'dish' || !itemData) return [];
-    const dish = itemData as Dish;
-    return dish.products
-      .map((dp) => {
-        const product = products.find((p) => p.id === dp.productId);
-        return product ? { name: product.name, weight: dp.weight } : null;
-      })
-      .filter((ingredient): ingredient is { name: string; weight: number } => ingredient !== null);
-  }, [item.type, itemData, products]);
+  // Используем ItemContent для всех элементов (и блюд, и продуктов)
+  const isDish = item.type === 'dish';
 
   return (
     <div ref={setNodeRef} className="touch-none" style={style}>
-      <MealItemCard
-        type={item.type}
-        itemData={itemData}
-        weight={item.type === 'product' ? item.weight : undefined}
-        onRemove={() => onRemove(index)}
-        onEdit={() => onEditItem(item)}
-        onUpdateWeight={
-          item.type === 'product' ? (weight) => onUpdateWeight(index, weight) : undefined
-        }
-        dragHandleProps={{ ...attributes, ...listeners }}
+      <div
+        className={`${isDish ? 'bg-orange-500/5 border border-orange-500/20' : 'bg-blue-500/5 border border-blue-500/20'} rounded-lg transition-all duration-200 p-3`}
       >
-        {/* Передаем состав блюда как children */}
-        {dishIngredients.length > 0 && (
-          <div className="space-y-1">
-            {dishIngredients.map((ingredient: { name: string; weight: number }, idx: number) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between px-3 py-1.5 bg-card border border-border rounded text-xs"
-              >
-                <span className="flex items-center gap-1.5">
-                  <Component className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-muted-foreground font-medium">{ingredient.name}</span>
-                </span>
-                <span className="text-muted-foreground font-medium text-xs flex items-center gap-1">
-                  <Weight className="w-3 h-3" />
-                  {ingredient.weight} г
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </MealItemCard>
+        <ItemContent
+          item={item}
+          products={products}
+          dishes={dishes}
+          onRemove={() => onRemove(index)}
+          onUpdateWeight={
+            item.type === 'product' ? (weight) => onUpdateWeight(index, weight) : undefined
+          }
+          onEditItem={() => onEditItem(item)}
+          showActions={true}
+          showCurrentPortion={showCurrentPortion}
+          onTogglePortion={onTogglePortion}
+        />
+      </div>
     </div>
   );
 };

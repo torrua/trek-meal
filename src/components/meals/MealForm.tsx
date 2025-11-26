@@ -59,6 +59,7 @@ const MealForm: React.FC<MealFormProps> = ({
   const { products } = useProductStore();
   const { dishes } = useDishStore();
   const { meals } = useMealStore();
+  const navigate = useNavigate();
 
   // Create validation schema without uniqueness check (only basic validation)
   const validationSchema = useMemo(() => {
@@ -79,7 +80,6 @@ const MealForm: React.FC<MealFormProps> = ({
   }, []);
 
   type MealFormValues = z.infer<typeof validationSchema>;
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -133,6 +133,21 @@ const MealForm: React.FC<MealFormProps> = ({
 
   const { fields, append, remove, move, update } = useFieldArray({ control, name: 'items' });
   const watchItems = watch('items');
+
+  // Track which items have their portions expanded
+  const [expandedPortions, setExpandedPortions] = useState<Set<string>>(new Set());
+
+  const togglePortionExpansion = (instanceId: string) => {
+    setExpandedPortions((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(instanceId)) {
+        newSet.delete(instanceId);
+      } else {
+        newSet.add(instanceId);
+      }
+      return newSet;
+    });
+  };
 
   const [validationErrors, setValidationErrors] = useState<{ name?: string; items?: string }>({});
 
@@ -260,18 +275,19 @@ const MealForm: React.FC<MealFormProps> = ({
     let defaultWeight = 100;
     if (type === 'product') {
       const product = products.find((p) => p.id === itemId);
-      defaultWeight = product && product.portions.length > 0 ? product.portions[0].weight : 100;
+      defaultWeight =
+        product && product.portions.length > 0 ? Number(product.portions[0].weight) : 100;
     } else if (type === 'dish') {
       const dish = dishes.find((d) => d.id === itemId);
       if (dish) {
-        defaultWeight = dish.products.reduce((sum, p) => sum + p.weight, 0) || 100;
+        defaultWeight = Number(dish.products.reduce((sum, p) => sum + Number(p.weight), 0) || 100);
       }
     }
     append({
       instanceId: `${type}-${Date.now()}`,
       type,
       itemId,
-      weight: defaultWeight,
+      weight: Number(defaultWeight),
     });
     setShowAddMenu(false);
     setSearchQuery('');
@@ -282,7 +298,8 @@ const MealForm: React.FC<MealFormProps> = ({
     weight: number
   ) => {
     if (watchItems[index].type === 'product') {
-      const updatedItem = { ...watchItems[index], weight };
+      const numericWeight = Number(weight);
+      const updatedItem = { ...watchItems[index], weight: numericWeight };
       update(index, updatedItem);
     }
   };
@@ -455,7 +472,19 @@ const MealForm: React.FC<MealFormProps> = ({
               <div className="flex items-center gap-1">
                 <Weight className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="font-semibold text-muted-foreground text-sm">
-                  {watchItems.reduce((total, item) => total + (item.weight || 0), 0)}
+                  {watchItems.reduce((total, item) => {
+                    if (item.type === 'product') {
+                      return total + Number(item.weight || 0);
+                    } else if (item.type === 'dish') {
+                      const dish = dishes.find((d) => d.id === item.itemId);
+                      if (dish) {
+                        return (
+                          total + dish.products.reduce((sum, dp) => sum + Number(dp.weight), 0)
+                        );
+                      }
+                    }
+                    return total;
+                  }, 0)}
                 </span>
               </div>
             </div>
@@ -567,12 +596,16 @@ const MealForm: React.FC<MealFormProps> = ({
                   key={field.id}
                   id={field.id}
                   index={index}
-                  item={watchItems[index]}
+                  item={watchItems[index] as MealPlanItem}
                   products={products}
                   dishes={dishes}
                   onRemove={remove}
                   onUpdateWeight={updateItemWeight}
                   onEditItem={handleEditItem}
+                  showCurrentPortion={expandedPortions.has(watchItems[index]?.instanceId || '')}
+                  onTogglePortion={() =>
+                    togglePortionExpansion(watchItems[index]?.instanceId || '')
+                  }
                 />
               ))}
             </SortableContext>
@@ -581,7 +614,7 @@ const MealForm: React.FC<MealFormProps> = ({
               {activeId && activeItem ? (
                 <div className="bg-card border-2 border-primary rounded-lg p-3 shadow-2xl opacity-95 z-50">
                   <ItemContent
-                    item={activeItem}
+                    item={activeItem as MealPlanItem}
                     products={products}
                     dishes={dishes}
                     showActions={false}

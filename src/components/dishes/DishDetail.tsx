@@ -14,11 +14,8 @@ import {
   Component,
   ChevronDown,
   Hash,
-  X,
-  Plus,
   Trash2,
   Search,
-  Box,
   PieChart,
   Circle,
   AlertTriangle,
@@ -44,7 +41,7 @@ import {
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNavigate } from 'react-router-dom';
-import type { Dish, DishData, DishProduct, Product, ProductPortion } from '../../types';
+import type { Dish, DishProduct, Product } from '../../types';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
 import useCategoryStore from '../../stores/useCategoryStore';
@@ -162,7 +159,7 @@ const ProductContentReadOnly: React.FC<{
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
+          <PortionIcon className="w-4 h-4 text-blue-500 flex-shrink-0" />
           <h4 className="font-medium text-foreground truncate">{product.name}</h4>
         </div>
         <div className="flex items-center gap-2">
@@ -341,9 +338,14 @@ interface SortableProductItemProps {
     value: string;
     label: string;
     menuLabel: string;
-    icon: React.ComponentType<any>;
+    icon: React.ComponentType<{ className?: string }>;
   }>;
-  currentPortion: any;
+  currentPortion: {
+    value: string;
+    label: string;
+    menuLabel: string;
+    icon: React.ComponentType<{ className?: string }>;
+  } | null;
   index: number;
   onPortionChange: (index: number, value: string) => void;
   onWeightChange: (index: number, value: string) => void;
@@ -418,27 +420,29 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
         </div>
       </div>
 
-      <div className="flex gap-3">
-        <div className="flex-1">
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Порция</label>
-          <DropdownSelect
-            value={currentPortion?.value || ''}
-            onChange={(value) => onPortionChange(index, value)}
-            options={portionOptions}
-            placeholder="Выберите порцию..."
-            icon={currentPortion?.icon || PieChart}
-          />
-        </div>
-        <div className="w-24">
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Вес (г)</label>
-          <Input
-            type="number"
-            value={product.weight || ''}
-            onChange={(e) => onWeightChange(index, e.target.value)}
-            placeholder="Вес"
-            className="text-center"
-            min="1"
-          />
+      <div className="pt-2 border-t border-border/50">
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Порция</label>
+            <DropdownSelect
+              value={currentPortion?.value || ''}
+              onChange={(value) => typeof value === 'string' && onPortionChange(index, value)}
+              options={portionOptions}
+              placeholder="Выберите порцию..."
+              icon={currentPortion?.icon || PieChart}
+            />
+          </div>
+          <div className="w-24">
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Вес (г)</label>
+            <Input
+              type="number"
+              value={product.weight || ''}
+              onChange={(e) => onWeightChange(index, e.target.value)}
+              placeholder="Вес"
+              className="text-center"
+              min="1"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -460,8 +464,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { products: allProducts } = useProductStore();
-  const { removeProductFromDish, updateProductInDish, updateDish, dishes, addDish } =
-    useDishStore();
+  const { removeProductFromDish, updateProductInDish, updateDish, addDish } = useDishStore();
   const { getTripsUsingDish } = useTripStore();
   const { categories } = useCategoryStore();
   const { searchByCategory } = useSettingsStore();

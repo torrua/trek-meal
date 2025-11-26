@@ -77,24 +77,13 @@ const MealItemCard: React.FC<MealItemCardProps> = ({
         </div>
 
         {/* Main Info */}
-        <div
-          className={`flex-1 min-w-0 ${showIngredients ? 'cursor-pointer' : ''}`}
-          onClick={showIngredients ? handleToggle : undefined}
-        >
+        <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2">
             <h4 className="font-medium text-sm text-foreground truncate">{itemData.name}</h4>
             <span className="text-xs font-mono text-muted-foreground flex-shrink-0">
               {displayWeight} г
             </span>
           </div>
-          {showIngredients && (
-            <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-              <ChevronDown
-                className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`}
-              />
-              <span>Состав ({(itemData as Dish).products.length})</span>
-            </div>
-          )}
         </div>
 
         {/* Actions */}
@@ -122,11 +111,20 @@ const MealItemCard: React.FC<MealItemCardProps> = ({
         </div>
       </div>
 
+      {/* Состав блюда header */}
+      {showIngredients && (
+        <button
+          onClick={handleToggle}
+          className="w-full px-3 py-2 text-left text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+        >
+          <ChevronDown className={`w-3 h-3 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          <span>Состав блюда ({(itemData as Dish).products.length})</span>
+        </button>
+      )}
+
       {/* Expanded Content (Ingredients for Dish) */}
       {showIngredients && expanded && children && (
-        <div className="px-3 pb-3 pt-0 pl-12 space-y-1 border-t border-black/5 dark:border-white/5 mt-1">
-          {children}
-        </div>
+        <div className="px-3 pb-3 pt-2 space-y-1">{children}</div>
       )}
     </div>
   );

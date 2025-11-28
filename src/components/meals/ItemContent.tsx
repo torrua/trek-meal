@@ -30,6 +30,10 @@ interface ItemContentProps {
   onRemoveDishIngredient?: (productId: number) => void;
   showCurrentPortion?: boolean;
   onTogglePortion?: () => void;
+  dragHandleProps?: {
+    attributes: React.HTMLAttributes<HTMLElement>;
+    listeners: React.HTMLAttributes<HTMLElement>;
+  };
 }
 
 const ItemContent: React.FC<ItemContentProps> = ({
@@ -42,9 +46,19 @@ const ItemContent: React.FC<ItemContentProps> = ({
   showActions = true,
   onEditDishIngredient,
   onRemoveDishIngredient,
-  showCurrentPortion: propShowCurrentPortion,
+  showCurrentPortion: propShowCurrentPortion = false,
   onTogglePortion,
+  dragHandleProps,
 }) => {
+  // Фильтруем только совместимые с SVG свойства из dnd-kit listeners
+  const svgCompatibleListeners = dragHandleProps?.listeners
+    ? {
+        onMouseDown: dragHandleProps.listeners.onMouseDown,
+        onTouchStart: dragHandleProps.listeners.onTouchStart,
+        onTouchEnd: dragHandleProps.listeners.onTouchEnd,
+      }
+    : {};
+
   const [showPortionDropdown, setShowPortionDropdown] = useState(false); // Показывать dropdown с выбором
   const [showDishIngredients, setShowDishIngredients] = useState(false);
   const [showNutrition, setShowNutrition] = useState(false);
@@ -100,7 +114,8 @@ const ItemContent: React.FC<ItemContentProps> = ({
   useEffect(() => {
     if (showPortionDropdown && portionButtonRef.current) {
       const updatePosition = () => {
-        const rect = portionButtonRef.current!.getBoundingClientRect();
+        const rect = portionButtonRef.current?.getBoundingClientRect();
+        if (!rect) return;
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
@@ -230,9 +245,19 @@ const ItemContent: React.FC<ItemContentProps> = ({
           }}
         >
           {isProduct ? (
-            <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            <Component
+              className="w-4 h-4 text-navy-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
+              role="button"
+              tabIndex={0}
+              {...svgCompatibleListeners}
+            />
           ) : (
-            <Soup className="w-4 h-4 text-orange-500 flex-shrink-0" />
+            <Soup
+              className="w-4 h-4 text-autumn-leaf-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
+              role="button"
+              tabIndex={0}
+              {...svgCompatibleListeners}
+            />
           )}
           <h4 className="font-medium text-foreground truncate">{selectedItem?.name}</h4>
         </div>
@@ -361,29 +386,29 @@ const ItemContent: React.FC<ItemContentProps> = ({
                 e.stopPropagation();
                 setShowPortionDropdown(!showPortionDropdown);
               }}
-              className="flex items-center justify-between px-3 h-8 text-sm bg-card border border-border rounded-md hover:bg-muted hover:border-primary/30 transition-all cursor-pointer"
+              className="flex items-center px-3 h-8 text-sm bg-card border border-border rounded-md hover:bg-muted hover:border-primary/30 transition-all cursor-pointer"
             >
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 flex-1">
                 {currentPortion ? (
                   currentPortion.isIndivisible ? (
-                    <Circle className="w-3 h-3 text-muted-foreground" />
+                    <Circle className="w-3.5 h-3.5 text-muted-foreground" />
                   ) : (
-                    <PieChart className="w-3 h-3 text-muted-foreground" />
+                    <PieChart className="w-3.5 h-3.5 text-muted-foreground" />
                   )
                 ) : (
-                  <Component className="w-3 h-3 text-muted-foreground" />
+                  <Component className="w-3.5 h-3.5 text-muted-foreground" />
                 )}
-                <span className="font-medium text-muted-foreground">
+                <span className="font-medium text-muted-foreground text-sm">
                   {currentPortion ? currentPortion.name : 'Другой'}
                 </span>
               </span>
-              <span className="text-muted-foreground font-medium text-xs flex items-center gap-1">
-                <Weight className="w-3 h-3" />
-                {item.weight} г
-              </span>
               <ChevronDown
-                className={`w-3 h-3 text-muted-foreground transition-transform ${showPortionDropdown ? 'rotate-180' : ''}`}
+                className={`w-3 h-3 text-muted-foreground transition-transform mx-2 ${showPortionDropdown ? 'rotate-180' : ''}`}
               />
+              <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
+                <Weight className="w-3.5 h-3.5" />
+                {item.weight}
+              </span>
             </div>
             {showPortionDropdown && (
               <div
@@ -409,10 +434,15 @@ const ItemContent: React.FC<ItemContentProps> = ({
                       className={`w-full text-left px-3 h-8 text-sm hover:bg-muted transition-colors flex items-center justify-between rounded-md ${Number(portion.weight) === Number(item.weight) ? 'bg-primary/10 text-primary' : ''}`}
                     >
                       <span className="flex items-center gap-2">
-                        <OptionIcon className="w-3 h-3 opacity-70" />
-                        <span className="font-medium">{portion.name}</span>
+                        <OptionIcon className="w-3.5 h-3.5 opacity-70" />
+                        <span className="font-medium text-muted-foreground text-sm">
+                          {portion.name}
+                        </span>
                       </span>
-                      <span className="text-muted-foreground text-sm">{portion.weight}</span>
+                      <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
+                        <Weight className="w-3.5 h-3.5" />
+                        {portion.weight}
+                      </span>
                     </button>
                   );
                 })}
@@ -434,14 +464,14 @@ const ItemContent: React.FC<ItemContentProps> = ({
                 className="flex items-center gap-2 px-3 h-8 bg-card border border-border rounded-md text-sm group"
               >
                 <span className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <IconComponent className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                  <IconComponent className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                   <span className="text-muted-foreground font-medium truncate">
                     {ingredient.name}
                   </span>
                 </span>
-                <span className="text-muted-foreground font-medium text-xs flex items-center gap-1">
-                  <Weight className="w-3 h-3" />
-                  {ingredient.weight} г
+                <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
+                  <Weight className="w-3.5 h-3.5" />
+                  {ingredient.weight}
                 </span>
 
                 {/* Action buttons */}

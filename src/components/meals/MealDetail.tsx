@@ -156,7 +156,7 @@ const ItemContentReadOnly: React.FC<{
         if (!product) return null;
 
         // Находим соответствующую порцию
-        const portion = product.portions?.find((p) => p.weight === dp.weight);
+        const portion = product.portions?.find((p) => Number(p.weight) === Number(dp.weight));
         const PortionIcon = portion?.isIndivisible ? Circle : PieChart;
 
         return {
@@ -176,7 +176,9 @@ const ItemContentReadOnly: React.FC<{
   const portion = useMemo(() => {
     if (item.type !== 'product' || !('weight' in item) || !item.weight || !selectedItem)
       return null;
-    return (selectedItem as Product).portions?.find((p) => p.weight === Number(item.weight));
+    return (selectedItem as Product).portions?.find(
+      (p) => Number(p.weight) === Number(item.weight)
+    );
   }, [item, selectedItem]);
 
   const CurrentPortionIcon = portion?.isIndivisible ? Circle : PieChart;
@@ -212,9 +214,7 @@ const ItemContentReadOnly: React.FC<{
           ) : (
             <Soup className="w-4 h-4 text-orange-500 flex-shrink-0" />
           )}
-          <h4 className="font-medium text-foreground truncate hover:text-primary cursor-pointer transition-colors">
-            {selectedItem?.name}
-          </h4>
+          <h4 className="font-medium text-foreground truncate">{selectedItem?.name}</h4>
         </div>
         <div className="flex items-center gap-2">
           {nutrition && displayWeight && (
@@ -277,14 +277,14 @@ const ItemContentReadOnly: React.FC<{
         <div className="pt-2">
           <div className="flex items-center justify-between px-3 h-8 bg-card border border-border rounded-md text-sm">
             <span className="flex items-center gap-1.5">
-              <CurrentPortionIcon className="w-3 h-3 text-muted-foreground" />
-              <span className="text-muted-foreground font-medium">
+              <CurrentPortionIcon className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-muted-foreground font-medium text-sm">
                 {portion ? portion.name : 'Другой'}
               </span>
             </span>
-            <span className="text-muted-foreground font-medium text-xs flex items-center gap-1">
-              <Weight className="w-3 h-3" />
-              {item.weight} г
+            <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
+              <Weight className="w-3.5 h-3.5" />
+              {item.weight}
             </span>
           </div>
         </div>
@@ -300,12 +300,14 @@ const ItemContentReadOnly: React.FC<{
                 className="flex items-center justify-between px-3 h-8 bg-card border border-border rounded-md text-sm"
               >
                 <span className="flex items-center gap-1.5">
-                  <IconComponent className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-muted-foreground font-medium">{ingredient.name}</span>
+                  <IconComponent className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-muted-foreground font-medium text-sm">
+                    {ingredient.name}
+                  </span>
                 </span>
-                <span className="text-muted-foreground font-medium text-xs flex items-center gap-1">
-                  <Weight className="w-3 h-3" />
-                  {ingredient.weight} г
+                <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
+                  <Weight className="w-3.5 h-3.5" />
+                  {ingredient.weight}
                 </span>
               </div>
             );
@@ -491,41 +493,41 @@ const MealDetail: React.FC<MealDetailProps> = ({
                     e.stopPropagation();
                     setShowHeaderNutrition(!showHeaderNutrition);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-muted/50 rounded-lg border border-border hover:bg-muted transition-all"
+                  className="flex items-center gap-1.5 px-3 h-9 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
                 >
                   {showHeaderNutrition ? (
                     <>
                       <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
                       <div className="flex items-center gap-2 text-sm">
                         <div className="flex items-center gap-1">
-                          <Flame className="w-3.5 h-3.5 text-orange-600" />
+                          <Flame className="w-4 h-4 text-orange-600" />
                           <span className="font-semibold text-orange-600">
                             {totalNutrition.calories}
                           </span>
                         </div>
                         <div className="w-px h-4 bg-border" />
                         <div className="flex items-center gap-1">
-                          <Beef className="w-3.5 h-3.5 text-blue-600" />
+                          <Beef className="w-4 h-4 text-blue-600" />
                           <span className="font-semibold text-blue-600">
                             {totalNutrition.proteins}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Droplet className="w-3.5 h-3.5 text-yellow-600" />
-                          <span className="font-semibold text-yellow-600">
+                          <Droplet className="w-4 h-4 text-green-600" />
+                          <span className="font-semibold text-green-600">
                             {totalNutrition.fats}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <Wheat className="w-3.5 h-3.5 text-green-600" />
-                          <span className="font-semibold text-green-600">
+                          <Wheat className="w-4 h-4 text-yellow-600" />
+                          <span className="font-semibold text-yellow-600">
                             {totalNutrition.carbs}
                           </span>
                         </div>
                       </div>
                       <div className="w-px h-4 bg-border" />
                       <div className="flex items-center gap-1">
-                        <Weight className="w-3.5 h-3.5 text-muted-foreground" />
+                        <Weight className="w-4 h-4 text-muted-foreground" />
                         <span className="font-semibold text-muted-foreground text-sm">
                           {totalWeight}
                         </span>
@@ -535,7 +537,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
                     <>
                       <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
                       <div className="flex items-center gap-1">
-                        <Weight className="w-3.5 h-3.5 text-muted-foreground" />
+                        <Weight className="w-4 h-4 text-muted-foreground" />
                         <span className="font-semibold text-muted-foreground text-sm">
                           {totalWeight}
                         </span>
@@ -554,9 +556,9 @@ const MealDetail: React.FC<MealDetailProps> = ({
                 {watchItems.length > 0 ? (
                   watchItems.map((item, index) => {
                     const isProduct = item.type === 'product';
-                    const bgColor = isProduct
-                      ? 'bg-blue-500/5 hover:bg-blue-500/10'
-                      : 'bg-orange-500/5 hover:bg-orange-500/10';
+                    const bgGradient = isProduct
+                      ? 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 hover:bg-card-hover'
+                      : 'bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 hover:bg-card-hover';
                     const borderColor = isProduct
                       ? 'border-blue-500/20 hover:border-blue-500/40'
                       : 'border-orange-500/20 hover:border-orange-500/40';
@@ -564,7 +566,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
                     return (
                       <div
                         key={item.instanceId || `${item.type}-${item.itemId}-${index}`}
-                        className={`${bgColor} border ${borderColor} rounded-lg p-3 transition-all duration-200 hover:shadow-sm`}
+                        className={`${bgGradient} border ${borderColor} rounded-xl p-3 transition-all duration-200 hover:shadow-sm`}
                       >
                         <ItemContentReadOnly item={item} products={products} dishes={dishes} />
                       </div>

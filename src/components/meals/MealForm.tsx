@@ -31,6 +31,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import type { Meal, MealData, MealPlanItem } from '../../types';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
+import useCategoryStore from '../../stores/useCategoryStore';
 import Textarea from '../../ui/Textarea';
 import Button from '../../ui/Button';
 import SortableItemComponent from './SortableItem';
@@ -58,6 +59,7 @@ const MealForm: React.FC<MealFormProps> = ({
 }) => {
   const { products } = useProductStore();
   const { dishes } = useDishStore();
+  const { categories } = useCategoryStore();
   const { meals } = useMealStore();
   const navigate = useNavigate();
 
@@ -234,15 +236,31 @@ const MealForm: React.FC<MealFormProps> = ({
   }, [showAddMenu]);
 
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products;
     const query = searchQuery.toLowerCase();
-    return products.filter((p) => p.name.toLowerCase().includes(query));
-  }, [products, searchQuery]);
+
+    return products
+      .filter((product) => {
+        // Search by product name
+        const nameMatch = product.name.toLowerCase().includes(query);
+
+        // Search by category name
+        let categoryMatch = false;
+        if (product.categoryId) {
+          const category = categories.find((cat) => cat.id === product.categoryId);
+          if (category) {
+            categoryMatch = category.name.toLowerCase().includes(query);
+          }
+        }
+
+        return nameMatch || categoryMatch;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [products, categories, searchQuery]);
 
   const filteredDishes = useMemo(() => {
-    if (!searchQuery.trim()) return dishes;
-    const query = searchQuery.toLowerCase();
-    return dishes.filter((d) => d.name.toLowerCase().includes(query));
+    return dishes
+      .filter((dish) => dish.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [dishes, searchQuery]);
 
   const activeItem = useMemo(() => {
@@ -432,7 +450,7 @@ const MealForm: React.FC<MealFormProps> = ({
         </div>
       </div>
 
-      <div className="p-6 bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 border border-border rounded-xl">
+      <div className="p-6 [background:var(--color-meal-composition-gradient)] border border-[#22c55e] shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] rounded-xl">
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
           <div className="flex items-center gap-3 flex-1">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
@@ -448,29 +466,33 @@ const MealForm: React.FC<MealFormProps> = ({
           </div>
 
           {watchItems.length > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg border border-border">
+            <div className="flex items-center gap-3 px-3 h-9 bg-muted/50 rounded-md border border-border">
               <div className="flex items-center gap-2 text-sm">
                 <div className="flex items-center gap-1">
-                  <Flame className="w-3.5 h-3.5 text-orange-600" />
-                  <span className="font-semibold text-orange-600">{totalNutrition.calories}</span>
+                  <Flame className="w-4 h-4 text-autumn-leaf-600" />
+                  <span className="font-semibold text-autumn-leaf-600">
+                    {totalNutrition.calories}
+                  </span>
                 </div>
                 <div className="w-px h-4 bg-border" />
                 <div className="flex items-center gap-1">
-                  <Beef className="w-3.5 h-3.5 text-blue-600" />
+                  <Beef className="w-4 h-4 text-blue-600" />
                   <span className="font-semibold text-blue-600">{totalNutrition.proteins}</span>
                 </div>
+                <div className="w-px h-4 bg-border" />
                 <div className="flex items-center gap-1">
-                  <Droplet className="w-3.5 h-3.5 text-yellow-600" />
+                  <Droplet className="w-4 h-4 text-yellow-600" />
                   <span className="font-semibold text-yellow-600">{totalNutrition.fats}</span>
                 </div>
+                <div className="w-px h-4 bg-border" />
                 <div className="flex items-center gap-1">
-                  <Wheat className="w-3.5 h-3.5 text-green-600" />
+                  <Wheat className="w-4 h-4 text-green-600" />
                   <span className="font-semibold text-green-600">{totalNutrition.carbs}</span>
                 </div>
               </div>
               <div className="w-px h-4 bg-border" />
               <div className="flex items-center gap-1">
-                <Weight className="w-3.5 h-3.5 text-muted-foreground" />
+                <Weight className="w-4 h-4 text-muted-foreground" />
                 <span className="font-semibold text-muted-foreground text-sm">
                   {watchItems.reduce((total, item) => {
                     if (item.type === 'product') {
@@ -541,7 +563,7 @@ const MealForm: React.FC<MealFormProps> = ({
                     {filteredDishes.length > 0 && (
                       <div className="mb-2">
                         <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
-                          <Soup className="w-3.5 h-3.5 text-orange-500" />
+                          <Soup className="w-3.5 h-3.5 text-autumn-leaf-500" />
                           Блюда ({filteredDishes.length})
                         </div>
                         {filteredDishes.map((dish) => (
@@ -551,7 +573,7 @@ const MealForm: React.FC<MealFormProps> = ({
                             onClick={() => handleAddItem(dish.id, 'dish')}
                             className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
                           >
-                            <Soup className="w-3.5 h-3.5 text-orange-500" />
+                            <Soup className="w-3.5 h-3.5 text-autumn-leaf-500" />
                             {dish.name}
                           </button>
                         ))}
@@ -563,17 +585,27 @@ const MealForm: React.FC<MealFormProps> = ({
                           <Component className="w-3.5 h-3.5 text-blue-500" />
                           Продукты ({filteredProducts.length})
                         </div>
-                        {filteredProducts.map((product) => (
-                          <button
-                            key={product.id}
-                            type="button"
-                            onClick={() => handleAddItem(product.id, 'product')}
-                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
-                          >
-                            <Component className="w-3.5 h-3.5 text-blue-500" />
-                            {product.name}
-                          </button>
-                        ))}
+                        {filteredProducts.map((product) => {
+                          const category = product.categoryId
+                            ? categories.find((cat) => cat.id === product.categoryId)
+                            : null;
+                          return (
+                            <button
+                              key={product.id}
+                              type="button"
+                              onClick={() => handleAddItem(product.id, 'product')}
+                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
+                            >
+                              <Component className="w-3.5 h-3.5 text-blue-500" />
+                              <span className="flex-1">{product.name}</span>
+                              {category && (
+                                <span className="text-muted-foreground text-xs flex items-center gap-1">
+                                  {category.emoji} {category.name}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </>
@@ -612,7 +644,13 @@ const MealForm: React.FC<MealFormProps> = ({
 
             <DragOverlay>
               {activeId && activeItem ? (
-                <div className="bg-card border-2 border-primary rounded-lg p-3 shadow-2xl opacity-95 z-50">
+                <div
+                  className={`rounded-xl p-3 shadow-2xl z-50 border ${
+                    (activeItem as MealPlanItem).type === 'product'
+                      ? '[background:var(--color-product-gradient)] border border-[#3b82f6] shadow-[0_4px_8px_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.15)]'
+                      : '[background:var(--color-dish-gradient)] border border-[#f59e0b] shadow-[0_4px_8px_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.15)]'
+                  }`}
+                >
                   <ItemContent
                     item={activeItem as MealPlanItem}
                     products={products}

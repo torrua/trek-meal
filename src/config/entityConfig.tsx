@@ -28,7 +28,7 @@ import {
   Component,
   Flame,
   Soup,
-  Weight,
+  Weight as _Weight,
   User,
   Scale,
   ExternalLink,
@@ -224,8 +224,8 @@ export const participantEntityConfig: EntityConfig<Participant> = {
 // --- PRODUCT ---
 export const productEntityConfig: EntityConfig<Product> = {
   getIcon: () => Component,
-  getIconColor: (_p, ctx) => (ctx?.category ? 'text-current' : 'text-gray-500'),
-  getBorderColor: (_p, ctx) => (ctx?.category as Category)?.color || '#6b7280',
+  getIconColor: (_p, ctx) => (ctx?.category ? 'text-current' : 'text-navy-500'),
+  getBorderColor: (_p, ctx) => (ctx?.category as Category)?.color || '#0ea5e9',
   views: {
     card: {
       title: (p) => p.name,
@@ -259,8 +259,8 @@ export const productEntityConfig: EntityConfig<Product> = {
 // --- DISH ---
 export const dishEntityConfig: EntityConfig<Dish> = {
   getIcon: () => Soup,
-  getIconColor: () => 'text-orange-500',
-  getBorderColor: () => '#f97316',
+  getIconColor: () => 'text-autumn-leaf-500',
+  getBorderColor: () => 'oklch(69.78% 0.197 45.40)',
   views: {
     card: {
       title: (dish) => dish.name,

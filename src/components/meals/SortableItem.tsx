@@ -30,7 +30,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
   showCurrentPortion = false,
   onTogglePortion,
 }) => {
-  const { setNodeRef, transform, transition, isDragging } = useSortable({
+  const { setNodeRef, transform, transition, isDragging, attributes, listeners } = useSortable({
     id,
   });
 
@@ -47,7 +47,11 @@ const SortableItem: React.FC<SortableItemProps> = ({
   return (
     <div ref={setNodeRef} className="touch-none" style={style}>
       <div
-        className={`${isDish ? 'bg-orange-500/5 border border-orange-500/20' : 'bg-blue-500/5 border border-blue-500/20'} rounded-lg transition-all duration-200 p-3`}
+        className={`${
+          isDish
+            ? '[background:var(--color-dish-gradient)] border border-[#f59e0b] shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]'
+            : '[background:var(--color-product-gradient)] border border-[#3b82f6] shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]'
+        } rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_4px_8px_rgba(0,0,0,0.15),0_2px_4px_rgba(0,0,0,0.1)]`}
       >
         <ItemContent
           item={item}
@@ -61,6 +65,10 @@ const SortableItem: React.FC<SortableItemProps> = ({
           showActions={true}
           showCurrentPortion={showCurrentPortion}
           onTogglePortion={onTogglePortion}
+          dragHandleProps={{
+            attributes,
+            listeners: listeners || {},
+          }}
         />
       </div>
     </div>

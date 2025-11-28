@@ -471,7 +471,7 @@ const DishesPage: React.FC = () => {
                     icon={dishEntityConfig.getIcon(dish)}
                     iconColor={dishEntityConfig.getIconColor?.(dish)}
                     details={[]}
-                    variant="meal"
+                    variant="dish"
                     nutrition={{
                       calories: Math.round(nutrition.calories),
                       proteins: Math.round(nutrition.proteins * 10) / 10,

@@ -51,7 +51,7 @@ interface EntityCardProps {
   linkTo?: string;
   description?: string;
   showMultiSelect?: boolean;
-  variant?: 'neutral' | 'meal' | 'info' | 'composition';
+  variant?: 'neutral' | 'meal' | 'info' | 'composition' | 'dish' | 'product';
   nutrition?: {
     calories: number;
     proteins: number;
@@ -148,8 +148,10 @@ const EntityCard: React.FC<EntityCardProps> = ({
   const gradientByVariant: Record<NonNullable<EntityCardProps['variant']>, string> = {
     neutral: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
     info: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
-    composition: 'bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5',
-    meal: 'bg-gradient-to-br from-orange-500/5 via-amber-500/5 to-blue-500/5',
+    composition: '[background:var(--color-meal-composition-gradient)]',
+    meal: '[background:var(--color-meal-composition-gradient)]',
+    dish: '[background:var(--color-dish-gradient)]',
+    product: '[background:var(--color-product-gradient)]',
   };
 
   const cardClasses = cn(

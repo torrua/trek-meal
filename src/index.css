@@ -51,6 +51,17 @@
   }
 }
 
+/* Custom gradient variables */
+:root {
+  --color-dish-gradient: linear-gradient(45deg, #fee9d1 0%, hsla(30, 60%, 65%, 0.06) 100%);
+  --color-product-gradient: linear-gradient(45deg, #bae6fd 0%, hsla(45, 60%, 55%, 0.08) 100%);
+  --color-meal-composition-gradient: linear-gradient(
+    45deg,
+    hsla(154, 70%, 35%, 0.1) 0%,
+    hsla(45, 60%, 55%, 0.08) 100%
+  );
+}
+
 @layer base {
   * {
     @apply border-border;

@@ -42,7 +42,7 @@ import { productEntityConfig } from '../config/entityConfig';
 import { exportProductToJson, exportBulkProductsToJson } from '../utils/backup';
 
 const ProductsPage: React.FC = () => {
-  const { products, addProduct, updateProduct, deleteProduct } = useProductStore();
+  const { products, addProduct, updateProduct: _updateProduct, deleteProduct } = useProductStore();
   const { categories } = useCategoryStore();
   const { searchTerm } = useSearchStore();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -424,7 +424,7 @@ const ProductsPage: React.FC = () => {
                       title: 'Варианты порций',
                     },
                   ]}
-                  variant="neutral"
+                  variant="product"
                   nutrition={{
                     calories: Math.round(product.calories || 0),
                     proteins: Math.round(product.proteins || 0),

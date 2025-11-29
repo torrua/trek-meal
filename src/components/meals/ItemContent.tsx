@@ -18,6 +18,9 @@ import {
 import type { Product, Dish, MealPlanItem, ProductPortion } from '../../types';
 import Button from '../../ui/Button';
 
+// ВНЕШНИЙ КЭШ: Сохраняет состояние открытости блоков
+const itemExpansionCache = new Map<string, boolean>();
+
 interface ItemContentProps {
   item: MealPlanItem;
   products: Product[];
@@ -28,8 +31,6 @@ interface ItemContentProps {
   showActions?: boolean;
   onEditDishIngredient?: (productId: number) => void;
   onRemoveDishIngredient?: (productId: number) => void;
-  showCurrentPortion?: boolean;
-  onTogglePortion?: () => void;
   dragHandleProps?: {
     attributes: React.HTMLAttributes<HTMLElement>;
     listeners: React.HTMLAttributes<HTMLElement>;
@@ -46,11 +47,8 @@ const ItemContent: React.FC<ItemContentProps> = ({
   showActions = true,
   onEditDishIngredient,
   onRemoveDishIngredient,
-  showCurrentPortion: propShowCurrentPortion = false,
-  onTogglePortion,
   dragHandleProps,
 }) => {
-  // Фильтруем только совместимые с SVG свойства из dnd-kit listeners
   const svgCompatibleListeners = dragHandleProps?.listeners
     ? {
         onMouseDown: dragHandleProps.listeners.onMouseDown,
@@ -59,9 +57,21 @@ const ItemContent: React.FC<ItemContentProps> = ({
       }
     : {};
 
-  const [showPortionDropdown, setShowPortionDropdown] = useState(false); // Показывать dropdown с выбором
+  const uniqueKey = (item as any).instanceId || `${item.type}-${item.itemId}`;
+
+  // --- СОСТОЯНИЯ ---
+  const [showProductPortion, setShowProductPortion] = useState(() => {
+    return itemExpansionCache.get(uniqueKey) || false;
+  });
+
+  useEffect(() => {
+    itemExpansionCache.set(uniqueKey, showProductPortion);
+  }, [showProductPortion, uniqueKey]);
+
+  const [showPortionDropdown, setShowPortionDropdown] = useState(false);
   const [showDishIngredients, setShowDishIngredients] = useState(false);
   const [showNutrition, setShowNutrition] = useState(false);
+
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const portionDropdownRef = useRef<HTMLDivElement>(null);
   const portionButtonRef = useRef<HTMLDivElement>(null);
@@ -110,7 +120,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
     return null;
   }, [item, products, selectedItem]);
 
-  // Обновление позиции dropdown при открытии
+  // Обновление позиции dropdown
   useEffect(() => {
     if (showPortionDropdown && portionButtonRef.current) {
       const updatePosition = () => {
@@ -137,7 +147,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
     }
   }, [showPortionDropdown]);
 
-  // Закрытие dropdown при клике вне его
+  // Закрытие dropdown при клике вне
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -205,7 +215,9 @@ const ItemContent: React.FC<ItemContentProps> = ({
   const portions = useMemo(() => {
     if (item.type !== 'product' || !selectedItem) return [];
     return (selectedItem as Product).portions || [];
-  }, [item.type, selectedItem]);
+  }, [item, selectedItem]);
+
+  const hasMultiplePortions = portions.length > 1;
 
   const currentPortion = useMemo(() => {
     if (item.type !== 'product' || !item.weight) return null;
@@ -217,43 +229,51 @@ const ItemContent: React.FC<ItemContentProps> = ({
   const handlePortionSelect = (portion: ProductPortion, event?: React.MouseEvent) => {
     if (event) {
       event.stopPropagation();
+      event.preventDefault();
     }
-    if (_onUpdateWeight) _onUpdateWeight(portion.weight);
+    if (_onUpdateWeight) _onUpdateWeight(Number(portion.weight));
     setShowPortionDropdown(false);
+  };
+
+  // Проверяем, можно ли вообще что-то развернуть в этом элементе
+  const canExpand =
+    (isDish && dishDetails && dishDetails.length > 0) ||
+    (isProduct && portions && portions.length > 0);
+
+  // Общий обработчик клика по строке заголовка
+  const handleHeaderClick = (e: React.MouseEvent) => {
+    // ВАЖНО: Мы не вызываем stopPropagation здесь, чтобы событие могло всплыть,
+    // если это нужно для DND, но обычно DND работает через listeners на иконке.
+
+    // Переключаем видимость
+    if (isDish && dishDetails && dishDetails.length > 0) {
+      setShowDishIngredients(!showDishIngredients);
+    }
+    if (isProduct && portions && portions.length > 0) {
+      setShowProductPortion(!showProductPortion);
+    }
   };
 
   return (
     <div className="space-y-1">
-      {/* Header: Title + Expandable КБЖУ + Actions */}
-      <div className="flex items-center gap-2">
-        {/* Кликабельная область заголовка */}
-        <div
-          className={`flex items-center gap-2 flex-1 min-w-0 ${
-            (isDish && dishDetails && dishDetails.length > 0) ||
-            (isProduct && portions && portions.length > 0)
-              ? 'cursor-pointer'
-              : ''
-          }`}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (isDish && dishDetails && dishDetails.length > 0) {
-              setShowDishIngredients(!showDishIngredients);
-            }
-            if (isProduct && portions && portions.length > 0) {
-              onTogglePortion?.();
-            }
-          }}
-        >
+      {/* Header Row: теперь кликабельный целиком */}
+      <div
+        className={`flex items-center gap-2 ${canExpand ? 'cursor-pointer' : ''}`}
+        onClick={handleHeaderClick}
+      >
+        {/* Иконка и Название (растягиваются, чтобы занять место) */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           {isProduct ? (
             <Component
-              className="w-4 h-4 text-navy-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
+              className="w-4 h-4 text-blue-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
               role="button"
               tabIndex={0}
               {...svgCompatibleListeners}
+              // Убираем onClick с иконки, так как клик теперь на родителе
             />
           ) : (
             <Soup
-              className="w-4 h-4 text-autumn-leaf-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
+              className="w-4 h-4 text-orange-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
               role="button"
               tabIndex={0}
               {...svgCompatibleListeners}
@@ -262,11 +282,11 @@ const ItemContent: React.FC<ItemContentProps> = ({
           <h4 className="font-medium text-foreground truncate">{selectedItem?.name}</h4>
         </div>
 
-        {/* Nutrition block - always shown for products and dishes */}
+        {/* Nutrition block - отдельная кнопка, клик не должен всплывать */}
         {(nutrition || (isProduct && selectedItem && displayWeight && displayWeight > 0)) && (
           <button
             onClick={(e) => {
-              e.stopPropagation();
+              e.stopPropagation(); // Останавливаем всплытие, чтобы не сработало сворачивание
               setShowNutrition(!showNutrition);
             }}
             className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
@@ -340,6 +360,8 @@ const ItemContent: React.FC<ItemContentProps> = ({
             )}
           </button>
         )}
+
+        {/* Actions - кнопки редактирования/удаления */}
         {showActions && (
           <div className="flex items-center gap-2">
             {onEditItem && (
@@ -348,7 +370,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
                 variant="ghost"
                 size="icon-sm"
                 onClick={(e) => {
-                  e.stopPropagation();
+                  e.stopPropagation(); // Останавливаем всплытие
                   onEditItem();
                 }}
                 className="!border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/15 text-blue-600"
@@ -363,7 +385,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
                 variant="ghost"
                 size="icon-sm"
                 onClick={(e) => {
-                  e.stopPropagation();
+                  e.stopPropagation(); // Останавливаем всплытие
                   onRemove();
                 }}
                 className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
@@ -376,17 +398,23 @@ const ItemContent: React.FC<ItemContentProps> = ({
         )}
       </div>
 
-      {/* Portion selector - only shown for products when showCurrentPortion is true */}
-      {isProduct && portions && portions.length > 0 && propShowCurrentPortion && (
+      {/* Portion selector block */}
+      {isProduct && portions && portions.length > 0 && item.weight && showProductPortion && (
         <div className="pt-2">
           <div className="relative flex-1">
             <div
               ref={portionButtonRef}
               onClick={(e) => {
-                e.stopPropagation();
-                setShowPortionDropdown(!showPortionDropdown);
+                if (hasMultiplePortions) {
+                  e.stopPropagation();
+                  setShowPortionDropdown(!showPortionDropdown);
+                }
               }}
-              className="flex items-center px-3 h-8 text-sm bg-card border border-border rounded-md hover:bg-muted hover:border-primary/30 transition-all cursor-pointer"
+              className={`flex items-center px-3 h-8 text-sm bg-card border border-border rounded-md transition-all ${
+                hasMultiplePortions
+                  ? 'hover:bg-muted hover:border-primary/30 cursor-pointer'
+                  : 'cursor-default opacity-90'
+              }`}
             >
               <span className="flex items-center gap-1.5 flex-1">
                 {currentPortion ? (
@@ -396,20 +424,26 @@ const ItemContent: React.FC<ItemContentProps> = ({
                     <PieChart className="w-3.5 h-3.5 text-muted-foreground" />
                   )
                 ) : (
-                  <Component className="w-3.5 h-3.5 text-muted-foreground" />
+                  <PieChart className="w-3.5 h-3.5 text-muted-foreground" />
                 )}
                 <span className="font-medium text-muted-foreground text-sm">
                   {currentPortion ? currentPortion.name : 'Другой'}
                 </span>
               </span>
-              <ChevronDown
-                className={`w-3 h-3 text-muted-foreground transition-transform mx-2 ${showPortionDropdown ? 'rotate-180' : ''}`}
-              />
+
+              {hasMultiplePortions && (
+                <ChevronDown
+                  className={`w-3 h-3 text-muted-foreground transition-transform mx-2 ${showPortionDropdown ? 'rotate-180' : ''}`}
+                />
+              )}
+
               <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
                 <Weight className="w-3.5 h-3.5" />
                 {item.weight}
               </span>
             </div>
+
+            {/* Dropdown Menu */}
             {showPortionDropdown && (
               <div
                 ref={portionDropdownRef}
@@ -419,7 +453,10 @@ const ItemContent: React.FC<ItemContentProps> = ({
                   left: `${dropdownPosition.left}px`,
                   width: `${dropdownPosition.width}px`,
                 }}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
               >
                 {portions.map((portion: ProductPortion, idx: number) => {
                   const OptionIcon = portion.isIndivisible ? Circle : PieChart;
@@ -429,12 +466,13 @@ const ItemContent: React.FC<ItemContentProps> = ({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
+                        e.preventDefault();
                         handlePortionSelect(portion, e);
                       }}
                       className={`w-full text-left px-3 h-8 text-sm hover:bg-muted transition-colors flex items-center justify-between rounded-md ${Number(portion.weight) === Number(item.weight) ? 'bg-primary/10 text-primary' : ''}`}
                     >
                       <span className="flex items-center gap-2">
-                        <OptionIcon className="w-3.5 h-3.5 opacity-70" />
+                        <OptionIcon className="w-3.5 h-3.5 text-muted-foreground opacity-70" />
                         <span className="font-medium text-muted-foreground text-sm">
                           {portion.name}
                         </span>

@@ -50,6 +50,7 @@ interface CollapsibleSectionProps {
   gradientFrom?: string;
   gradientVia?: string;
   gradientTo?: string;
+  className?: string;
 }
 
 const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
@@ -65,31 +66,42 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   gradientFrom = 'from-blue-500/5',
   gradientVia = 'via-purple-500/5',
   gradientTo = 'to-pink-500/5',
+  className,
 }) => {
+  // Определяем тень как константу, чтобы использовать везде
+  const defaultShadow = 'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]';
+
   return (
     <div
-      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-hidden`}
+      // Применяем defaultShadow ко всем блокам
+      // Если className передан, используем его, иначе стандартный border
+      className={`${className || 'border border-border'} ${defaultShadow} rounded-xl relative transform`}
     >
       <div
-        className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
-        onClick={() => onToggle(id)}
-      >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
-            {icon}
+        className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} rounded-xl absolute inset-0`}
+      ></div>
+      <div className="relative">
+        <div
+          className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
+          onClick={() => onToggle(id)}
+        >
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
+              {icon}
+            </div>
+            <h2 className="text-lg font-semibold truncate">{title}</h2>
+            {summaryContent && <div className="ml-2 flex-shrink-0">{summaryContent}</div>}
           </div>
-          <h2 className="text-lg font-semibold truncate">{title}</h2>
-          {summaryContent && <div className="ml-2 flex-shrink-0">{summaryContent}</div>}
+          <div className="flex items-center gap-2 min-w-[200px] justify-end">
+            {actionButton}
+            {headerContent}
+            <ChevronDown
+              className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2 min-w-[200px] justify-end">
-          {actionButton}
-          {headerContent}
-          <ChevronDown
-            className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          />
-        </div>
+        {isOpen && <div className="p-6 pt-0">{children}</div>}
       </div>
-      {isOpen && <div className="p-6 pt-0">{children}</div>}
     </div>
   );
 };
@@ -181,6 +193,11 @@ const ItemContentReadOnly: React.FC<{
     );
   }, [item, selectedItem]);
 
+  const portions = useMemo(() => {
+    if (item.type !== 'product' || !selectedItem) return [];
+    return (selectedItem as Product).portions || [];
+  }, [item.type, selectedItem]);
+
   const CurrentPortionIcon = portion?.isIndivisible ? Circle : PieChart;
 
   const isProduct = item.type === 'product';
@@ -197,12 +214,12 @@ const ItemContentReadOnly: React.FC<{
 
   return (
     <div
-      className={`space-y-1 ${(isDish && dishDetails && dishDetails.length > 0) || (isProduct && item.weight) ? 'cursor-pointer' : ''}`}
+      className={`space-y-1 ${(isDish && dishDetails && dishDetails.length > 0) || (isProduct && portions && portions.length > 0) ? 'cursor-pointer' : ''}`}
       onClick={() => {
         if (isDish && dishDetails && dishDetails.length > 0) {
           setShowDishIngredients(!showDishIngredients);
         }
-        if (isProduct && item.weight) {
+        if (isProduct && portions && portions.length > 0) {
           setShowProductPortion(!showProductPortion);
         }
       }}
@@ -273,7 +290,7 @@ const ItemContentReadOnly: React.FC<{
         </div>
       </div>
 
-      {isProduct && item.weight && showProductPortion && (
+      {isProduct && portions && portions.length > 0 && item.weight && showProductPortion && (
         <div className="pt-2">
           <div className="flex items-center justify-between px-3 h-8 bg-card border border-border rounded-md text-sm">
             <span className="flex items-center gap-1.5">
@@ -422,7 +439,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
   };
 
   return (
-    <div className="space-y-6 pl-1" ref={containerRef}>
+    <div className="space-y-6 pl-1 pb-4" ref={containerRef}>
       {isEditing && meal ? (
         <div className="mt-0 transition-all duration-200 ease-in-out pl-1">
           <MealForm
@@ -475,7 +492,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
           <CollapsibleSection
             id="composition"
             title="Состав"
-            icon={<Utensils className="w-4 h-4 text-primary" />}
+            icon={<Utensils className="w-4 h-4 text-green-600" />}
             isOpen={isCompositionOpen}
             onToggle={onToggleSection}
             summaryContent={
@@ -512,15 +529,17 @@ const MealDetail: React.FC<MealDetailProps> = ({
                             {totalNutrition.proteins}
                           </span>
                         </div>
+                        <div className="w-px h-4 bg-border" />
                         <div className="flex items-center gap-1">
-                          <Droplet className="w-4 h-4 text-green-600" />
-                          <span className="font-semibold text-green-600">
+                          <Droplet className="w-4 h-4 text-yellow-600" />
+                          <span className="font-semibold text-yellow-600">
                             {totalNutrition.fats}
                           </span>
                         </div>
+                        <div className="w-px h-4 bg-border" />
                         <div className="flex items-center gap-1">
-                          <Wheat className="w-4 h-4 text-yellow-600" />
-                          <span className="font-semibold text-yellow-600">
+                          <Wheat className="w-4 h-4 text-green-600" />
+                          <span className="font-semibold text-green-600">
                             {totalNutrition.carbs}
                           </span>
                         </div>
@@ -550,23 +569,21 @@ const MealDetail: React.FC<MealDetailProps> = ({
             gradientFrom="from-orange-500/5"
             gradientVia="via-yellow-500/5"
             gradientTo="to-green-500/5"
+            className="[background:var(--color-meal-composition-gradient)] border border-border"
           >
             <div className="space-y-4 pt-4">
               <div className="space-y-3">
                 {watchItems.length > 0 ? (
                   watchItems.map((item, index) => {
                     const isProduct = item.type === 'product';
-                    const bgGradient = isProduct
-                      ? 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 hover:bg-card-hover'
-                      : 'bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 hover:bg-card-hover';
-                    const borderColor = isProduct
-                      ? 'border-blue-500/20 hover:border-blue-500/40'
-                      : 'border-orange-500/20 hover:border-orange-500/40';
+                    const itemStyle = isProduct
+                      ? '[background:var(--color-product-gradient)] border border-[#3b82f6]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+                      : '[background:var(--color-dish-gradient)] border border-[#f97316]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]';
 
                     return (
                       <div
                         key={item.instanceId || `${item.type}-${item.itemId}-${index}`}
-                        className={`${bgGradient} border ${borderColor} rounded-xl p-3 transition-all duration-200 hover:shadow-sm`}
+                        className={`${itemStyle} rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]`}
                       >
                         <ItemContentReadOnly item={item} products={products} dishes={dishes} />
                       </div>

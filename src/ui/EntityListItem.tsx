@@ -24,7 +24,7 @@ interface EntityListItemProps {
   showMultiSelect?: boolean;
   borderColor?: string;
   'data-testid'?: string;
-  variant?: 'neutral' | 'meal' | 'info' | 'composition';
+  variant?: 'neutral' | 'meal' | 'info' | 'composition' | 'dish' | 'product';
   onRequestMultiSelectMode?: () => void;
 }
 
@@ -44,17 +44,32 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
 }) => {
   const gradientByVariant: Record<NonNullable<EntityListItemProps['variant']>, string> = {
     neutral: 'bg-gradient-to-r from-blue-50 to-white dark:from-blue-900/10 dark:to-transparent',
-    info: 'bg-gradient-to-r from-purple-50 to-white dark:from-purple-900/10 dark:to-transparent',
-    composition:
-      'bg-gradient-to-r from-green-50 to-white dark:from-green-900/10 dark:to-transparent',
-    meal: 'bg-gradient-to-r from-orange-50 to-white dark:from-orange-900/10 dark:to-transparent',
+    info: 'bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5',
+    composition: '[background:var(--color-meal-composition-gradient)]',
+    meal: '[background:var(--color-meal-composition-gradient)]',
+    dish: '[background:var(--color-dish-gradient)]',
+    product: '[background:var(--color-product-gradient)]',
   };
 
   const itemClasses = cn(
-    'group flex w-full items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5 text-left transition-all duration-200',
+    // ИЗМЕНЕНО: p-3 -> px-4 py-3
+    // px-4 (16px) выравнивает контент по горизонтали так же, как в карточках.
+    // py-3 (12px) + внутреннее центрирование текста создают визуальный отступ сверху ~16px.
+    'group flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-200',
     gradientByVariant[variant],
     {
-      'border-primary/50 bg-primary/5 ring-1 ring-primary/20': isSelected,
+      // Стандартная обводка
+      'border-border': !isSelected,
+
+      // Тень только для meal
+      'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]': variant === 'meal',
+
+      // ВЫДЕЛЕНИЕ:
+      // 1. Meal - зеленая тема
+      'border-[#22c55e] bg-[#22c55e]/5': isSelected && variant === 'meal',
+      // 2. Остальные - стандартная синяя тема
+      'border-primary/50 bg-primary/5 ring-1 ring-primary/20': isSelected && variant !== 'meal',
+
       'hover:bg-card-hover hover:border-border-hover hover:shadow-sm': !isSelected,
       'cursor-pointer': !!onSelect,
     }
@@ -125,7 +140,6 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
         {meta.length > 0 && (
           <div className="hidden sm:flex items-center gap-4 flex-shrink-0 ml-auto mr-2">
             {meta.map((item, index) => {
-              // Если значения нет, не рендерим ничего
               if (!item.text && item.text !== 0) return null;
 
               return (

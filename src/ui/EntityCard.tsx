@@ -13,7 +13,7 @@ import {
   Weight,
   Hash,
   PieChart,
-} from 'lucide-react'; // Заменили Box на PieChart
+} from 'lucide-react';
 import DropdownMenu from './DropdownMenu';
 import './entityCard.css';
 
@@ -155,10 +155,22 @@ const EntityCard: React.FC<EntityCardProps> = ({
   };
 
   const cardClasses = cn(
-    'group relative flex flex-col rounded-xl border border-border p-4 transition-all duration-200 cursor-pointer bg-card',
+    'group relative flex flex-col rounded-xl p-4 transition-all duration-200 cursor-pointer bg-card',
     gradientByVariant[variant],
     {
-      'border-primary/50 bg-primary/5': isSelected,
+      // Стандартная обводка, если не выбрано
+      'border border-border': !isSelected,
+
+      // Тень только для варианта meal
+      'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]': variant === 'meal',
+
+      // ВЫДЕЛЕНИЕ:
+      // 1. Если это Meal - зеленая обводка и фон
+      'border border-[#22c55e] bg-[#22c55e]/5': isSelected && variant === 'meal',
+      // 2. Если это другое (продукт, блюдо) - стандартная (синяя) обводка и фон
+      'border border-primary/50 bg-primary/5': isSelected && variant !== 'meal',
+
+      // Ховер эффекты только для невыделенных
       'hover:bg-card-hover hover:border-border-hover notion-shadow-xs hover:notion-shadow-sm':
         !isSelected,
     },
@@ -198,7 +210,13 @@ const EntityCard: React.FC<EntityCardProps> = ({
                 onRequestMultiSelectMode?.();
               }}
             >
-              {typeof Icon === 'function' ? <Icon /> : <Icon className="h-4 w-4 text-primary" />}
+              {typeof Icon === 'function' ? (
+                <Icon />
+              ) : (
+                <Icon
+                  className={`h-4 w-4 ${variant === 'meal' ? 'text-green-600' : 'text-primary'}`}
+                />
+              )}
             </div>
           )}
 
@@ -216,7 +234,9 @@ const EntityCard: React.FC<EntityCardProps> = ({
         </div>
 
         {menuItems && menuItems.length > 0 && (
-          <div className="flex-shrink-0 -mr-1.5 -mt-1.5">
+          // ИСПРАВЛЕНО: Убран отрицательный отступ справа (-mr-2),
+          // чтобы кнопка была симметрична иконке слева относительно границ паддинга карточки
+          <div className="flex-shrink-0">
             <DropdownMenu
               items={menuItems}
               trigger={
@@ -245,7 +265,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
       {/* Details Footer */}
       {details && details.length > 0 && (
-        <div className="mt-auto pt-1">
+        <div className="mt-auto">
           <dl className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-xs">
             {details.map((item) => (
               <div
@@ -265,7 +285,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
       {/* Nutrition Footer */}
       {nutrition && (
-        <div className="mt-auto pt-1">
+        <div className="mt-auto">
           <div ref={nutritionRef} className={cn('cq-nutrition text-xs', showBju && 'show-bju')}>
             {typeof nutrition.itemsCount === 'number' && (
               <div className="flex items-center gap-1">
@@ -316,8 +336,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
             {typeof nutrition.weight === 'undefined' &&
               typeof nutrition.portionCount === 'number' && (
                 <div className="flex items-center gap-1 ml-auto" title="Вариантов порций">
-                  <PieChart className="w-3 h-3 text-muted-foreground flex-shrink-0" />{' '}
-                  {/* Заменили Box на PieChart */}
+                  <PieChart className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                   <span className="font-medium text-muted-foreground">
                     {nutrition.portionCount}
                   </span>

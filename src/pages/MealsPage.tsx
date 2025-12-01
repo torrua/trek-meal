@@ -16,6 +16,9 @@ import {
   Flame,
   Weight,
   Hash,
+  Beef,
+  Droplet,
+  Wheat,
 } from 'lucide-react';
 import { useMealStore } from '../stores/useMealStore';
 import useProductStore from '../stores/useProductStore';
@@ -376,6 +379,24 @@ const MealsPage: React.FC = () => {
                   text: Math.round(totalCalories),
                   className: 'text-orange-600',
                   tooltip: 'Калории',
+                },
+                proteins: {
+                  icon: Beef,
+                  text: Math.round(totalProteins * 10) / 10,
+                  className: 'text-blue-600',
+                  tooltip: 'Белки',
+                },
+                fats: {
+                  icon: Droplet,
+                  text: Math.round(totalFats * 10) / 10,
+                  className: 'text-yellow-600',
+                  tooltip: 'Жиры',
+                },
+                carbs: {
+                  icon: Wheat,
+                  text: Math.round(totalCarbs * 10) / 10,
+                  className: 'text-green-600',
+                  tooltip: 'Углеводы',
                 },
                 weight: {
                   icon: Weight,

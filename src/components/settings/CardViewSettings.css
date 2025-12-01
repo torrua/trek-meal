@@ -1,0 +1,12 @@
+/* Drag and drop styles for sortable items - больше не нужны, используем inline стили */
+.sortable-item {
+  transform: var(--transform);
+  transition: var(--transition);
+}
+
+/* Плавная анимация после окончания перетаскивания */
+.sortable-item:not(.dragging) {
+  transition:
+    transform 200ms ease-out,
+    opacity 200ms ease-out;
+}

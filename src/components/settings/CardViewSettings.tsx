@@ -25,12 +25,31 @@ import {
   Backpack,
   Tag,
   Info,
+  Component,
+  Soup,
+  Utensils,
 } from 'lucide-react';
 import cn from 'classnames';
-import { useSettingsStore, FieldConfig } from '../../stores/useSettingsStore';
-import { CARD_FIELDS, EntityType } from '../../config/cardFields';
+import { useSettingsStore } from '../../stores/useSettingsStore';
+import { CARD_FIELDS } from '../../config/cardFields';
+import { EntityType, FieldConfig } from '../../types';
 import Button from '../../ui/Button';
 import './CardViewSettings.css';
+
+interface FieldDefinition {
+  id: string;
+  label: string;
+  defaultVisible: boolean;
+}
+
+const TAB_ICONS: Record<EntityType, React.ElementType> = {
+  trips: MapPin,
+  participants: Users,
+  products: Component,
+  dishes: Soup,
+  meals: Utensils,
+  equipment: Backpack,
+};
 
 const FIELD_ICONS: Record<string, React.ElementType> = {
   calories: Flame,
@@ -67,16 +86,15 @@ const SortableFieldItem = ({
     <div
       ref={setNodeRef}
       className={cn(
-        'flex items-center justify-between p-2 bg-card border border-border rounded-md mb-1.5 sortable-item',
-        'group hover:border-primary/40 hover:shadow-sm transition-all',
+        'flex items-center justify-between p-2 bg-card border border-border rounded-md mb-1.5',
+        'group hover:border-primary/40 hover:shadow-sm',
         isDragging && 'shadow-lg ring-2 ring-primary/20 opacity-50'
       )}
-      style={
-        {
-          '--transform': CSS.Transform.toString(transform),
-          '--transition': transition,
-        } as React.CSSProperties
-      }
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition: transition,
+        zIndex: isDragging ? 1000 : 1,
+      }}
     >
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <button
@@ -141,30 +159,36 @@ const CardViewSettings: React.FC = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = currentFields.findIndex((f) => f.id === active.id);
-      const newIndex = currentFields.findIndex((f) => f.id === over.id);
+      const oldIndex = currentFields.findIndex((f: FieldConfig) => f.id === active.id);
+      const newIndex = currentFields.findIndex((f: FieldConfig) => f.id === over.id);
       reorderFields(activeTab, arrayMove(currentFields, oldIndex, newIndex));
     }
   };
 
   return (
     <div className="space-y-4">
-      {/* Табы без перетаскивания */}
+      {/* Табы: активный - с текстом, остальные - только иконки */}
       <div className="flex flex-wrap gap-1.5 pb-3 border-b border-border">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
-              activeTab === tab.id
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {tabs.map((tab) => {
+          const Icon = TAB_ICONS[tab.id];
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-sm min-w-0'
+                  : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground w-10 h-10 justify-center p-0'
+              )}
+              title={!isActive ? tab.label : undefined}
+            >
+              <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+              {isActive && <span className="truncate">{tab.label}</span>}
+            </button>
+          );
+        })}
       </div>
 
       {/* Компактный заголовок и контент */}
@@ -188,12 +212,12 @@ const CardViewSettings: React.FC = () => {
 
         <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext
-            items={currentFields.map((f) => f.id)}
+            items={currentFields.map((f: FieldConfig) => f.id)}
             strategy={verticalListSortingStrategy}
           >
             <div className="w-full">
-              {currentFields.map((field) => {
-                const def = CARD_FIELDS[activeTab]?.find((d) => d.id === field.id);
+              {currentFields.map((field: FieldConfig) => {
+                const def = CARD_FIELDS[activeTab]?.find((d: FieldDefinition) => d.id === field.id);
                 if (!def) return null;
 
                 return (

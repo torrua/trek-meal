@@ -3,11 +3,9 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import {
-  CirclePlus,
   Utensils,
   Edit,
   Trash2,
-  Repeat,
   Copy,
   Share,
   X,
@@ -16,50 +14,65 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
-  Info,
 } from 'lucide-react';
 import useMealTypesStore from '../stores/useMealTypesStore';
 import { exportBulkMealTypesToJson, importDataFromJson } from '../utils/backup';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
+import Modal from '../ui/Modal';
 import EntityCard, { MenuItem } from '../ui/EntityCard';
-import DetailPane from '../ui/DetailPane'; // Импортируем DetailPane
 import { useViewMode } from '../hooks/useViewMode';
-
+import CreateMealTypeButton from '../components/meal-types/CreateMealTypeButton';
+import MealTypeForm from '../components/meal-types/MealTypeForm';
+import MealTypeDetail from '../components/meal-types/MealTypeDetail';
 import type { MealType } from '../types';
 
 const MealTypesPage: React.FC = () => {
-  const { mealTypes, deleteMealType } = useMealTypesStore();
+  const { mealTypes, deleteMealType, updateMealType, addMealType } = useMealTypesStore();
   const { viewMode, toggleViewMode } = useViewMode('meal-types');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [showForm, setShowForm] = useState(false);
   const [typeToDelete, setTypeToDelete] = useState<{
     id: number;
     name: string;
-    repeatable?: boolean;
   } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [isDetailEditing, setIsDetailEditing] = useState(false);
+  const [detailEditTrigger, setDetailEditTrigger] = useState(0);
+  const [editSubmitTrigger, setEditSubmitTrigger] = useState(0);
+  const [editCancelTrigger, setEditCancelTrigger] = useState(0);
 
   // Multi-selection state
   const [selectedMealTypeIds, setSelectedMealTypeIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
 
   // Detail Pane state
-  const [openSections, setOpenSections] = useState<string[]>(['info']);
+  const [openSections, setOpenSections] = useState<string[]>(['basic-info']);
 
   const sortedMealTypes = useMemo(() => {
-    return [...mealTypes].sort((a, b) => a.name.localeCompare(b.name));
+    try {
+      return [...mealTypes].sort((a, b) => a.name.localeCompare(b.name));
+    } catch (error) {
+      console.error('Error sorting meal types:', error);
+      return [];
+    }
   }, [mealTypes]);
 
-  const selectedMealType = useMemo(
-    () => mealTypes.find((mt) => mt.id === activeId) || null,
-    [activeId, mealTypes]
-  );
+  const selectedMealType = useMemo(() => {
+    try {
+      return mealTypes.find((mt) => mt.id === activeId) || null;
+    } catch (error) {
+      console.error('Error finding meal type:', error);
+      return null;
+    }
+  }, [mealTypes, activeId]);
+
+  const editingMealType = isCreatingNew ? null : selectedMealType;
 
   // Handlers
-  const handleToggleSection = (id: string) => {
-    setOpenSections((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  };
 
   const handleDeleteRequest = useCallback((mealType: MealType) => {
     setTypeToDelete(mealType);
@@ -71,6 +84,63 @@ const MealTypesPage: React.FC = () => {
       deleteMealType(typeToDelete.id);
       setTypeToDelete(null);
     }
+  };
+
+  // Form handlers
+  const handleFormSubmit = async (data: { name: string; description?: string }) => {
+    try {
+      setIsSubmitting(true);
+
+      if (editingMealType) {
+        updateMealType(editingMealType.id, data.name);
+        toast.success('Тип приёма пищи обновлён');
+        setEditSubmitTrigger((t) => t + 1);
+      } else {
+        addMealType(data.name);
+        toast.success('Тип приёма пищи создан');
+      }
+
+      setShowForm(false);
+      setIsCreatingNew(false);
+      setIsDetailEditing(false);
+    } catch (error) {
+      console.error('Error saving meal type:', error);
+      toast.error('Ошибка при сохранении типа приёма пищи');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setIsCreatingNew(false);
+    setIsDetailEditing(false);
+    setActiveId(null);
+    setEditCancelTrigger((t) => t + 1);
+  };
+
+  const handleCreateNew = () => {
+    try {
+      setIsDetailEditing(false);
+      setIsCreatingNew(true);
+      setShowForm(false);
+      setActiveId(null);
+      setOpenSections(['basic-info']);
+
+      const newTrigger = detailEditTrigger + 1;
+      setIsDetailEditing(true);
+      setDetailEditTrigger(newTrigger);
+    } catch (error) {
+      console.error('Error in handleCreateNew:', error);
+      toast.error('Ошибка при создании типа приёма пищи');
+    }
+  };
+
+  const handleEdit = (mealType: MealType) => {
+    setActiveId(mealType.id);
+    setIsDetailEditing(true);
+    setOpenSections((prev) => (prev.includes('basic-info') ? prev : [...prev, 'basic-info']));
+    setDetailEditTrigger((t) => t + 1);
   };
 
   const toggleMultiSelect = () => {
@@ -122,8 +192,7 @@ const MealTypesPage: React.FC = () => {
   };
 
   const handleClone = useCallback((mealType: MealType) => {
-    const { cloneMealType } = useMealTypesStore.getState();
-    cloneMealType(mealType.id);
+    useMealTypesStore.getState().cloneMealType(mealType.id);
   }, []);
 
   const handleExport = useCallback((mealType: MealType) => {
@@ -199,14 +268,10 @@ const MealTypesPage: React.FC = () => {
                 >
                   <Check className="w-4 h-4" />
                 </Button>
-                <Button
-                  onClick={() => (window.location.href = '/meal-types/new')}
-                  variant="primary"
-                  size="default"
-                >
-                  <CirclePlus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Добавить тип</span>
-                </Button>
+                <CreateMealTypeButton
+                  onClick={handleCreateNew}
+                  disabled={isDetailEditing || isCreatingNew}
+                />
               </>
             ) : (
               <div className="flex items-center gap-2">
@@ -273,7 +338,7 @@ const MealTypesPage: React.FC = () => {
                 {
                   label: 'Редактировать',
                   icon: Edit,
-                  onClick: () => (window.location.href = `/meal-types/${mealType.id}`),
+                  onClick: () => handleEdit(mealType),
                 },
                 {
                   label: 'Клонировать',
@@ -301,9 +366,9 @@ const MealTypesPage: React.FC = () => {
                   iconColor="text-primary"
                   details={[
                     {
-                      key: 'repeatable',
-                      icon: Repeat,
-                      text: mealType.repeatable ? 'Повторяемый' : 'Один раз в день',
+                      key: 'usage',
+                      icon: Utensils,
+                      text: 'Многократный',
                     },
                   ]}
                   isSelected={activeId === mealType.id}
@@ -322,62 +387,88 @@ const MealTypesPage: React.FC = () => {
 
           {/* Detail panel (Right Column) */}
           <div className="lg:col-span-2">
-            {selectedMealType ? (
-              <div className="h-full pl-1">
-                <DetailPane
-                  openSections={openSections}
-                  onToggleSection={handleToggleSection}
-                  sections={[
-                    {
-                      id: 'info',
-                      title: 'Параметры',
-                      icon: Info,
-                      content: (
-                        <div className="space-y-4">
-                          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
-                            <div className="flex items-start gap-3">
-                              <div className="p-2 bg-background rounded-lg border border-border text-muted-foreground">
-                                <Repeat className="w-5 h-5" />
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-medium text-foreground">
-                                  Режим повторения
-                                </h4>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {selectedMealType.repeatable
-                                    ? 'Этот тип можно добавлять несколько раз в один день (например, Перекус).'
-                                    : 'Этот тип обычно используется один раз в день (например, Обед).'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ),
-                    },
-                  ]}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0 text-primary border border-primary/20">
-                        <Utensils className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-foreground">
-                          {selectedMealType.name}
-                        </h2>
-                        <p className="text-muted-foreground">Шаблон приёма пищи</p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      onClick={() => (window.location.href = `/meal-types/${selectedMealType.id}`)}
-                    >
-                      <Edit className="w-4 h-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Изменить</span>
-                    </Button>
+            {isCreatingNew ? (
+              <MealTypeDetail
+                mealType={null}
+                onEdit={() => {
+                  // Ничего не делаем - для нового типа редактирование не применимо
+                }}
+                editTrigger={detailEditTrigger}
+                openSections={openSections}
+                onToggleSection={(id) =>
+                  setOpenSections((prev) =>
+                    prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+                  )
+                }
+                onStartEdit={() => setIsDetailEditing(true)}
+                onFinishEdit={() => {
+                  setIsDetailEditing(false);
+                  setIsCreatingNew(false);
+                }}
+                editSubmitTrigger={editSubmitTrigger}
+                editCancelTrigger={editCancelTrigger}
+              />
+            ) : selectedMealType ? (
+              <MealTypeDetail
+                mealType={selectedMealType}
+                onEdit={() => setIsDetailEditing(true)}
+                editTrigger={detailEditTrigger}
+                openSections={openSections}
+                onToggleSection={(id) =>
+                  setOpenSections((prev) =>
+                    prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+                  )
+                }
+                onStartEdit={() => setIsDetailEditing(true)}
+                onFinishEdit={() => setIsDetailEditing(false)}
+                editSubmitTrigger={editSubmitTrigger}
+                editCancelTrigger={editCancelTrigger}
+              />
+            ) : (
+              <div className="h-full flex items-start justify-center pt-16">
+                <div className="text-center p-4">
+                  <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Utensils className="w-10 h-10 text-muted-foreground" />
                   </div>
-                </DetailPane>
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    Выберите тип приёма пищи
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Выберите тип из списка, чтобы увидеть подробную информацию
+                  </p>
+                </div>
               </div>
+            )}
+          </div>
+        </div>
+      ) : isCreatingNew ? (
+        // Показываем форму создания даже если нет типов
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+          <div className="lg:col-span-1 space-y-3">{/* Пустой левый блок */}</div>
+
+          {/* Detail panel (Right Column) */}
+          <div className="lg:col-span-2">
+            {isCreatingNew ? (
+              <MealTypeDetail
+                mealType={null}
+                onEdit={() => {
+                  // Ничего не делаем - для нового типа редактирование не применимо
+                }}
+                editTrigger={detailEditTrigger}
+                openSections={openSections}
+                onToggleSection={(id) =>
+                  setOpenSections((prev) =>
+                    prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+                  )
+                }
+                onStartEdit={() => setIsDetailEditing(true)}
+                onFinishEdit={() => {
+                  setIsDetailEditing(false);
+                  setIsCreatingNew(false);
+                }}
+                editSubmitTrigger={editSubmitTrigger}
+                editCancelTrigger={editCancelTrigger}
+              />
             ) : (
               <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">
@@ -399,12 +490,23 @@ const MealTypesPage: React.FC = () => {
         <div className="text-center py-16 px-6 text-muted-foreground">
           <Utensils className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-medium text-foreground">Типов пока нет</h3>
-          <Button onClick={() => (window.location.href = '/meal-types/new')} className="mt-4">
-            <CirclePlus className="w-4 h-4 mr-2" />
-            Добавить первый тип
-          </Button>
+          <CreateMealTypeButton onClick={handleCreateNew} variant="primary" showText={true} />
         </div>
       )}
+
+      {/* Form Modal */}
+      <Modal
+        isOpen={showForm}
+        onClose={handleFormCancel}
+        title={editingMealType ? 'Редактировать тип приёма пищи' : 'Новый тип приёма пищи'}
+      >
+        <MealTypeForm
+          mealType={editingMealType}
+          onSubmit={handleFormSubmit}
+          onCancel={handleFormCancel}
+          isSubmitting={isSubmitting}
+        />
+      </Modal>
 
       {/* Delete confirmation */}
       <ConfirmModal

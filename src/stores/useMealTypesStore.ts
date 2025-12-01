@@ -4,17 +4,12 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import useTripStore from './useTripStore';
-import type { MealType as BaseMealType } from '../types';
-
-export interface MealType extends BaseMealType {
-  // Keep the existing properties and add repeatable
-  repeatable?: boolean;
-}
+import type { MealType } from '../types';
 
 interface MealTypesState {
   mealTypes: MealType[];
-  addMealType: (name: string, repeatable?: boolean) => void;
-  updateMealType: (id: number, name: string, repeatable?: boolean) => void;
+  addMealType: (name: string) => void;
+  updateMealType: (id: number, name: string) => void;
   deleteMealType: (id: number) => void;
   cloneMealType: (id: number) => void;
   setMealTypes: (mealTypes: MealType[]) => void;
@@ -27,24 +22,21 @@ const useMealTypesStore = create<MealTypesState>()(
         {
           id: 1,
           name: 'Завтрак',
-          repeatable: false,
           defaultValues: { name: 'Завтрак', items: [] },
         },
         {
           id: 2,
           name: 'Обед',
-          repeatable: false,
           defaultValues: { name: 'Обед', items: [] },
         },
         {
           id: 3,
           name: 'Ужин',
-          repeatable: false,
           defaultValues: { name: 'Ужин', items: [] },
         },
       ],
 
-      addMealType: (name, repeatable = false) => {
+      addMealType: (name) => {
         const trimmedName = name.trim();
         if (!trimmedName) {
           toast.error('Название не может быть пустым.');
@@ -57,14 +49,13 @@ const useMealTypesStore = create<MealTypesState>()(
         const newMealType: MealType = {
           id: Date.now(),
           name: trimmedName,
-          repeatable,
           defaultValues: { name: trimmedName, items: [] },
         };
         set((state) => ({ mealTypes: [...state.mealTypes, newMealType] }));
         toast.success(`"${trimmedName}" добавлен.`);
       },
 
-      updateMealType: (id, name, repeatable = false) => {
+      updateMealType: (id, name) => {
         const trimmedName = name.trim();
         if (!trimmedName) {
           toast.error('Название не может быть пустым.');
@@ -72,7 +63,7 @@ const useMealTypesStore = create<MealTypesState>()(
         }
         set((state) => ({
           mealTypes: state.mealTypes.map((mt) =>
-            mt.id === id ? { ...mt, name: trimmedName, repeatable } : mt
+            mt.id === id ? { ...mt, name: trimmedName } : mt
           ),
         }));
         toast.success('Название обновлено.');

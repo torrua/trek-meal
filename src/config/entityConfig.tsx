@@ -90,36 +90,49 @@ type EquipmentCategoryActions = {
   onDelete: (e: EquipmentCategory) => void;
 };
 
-interface CustomMealType extends MealType {
-  repeatable?: boolean;
-}
 type MealTypeActions = {
-  onEdit: (e: CustomMealType) => void;
-  onClone: (e: CustomMealType) => void;
-  onExport: (e: CustomMealType) => void;
-  onDelete: (e: CustomMealType) => void;
+  onEdit: (e: MealType) => void;
+  onClone: (e: MealType) => void;
+  onExport: (e: MealType) => void;
+  onDelete: (e: MealType) => void;
 };
+
+interface CardDetail {
+  key: string;
+  icon: React.ElementType;
+  text: string | number;
+  title?: string;
+  className?: string;
+}
 
 interface CardViewConfig<T> {
   title: (entity: T) => string;
-  subtitle?: (entity: T, context?: Record<string, unknown>) => string | React.ReactNode;
-  details: (
-    entity: T,
-    context?: Record<string, unknown>
-  ) => Array<{
-    key: string;
-    icon: React.ElementType;
-    text: string | number;
-    title?: string;
-    className?: string;
-  }>;
+  details?: (entity: T) => CardDetail[];
+  listItem?: { title: (entity: T) => string };
 }
 
 interface ListItemViewConfig<T> {
   title: (entity: T, context?: Record<string, unknown>) => string;
   details?: (entity: T, context?: Record<string, unknown>) => (string | React.ReactNode)[];
-  actions?: (handlers: Record<string, (entity: T) => void>) => any[];
+  actions?: (handlers: ActionHandler<T>) => MenuItem[];
 }
+
+interface MenuItem {
+  label: string;
+  icon: React.ElementType;
+  onClick: (...args: any[]) => void;
+  className?: string;
+}
+
+type ActionHandler<T> =
+  | Record<string, (entity: T) => void>
+  | {
+      onEdit?: (entity: T) => void;
+      onClone?: (entity: T) => void;
+      onExport?: (entity: T) => void;
+      onDelete?: (entity: T) => void;
+      onAddToTrip?: (entity: T) => void;
+    };
 
 interface EntityConfig<T> {
   getIcon: (entity: T, context?: Record<string, unknown>) => React.ElementType;
@@ -129,7 +142,7 @@ interface EntityConfig<T> {
     card: CardViewConfig<T>;
     listItem: ListItemViewConfig<T>;
   };
-  getActions: (handlers: any) => any[];
+  getActions: (handlers: ActionHandler<T>) => MenuItem[];
 }
 
 // --- TRIP ---
@@ -339,20 +352,14 @@ export const categoryEntityConfig: EntityConfig<Category> = {
 };
 
 // --- MEAL TYPE ---
-export const mealTypeEntityConfig: EntityConfig<CustomMealType> = {
+export const mealTypeEntityConfig: EntityConfig<MealType> = {
   getIcon: () => Utensils,
   getIconColor: () => 'text-gray-500',
   getBorderColor: () => '#6b7280',
   views: {
     card: {
       title: (mt) => mt.name,
-      details: (mt) => [
-        {
-          key: 'repeatable',
-          icon: mt.repeatable ? Copy : Tag,
-          text: mt.repeatable ? 'Повторяемый' : '1 раз/день',
-        },
-      ],
+      details: () => [],
     },
     listItem: { title: (mt) => mt.name },
   },

@@ -58,19 +58,18 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
     'group flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-200',
     gradientByVariant[variant],
     {
-      // Стандартная обводка
-      'border-border': !isSelected,
+      // Стандартная обводка, если не выбрано ИЛИ если это выбранная meal
+      'border-border': !isSelected || (isSelected && variant === 'meal'),
 
-      // Тень только для meal
-      'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]': variant === 'meal',
+      // Тень только для выделенных элементов
+      'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]': isSelected,
 
       // ВЫДЕЛЕНИЕ:
-      // 1. Meal - зеленая тема
-      'border-[#22c55e] bg-[#22c55e]/5': isSelected && variant === 'meal',
-      // 2. Остальные - стандартная синяя тема
+      // 1. Если это Meal - стандартная обводка + градиентный фон
+      // 2. Если это другое (продукт, блюдо) - стандартная (синяя) обводка и фон
       'border-primary/50 bg-primary/5 ring-1 ring-primary/20': isSelected && variant !== 'meal',
 
-      'hover:bg-card-hover hover:border-border-hover hover:shadow-sm': !isSelected,
+      'hover:bg-card-hover hover:border-border-hover': !isSelected,
       'cursor-pointer': !!onSelect,
     }
   );

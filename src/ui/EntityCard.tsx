@@ -165,8 +165,8 @@ const EntityCard: React.FC<EntityCardProps> = ({
       'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]': variant === 'meal',
 
       // ВЫДЕЛЕНИЕ:
-      // 1. Если это Meal - зеленая обводка и фон
-      'border border-[#22c55e] bg-[#22c55e]/5': isSelected && variant === 'meal',
+      // 1. Если это Meal - стандартная обводка + темный фон
+      'border border-border bg-[#22c55e]/20': isSelected && variant === 'meal',
       // 2. Если это другое (продукт, блюдо) - стандартная (синяя) обводка и фон
       'border border-primary/50 bg-primary/5': isSelected && variant !== 'meal',
 
@@ -245,7 +245,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
                     e.preventDefault();
                     e.stopPropagation();
                   }}
-                  className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100 lg:opacity-0 focus:opacity-100"
+                  className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground/70 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                   aria-label="Меню действий"
                 >
                   <MoreHorizontal className="h-4 w-4" />
@@ -289,46 +289,46 @@ const EntityCard: React.FC<EntityCardProps> = ({
           <div ref={nutritionRef} className={cn('cq-nutrition text-xs', showBju && 'show-bju')}>
             {typeof nutrition.itemsCount === 'number' && (
               <div className="flex items-center gap-1">
-                <Hash className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                 <span className="font-medium text-muted-foreground">{nutrition.itemsCount}</span>
+                <Hash className="w-3 h-3 text-muted-foreground flex-shrink-0" />
               </div>
             )}
 
             <div className="flex items-center gap-1">
-              <Flame className="w-3 h-3 text-orange-500 flex-shrink-0" />
               <span className="font-semibold text-orange-600/90">
                 {Math.round(nutrition.calories)}
               </span>
+              <Flame className="w-3 h-3 text-orange-500 flex-shrink-0" />
             </div>
 
             <div className="bju items-center gap-1">
-              <Beef className="w-3 h-3 text-blue-500 flex-shrink-0" />
               <span className="font-medium text-blue-600/90">
                 {Math.round(nutrition.proteins * 10) / 10}
               </span>
+              <Beef className="w-3 h-3 text-blue-500 flex-shrink-0" />
             </div>
 
             <div className="bju items-center gap-1">
-              <Droplet className="w-3 h-3 text-yellow-500 flex-shrink-0" />
               <span className="font-medium text-yellow-600/90">
                 {Math.round(nutrition.fats * 10) / 10}
               </span>
+              <Droplet className="w-3 h-3 text-yellow-500 flex-shrink-0" />
             </div>
 
             <div className="bju items-center gap-1">
-              <Wheat className="w-3 h-3 text-green-500 flex-shrink-0" />
               <span className="font-medium text-green-600/90">
                 {Math.round(nutrition.carbs * 10) / 10}
               </span>
+              <Wheat className="w-3 h-3 text-green-500 flex-shrink-0" />
             </div>
 
             {/* 1. Если передан вес (Блюда, Приемы пищи) */}
             {typeof nutrition.weight === 'number' && (
               <div className="flex items-center gap-1 ml-auto" title="Общий вес">
-                <Weight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                 <span className="font-medium text-muted-foreground">
                   {Math.round(nutrition.weight)}
                 </span>
+                <Weight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
               </div>
             )}
 
@@ -336,10 +336,10 @@ const EntityCard: React.FC<EntityCardProps> = ({
             {typeof nutrition.weight === 'undefined' &&
               typeof nutrition.portionCount === 'number' && (
                 <div className="flex items-center gap-1 ml-auto" title="Вариантов порций">
-                  <PieChart className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                   <span className="font-medium text-muted-foreground">
                     {nutrition.portionCount}
                   </span>
+                  <PieChart className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                 </div>
               )}
           </div>

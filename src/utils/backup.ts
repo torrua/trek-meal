@@ -9,6 +9,7 @@ import useCategoryStore from '../stores/useCategoryStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useMealTypesStore from '../stores/useMealTypesStore';
+import useMealStore from '../stores/useMealStore';
 import type {
   Participant,
   Trip,
@@ -18,6 +19,7 @@ import type {
   EquipmentCategory,
   MealType,
   Category,
+  Meal,
 } from '../types';
 
 interface BackupMetadata {
@@ -34,6 +36,7 @@ interface BackupMetadata {
     equipment: number;
     equipmentCategories: number;
     mealTypes: number;
+    meals: number;
   };
 }
 
@@ -52,6 +55,7 @@ export const exportDataToJson = () => {
     const equipment = useEquipmentStore.getState().equipment;
     const equipmentCategories = useEquipmentCategoryStore.getState().categories;
     const mealTypes = useMealTypesStore.getState().mealTypes;
+    const meals = useMealStore.getState().meals;
     const theme = 'light';
 
     // Создаем метаданные для резервной копии
@@ -63,7 +67,8 @@ export const exportDataToJson = () => {
       categories.length +
       equipment.length +
       equipmentCategories.length +
-      mealTypes.length;
+      mealTypes.length +
+      meals.length;
 
     const metadata: BackupMetadata = {
       version: '2.0.0',
@@ -79,6 +84,7 @@ export const exportDataToJson = () => {
         equipment: equipment.length,
         equipmentCategories: equipmentCategories.length,
         mealTypes: mealTypes.length,
+        meals: meals.length,
       },
     };
 
@@ -94,6 +100,7 @@ export const exportDataToJson = () => {
         equipment,
         equipmentCategories,
         mealTypes,
+        meals,
         settings: {
           theme,
         },
@@ -192,6 +199,9 @@ export const importDataFromJson = (file: File) => {
         if (Array.isArray(importData.mealTypes)) {
           useMealTypesStore.setState({ mealTypes: importData.mealTypes });
         }
+        if (Array.isArray(importData.meals)) {
+          useMealStore.setState({ meals: importData.meals });
+        }
         // Theme import ignored in light-only mode
       }
 
@@ -203,7 +213,8 @@ export const importDataFromJson = (file: File) => {
         (importData.categories?.length || 0) +
         (importData.equipment?.length || 0) +
         (importData.equipmentCategories?.length || 0) +
-        (importData.mealTypes?.length || 0);
+        (importData.mealTypes?.length || 0) +
+        (importData.meals?.length || 0);
 
       toast.success(
         `Данные успешно импортированы! (${recordCount} записей) Страница будет перезагружена.`,
@@ -642,6 +653,58 @@ export const exportBulkMealTypesToJson = (mealTypes: MealType[]) => {
     toast.success(`Экспортировано ${mealTypes.length} типов приёмов пищи!`);
   } catch (error) {
     console.error('Ошибка при экспорте типов приёмов пищи:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует данные одного приёма пищи в JSON файл.
+ * @param meal - Объект приёма пищи для экспорта.
+ */
+export const exportMealToJson = (meal: Meal) => {
+  try {
+    const jsonString = JSON.stringify(meal, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = meal.name.replace(/\s+/g, '-').toLowerCase();
+    a.download = `meal-${safeName}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Данные приёма пищи "${meal.name}" экспортированы!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте данных приёма пищи:', error);
+    toast.error('Произошла ошибка при экспорте.');
+  }
+};
+
+/**
+ * Экспортирует выбранные приёмы пищи в JSON файл.
+ * @param meals - Массив приёмов пищи для экспорта.
+ */
+export const exportBulkMealsToJson = (meals: Meal[]) => {
+  try {
+    const jsonString = JSON.stringify(meals, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.download = `meals-bulk-export-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Экспортировано ${meals.length} приёмов пищи!`);
+  } catch (error) {
+    console.error('Ошибка при экспорте приёмов пищи:', error);
     toast.error('Произошла ошибка при экспорте.');
   }
 };

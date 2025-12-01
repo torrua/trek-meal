@@ -95,9 +95,6 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           <div className="flex items-center gap-2 min-w-[200px] justify-end">
             {actionButton}
             {headerContent}
-            <ChevronDown
-              className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-            />
           </div>
         </div>
         {isOpen && <div className="p-6 pt-0">{children}</div>}
@@ -471,7 +468,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Название приёма пищи
                 </label>
-                <div className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground">
+                <div className="w-full px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground">
                   {meal.name}
                 </div>
               </div>
@@ -481,7 +478,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Краткое описание
                   </label>
-                  <div className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap">
+                  <div className="w-full px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap">
                     {meal.description}
                   </div>
                 </div>

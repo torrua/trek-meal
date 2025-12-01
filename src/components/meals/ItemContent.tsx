@@ -51,13 +51,44 @@ const ItemContent: React.FC<ItemContentProps> = ({
 }) => {
   const svgCompatibleListeners = dragHandleProps?.listeners
     ? {
-        onMouseDown: dragHandleProps.listeners.onMouseDown,
-        onTouchStart: dragHandleProps.listeners.onTouchStart,
-        onTouchEnd: dragHandleProps.listeners.onTouchEnd,
+        onPointerDown: (e: React.PointerEvent<SVGSVGElement>) => {
+          setIsDragging(true);
+          (
+            dragHandleProps.listeners.onPointerDown as unknown as (
+              e: React.PointerEvent<SVGSVGElement>
+            ) => void
+          )?.(e);
+        },
+        onTouchStart: (e: React.TouchEvent<SVGSVGElement>) => {
+          setIsDragging(true);
+          (
+            dragHandleProps.listeners.onTouchStart as unknown as (
+              e: React.TouchEvent<SVGSVGElement>
+            ) => void
+          )?.(e);
+        },
+        onTouchEnd: (e: React.TouchEvent<SVGSVGElement>) => {
+          setIsDragging(false);
+          (
+            dragHandleProps.listeners.onTouchEnd as unknown as (
+              e: React.TouchEvent<SVGSVGElement>
+            ) => void
+          )?.(e);
+        },
       }
     : {};
 
-  const uniqueKey = (item as any).instanceId || `${item.type}-${item.itemId}`;
+  const svgCompatibleAttributes = dragHandleProps?.attributes
+    ? Object.fromEntries(
+        Object.entries(dragHandleProps.attributes).filter(
+          ([key]) =>
+            !key.startsWith('on') || ['onPointerDown', 'onTouchStart', 'onTouchEnd'].includes(key)
+        )
+      )
+    : {};
+
+  const uniqueKey =
+    (item as MealPlanItem & { instanceId?: string }).instanceId || `${item.type}-${item.itemId}`;
 
   // --- СОСТОЯНИЯ ---
   const [showProductPortion, setShowProductPortion] = useState(() => {
@@ -160,10 +191,24 @@ const ItemContent: React.FC<ItemContentProps> = ({
       }
     };
 
+    // Сброс состояния перетаскивания при mouse up
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
     if (showPortionDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+
+    // Всегда слушаем mouseUp для сброса состояния перетаскивания
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchend', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchend', handleMouseUp);
+    };
   }, [showPortionDropdown]);
 
   const dishDetails = useMemo(() => {
@@ -240,8 +285,19 @@ const ItemContent: React.FC<ItemContentProps> = ({
     (isDish && dishDetails && dishDetails.length > 0) ||
     (isProduct && portions && portions.length > 0);
 
+  const [isDragging, setIsDragging] = useState(false);
+
   // Общий обработчик клика по строке заголовка
-  const handleHeaderClick = (e: React.MouseEvent) => {
+  const handleHeaderClick = (_e: React.MouseEvent) => {
+    // Не обрабатываем клик во время перетаскивания
+    if (isDragging) return;
+
+    // Также не обрабатываем клик, если он был на drag handle
+    const target = _e.target as HTMLElement;
+    if (target.closest('[role="button"]')) {
+      return;
+    }
+
     // ВАЖНО: Мы не вызываем stopPropagation здесь, чтобы событие могло всплыть,
     // если это нужно для DND, но обычно DND работает через listeners на иконке.
 
@@ -268,7 +324,9 @@ const ItemContent: React.FC<ItemContentProps> = ({
               className="w-4 h-4 text-blue-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
               role="button"
               tabIndex={0}
+              aria-label="Перетащить продукт"
               {...svgCompatibleListeners}
+              {...svgCompatibleAttributes}
               // Убираем onClick с иконки, так как клик теперь на родителе
             />
           ) : (
@@ -276,7 +334,9 @@ const ItemContent: React.FC<ItemContentProps> = ({
               className="w-4 h-4 text-orange-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
               role="button"
               tabIndex={0}
+              aria-label="Перетащить блюдо"
               {...svgCompatibleListeners}
+              {...svgCompatibleAttributes}
             />
           )}
           <h4 className="font-medium text-foreground truncate">{selectedItem?.name}</h4>
@@ -295,7 +355,6 @@ const ItemContent: React.FC<ItemContentProps> = ({
               <>
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
                 <div className="flex items-center gap-1">
-                  <Flame className="w-4 h-4 text-orange-600" />
                   <span className="text-sm font-semibold text-orange-600">
                     {nutrition
                       ? nutrition.calories
@@ -303,10 +362,10 @@ const ItemContent: React.FC<ItemContentProps> = ({
                         ? Math.round((selectedItem as Product).calories * (displayWeight / 100))
                         : 0}
                   </span>
+                  <Flame className="w-4 h-4 text-orange-600" />
                 </div>
                 <div className="w-px h-4 bg-border" />
                 <div className="flex items-center gap-1">
-                  <Beef className="w-4 h-4 text-blue-600" />
                   <span className="text-sm font-semibold text-blue-600">
                     {nutrition
                       ? nutrition.proteins
@@ -316,9 +375,9 @@ const ItemContent: React.FC<ItemContentProps> = ({
                           ) / 10
                         : 0}
                   </span>
+                  <Beef className="w-4 h-4 text-blue-600" />
                 </div>
                 <div className="flex items-center gap-1">
-                  <Droplet className="w-4 h-4 text-yellow-600" />
                   <span className="text-sm font-semibold text-yellow-600">
                     {nutrition
                       ? nutrition.fats
@@ -327,9 +386,9 @@ const ItemContent: React.FC<ItemContentProps> = ({
                           10
                         : 0}
                   </span>
+                  <Droplet className="w-4 h-4 text-yellow-600" />
                 </div>
                 <div className="flex items-center gap-1">
-                  <Wheat className="w-4 h-4 text-green-600" />
                   <span className="text-sm font-semibold text-green-600">
                     {nutrition
                       ? nutrition.carbs
@@ -338,23 +397,24 @@ const ItemContent: React.FC<ItemContentProps> = ({
                           10
                         : 0}
                   </span>
+                  <Wheat className="w-4 h-4 text-green-600" />
                 </div>
                 <div className="w-px h-4 bg-border" />
                 <div className="flex items-center gap-1">
-                  <Weight className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm font-semibold text-muted-foreground">
                     {displayWeight}
                   </span>
+                  <Weight className="w-4 h-4 text-muted-foreground" />
                 </div>
               </>
             ) : (
               <>
                 <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
                 <div className="flex items-center gap-1">
-                  <Weight className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm font-semibold text-muted-foreground">
                     {displayWeight}
                   </span>
+                  <Weight className="w-4 h-4 text-muted-foreground" />
                 </div>
               </>
             )}
@@ -438,8 +498,8 @@ const ItemContent: React.FC<ItemContentProps> = ({
               )}
 
               <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-                <Weight className="w-3.5 h-3.5" />
                 {item.weight}
+                <Weight className="w-3.5 h-3.5" />
               </span>
             </div>
 
@@ -478,8 +538,8 @@ const ItemContent: React.FC<ItemContentProps> = ({
                         </span>
                       </span>
                       <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-                        <Weight className="w-3.5 h-3.5" />
                         {portion.weight}
+                        <Weight className="w-3.5 h-3.5" />
                       </span>
                     </button>
                   );
@@ -508,8 +568,8 @@ const ItemContent: React.FC<ItemContentProps> = ({
                   </span>
                 </span>
                 <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-                  <Weight className="w-3.5 h-3.5" />
                   {ingredient.weight}
+                  <Weight className="w-3.5 h-3.5" />
                 </span>
 
                 {/* Action buttons */}

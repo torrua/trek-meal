@@ -23,7 +23,7 @@ import useDishStore from '../stores/useDishStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useViewMode } from '../hooks/useViewMode';
-import type { Meal, MealData } from '../types';
+import type { Meal, MealData, ImportedJsonData } from '../types';
 import Button from '../ui/Button';
 import EntityCard from '../ui/EntityCard';
 import EntityListItem, { MetaItem } from '../ui/EntityListItem';
@@ -35,6 +35,8 @@ import MealForm from '../components/meals/MealForm';
 import MealDetail from '../components/meals/MealDetail';
 import CreateMealButton from '../components/meals/CreateMealButton';
 import { generateUniqueMealName } from '../components/meals/mealFormUtils';
+import { exportBulkMealsToJson } from '../utils/backup';
+import ImportMealsModal from '../components/meals/ImportMealsModal';
 
 const MealsPage: React.FC = () => {
   const { meals, addMeal, updateMeal, removeMeal, getNextMealId } = useMealStore();
@@ -52,6 +54,8 @@ const MealsPage: React.FC = () => {
   const [mealToDelete, setMealToDelete] = useState<Meal | null>(null);
   const [openSections, setOpenSections] = useState<string[]>(['basic-info', 'composition']);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFileContent, setImportFileContent] = useState<ImportedJsonData | null>(null);
 
   const [selectedMealIds, setSelectedMealIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
@@ -159,7 +163,33 @@ const MealsPage: React.FC = () => {
 
   const handleBulkExport = () => {
     if (selectedMealIds.length === 0) return;
-    console.log(`Exporting meals: ${selectedMealIds.join(', ')}`);
+    const selectedMeals = meals.filter((meal) => selectedMealIds.includes(meal.id));
+    exportBulkMealsToJson(selectedMeals);
+  };
+
+  const handleImportClick = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const jsonContent = event.target?.result as string;
+            const data = JSON.parse(jsonContent);
+            setImportFileContent(data);
+            setShowImportModal(true);
+          } catch (error) {
+            console.error('Error parsing JSON file:', error);
+            // Show error toast
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
   };
 
   return (
@@ -182,7 +212,13 @@ const MealsPage: React.FC = () => {
                   <Filter className="w-4 h-4" />
                 </Button>
 
-                <Button variant="secondary" size="icon" title="Импорт" aria-label="Импорт">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  title="Импорт"
+                  aria-label="Импорт"
+                  onClick={handleImportClick}
+                >
                   <Download className="w-4 h-4" />
                 </Button>
 
@@ -540,6 +576,15 @@ const MealsPage: React.FC = () => {
           </span>
         </p>
       </ConfirmModal>
+
+      <ImportMealsModal
+        isOpen={showImportModal}
+        onClose={() => {
+          setShowImportModal(false);
+          setImportFileContent(null);
+        }}
+        fileContent={importFileContent}
+      />
     </div>
   );
 };

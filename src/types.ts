@@ -134,6 +134,7 @@ export interface MealType {
 // --- НОВЫЙ ТИП: Для импортируемых файлов ---
 export interface ImportedJsonData {
   products: ProductData[];
+  meals?: MealData[];
   // Можно будет расширять другими ключами в будущем
 }
 

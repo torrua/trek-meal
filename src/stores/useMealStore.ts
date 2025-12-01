@@ -9,6 +9,7 @@ interface MealStore {
   meals: Meal[];
   nextId: number;
   addMeal: (mealData: MealData) => Meal;
+  addMultipleMeals: (mealsData: MealData[]) => void;
   updateMeal: (id: number, mealData: Partial<MealData>) => void;
   removeMeal: (id: number) => void;
   getMealById: (id: number) => Meal | undefined;
@@ -39,6 +40,35 @@ export const useMealStore = create<MealStore>()(
         }));
         toast.success(`Приём пищи "${newMeal.name}" создан`);
         return newMeal;
+      },
+      addMultipleMeals: (mealsData) => {
+        const existingMeals = get().meals;
+        const currentNextId = get().nextId;
+
+        // Filter out meals with duplicate names
+        const validMealsData = mealsData.filter((mealData) => {
+          if (!isMealNameUnique(mealData.name, existingMeals)) {
+            console.warn(`Приём пищи с названием "${mealData.name}" уже существует, пропускаем`);
+            return false;
+          }
+          return true;
+        });
+
+        // Create new meals with proper IDs
+        const newMeals: Meal[] = validMealsData.map((mealData, index) => ({
+          id: currentNextId + index,
+          ...mealData,
+        }));
+
+        if (newMeals.length > 0) {
+          set((state) => ({
+            meals: [...state.meals, ...newMeals],
+            nextId: state.nextId + newMeals.length,
+          }));
+          toast.success(`Импортировано ${newMeals.length} приёмов пищи`);
+        } else {
+          toast.error('Нет новых приёмов пищи для импорта');
+        }
       },
       updateMeal: (id, mealData) => {
         const existingMeals = get().meals;
@@ -79,3 +109,5 @@ export const useMealStore = create<MealStore>()(
     }
   )
 );
+
+export default useMealStore;

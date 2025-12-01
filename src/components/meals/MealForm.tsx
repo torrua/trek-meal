@@ -310,7 +310,7 @@ const MealForm: React.FC<MealFormProps> = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 3, // Уменьшаем расстояние для более легкого начала перетаскивания
       },
     })
   );
@@ -435,7 +435,7 @@ const MealForm: React.FC<MealFormProps> = ({
         </div>
       </div>
 
-      <div className="p-6 [background:var(--color-meal-composition-gradient)] border border-[#22c55e] shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] rounded-xl">
+      <div className="p-6 [background:var(--color-meal-composition-gradient)] border border-border shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] rounded-xl">
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
           <div className="flex items-center gap-3 flex-1">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
@@ -454,28 +454,27 @@ const MealForm: React.FC<MealFormProps> = ({
             <div className="flex items-center gap-3 px-3 h-9 bg-muted/50 rounded-md border border-border">
               <div className="flex items-center gap-2 text-sm">
                 <div className="flex items-center gap-1">
-                  <Flame className="w-4 h-4 text-orange-600" />
                   <span className="font-semibold text-orange-600">{totalNutrition.calories}</span>
+                  <Flame className="w-4 h-4 text-orange-600" />
                 </div>
                 <div className="w-px h-4 bg-border" />
                 <div className="flex items-center gap-1">
-                  <Beef className="w-4 h-4 text-blue-600" />
                   <span className="font-semibold text-blue-600">{totalNutrition.proteins}</span>
+                  <Beef className="w-4 h-4 text-blue-600" />
                 </div>
                 <div className="w-px h-4 bg-border" />
                 <div className="flex items-center gap-1">
-                  <Droplet className="w-4 h-4 text-yellow-600" />
                   <span className="font-semibold text-yellow-600">{totalNutrition.fats}</span>
+                  <Droplet className="w-4 h-4 text-yellow-600" />
                 </div>
                 <div className="w-px h-4 bg-border" />
                 <div className="flex items-center gap-1">
-                  <Wheat className="w-4 h-4 text-green-600" />
                   <span className="font-semibold text-green-600">{totalNutrition.carbs}</span>
+                  <Wheat className="w-4 h-4 text-green-600" />
                 </div>
               </div>
               <div className="w-px h-4 bg-border" />
               <div className="flex items-center gap-1">
-                <Weight className="w-4 h-4 text-muted-foreground" />
                 <span className="font-semibold text-muted-foreground text-sm">
                   {watchItems.reduce((total, item) => {
                     if (item.type === 'product') {
@@ -491,6 +490,7 @@ const MealForm: React.FC<MealFormProps> = ({
                     return total;
                   }, 0)}
                 </span>
+                <Weight className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
           )}
@@ -513,7 +513,9 @@ const MealForm: React.FC<MealFormProps> = ({
             <div
               ref={dropdownRef}
               className="fixed-dropdown-container bg-card border border-border rounded-lg shadow-2xl overflow-hidden"
-              // eslint-disable-next-line react/forbid-prop-types
+              // eslint-disable-next-line react/forbid-dom-props, react/forbid-prop-types
+              /* eslint-disable */
+              // Dynamic positioning styles - required for dropdown positioning
               style={{
                 top: `${dropdownPosition.top}px`,
                 left: `${dropdownPosition.left}px`,
@@ -536,64 +538,79 @@ const MealForm: React.FC<MealFormProps> = ({
                 tabIndex={0}
                 onTouchMove={(e) => {
                   e.stopPropagation();
+                  e.preventDefault();
+                  const scrollContainer = dropdownRef.current?.querySelector(
+                    '.absolute-dropdown-scrollbar'
+                  ) as HTMLElement;
+                  if (scrollContainer) {
+                    scrollContainer.scrollTop += e.deltaY;
+                  }
                 }}
               >
-                {filteredDishes.length === 0 && filteredProducts.length === 0 ? (
-                  <div className="px-3 py-8 text-center text-sm text-muted-foreground">
-                    Ничего не найдено
-                  </div>
-                ) : (
-                  <>
-                    {filteredDishes.length > 0 && (
-                      <div className="mb-2">
-                        <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
-                          <Soup className="w-3.5 h-3.5 text-orange-500" />
-                          Блюда ({filteredDishes.length})
-                        </div>
-                        {filteredDishes.map((dish) => (
-                          <button
-                            key={dish.id}
-                            type="button"
-                            onClick={() => handleAddItem(dish.id, 'dish')}
-                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
-                          >
+                <div
+                  className="p-2 absolute-dropdown-scrollbar"
+                  tabIndex={0}
+                  onTouchMove={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  {filteredDishes.length === 0 && filteredProducts.length === 0 ? (
+                    <div className="px-3 py-8 text-center text-sm text-muted-foreground">
+                      Ничего не найдено
+                    </div>
+                  ) : (
+                    <>
+                      {filteredDishes.length > 0 && (
+                        <div className="mb-2">
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
                             <Soup className="w-3.5 h-3.5 text-orange-500" />
-                            {dish.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {filteredProducts.length > 0 && (
-                      <div>
-                        <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
-                          <Component className="w-3.5 h-3.5 text-blue-500" />
-                          Продукты ({filteredProducts.length})
-                        </div>
-                        {filteredProducts.map((product) => {
-                          const category = product.categoryId
-                            ? categories.find((cat) => cat.id === product.categoryId)
-                            : null;
-                          return (
+                            Блюда ({filteredDishes.length})
+                          </div>
+                          {filteredDishes.map((dish) => (
                             <button
-                              key={product.id}
+                              key={dish.id}
                               type="button"
-                              onClick={() => handleAddItem(product.id, 'product')}
+                              onClick={() => handleAddItem(dish.id, 'dish')}
                               className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
                             >
-                              <Component className="w-3.5 h-3.5 text-blue-500" />
-                              <span className="flex-1">{product.name}</span>
-                              {category && (
-                                <span className="text-muted-foreground text-xs flex items-center gap-1">
-                                  {category.emoji} {category.name}
-                                </span>
-                              )}
+                              <Soup className="w-3.5 h-3.5 text-orange-500" />
+                              {dish.name}
                             </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
-                )}
+                          ))}
+                        </div>
+                      )}
+                      {filteredProducts.length > 0 && (
+                        <div>
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                            <Component className="w-3.5 h-3.5 text-blue-500" />
+                            Продукты ({filteredProducts.length})
+                          </div>
+                          {filteredProducts.map((product) => {
+                            const category = product.categoryId
+                              ? categories.find((cat) => cat.id === product.categoryId)
+                              : null;
+                            return (
+                              <button
+                                key={product.id}
+                                type="button"
+                                onClick={() => handleAddItem(product.id, 'product')}
+                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
+                              >
+                                <Component className="w-3.5 h-3.5 text-blue-500" />
+                                <span className="flex-1">{product.name}</span>
+                                {category && (
+                                  <span className="text-muted-foreground text-xs flex items-center gap-1">
+                                    {category.emoji} {category.name}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           )}

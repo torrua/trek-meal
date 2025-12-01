@@ -30,8 +30,8 @@ import cn from 'classnames';
 import { useSettingsStore, FieldConfig } from '../../stores/useSettingsStore';
 import { CARD_FIELDS, EntityType } from '../../config/cardFields';
 import Button from '../../ui/Button';
+import './CardViewSettings.css';
 
-// Маппинг ID поля к иконке
 const FIELD_ICONS: Record<string, React.ElementType> = {
   calories: Flame,
   proteins: Beef,
@@ -57,59 +57,67 @@ const SortableFieldItem = ({
   label: string;
   onToggle: () => void;
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: field.id,
   });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
 
   const Icon = FIELD_ICONS[field.id] || FIELD_ICONS.default;
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className="flex items-center justify-between p-3 bg-card border border-border rounded-lg mb-2 group hover:border-primary/40 transition-colors"
+      className={cn(
+        'flex items-center justify-between p-2 bg-card border border-border rounded-md mb-1.5 sortable-item',
+        'group hover:border-primary/40 hover:shadow-sm transition-all',
+        isDragging && 'shadow-lg ring-2 ring-primary/20 opacity-50'
+      )}
+      style={
+        {
+          '--transform': CSS.Transform.toString(transform),
+          '--transition': transition,
+        } as React.CSSProperties
+      }
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
         <button
           {...attributes}
           {...listeners}
-          className="p-1.5 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing touch-none"
+          className={cn(
+            'p-1 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing',
+            'touch-none flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity'
+          )}
           title="Перетащить"
         >
-          <GripVertical className="w-4 h-4" />
+          <GripVertical className="w-3.5 h-3.5" />
         </button>
 
-        <div className="flex items-center gap-2">
-          <div className={cn('p-1.5 rounded-md bg-muted/50', !field.visible && 'opacity-50')}>
-            <Icon className="w-4 h-4 text-muted-foreground" />
-          </div>
-          <span
-            className={cn(
-              'text-sm font-medium transition-colors',
-              !field.visible && 'text-muted-foreground line-through decoration-border'
-            )}
-          >
-            {label}
-          </span>
+        <div
+          className={cn('p-1 rounded bg-muted/50 flex-shrink-0', !field.visible && 'opacity-40')}
+        >
+          <Icon className="w-3.5 h-3.5 text-muted-foreground" />
         </div>
+
+        <span
+          className={cn(
+            'text-sm transition-colors truncate',
+            !field.visible && 'text-muted-foreground'
+          )}
+        >
+          {label}
+        </span>
       </div>
 
       <button
         onClick={onToggle}
         className={cn(
-          'p-2 rounded-md transition-colors',
+          'p-1.5 rounded transition-colors',
           field.visible
             ? 'text-primary bg-primary/10 hover:bg-primary/20'
             : 'text-muted-foreground bg-muted hover:bg-muted/80'
         )}
         title={field.visible ? 'Скрыть поле' : 'Показать поле'}
       >
-        {field.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+        {field.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
       </button>
     </div>
   );
@@ -117,15 +125,15 @@ const SortableFieldItem = ({
 
 const CardViewSettings: React.FC = () => {
   const { cardViews, toggleFieldVisibility, reorderFields, resetToDefaults } = useSettingsStore();
-  const [activeTab, setActiveTab] = useState<EntityType>('products');
+  const [activeTab, setActiveTab] = useState<EntityType>('trips');
 
   const tabs: { id: EntityType; label: string }[] = [
+    { id: 'trips', label: 'Походы' },
+    { id: 'participants', label: 'Участники' },
     { id: 'products', label: 'Продукты' },
     { id: 'dishes', label: 'Блюда' },
     { id: 'meals', label: 'Приёмы пищи' },
     { id: 'equipment', label: 'Снаряжение' },
-    { id: 'trips', label: 'Походы' },
-    { id: 'participants', label: 'Участники' },
   ];
 
   const currentFields = cardViews[activeTab] || [];
@@ -140,14 +148,15 @@ const CardViewSettings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap gap-2 pb-4 border-b border-border">
+    <div className="space-y-4">
+      {/* Табы без перетаскивания */}
+      <div className="flex flex-wrap gap-1.5 pb-3 border-b border-border">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              'px-4 py-2 rounded-full text-sm font-medium transition-all',
+              'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
               activeTab === tab.id
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -158,19 +167,21 @@ const CardViewSettings: React.FC = () => {
         ))}
       </div>
 
-      <div className="bg-muted/30 rounded-xl p-4 sm:p-6 border border-border">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-medium text-foreground">Настройка компактного вида</h3>
-            <p className="text-sm text-muted-foreground">Порядок и видимость полей в списках.</p>
+      {/* Компактный заголовок и контент */}
+      <div className="bg-muted/30 rounded-lg p-4 border border-border">
+        <div className="flex items-start sm:items-center justify-between mb-3 gap-2 flex-wrap">
+          <div className="min-w-0">
+            <h3 className="text-base font-medium text-foreground">Настройка полей</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Порядок и видимость в списках</p>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => resetToDefaults(activeTab)}
+            className="h-8 px-2 text-xs flex-shrink-0"
             title="Сброс к значениям по умолчанию"
           >
-            <RotateCcw className="w-4 h-4 mr-2" />
+            <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
             Сброс
           </Button>
         </div>
@@ -180,7 +191,7 @@ const CardViewSettings: React.FC = () => {
             items={currentFields.map((f) => f.id)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="max-w-xl space-y-2">
+            <div className="w-full">
               {currentFields.map((field) => {
                 const def = CARD_FIELDS[activeTab]?.find((d) => d.id === field.id);
                 if (!def) return null;

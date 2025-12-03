@@ -45,7 +45,6 @@ interface EntityCardProps {
   onSelect?: () => void;
   onMultiSelect?: (selected: boolean) => void;
   onRequestMultiSelectMode?: () => void;
-  borderColor?: string;
   className?: string;
   'data-testid'?: string;
   linkTo?: string;
@@ -93,7 +92,6 @@ const EntityCard: React.FC<EntityCardProps> = ({
   onSelect,
   onMultiSelect,
   onRequestMultiSelectMode,
-  borderColor: _borderColor,
   className,
   'data-testid': testId,
   linkTo,
@@ -106,6 +104,8 @@ const EntityCard: React.FC<EntityCardProps> = ({
   const nutritionRef = useRef<HTMLDivElement | null>(null);
   const [showBju, setShowBju] = useState(globalShowBjuCard);
   const measureTimeoutRef = useRef<number | undefined>(undefined);
+  const clickTimeoutRef = useRef<number | null>(null);
+  const clickCountRef = useRef(0);
 
   useEffect(() => {
     return subscribeToShowBjuCard(setShowBju);
@@ -145,6 +145,56 @@ const EntityCard: React.FC<EntityCardProps> = ({
     };
   }, [nutrition]);
 
+  // Clean up timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (clickTimeoutRef.current) {
+        window.clearTimeout(clickTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    clickCountRef.current++;
+
+    if (clickCountRef.current === 1) {
+      // Set a timeout to handle single click
+      clickTimeoutRef.current = window.setTimeout(() => {
+        if (clickCountRef.current === 1) {
+          // This was a single click
+          if (showMultiSelect && onMultiSelect) {
+            onMultiSelect(!isMultiSelected);
+          } else {
+            onSelect?.();
+          }
+        }
+        clickCountRef.current = 0;
+        if (clickTimeoutRef.current) {
+          window.clearTimeout(clickTimeoutRef.current);
+          clickTimeoutRef.current = null;
+        }
+      }, 300); // 300ms delay to detect double-click
+    } else if (clickCountRef.current === 2) {
+      // This is a double-click
+      if (clickTimeoutRef.current) {
+        window.clearTimeout(clickTimeoutRef.current);
+        clickTimeoutRef.current = null;
+      }
+      onRequestMultiSelectMode?.();
+      clickCountRef.current = 0;
+    }
+  };
+
+  const handleIconDoubleClick = (e: React.MouseEvent) => {
+    // Prevent the card click handler from firing
+    e.preventDefault();
+    e.stopPropagation();
+    onRequestMultiSelectMode?.();
+  };
+
   const gradientByVariant: Record<NonNullable<EntityCardProps['variant']>, string> = {
     neutral: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
     info: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
@@ -156,21 +206,11 @@ const EntityCard: React.FC<EntityCardProps> = ({
   };
 
   const cardClasses = cn(
-    'group relative flex flex-col rounded-xl p-4 transition-all duration-200 cursor-pointer bg-card',
+    'group relative flex flex-col rounded-xl p-4 cursor-pointer bg-card',
     gradientByVariant[variant],
     {
-      // Стандартная обводка, если не выбрано
       'border border-border': !isSelected,
-      // Тень для всех вариантов, не только для meal
-      'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]': true,
-
-      // ВЫДЕЛЕНИЕ:
-      // Теперь все компоненты используют одинаковую (синюю) обводку при выделении
-      'border border-primary/50 bg-primary/5': isSelected,
-
-      // Ховер эффекты только для невыделенных
-      'hover:bg-card-hover hover:border-border-hover notion-shadow-xs hover:notion-shadow-sm':
-        !isSelected,
+      'shadow-md ring-2 ring-primary/20': isSelected,
     },
     className
   );
@@ -283,46 +323,46 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
       {/* Nutrition Footer */}
       {nutrition && (
-        <div className="mt-auto">
+        <div className="mt-3">
           <div ref={nutritionRef} className={cn('cq-nutrition text-xs', showBju && 'show-bju')}>
             {typeof nutrition.itemsCount === 'number' && (
-              <div className="flex items-center gap-1">
-                <span className="font-medium text-muted-foreground">{nutrition.itemsCount}</span>
+              <div className="flex items-center gap-0.5">
                 <Hash className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                <span className="font-medium text-muted-foreground">{nutrition.itemsCount}</span>
               </div>
             )}
 
-            <div className="flex items-center gap-1">
-              <span className="font-semibold text-orange-600/90">
+            <div className="flex items-center gap-0.5">
+              <Flame className="w-3 h-3 text-orange-500 flex-shrink-0" />
+              <span className="font-semibold text-orange-600">
                 {Math.round(nutrition.calories)}
               </span>
-              <Flame className="w-3 h-3 text-orange-500 flex-shrink-0" />
             </div>
 
-            <div className="bju items-center gap-1">
-              <span className="font-medium text-blue-600/90">
+            <div className="bju items-center gap-0.5">
+              <Beef className="w-3 h-3 text-blue-500 flex-shrink-0" />
+              <span className="font-medium text-blue-600">
                 {Math.round(nutrition.proteins * 10) / 10}
               </span>
-              <Beef className="w-3 h-3 text-blue-500 flex-shrink-0" />
             </div>
 
-            <div className="bju items-center gap-1">
-              <span className="font-medium text-yellow-600/90">
+            <div className="bju items-center gap-0.5">
+              <Droplet className="w-3 h-3 text-yellow-500 flex-shrink-0" />
+              <span className="font-medium text-yellow-600">
                 {Math.round(nutrition.fats * 10) / 10}
               </span>
-              <Droplet className="w-3 h-3 text-yellow-500 flex-shrink-0" />
             </div>
 
-            <div className="bju items-center gap-1">
-              <span className="font-medium text-green-600/90">
+            <div className="bju items-center gap-0.5">
+              <Wheat className="w-3 h-3 text-green-500 flex-shrink-0" />
+              <span className="font-medium text-green-600">
                 {Math.round(nutrition.carbs * 10) / 10}
               </span>
-              <Wheat className="w-3 h-3 text-green-500 flex-shrink-0" />
             </div>
 
             {/* 1. Если передан вес (Блюда, Приемы пищи) */}
             {typeof nutrition.weight === 'number' && (
-              <div className="flex items-center gap-1 ml-auto" title="Общий вес">
+              <div className="flex items-center gap-0.5 ml-auto" title="Общий вес">
                 <span className="font-medium text-muted-foreground">
                   {Math.round(nutrition.weight)}
                 </span>
@@ -333,7 +373,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
             {/* 2. Если переданы порции (Продукты), но нет веса */}
             {typeof nutrition.weight === 'undefined' &&
               typeof nutrition.portionCount === 'number' && (
-                <div className="flex items-center gap-1 ml-auto" title="Вариантов порций">
+                <div className="flex items-center gap-0.5 ml-auto" title="Вариантов порций">
                   <span className="font-medium text-muted-foreground">
                     {nutrition.portionCount}
                   </span>
@@ -355,6 +395,11 @@ const EntityCard: React.FC<EntityCardProps> = ({
       } else {
         onSelect?.();
       }
+    },
+    onDoubleClick: (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onRequestMultiSelectMode?.();
     },
     onKeyDown: (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {

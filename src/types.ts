@@ -119,6 +119,7 @@ export interface Meal {
   name: string;
   description?: string;
   items: MealPlanItem[];
+  mealTypeId?: number;
 }
 
 export type MealData = Omit<Meal, 'id'>;

@@ -19,10 +19,12 @@ import {
   Beef,
   Droplet,
   Wheat,
+  Tag,
 } from 'lucide-react';
 import { useMealStore } from '../stores/useMealStore';
 import useProductStore from '../stores/useProductStore';
 import useDishStore from '../stores/useDishStore';
+import useMealTypesStore from '../stores/useMealTypesStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useViewMode } from '../hooks/useViewMode';
@@ -40,11 +42,13 @@ import CreateMealButton from '../components/meals/CreateMealButton';
 import { generateUniqueMealName } from '../components/meals/mealFormUtils';
 import { exportBulkMealsToJson } from '../utils/backup';
 import ImportMealsModal from '../components/meals/ImportMealsModal';
+import { useSearchParams } from 'react-router-dom';
 
 const MealsPage: React.FC = () => {
   const { meals, addMeal, updateMeal, removeMeal } = useMealStore();
   const { products } = useProductStore();
   const { dishes } = useDishStore();
+  const { mealTypes } = useMealTypesStore();
   const isMobile = useIsMobile();
   const { viewMode, toggleViewMode } = useViewMode('meals');
   const getVisibleFields = useSettingsStore((state) => state.getVisibleFields);
@@ -59,6 +63,7 @@ const MealsPage: React.FC = () => {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFileContent, setImportFileContent] = useState<ImportedJsonData | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [selectedMealIds, setSelectedMealIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
@@ -66,6 +71,23 @@ const MealsPage: React.FC = () => {
   const [editSubmitTrigger, _setEditSubmitTrigger] = useState(0);
   const [editCancelTrigger, _setEditCancelTrigger] = useState(0);
   const visibleFields = getVisibleFields('meals');
+
+  // URL synchronization - handle selectedId query parameter
+  useEffect(() => {
+    const selectedId = searchParams.get('selectedId');
+    if (selectedId && meals.some((m) => m.id === Number(selectedId))) {
+      setActiveId(Number(selectedId));
+      // Remove the query parameter from the URL
+      setSearchParams({}, { replace: true });
+      // Scroll to the detail pane
+      setTimeout(() => {
+        const detailPane = document.getElementById('meal-detail-pane');
+        if (detailPane) {
+          detailPane.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [searchParams, meals, setSearchParams]);
 
   const selectedMeal = useMemo(
     () => meals.find((m) => m.id === activeId) || null,
@@ -316,7 +338,7 @@ const MealsPage: React.FC = () => {
 
       {meals.length > 0 || creatingMeal ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)] pl-1 pb-4">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)] pl-1 pb-4 pt-2">
             {meals.map((meal) => {
               // Compute totals for nutrition and weight
               let totalCalories = 0,
@@ -374,6 +396,14 @@ const MealsPage: React.FC = () => {
                         className: 'text-muted-foreground',
                       }
                     : null,
+                mealType: meal.mealTypeId
+                  ? {
+                      icon: Tag,
+                      text: mealTypes.find((mt) => mt.id === meal.mealTypeId)?.name || 'Тип',
+                      tooltip: 'Тип приёма пищи',
+                      className: 'text-muted-foreground',
+                    }
+                  : null,
                 calories: {
                   icon: Flame,
                   text: Math.round(totalCalories),
@@ -415,10 +445,16 @@ const MealsPage: React.FC = () => {
                   key={meal.id}
                   title={mealEntityConfig.views.card.title(meal)}
                   meta={metaItems}
-                  borderColor={mealEntityConfig.getBorderColor(meal)}
                   isSelected={activeId === meal.id}
                   isMultiSelected={selectedMealIds.includes(meal.id)}
-                  onSelect={isCardDisabled ? undefined : () => setActiveId(meal.id)}
+                  onSelect={
+                    isCardDisabled
+                      ? undefined
+                      : () => {
+                          // Toggle selection - if already selected, deselect it
+                          setActiveId(activeId === meal.id ? null : meal.id);
+                        }
+                  }
                   onMultiSelect={isCardDisabled ? undefined : () => toggleMealSelection(meal.id)}
                   onRequestMultiSelectMode={() => {
                     if (!showMultiSelect) {
@@ -434,11 +470,20 @@ const MealsPage: React.FC = () => {
                 <EntityCard
                   key={meal.id}
                   title={mealEntityConfig.views.card.title(meal)}
+                  subtitle={mealEntityConfig.views.card.subtitle?.(meal, {
+                    mealType: mealTypes.find((mt) => mt.id === meal.mealTypeId),
+                  })}
                   icon={mealEntityConfig.getIcon(meal)}
-                  borderColor={mealEntityConfig.getBorderColor(meal)}
                   isSelected={activeId === meal.id}
                   isMultiSelected={selectedMealIds.includes(meal.id)}
-                  onSelect={isCardDisabled ? undefined : () => setActiveId(meal.id)}
+                  onSelect={
+                    isCardDisabled
+                      ? undefined
+                      : () => {
+                          // Toggle selection - if already selected, deselect it
+                          setActiveId(activeId === meal.id ? null : meal.id);
+                        }
+                  }
                   onMultiSelect={isCardDisabled ? undefined : () => toggleMealSelection(meal.id)}
                   onRequestMultiSelectMode={() => {
                     if (!showMultiSelect) {
@@ -462,7 +507,10 @@ const MealsPage: React.FC = () => {
             })}
           </div>
 
-          <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
+          <div
+            className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar pt-2"
+            id="meal-detail-pane"
+          >
             {creatingMeal ? (
               <div className="pl-1">
                 <MealForm
@@ -565,6 +613,12 @@ const MealsPage: React.FC = () => {
           onSubmit={handleFormSubmit}
           onCancel={() => setShowFormModal(false)}
           autoGeneratedName={!editingMeal ? autoGeneratedName : undefined}
+          openSections={openSections}
+          onToggleSection={(id) =>
+            setOpenSections((prev) =>
+              prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+            )
+          }
         />
       </Modal>
 

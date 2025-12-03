@@ -318,7 +318,7 @@ const CategoriesPage: React.FC = () => {
       {/* Основной контент */}
       {categoryManagement.filteredCategories.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar pl-1 pb-4">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar pl-1 pb-4 pt-2">
             {categoryManagement.filteredCategories.map((category) => {
               const productCount = productStore.products.filter(
                 (p) => p.categoryId === category.id

@@ -344,7 +344,7 @@ const EquipmentPage: React.FC = () => {
 
       {filteredEquipment.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar pl-1 pb-4">
+          <div className="lg:col-span-1 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar pl-1 pb-4 pt-2">
             {filteredEquipment.map((equipmentItem) => {
               const category = categories.find(
                 (c: EquipmentCategory) => c.id === equipmentItem.categoryId
@@ -426,7 +426,7 @@ const EquipmentPage: React.FC = () => {
             })}
           </div>
 
-          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)]">
+          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)] pt-2">
             {selectedEquipment ? (
               <DetailPane
                 sections={[

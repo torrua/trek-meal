@@ -13,13 +13,14 @@ import {
   Wheat,
   Weight,
   Edit,
-  ChevronDown,
   PieChart,
   Circle,
+  ChevronDown,
 } from 'lucide-react';
 import type { Meal, Product, Dish, MealPlanItem } from '../../types';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
+import useMealTypesStore from '../../stores/useMealTypesStore';
 import Button from '../../ui/Button';
 import MealForm from './MealForm';
 import { useMealStore } from '../../stores/useMealStore';
@@ -120,13 +121,15 @@ const ItemContentReadOnly: React.FC<{
   const nutrition = useMemo(() => {
     if (item.type === 'product') {
       const product = products.find((p) => p.id === item.itemId);
-      if (!product || !item.weight) return null;
-      const multiplier = Number(item.weight) / 100;
+      if (!product) return null;
+      // Even if item.weight is not set, we can still show nutrition for 100g
+      const weight = Number(item.weight || 100);
+      const multiplier = weight / 100;
       return {
-        calories: Math.round(product.calories * multiplier),
-        proteins: Math.round(product.proteins * multiplier * 10) / 10,
-        fats: Math.round(product.fats * multiplier * 10) / 10,
-        carbs: Math.round(product.carbs * multiplier * 10) / 10,
+        calories: Math.round((product.calories || 0) * multiplier),
+        proteins: Math.round((product.proteins || 0) * multiplier * 10) / 10,
+        fats: Math.round((product.fats || 0) * multiplier * 10) / 10,
+        carbs: Math.round((product.carbs || 0) * multiplier * 10) / 10,
       };
     }
     if (item.type === 'dish') {
@@ -183,13 +186,13 @@ const ItemContentReadOnly: React.FC<{
   }, [item.type, selectedItem, products]);
 
   const portion = useMemo(() => {
-    if (item.type !== 'product' || !('weight' in item) || !item.weight || !selectedItem)
+    if (item.type !== 'product' || !('weight' in item) || !selectedItem) {
       return null;
+    }
     return (selectedItem as Product).portions?.find(
       (p) => Number(p.weight) === Number(item.weight)
     );
   }, [item, selectedItem]);
-
   const portions = useMemo(() => {
     if (item.type !== 'product' || !selectedItem) return [];
     return (selectedItem as Product).portions || [];
@@ -207,7 +210,8 @@ const ItemContentReadOnly: React.FC<{
     return Number(dish.products.reduce((sum, dp) => sum + Number(dp.weight), 0));
   }, [item.type, selectedItem]);
 
-  const displayWeight = isProduct ? Number(item.weight) : Number(dishWeight);
+  // Always calculate displayWeight, even if it's 0
+  const displayWeight = isProduct ? Number(item.weight || 0) : Number(dishWeight);
 
   return (
     <div
@@ -231,7 +235,8 @@ const ItemContentReadOnly: React.FC<{
           <h4 className="font-medium text-foreground truncate">{selectedItem?.name}</h4>
         </div>
         <div className="flex items-center gap-2">
-          {nutrition && displayWeight && (
+          {/* Show nutrition button if we have a selected item and nutrition data */}
+          {selectedItem && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -241,33 +246,41 @@ const ItemContentReadOnly: React.FC<{
             >
               {showNutrition ? (
                 <>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
-                  <div className="flex items-center gap-1">
-                    <Flame className="w-4 h-4 text-orange-600" />
-                    <span className="text-sm font-semibold text-orange-600">
-                      {nutrition.calories}
-                    </span>
-                  </div>
-                  <div className="w-px h-4 bg-border" />
-                  <div className="flex items-center gap-1">
-                    <Beef className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-semibold text-blue-600">
-                      {nutrition.proteins}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Droplet className="w-4 h-4 text-yellow-600" />
-                    <span className="text-sm font-semibold text-yellow-600">{nutrition.fats}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Wheat className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-semibold text-green-600">{nutrition.carbs}</span>
-                  </div>
-                  <div className="w-px h-4 bg-border" />
+                  {nutrition && (
+                    <>
+                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
+                      <div className="flex items-center gap-1">
+                        <Flame className="w-4 h-4 text-orange-600" />
+                        <span className="text-sm font-semibold text-orange-600">
+                          {nutrition.calories}
+                        </span>
+                      </div>
+                      <div className="w-px h-4 bg-border" />
+                      <div className="flex items-center gap-1">
+                        <Beef className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-semibold text-blue-600">
+                          {nutrition.proteins}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Droplet className="w-4 h-4 text-yellow-600" />
+                        <span className="text-sm font-semibold text-yellow-600">
+                          {nutrition.fats}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Wheat className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-semibold text-green-600">
+                          {nutrition.carbs}
+                        </span>
+                      </div>
+                      <div className="w-px h-4 bg-border" />
+                    </>
+                  )}
                   <div className="flex items-center gap-1">
                     <Weight className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm font-semibold text-muted-foreground">
-                      {displayWeight}
+                      {displayWeight || 0}
                     </span>
                   </div>
                 </>
@@ -277,7 +290,7 @@ const ItemContentReadOnly: React.FC<{
                   <div className="flex items-center gap-1">
                     <Weight className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm font-semibold text-muted-foreground">
-                      {displayWeight}
+                      {displayWeight || 0}
                     </span>
                   </div>
                 </>
@@ -346,6 +359,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
   const { products } = useProductStore();
   const { dishes } = useDishStore();
   const { updateMeal } = useMealStore();
+  const { mealTypes } = useMealTypesStore();
   const [isEditing, setIsEditing] = useState(false);
   const [showHeaderNutrition, setShowHeaderNutrition] = useState(false);
   const editTriggerRef = useRef<number | undefined>(undefined);
@@ -361,12 +375,6 @@ const MealDetail: React.FC<MealDetailProps> = ({
   }, [editTrigger, onStartEdit]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (isEditing && containerRef.current) {
-      containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [isEditing]);
 
   const watchItems = useMemo(() => meal?.items || [], [meal?.items]);
 
@@ -414,11 +422,12 @@ const MealDetail: React.FC<MealDetailProps> = ({
 
   if (!meal) return null;
 
+  // Use the passed openSections prop for both view and edit modes to preserve state
   const isBasicInfoOpen = openSections.includes('basic-info');
   const isCompositionOpen = openSections.includes('composition');
 
   const handleStartEdit = () => {
-    if (!openSections.includes('basic-info')) onToggleSection('basic-info');
+    // No longer force opening basic-info section when editing
     setIsEditing(true);
     onStartEdit?.();
   };
@@ -444,6 +453,8 @@ const MealDetail: React.FC<MealDetailProps> = ({
             onSubmit={handleSave}
             onCancel={handleCancelEdit}
             focusName={true}
+            openSections={openSections}
+            onToggleSection={onToggleSection}
           />
         </div>
       ) : (
@@ -455,8 +466,14 @@ const MealDetail: React.FC<MealDetailProps> = ({
             isOpen={isBasicInfoOpen}
             onToggle={onToggleSection}
             actionButton={
-              <Button type="button" variant="primary" onClick={handleStartEdit} icon={Edit}>
-                Редактировать
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleStartEdit}
+                icon={Edit}
+                size="icon"
+              >
+                {/* Empty - only icon */}
               </Button>
             }
             gradientFrom="from-blue-500/5"
@@ -480,6 +497,16 @@ const MealDetail: React.FC<MealDetailProps> = ({
                   </label>
                   <div className="w-full px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap">
                     {meal.description}
+                  </div>
+                </div>
+              )}
+              {meal.mealTypeId && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Тип приёма пищи
+                  </label>
+                  <div className="w-full px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground">
+                    {mealTypes.find((mt) => mt.id === meal.mealTypeId)?.name || 'Неизвестный тип'}
                   </div>
                 </div>
               )}

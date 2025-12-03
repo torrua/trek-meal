@@ -22,7 +22,6 @@ interface EntityListItemProps {
   onSelect?: () => void;
   onMultiSelect?: (selected: boolean) => void;
   showMultiSelect?: boolean;
-  borderColor?: string;
   'data-testid'?: string;
   variant?: 'neutral' | 'meal' | 'info' | 'composition' | 'dish' | 'product' | 'meal-type';
   onRequestMultiSelectMode?: () => void;
@@ -37,7 +36,6 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
   onSelect,
   onMultiSelect,
   showMultiSelect = false,
-  borderColor: _borderColor,
   'data-testid': testId,
   variant = 'neutral',
   onRequestMultiSelectMode,
@@ -53,25 +51,11 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
   };
 
   const itemClasses = cn(
-    // ИЗМЕНЕНО: p-3 -> px-4 py-3
-    // px-4 (16px) выравнивает контент по горизонтали так же, как в карточках.
-    // py-3 (12px) + внутреннее центрирование текста создают визуальный отступ сверху ~16px.
-    'group flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-200',
+    'group flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3 text-left cursor-pointer',
     gradientByVariant[variant],
     {
-      // Стандартная обводка, если не выбрано ИЛИ если это выбранная meal
-      'border-border': !isSelected || (isSelected && variant === 'meal'),
-
-      // Тень только для выделенных элементов
-      'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]': isSelected,
-
-      // ВЫДЕЛЕНИЕ:
-      // 1. Если это Meal - стандартная обводка + градиентный фон
-      // 2. Если это другое (продукт, блюдо) - стандартная (синяя) обводка и фон
-      'border-primary/50 bg-primary/5 ring-1 ring-primary/20': isSelected && variant !== 'meal',
-
-      'hover:bg-card-hover hover:border-border-hover': !isSelected,
-      'cursor-pointer': !!onSelect,
+      'border border-border': !isSelected,
+      'shadow-md ring-2 ring-primary/20': isSelected,
     }
   );
 
@@ -145,10 +129,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
               return (
                 <div
                   key={index}
-                  className={cn(
-                    'flex items-center gap-1.5 text-xs font-medium text-foreground',
-                    item.className
-                  )}
+                  className={cn('flex items-center gap-0.5 text-xs font-medium', item.className)}
                   title={item.tooltip}
                 >
                   <item.icon
@@ -157,7 +138,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
                       item.className ? 'opacity-90' : 'text-muted-foreground'
                     )}
                   />
-                  <span className="tabular-nums">{item.text}</span>
+                  <span className={cn('tabular-nums', item.className)}>{item.text}</span>
                 </div>
               );
             })}

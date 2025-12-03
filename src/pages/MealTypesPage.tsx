@@ -21,6 +21,7 @@ import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import Modal from '../ui/Modal';
 import EntityCard, { MenuItem } from '../ui/EntityCard';
+import EntityListItem from '../ui/EntityListItem';
 import { useViewMode } from '../hooks/useViewMode';
 import CreateMealTypeButton from '../components/meal-types/CreateMealTypeButton';
 import MealTypeForm from '../components/meal-types/MealTypeForm';
@@ -357,7 +358,7 @@ const MealTypesPage: React.FC = () => {
       {/* Main content */}
       {sortedMealTypes.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)] pl-1 pb-4">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)] pl-1 pb-4 pt-2">
             {sortedMealTypes.map((mealType) => {
               const menuItems: MenuItem[] = [
                 {
@@ -383,7 +384,21 @@ const MealTypesPage: React.FC = () => {
                 },
               ];
 
-              return (
+              return viewMode === 'compact' ? (
+                <EntityListItem
+                  key={mealType.id}
+                  title={mealType.name}
+                  isSelected={activeId === mealType.id}
+                  isMultiSelected={selectedMealTypeIds.includes(mealType.id)}
+                  onSelect={() => _handleEdit(mealType)}
+                  onMultiSelect={() => toggleMealTypeSelection(mealType.id)}
+                  borderColor="#6b7280"
+                  menuItems={menuItems}
+                  data-testid={`meal-type-card-${mealType.id}`}
+                  showMultiSelect={showMultiSelect}
+                  variant="meal-type"
+                />
+              ) : (
                 <EntityCard
                   key={mealType.id}
                   title={mealType.name}
@@ -398,7 +413,6 @@ const MealTypesPage: React.FC = () => {
                   menuItems={menuItems}
                   data-testid={`meal-type-card-${mealType.id}`}
                   showMultiSelect={showMultiSelect}
-                  viewMode={viewMode}
                   variant="meal-type"
                 />
               );

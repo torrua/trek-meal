@@ -1,5 +1,5 @@
 // src/config/mealEntityConfig.tsx
-import { Utensils, Edit, Trash2 } from 'lucide-react';
+import { Utensils, Edit, Trash2, Tag } from 'lucide-react';
 import type { Meal } from '../types';
 
 // Lightweight config object shaped like other entity configs
@@ -9,6 +9,7 @@ export const mealEntityConfig = {
   views: {
     card: {
       title: (meal: Meal) => meal.name,
+      subtitle: (_meal: Meal, ctx: any) => ctx?.mealType?.name || 'Без типа',
       details: (meal: Meal) => [
         {
           key: 'items',

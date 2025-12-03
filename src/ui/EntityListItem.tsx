@@ -24,7 +24,7 @@ interface EntityListItemProps {
   showMultiSelect?: boolean;
   borderColor?: string;
   'data-testid'?: string;
-  variant?: 'neutral' | 'meal' | 'info' | 'composition' | 'dish' | 'product';
+  variant?: 'neutral' | 'meal' | 'info' | 'composition' | 'dish' | 'product' | 'meal-type';
   onRequestMultiSelectMode?: () => void;
 }
 
@@ -47,6 +47,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
     info: 'bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5',
     composition: '[background:var(--color-meal-composition-gradient)]',
     meal: '[background:var(--color-meal-composition-gradient)]',
+    'meal-type': '[background:var(--color-meal-type-gradient)]',
     dish: '[background:var(--color-dish-gradient)]',
     product: '[background:var(--color-product-gradient)]',
   };

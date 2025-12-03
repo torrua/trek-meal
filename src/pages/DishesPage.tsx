@@ -367,7 +367,7 @@ const DishesPage: React.FC = () => {
 
       {filteredDishes.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)]">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)] pl-1 pb-4">
             {filteredDishes.map((dish) => {
               const { nutrition, totalWeight } = calculateDishNutrition(dish);
               const cardConfig = dishEntityConfig.views.card;

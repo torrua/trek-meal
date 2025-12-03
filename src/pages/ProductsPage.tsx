@@ -342,7 +342,7 @@ const ProductsPage: React.FC = () => {
 
       {filteredProducts.length > 0 || creatingProduct ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar pl-1 pb-4">
             {filteredProducts.map((product) => {
               const category = categories.find((c: Category) => c.id === product.categoryId);
               const cardConfig = productEntityConfig.views.card;

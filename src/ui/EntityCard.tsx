@@ -51,7 +51,7 @@ interface EntityCardProps {
   linkTo?: string;
   description?: string;
   showMultiSelect?: boolean;
-  variant?: 'neutral' | 'meal' | 'info' | 'composition' | 'dish' | 'product';
+  variant?: 'neutral' | 'meal' | 'info' | 'composition' | 'dish' | 'product' | 'meal-type';
   nutrition?: {
     calories: number;
     proteins: number;
@@ -150,6 +150,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
     info: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
     composition: '[background:var(--color-meal-composition-gradient)]',
     meal: '[background:var(--color-meal-composition-gradient)]',
+    'meal-type': '[background:var(--color-meal-type-gradient)]',
     dish: '[background:var(--color-dish-gradient)]',
     product: '[background:var(--color-product-gradient)]',
   };
@@ -160,15 +161,12 @@ const EntityCard: React.FC<EntityCardProps> = ({
     {
       // Стандартная обводка, если не выбрано
       'border border-border': !isSelected,
-
-      // Тень только для варианта meal
-      'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]': variant === 'meal',
+      // Тень для всех вариантов, не только для meal
+      'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]': true,
 
       // ВЫДЕЛЕНИЕ:
-      // 1. Если это Meal - стандартная обводка + темный фон
-      'border border-border bg-[#22c55e]/20': isSelected && variant === 'meal',
-      // 2. Если это другое (продукт, блюдо) - стандартная (синяя) обводка и фон
-      'border border-primary/50 bg-primary/5': isSelected && variant !== 'meal',
+      // Теперь все компоненты используют одинаковую (синюю) обводку при выделении
+      'border border-primary/50 bg-primary/5': isSelected,
 
       // Ховер эффекты только для невыделенных
       'hover:bg-card-hover hover:border-border-hover notion-shadow-xs hover:notion-shadow-sm':
@@ -214,7 +212,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
                 <Icon />
               ) : (
                 <Icon
-                  className={`h-4 w-4 ${variant === 'meal' ? 'text-green-600' : 'text-primary'}`}
+                  className={`h-4 w-4 ${variant === 'meal' ? 'text-green-600' : variant === 'meal-type' ? 'text-purple-600' : 'text-primary'}`}
                 />
               )}
             </div>

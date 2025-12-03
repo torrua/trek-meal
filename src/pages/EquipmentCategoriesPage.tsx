@@ -356,7 +356,7 @@ const EquipmentCategoriesPage: React.FC = () => {
       {/* Main content */}
       {filteredCategories.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar pl-1 pb-4">
             {filteredCategories.map((category) => {
               const equipmentCount = equipmentStore.equipment.filter(
                 (e) => e.categoryId === category.id

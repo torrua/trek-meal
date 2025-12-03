@@ -42,7 +42,7 @@ import { exportBulkMealsToJson } from '../utils/backup';
 import ImportMealsModal from '../components/meals/ImportMealsModal';
 
 const MealsPage: React.FC = () => {
-  const { meals, addMeal, updateMeal, removeMeal, getNextMealId } = useMealStore();
+  const { meals, addMeal, updateMeal, removeMeal } = useMealStore();
   const { products } = useProductStore();
   const { dishes } = useDishStore();
   const isMobile = useIsMobile();
@@ -80,8 +80,8 @@ const MealsPage: React.FC = () => {
   }, []);
 
   const generateMealName = useCallback(() => {
-    return generateUniqueMealName(meals, getNextMealId());
-  }, [meals, getNextMealId]);
+    return generateUniqueMealName(meals);
+  }, [meals]);
 
   useEffect(() => {
     if (creatingMeal || showFormModal) {
@@ -316,7 +316,7 @@ const MealsPage: React.FC = () => {
 
       {meals.length > 0 || creatingMeal ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)]">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)] pl-1 pb-4">
             {meals.map((meal) => {
               // Compute totals for nutrition and weight
               let totalCalories = 0,
@@ -362,7 +362,7 @@ const MealsPage: React.FC = () => {
                   },
                 }));
 
-              const isCardDisabled = isDetailEditing && meal.id !== activeId;
+              const isCardDisabled = isDetailEditing && activeId !== null && meal.id !== activeId;
 
               const metaMap: Record<string, MetaItem | null> = {
                 items:

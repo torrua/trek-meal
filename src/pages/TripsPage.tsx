@@ -328,7 +328,7 @@ const TripsPage: React.FC = () => {
 
       {filteredTrips.length > 0 || isCreating ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar pl-1 pb-4">
             {filteredTrips.map((trip) => {
               const cardConfig = tripEntityConfig.views.card;
               const actions = tripEntityConfig.getActions({

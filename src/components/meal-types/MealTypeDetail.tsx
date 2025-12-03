@@ -36,6 +36,7 @@ interface CollapsibleSectionProps {
   gradientVia?: string;
   gradientTo?: string;
   className?: string;
+  disableToggle?: boolean;
 }
 
 const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
@@ -52,6 +53,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   gradientVia = 'via-purple-500/5',
   gradientTo = 'to-pink-500/5',
   className,
+  disableToggle = false,
 }) => {
   const defaultShadow = 'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]';
 
@@ -65,7 +67,12 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       <div className="relative">
         <div
           className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
-          onClick={() => _onToggle(_id)}
+          onClick={() => {
+            // Don't toggle section when disableToggle is true
+            if (!disableToggle) {
+              _onToggle(_id);
+            }
+          }}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
@@ -79,7 +86,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
             {headerContent}
           </div>
         </div>
-        {isOpen && <div className="p-6 pt-0">{children}</div>}
+        {isOpen && <div className="p-6 pt-0 pb-8">{children}</div>}
       </div>
     </div>
   );
@@ -130,6 +137,10 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
 
   const handleInlineEdit = () => {
     if (mealType) {
+      // Ensure the basic-info section is open when entering edit mode
+      if (!openSections.includes('basic-info')) {
+        onToggleSection('basic-info');
+      }
       setEditName(mealType.name);
       setEditDescription(mealType.description || '');
       setIsInlineEditing(true);
@@ -151,6 +162,12 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
       }
 
       setIsInlineEditing(false);
+
+      // Если это создание нового типа, сбрасываем состояние создания
+      if (!mealType) {
+        setIsEditing(false);
+        onFinishEdit?.();
+      }
     } catch (error) {
       console.error('Error saving meal type:', error);
       toast.error('Ошибка при сохранении типа приёма пищи');
@@ -168,76 +185,75 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
     }
   };
 
-  // Показываем компонент если есть mealType или в режиме создания
-  if (!mealType && !isEditing) {
-    return null;
-  }
-
-  // Для нового типа сразу показываем форму редактирования
-  if (!mealType && isEditing) {
+  // Для нового типа показываем форму создания в режиме просмотра (не редактирования)
+  if (!mealType) {
+    // Показываем форму для создания нового типа в режиме просмотра
     return (
-      <div className="space-y-4">
-        {/* Basic Info Section */}
-        <CollapsibleSection
-          id="basic-info"
-          title="Основная информация"
-          icon={<Info className="w-4 h-4 text-primary" />}
-          isOpen={openSections.includes('basic-info')}
-          onToggle={onToggleSection}
-          gradientFrom="from-blue-500/5"
-          gradientVia="via-purple-500/5"
-          gradientTo="to-pink-500/5"
-          actionButton={
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleInlineCancel}
-                disabled={isSubmitting}
-              >
-                Отмена
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                onClick={handleInlineSave}
-                disabled={isSubmitting || !editName.trim()}
-                icon={isSubmitting ? undefined : Save}
-                size="icon"
-              >
-                {isSubmitting ? 'Сохранение...' : ''}
-              </Button>
-            </div>
-          }
-        >
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Название</label>
-              <Input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Введите название типа"
-                disabled={isSubmitting}
-              />
-            </div>
+      <div className="pt-2">
+        <div className="space-y-4">
+          {/* Basic Info Section */}
+          <CollapsibleSection
+            id="basic-info"
+            title="Основная информация"
+            icon={<Info className="w-4 h-4 text-primary" />}
+            isOpen={openSections.includes('basic-info')}
+            onToggle={onToggleSection}
+            gradientFrom="from-blue-500/5"
+            gradientVia="via-purple-500/5"
+            gradientTo="to-pink-500/5"
+            actionButton={
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleInlineCancel}
+                  disabled={isSubmitting}
+                >
+                  Отмена
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={handleInlineSave}
+                  disabled={isSubmitting || !editName.trim()}
+                  icon={isSubmitting ? undefined : Save}
+                  size="icon"
+                >
+                  {isSubmitting ? 'Сохранение...' : ''}
+                </Button>
+              </div>
+            }
+            disableToggle={true}
+          >
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Название</label>
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Введите название типа"
+                  disabled={isSubmitting}
+                />
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Описание</label>
-              <Textarea
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                placeholder="Введите описание (необязательно)"
-                disabled={isSubmitting}
-                rows={3}
-              />
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Описание</label>
+                <Textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Введите описание (необязательно)"
+                  disabled={isSubmitting}
+                  rows={3}
+                />
+              </div>
             </div>
-          </div>
-        </CollapsibleSection>
+          </CollapsibleSection>
+        </div>
       </div>
     );
   }
 
-  if (isEditing) {
+  if (isEditing && mealType) {
     return (
       <div className="h-full">
         <MealTypeForm
@@ -257,97 +273,103 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Basic Info Section */}
-      <CollapsibleSection
-        id="basic-info"
-        title="Основная информация"
-        icon={<Info className="w-4 h-4 text-primary" />}
-        isOpen={openSections.includes('basic-info')}
-        onToggle={onToggleSection}
-        gradientFrom="from-blue-500/5"
-        gradientVia="via-purple-500/5"
-        gradientTo="to-pink-500/5"
-        actionButton={
-          !isInlineEditing && mealType ? (
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleInlineEdit}
-              icon={Edit}
-              size="icon"
-            >
-              {/* Пусто - только иконка */}
-            </Button>
-          ) : isInlineEditing ? (
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleInlineCancel}
-                disabled={isSubmitting}
-              >
-                Отмена
-              </Button>
+    <div className="pt-2">
+      <div className="space-y-4">
+        {/* Basic Info Section */}
+        <CollapsibleSection
+          id="basic-info"
+          title="Основная информация"
+          icon={<Info className="w-4 h-4 text-primary" />}
+          isOpen={openSections.includes('basic-info')}
+          onToggle={onToggleSection}
+          gradientFrom="from-purple-500/5"
+          gradientVia="via-yellow-500/5"
+          gradientTo="to-pink-500/5"
+          actionButton={
+            !isInlineEditing && mealType ? (
               <Button
                 type="button"
                 variant="primary"
-                onClick={handleInlineSave}
-                disabled={isSubmitting || !editName.trim()}
-                icon={isSubmitting ? undefined : Save}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleInlineEdit();
+                }}
+                icon={Edit}
                 size="icon"
               >
-                {isSubmitting ? 'Сохранение...' : ''}
+                {/* Пусто - только иконка */}
               </Button>
-            </div>
-          ) : null
-        }
-      >
-        <div className="space-y-4">
-          {isInlineEditing ? (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Название</label>
-                <Input
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Введите название типа"
+            ) : isInlineEditing ? (
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleInlineCancel}
                   disabled={isSubmitting}
-                />
+                >
+                  Отмена
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={handleInlineSave}
+                  disabled={isSubmitting || !editName.trim()}
+                  icon={isSubmitting ? undefined : Save}
+                  size="icon"
+                >
+                  {isSubmitting ? 'Сохранение...' : ''}
+                </Button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Описание</label>
-                <Textarea
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  placeholder="Введите описание (необязательно)"
-                  disabled={isSubmitting}
-                  rows={3}
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Название</label>
-                <div className="w-full px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground">
-                  {mealType?.name || ''}
+            ) : null
+          }
+          disableToggle={isInlineEditing}
+        >
+          <div className="space-y-4">
+            {isInlineEditing ? (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">Название</label>
+                  <Input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Введите название типа"
+                    disabled={isSubmitting}
+                  />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-                <div className="w-full px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap min-h-[80px]">
-                  {mealType?.description || 'Нет описания'}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">Описание</label>
+                  <Textarea
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="Введите описание (необязательно)"
+                    disabled={isSubmitting}
+                    rows={3}
+                  />
                 </div>
-              </div>
-            </>
-          )}
-        </div>
-      </CollapsibleSection>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Название</label>
+                  <div className="w-full px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground">
+                    {mealType?.name || ''}
+                  </div>
+                </div>
 
-      {/* Usage Section - только для существующих типов */}
-      {/* Убрали секцию использования по запросу */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
+                  <div className="w-full px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap min-h-[80px]">
+                    {mealType?.description || 'Нет описания'}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </CollapsibleSection>
+
+        {/* Usage Section - только для существующих типов */}
+        {/* Убрали секцию использования по запросу */}
+      </div>
     </div>
   );
 };

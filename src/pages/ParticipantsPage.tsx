@@ -296,7 +296,7 @@ const ParticipantsPage: React.FC = () => {
       {filteredParticipants.length > 0 || isCreating ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* Левая колонка: Список */}
-          <div className="lg:col-span-1 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="lg:col-span-1 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar pl-1 pb-4">
             {filteredParticipants.map((p) => {
               const tripCount = useTripStore
                 .getState()

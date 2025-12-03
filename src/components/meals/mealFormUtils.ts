@@ -67,10 +67,26 @@ export const generateDefaultMealName = (nextId: number): string => {
 };
 
 // Helper to generate unique name with timestamp fallback
-export const generateUniqueMealName = (meals: Meal[], nextId: number): string => {
-  const baseName = `Приём пищи №${nextId}`;
+export const generateUniqueMealName = (meals: Meal[]): string => {
+  // Find the highest meal number currently in use
+  let maxNumber = 0;
+  const mealNumberRegex = /^Приём пищи №(\d+)$/;
 
-  // Check if this name already exists
+  meals.forEach((meal) => {
+    const match = meal.name.match(mealNumberRegex);
+    if (match) {
+      const number = parseInt(match[1], 10);
+      if (number > maxNumber) {
+        maxNumber = number;
+      }
+    }
+  });
+
+  // Next number should be one higher than the highest existing number
+  const nextNumber = maxNumber + 1;
+  const baseName = `Приём пищи №${nextNumber}`;
+
+  // Check if this name already exists (shouldn't happen with our logic, but just in case)
   const nameExists = meals.some((meal) => meal.name === baseName);
 
   if (!nameExists) {

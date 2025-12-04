@@ -371,9 +371,9 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
                   <label className="flex items-center gap-2 text-xs font-bold text-blue-600/70 uppercase tracking-wider mb-2">
                     <FileText className="w-3 h-3" /> Описание маршрута
                   </label>
-                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {trip.description}
-                  </p>
+                  <div className="view-mode-field view-mode-multi-line">
+                    {trip.description || 'Нет описания'}
+                  </div>
                 </>
               )}
             </div>

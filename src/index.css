@@ -175,6 +175,33 @@
   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
 
+/* Unified text field styling for consistency between edit and view modes */
+.unified-single-line-field {
+  @apply h-10 px-4 py-2 rounded-lg border border-border bg-card text-sm text-foreground flex items-center;
+}
+
+.unified-multi-line-field {
+  @apply min-h-[84px] px-4 py-2.5 rounded-lg border border-border bg-card text-sm text-foreground whitespace-pre-wrap box-border;
+}
+
+/* Hover and focus states for editable fields - matching EntityCard styling */
+.unified-field-hover:focus,
+.unified-field-hover:hover {
+  background-color: rgb(var(--card-hover));
+  border-color: rgb(var(--border-hover));
+  @apply notion-shadow-xs;
+  transition: background-color 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out;
+}
+
+.unified-field-hover:focus {
+  @apply notion-shadow-sm;
+}
+
+.unified-field-focus:focus {
+  @apply shadow-md ring-2 ring-primary/20 outline-none;
+  transition: box-shadow 0.3s ease-out, ring 0.3s ease-out;
+}
+
 /* Refined Notion-style shadows */
 .notion-shadow-xs {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -219,6 +246,11 @@
   color: rgb(var(--muted-foreground));
 }
 
+/* Smooth border transition */
+.border-transition {
+  transition: border-color 0.3s ease-out;
+}
+
 .notion-bg-hover {
   transition: background-color 0.15s ease-out;
 }
@@ -252,6 +284,19 @@ input,
 textarea,
 select {
   font-family: inherit;
+}
+
+/* Unified field styles for view mode */
+.view-mode-field {
+  @apply bg-card border border-border rounded-lg text-sm text-foreground;
+}
+
+.view-mode-single-line {
+  @apply h-10 px-4 py-2 flex items-center;
+}
+
+.view-mode-multi-line {
+  @apply min-h-[84px] px-4 py-2.5 whitespace-pre-wrap box-border;
 }
 
 /* Fixed dropdown scrollbar */

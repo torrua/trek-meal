@@ -327,9 +327,9 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
                   <label className="flex items-center gap-2 text-xs font-bold text-blue-600/70 uppercase tracking-wider mb-2">
                     <FileText className="w-3 h-3" /> Заметки
                   </label>
-                  <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {participant.notes}
-                  </p>
+                  <div className="view-mode-field view-mode-multi-line">
+                    {participant.notes || 'Нет заметок'}
+                  </div>
                 </>
               )}
             </div>

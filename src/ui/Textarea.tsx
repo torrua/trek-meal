@@ -29,12 +29,12 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           id={textareaId}
           className={cn(
-            'flex min-h-[80px] w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm',
-            'placeholder:text-muted-foreground text-foreground transition-all duration-200',
-            'hover:border-border-hover focus:border-primary/60 focus:bg-card',
-            'focus:outline-none focus:ring-2 focus:ring-primary/20',
+            'flex min-h-[80px] w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm',
+            'placeholder:text-muted-foreground text-foreground transition-colors duration-200 border-transition',
+            'hover:bg-card-hover hover:border-border-hover hover:notion-shadow-sm',
+            'focus:shadow-md focus:ring-2 focus:ring-primary/20 focus:outline-none',
             'disabled:cursor-not-allowed disabled:opacity-50 resize-vertical',
-            error && 'border-danger focus:border-danger focus:ring-danger/20',
+            error && 'border-danger',
             className
           )}
           ref={ref}

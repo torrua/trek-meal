@@ -185,7 +185,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
           {product.description && (
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-              <div className="w-full min-h-[80px] px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
+              <div className="flex w-full min-h-[84px] px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
                 {product.description}
               </div>
             </div>

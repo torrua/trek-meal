@@ -62,22 +62,22 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             className={cn(
               // Base styles - Notion-inspired
-              'flex w-full text-sm transition-all duration-200 notion-focus-ring',
+              'flex w-full text-sm transition-colors duration-200 border-transition',
               'placeholder:text-muted-foreground text-foreground',
               'disabled:cursor-not-allowed disabled:opacity-50',
 
               // Variant styles
               variant === 'default' && [
                 'h-10 rounded-lg border border-border bg-card px-4 py-2',
-                'hover:border-border-hover focus:border-primary/60 focus:bg-card',
-                'focus:ring-2 focus:ring-primary/20',
-                error && 'border-danger focus:border-danger focus:ring-danger/20',
+                'hover:bg-card-hover hover:border-border-hover hover:notion-shadow-sm',
+                'focus:shadow-md focus:ring-2 focus:ring-primary/20 focus:outline-none',
+                error && 'border-danger',
               ],
 
               variant === 'ghost' && [
                 'h-9 rounded-md px-3 py-2 border-0 bg-muted/30',
-                'hover:bg-muted/50 focus:bg-muted/70',
-                'focus:ring-1 focus:ring-primary/30',
+                'hover:bg-muted/50',
+                'focus:outline-none',
               ],
 
               // Icon padding

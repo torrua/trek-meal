@@ -846,14 +846,14 @@ const DishDetail: React.FC<DishDetailProps> = ({
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Название блюда
                 </label>
-                <div className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground">
+                <div className="w-full h-10 px-4 py-2 bg-muted/50 border border-border rounded-lg text-sm text-foreground flex items-center">
                   {dish.name}
                 </div>
               </div>
               {dish.description && (
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-                  <div className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap">
+                  <div className="w-full min-h-[80px] px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
                     {dish.description}
                   </div>
                 </div>

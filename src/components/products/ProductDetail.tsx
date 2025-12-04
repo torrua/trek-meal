@@ -146,7 +146,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
             <label className="block text-sm font-medium text-foreground mb-2">
               Название продукта
             </label>
-            <div className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground font-medium">
+            <div className="w-full h-10 px-4 py-2 bg-muted/50 border border-border rounded-lg text-sm text-foreground font-medium flex items-center">
               {product.name}
             </div>
           </div>
@@ -154,7 +154,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Категория</label>
-              <div className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-lg text-sm flex items-center gap-2">
+              <div className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-sm flex items-center gap-2">
                 {category ? (
                   <>
                     <span>{category.emoji}</span>
@@ -169,12 +169,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Особенности</label>
               {product.isPerishable ? (
-                <div className="w-full px-3 py-2.5 bg-warning/10 border border-warning/20 rounded-lg text-sm flex items-center gap-2 text-warning-foreground">
+                <div className="w-full px-4 py-2.5 bg-warning/10 border border-warning/20 rounded-lg text-sm flex items-center gap-2 text-warning-foreground">
                   <Thermometer className="w-4 h-4" />
                   <span>Скоропортящийся</span>
                 </div>
               ) : (
-                <div className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-muted-foreground flex items-center gap-2">
+                <div className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-muted-foreground flex items-center gap-2">
                   <Check className="w-4 h-4" />
                   <span>Длительного хранения</span>
                 </div>
@@ -185,7 +185,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
           {product.description && (
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-              <div className="w-full px-3 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap">
+              <div className="w-full min-h-[80px] px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
                 {product.description}
               </div>
             </div>

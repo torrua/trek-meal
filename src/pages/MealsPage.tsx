@@ -72,9 +72,27 @@ const MealsPage: React.FC = () => {
   const [editCancelTrigger, _setEditCancelTrigger] = useState(0);
   const visibleFields = getVisibleFields('meals');
 
-  // URL synchronization - handle selectedId query parameter
+  // URL synchronization - handle selectedId and mealId query parameters
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
+    const mealId = searchParams.get('mealId');
+
+    // Handle mealId parameter (from meal type usage block)
+    if (mealId && meals.some((m) => m.id === Number(mealId))) {
+      setActiveId(Number(mealId));
+      // Remove the query parameter from the URL
+      setSearchParams({}, { replace: true });
+      // Scroll to the detail pane
+      setTimeout(() => {
+        const detailPane = document.getElementById('meal-detail-pane');
+        if (detailPane) {
+          detailPane.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+      return;
+    }
+
+    // Handle selectedId parameter (existing logic)
     if (selectedId && meals.some((m) => m.id === Number(selectedId))) {
       setActiveId(Number(selectedId));
       // Remove the query parameter from the URL

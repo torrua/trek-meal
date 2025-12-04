@@ -29,7 +29,7 @@ const dbNavigation = [
 
 const categoriesNavigation = [
   { path: '/categories', label: 'Категории продуктов', icon: Tag },
-  { path: '/meal-types', label: 'Типы приёмов пищи', icon: Utensils },
+  { path: '/meal-types', label: 'Типы приёмов пищи', icon: Tag },
   { path: '/equipment-categories', label: 'Категории снаряжения', icon: Layers },
 ];
 

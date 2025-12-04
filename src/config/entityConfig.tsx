@@ -353,7 +353,7 @@ export const categoryEntityConfig: EntityConfig<Category> = {
 
 // --- MEAL TYPE ---
 export const mealTypeEntityConfig: EntityConfig<MealType> = {
-  getIcon: () => Utensils,
+  getIcon: () => Tag,
   getIconColor: () => 'text-gray-500',
   getBorderColor: () => '#6b7280',
   views: {

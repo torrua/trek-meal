@@ -180,7 +180,14 @@ export interface TripEquipmentAssignment {
   quantity: number;
 }
 
-export type EntityType = 'products' | 'dishes' | 'trips' | 'equipment' | 'participants' | 'meals';
+export type EntityType =
+  | 'products'
+  | 'dishes'
+  | 'trips'
+  | 'equipment'
+  | 'participants'
+  | 'meals'
+  | 'meal-types';
 
 export interface FieldConfig {
   id: string;

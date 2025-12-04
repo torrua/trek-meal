@@ -44,4 +44,5 @@ export const CARD_FIELDS: Record<EntityType, FieldDefinition[]> = {
     { id: 'carbs', label: 'Углеводы (г)', defaultVisible: false },
     { id: 'weight', label: 'Общий вес (г)', defaultVisible: true },
   ],
+  'meal-types': [{ id: 'meals', label: 'Количество приёмов пищи', defaultVisible: true }],
 };

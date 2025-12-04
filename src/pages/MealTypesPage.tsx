@@ -14,8 +14,11 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
+  Tag,
 } from 'lucide-react';
 import useMealTypesStore from '../stores/useMealTypesStore';
+import useMealStore from '../stores/useMealStore';
+import { mealTypeEntityConfig } from '../config/entityConfig';
 import { exportBulkMealTypesToJson, importDataFromJson } from '../utils/backup';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
@@ -62,6 +65,21 @@ const MealTypesPage: React.FC = () => {
       return [];
     }
   }, [mealTypes]);
+
+  // Calculate meal counts for each meal type
+  const mealCounts = useMemo(() => {
+    const meals = useMealStore.getState().meals;
+    const counts: Record<number, number> = {};
+
+    // Count meals for each meal type
+    meals.forEach((meal) => {
+      if (meal.mealTypeId) {
+        counts[meal.mealTypeId] = (counts[meal.mealTypeId] || 0) + 1;
+      }
+    });
+
+    return counts;
+  }, []);
 
   const selectedMealType = useMemo(() => {
     try {
@@ -388,11 +406,13 @@ const MealTypesPage: React.FC = () => {
                 <EntityListItem
                   key={mealType.id}
                   title={mealType.name}
+                  meta={[
+                    { icon: Utensils, text: mealCounts[mealType.id] || 0, tooltip: 'Приёмы пищи' },
+                  ]}
                   isSelected={activeId === mealType.id}
                   isMultiSelected={selectedMealTypeIds.includes(mealType.id)}
                   onSelect={() => _handleEdit(mealType)}
                   onMultiSelect={() => toggleMealTypeSelection(mealType.id)}
-                  borderColor="#6b7280"
                   menuItems={menuItems}
                   data-testid={`meal-type-card-${mealType.id}`}
                   showMultiSelect={showMultiSelect}
@@ -401,10 +421,17 @@ const MealTypesPage: React.FC = () => {
               ) : (
                 <EntityCard
                   key={mealType.id}
-                  title={mealType.name}
-                  icon={Utensils}
+                  title={mealTypeEntityConfig.views.card.title(mealType)}
+                  icon={mealTypeEntityConfig.getIcon(mealType)}
                   iconColor="text-purple-600"
-                  details={[]}
+                  details={[
+                    {
+                      key: 'meals',
+                      icon: Utensils,
+                      text: mealCounts[mealType.id] || 0,
+                      title: 'Приёмы пищи',
+                    },
+                  ]}
                   isSelected={activeId === mealType.id}
                   isMultiSelected={selectedMealTypeIds.includes(mealType.id)}
                   onSelect={() => _handleEdit(mealType)}
@@ -466,7 +493,7 @@ const MealTypesPage: React.FC = () => {
               <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">
                   <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Utensils className="w-10 h-10 text-muted-foreground" />
+                    <Tag className="w-10 h-10 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-medium text-foreground mb-2">
                     Выберите тип приёма пищи
@@ -513,7 +540,7 @@ const MealTypesPage: React.FC = () => {
               <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">
                   <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Utensils className="w-10 h-10 text-muted-foreground" />
+                    <Tag className="w-10 h-10 text-muted-foreground" />
                   </div>
                   <h3 className="text-lg font-medium text-foreground mb-2">
                     Выберите тип приёма пищи
@@ -528,7 +555,7 @@ const MealTypesPage: React.FC = () => {
         </div>
       ) : (
         <div className="h-full flex flex-col items-center justify-center py-16">
-          <Utensils className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <Tag className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <h3 className="text-lg font-medium text-foreground">Типов пока нет</h3>
           <p className="text-sm text-muted-foreground mt-2">Создайте первый тип приёма пищи.</p>
           <div className="mt-4 inline-block">

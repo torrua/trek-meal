@@ -104,8 +104,6 @@ const EntityCard: React.FC<EntityCardProps> = ({
   const nutritionRef = useRef<HTMLDivElement | null>(null);
   const [showBju, setShowBju] = useState(globalShowBjuCard);
   const measureTimeoutRef = useRef<number | undefined>(undefined);
-  const clickTimeoutRef = useRef<number | null>(null);
-  const clickCountRef = useRef(0);
 
   useEffect(() => {
     return subscribeToShowBjuCard(setShowBju);
@@ -145,54 +143,35 @@ const EntityCard: React.FC<EntityCardProps> = ({
     };
   }, [nutrition]);
 
-  // Clean up timeouts on unmount
-  useEffect(() => {
-    return () => {
-      if (clickTimeoutRef.current) {
-        window.clearTimeout(clickTimeoutRef.current);
+  const interactiveProps = {
+    onClick: (e: React.MouseEvent) => {
+      if (showMultiSelect && onMultiSelect) {
+        e.preventDefault();
+        e.stopPropagation();
+        onMultiSelect(!isMultiSelected);
+      } else {
+        onSelect?.();
       }
-    };
-  }, []);
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    clickCountRef.current++;
-
-    if (clickCountRef.current === 1) {
-      // Set a timeout to handle single click
-      clickTimeoutRef.current = window.setTimeout(() => {
-        if (clickCountRef.current === 1) {
-          // This was a single click
-          if (showMultiSelect && onMultiSelect) {
-            onMultiSelect(!isMultiSelected);
-          } else {
-            onSelect?.();
-          }
-        }
-        clickCountRef.current = 0;
-        if (clickTimeoutRef.current) {
-          window.clearTimeout(clickTimeoutRef.current);
-          clickTimeoutRef.current = null;
-        }
-      }, 300); // 300ms delay to detect double-click
-    } else if (clickCountRef.current === 2) {
-      // This is a double-click
-      if (clickTimeoutRef.current) {
-        window.clearTimeout(clickTimeoutRef.current);
-        clickTimeoutRef.current = null;
-      }
+    },
+    onDoubleClick: (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       onRequestMultiSelectMode?.();
-      clickCountRef.current = 0;
-    }
-  };
-
-  const handleIconDoubleClick = (e: React.MouseEvent) => {
-    // Prevent the card click handler from firing
-    e.preventDefault();
-    e.stopPropagation();
-    onRequestMultiSelectMode?.();
+    },
+    onKeyDown: (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (showMultiSelect && e.shiftKey) {
+          onMultiSelect?.(!isMultiSelected);
+        } else {
+          onSelect?.();
+        }
+      }
+    },
+    role: 'button',
+    tabIndex: onSelect ? 0 : -1,
+    'aria-pressed': isSelected,
+    'data-testid': testId,
   };
 
   const gradientByVariant: Record<NonNullable<EntityCardProps['variant']>, string> = {
@@ -240,14 +219,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
               </button>
             </div>
           ) : (
-            <div
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors duration-200"
-              onDoubleClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onRequestMultiSelectMode?.();
-              }}
-            >
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors duration-200">
               {typeof Icon === 'function' ? (
                 <Icon />
               ) : (
@@ -385,37 +357,6 @@ const EntityCard: React.FC<EntityCardProps> = ({
       )}
     </>
   );
-
-  const interactiveProps = {
-    onClick: (e: React.MouseEvent) => {
-      if (showMultiSelect && onMultiSelect) {
-        e.preventDefault();
-        e.stopPropagation();
-        onMultiSelect(!isMultiSelected);
-      } else {
-        onSelect?.();
-      }
-    },
-    onDoubleClick: (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      onRequestMultiSelectMode?.();
-    },
-    onKeyDown: (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        if (showMultiSelect && e.shiftKey) {
-          onMultiSelect?.(!isMultiSelected);
-        } else {
-          onSelect?.();
-        }
-      }
-    },
-    role: 'button',
-    tabIndex: onSelect ? 0 : -1,
-    'aria-pressed': isSelected,
-    'data-testid': testId,
-  };
 
   if (linkTo) {
     return (

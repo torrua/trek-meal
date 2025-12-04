@@ -1,14 +1,34 @@
 // src/components/meal-types/MealTypeDetail.tsx
 
 import React, { useState } from 'react';
-import { Info, Edit, Save } from 'lucide-react';
-import type { MealType } from '../../types';
+import {
+  Info,
+  Edit,
+  Save,
+  Utensils,
+  Hash,
+  ChevronDown,
+  Flame,
+  Beef,
+  Droplet,
+  Wheat,
+  Weight,
+  SquareArrowOutUpRight,
+  Trash2,
+  Tag,
+} from 'lucide-react';
+import type { MealType, Meal } from '../../types';
 import Button from '../../ui/Button';
 import MealTypeForm from './MealTypeForm';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import useMealTypesStore from '../../stores/useMealTypesStore';
+import useMealStore from '../../stores/useMealStore';
+import useDishStore from '../../stores/useDishStore';
+import useProductStore from '../../stores/useProductStore';
 import { toast } from 'react-hot-toast';
+import { calculateNutrition } from '../meals/mealFormUtils';
+import { useNavigate } from 'react-router-dom';
 
 interface MealTypeDetailProps {
   mealType: MealType | null;
@@ -108,6 +128,9 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedMeals, setExpandedMeals] = useState<Set<number>>(new Set());
+  const [deletedMeals, setDeletedMeals] = useState<Set<number>>(new Set());
+  const navigate = useNavigate();
 
   const { updateMealType, addMealType } = useMealTypesStore();
 
@@ -155,6 +178,24 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
         // Редактирование существующего типа
         await updateMealType(mealType.id, editName);
         toast.success('Тип приёма пищи обновлён');
+
+        // Remove meal type associations from deleted meals
+        if (deletedMeals.size > 0) {
+          const mealStore = useMealStore.getState();
+          const mealsToUpdate = usageMeals.filter((meal) => deletedMeals.has(meal.id));
+
+          // Update all marked meals to remove the meal type association
+          for (const meal of mealsToUpdate) {
+            await mealStore.updateMeal(meal.id, {
+              ...meal,
+              mealTypeId: undefined,
+            });
+          }
+
+          // Clear the deleted meals set
+          setDeletedMeals(new Set());
+          toast.success(`Удалено ${mealsToUpdate.length} связей с приёмами пищи`);
+        }
       } else {
         // Создание нового типа
         await addMealType(editName);
@@ -178,6 +219,8 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
 
   const handleInlineCancel = () => {
     setIsInlineEditing(false);
+    // Clear deleted meals set when cancelling edit
+    setDeletedMeals(new Set());
     // Если это создание нового типа, сбрасываем и состояние создания
     if (!mealType) {
       setIsEditing(false);
@@ -227,7 +270,7 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
           >
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Название</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Название</label>
                 <Input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
@@ -237,7 +280,7 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Описание</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
                 <Textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
@@ -271,6 +314,52 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
       </div>
     );
   }
+
+  // Calculate usage count and meals for the meal type
+  const usageMeals = mealType
+    ? useMealStore.getState().meals.filter((meal) => meal.mealTypeId === mealType.id)
+    : [];
+  const usageCount = usageMeals.length;
+
+  // Calculate nutrition totals for a meal
+  const calculateMealNutrition = (meal: Meal) => {
+    const products = useProductStore.getState().products;
+    const dishes = useDishStore.getState().dishes;
+
+    let totalCalories = 0,
+      totalProteins = 0,
+      totalFats = 0,
+      totalCarbs = 0,
+      totalWeight = 0;
+
+    meal.items.forEach((item) => {
+      const nutrition = calculateNutrition(item, products, dishes);
+      if (nutrition) {
+        totalCalories += nutrition.calories;
+        totalProteins += nutrition.proteins;
+        totalFats += nutrition.fats;
+        totalCarbs += nutrition.carbs;
+      }
+
+      // Calculate weight
+      if (item.type === 'product' && 'weight' in item) {
+        totalWeight += Number(item.weight) || 0;
+      } else if (item.type === 'dish') {
+        // For dishes, we would need to calculate the total weight of all ingredients
+        // For simplicity, we'll just count the number of items
+        totalWeight += 100; // Placeholder value
+      }
+    });
+
+    return {
+      calories: Math.round(totalCalories),
+      proteins: Math.round(totalProteins * 10) / 10,
+      fats: Math.round(totalFats * 10) / 10,
+      carbs: Math.round(totalCarbs * 10) / 10,
+      weight: Math.round(totalWeight),
+      itemsCount: meal.items.length,
+    };
+  };
 
   return (
     <div className="pt-2">
@@ -328,7 +417,7 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
             {isInlineEditing ? (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Название</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Название</label>
                   <Input
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
@@ -337,7 +426,7 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Описание</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
                   <Textarea
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
@@ -351,14 +440,14 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
               <>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Название</label>
-                  <div className="w-full px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground">
+                  <div className="w-full h-10 px-4 py-2 bg-card border border-border rounded-lg text-sm text-foreground flex items-center">
                     {mealType?.name || ''}
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-                  <div className="w-full px-3 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap min-h-[80px]">
+                  <div className="w-full min-h-[80px] px-4 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
                     {mealType?.description || 'Нет описания'}
                   </div>
                 </div>
@@ -367,8 +456,203 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
           </div>
         </CollapsibleSection>
 
-        {/* Usage Section - только для существующих типов */}
-        {/* Убрали секцию использования по запросу */}
+        {/* Usage Section - только для существующих типов с приёмами пищи */}
+        {mealType && usageCount > 0 && (
+          <CollapsibleSection
+            id="usage"
+            title="Использование"
+            icon={<Tag className="w-4 h-4 text-green-600" />}
+            isOpen={openSections.includes('usage')}
+            onToggle={onToggleSection}
+            gradientFrom="from-green-500/5"
+            gradientVia="via-teal-500/5"
+            gradientTo="to-blue-500/5"
+            summaryContent={
+              usageCount > 0 && (
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Hash className="w-3.5 h-3.5" />
+                  {usageCount}
+                </span>
+              )
+            }
+          >
+            <div className="space-y-4 pt-4">
+              <div className="space-y-3">
+                {usageMeals.length > 0 ? (
+                  usageMeals
+                    .filter((meal: Meal) => !deletedMeals.has(meal.id))
+                    .map((meal: Meal) => {
+                      // Calculate total nutrition for the meal
+                      const products = useProductStore.getState().products;
+                      const dishes = useDishStore.getState().dishes;
+
+                      let totalCalories = 0,
+                        totalProteins = 0,
+                        totalFats = 0,
+                        totalCarbs = 0,
+                        totalWeight = 0;
+
+                      meal.items.forEach((item: any) => {
+                        const nutrition = calculateNutrition(item, products, dishes);
+                        if (nutrition) {
+                          totalCalories += nutrition.calories;
+                          totalProteins += nutrition.proteins;
+                          totalFats += nutrition.fats;
+                          totalCarbs += nutrition.carbs;
+                        }
+
+                        // Calculate weight
+                        if (item.type === 'product') {
+                          totalWeight += Number(item.weight || 0);
+                        } else if (item.type === 'dish') {
+                          const dish = dishes.find((d) => d.id === item.itemId);
+                          if (dish) {
+                            totalWeight += Number(
+                              dish.products.reduce((sum, dp) => sum + Number(dp.weight), 0)
+                            );
+                          }
+                        }
+                      });
+
+                      return (
+                        <div
+                          key={meal.id}
+                          data-meal-id={meal.id}
+                          className="[background:var(--color-meal-composition-gradient)] border border-[#10b981]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] show-nutrition:p-3"
+                        >
+                          <div className="space-y-1">
+                            {/* Header Row */}
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <Utensils className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                <h4 className="font-medium text-foreground truncate">
+                                  {meal.name}
+                                </h4>
+                              </div>
+
+                              {/* Action buttons */}
+                              <div className="flex items-center gap-2">
+                                {/* Nutrition block - expands to show all nutrition elements when clicked */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // Stop propagation to prevent collapsing
+                                    // Toggle nutrition details visibility using state
+                                    setExpandedMeals((prev) => {
+                                      const newSet = new Set(prev);
+                                      if (newSet.has(meal.id)) {
+                                        newSet.delete(meal.id);
+                                      } else {
+                                        newSet.add(meal.id);
+                                      }
+                                      return newSet;
+                                    });
+                                  }}
+                                  className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
+                                >
+                                  {expandedMeals.has(meal.id) ? (
+                                    <>
+                                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-sm font-semibold text-orange-600">
+                                          {Math.round(totalCalories)}
+                                        </span>
+                                        <Flame className="w-4 h-4 text-orange-600" />
+                                      </div>
+                                      <div className="w-px h-4 bg-border" />
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-sm font-semibold text-blue-600">
+                                          {Math.round(totalProteins * 10) / 10}
+                                        </span>
+                                        <Beef className="w-4 h-4 text-blue-600" />
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-sm font-semibold text-yellow-600">
+                                          {Math.round(totalFats * 10) / 10}
+                                        </span>
+                                        <Droplet className="w-4 h-4 text-yellow-600" />
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-sm font-semibold text-green-600">
+                                          {Math.round(totalCarbs * 10) / 10}
+                                        </span>
+                                        <Wheat className="w-4 h-4 text-green-600" />
+                                      </div>
+                                      <div className="w-px h-4 bg-border" />
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-sm font-semibold text-muted-foreground">
+                                          {Math.round(totalWeight)}
+                                        </span>
+                                        <Weight className="w-4 h-4 text-muted-foreground" />
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-sm font-semibold text-muted-foreground">
+                                          {Math.round(totalWeight)}
+                                        </span>
+                                        <Weight className="w-4 h-4 text-muted-foreground" />
+                                      </div>
+                                    </>
+                                  )}
+                                </button>
+
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/meals?mealId=${meal.id}`);
+                                  }}
+                                  className="!border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/15 text-blue-600"
+                                  title="Открыть приём пищи"
+                                >
+                                  <SquareArrowOutUpRight className="w-4 h-4" />
+                                </Button>
+
+                                {/* Delete button - only shown in edit mode */}
+                                {isInlineEditing && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      // Optimistically remove meal from the list
+                                      setDeletedMeals((prev) => {
+                                        const newSet = new Set(prev);
+                                        newSet.add(meal.id);
+                                        return newSet;
+                                      });
+                                      toast.success(
+                                        'Приём пищи помечен для удаления. Нажмите "Сохранить" для подтверждения'
+                                      );
+                                    }}
+                                    className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
+                                    title="Удалить тип приёма пищи"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            {/* Removed detailed nutrition block as per requirements - only the button is needed */}
+                          </div>
+                        </div>
+                      );
+                    })
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm">Нет приёмов пищи, использующих этот тип</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CollapsibleSection>
+        )}
       </div>
     </div>
   );

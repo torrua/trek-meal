@@ -48,6 +48,7 @@ const TAB_ICONS: Record<EntityType, React.ElementType> = {
   products: Component,
   dishes: Soup,
   meals: Utensils,
+  'meal-types': Tag,
   equipment: Backpack,
 };
 
@@ -64,6 +65,7 @@ const FIELD_ICONS: Record<string, React.ElementType> = {
   type: Info,
   trips: MapPin,
   equipment: Backpack,
+  meals: Utensils,
   default: Tag,
 };
 
@@ -151,6 +153,7 @@ const CardViewSettings: React.FC = () => {
     { id: 'products', label: 'Продукты' },
     { id: 'dishes', label: 'Блюда' },
     { id: 'meals', label: 'Приёмы пищи' },
+    { id: 'meal-types', label: 'Типы приёмов пищи' },
     { id: 'equipment', label: 'Снаряжение' },
   ];
 

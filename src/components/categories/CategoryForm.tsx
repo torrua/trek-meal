@@ -81,7 +81,6 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
               onChange={(e) => setName(e.target.value)}
               autoFocus
               placeholder="Например, Крупы и макароны"
-              className="text-base"
             />
           </FormField>
 
@@ -90,7 +89,6 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
               value={emoji}
               onChange={(e) => setEmoji(e.target.value)}
               placeholder="Например, 🌾"
-              className="text-center text-2xl"
             />
           </FormField>
         </div>

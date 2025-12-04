@@ -230,7 +230,6 @@ const TripForm: React.FC<TripFormProps> = ({ onSubmit, onCancel, trip = null }) 
                 required
                 maxLength={100}
                 placeholder="Например, Восхождение на Эльбрус"
-                className="text-base font-medium"
               />
             </div>
 

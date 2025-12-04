@@ -36,6 +36,7 @@ import useDishStore from '../../stores/useDishStore';
 import useCategoryStore from '../../stores/useCategoryStore';
 import useMealTypesStore from '../../stores/useMealTypesStore';
 import Textarea from '../../ui/Textarea';
+import Input from '../../ui/Input';
 import Button from '../../ui/Button';
 import SortableItemComponent from './SortableItem';
 import DropdownSelect from '../../ui/DropdownSelect';
@@ -152,6 +153,7 @@ const MealForm: React.FC<MealFormProps> = ({
 
   type MealFormValues = z.infer<typeof validationSchema>;
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -484,7 +486,7 @@ const MealForm: React.FC<MealFormProps> = ({
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Название приёма пищи
                 </label>
-                <input
+                <Input
                   {...field}
                   ref={nameInputRef}
                   type="text"
@@ -492,17 +494,8 @@ const MealForm: React.FC<MealFormProps> = ({
                     meal ? 'Например, Завтрак, Обед, Ужин...' : 'Приём пищи (можно изменить)'
                   }
                   autoFocus
-                  className={`w-full px-3 py-2.5 bg-card border ${
-                    validationErrors.name || errors.name?.message
-                      ? 'border-danger focus:ring-danger/50'
-                      : 'border-border focus:ring-primary/50'
-                  } rounded-lg text-sm focus:outline-none focus:ring-2 transition-all`}
+                  error={validationErrors.name || errors.name?.message}
                 />
-                {(validationErrors.name || errors.name?.message) && (
-                  <p className="text-sm text-danger text-center">
-                    {validationErrors.name || errors.name?.message}
-                  </p>
-                )}
               </div>
             )}
           />
@@ -566,13 +559,17 @@ const MealForm: React.FC<MealFormProps> = ({
         <div className="relative mb-4" ref={searchInputRef}>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
-            <input
+            <Input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setShowAddMenu(true)}
-              placeholder="Найти продукт или блюдо..."
-              className="w-full pl-10 pr-3 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/60 transition-all"
+              onFocus={() => {
+                setIsFocused(true);
+                setShowAddMenu(true);
+              }}
+              onBlur={() => setIsFocused(false)}
+              placeholder={!isFocused ? 'Найти продукт или блюдо...' : ''}
+              className={!isFocused && !searchQuery ? 'text-center pl-10' : 'text-left pl-10'}
             />
           </div>
 
@@ -620,70 +617,62 @@ const MealForm: React.FC<MealFormProps> = ({
                   e.stopPropagation();
                 }}
               >
-                <div
-                  className="p-2 absolute-dropdown-scrollbar"
-                  tabIndex={0}
-                  onTouchMove={(e) => {
-                    e.stopPropagation();
-                  }}
-                >
-                  {filteredDishes.length === 0 && filteredProducts.length === 0 ? (
-                    <div className="px-3 py-8 text-center text-sm text-muted-foreground">
-                      Ничего не найдено
-                    </div>
-                  ) : (
-                    <>
-                      {filteredDishes.length > 0 && (
-                        <div className="mb-2">
-                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                {filteredDishes.length === 0 && filteredProducts.length === 0 ? (
+                  <div className="px-3 py-8 text-center text-sm text-muted-foreground">
+                    Ничего не найдено
+                  </div>
+                ) : (
+                  <>
+                    {filteredDishes.length > 0 && (
+                      <div className="mb-2">
+                        <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                          <Soup className="w-3.5 h-3.5 text-orange-500" />
+                          Блюда ({filteredDishes.length})
+                        </div>
+                        {filteredDishes.map((dish) => (
+                          <button
+                            key={dish.id}
+                            type="button"
+                            onClick={() => handleAddItem(dish.id, 'dish')}
+                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
+                          >
                             <Soup className="w-3.5 h-3.5 text-orange-500" />
-                            Блюда ({filteredDishes.length})
-                          </div>
-                          {filteredDishes.map((dish) => (
+                            {dish.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {filteredProducts.length > 0 && (
+                      <div>
+                        <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                          <Component className="w-3.5 h-3.5 text-blue-500" />
+                          Продукты ({filteredProducts.length})
+                        </div>
+                        {filteredProducts.map((product) => {
+                          const category = product.categoryId
+                            ? categories.find((cat) => cat.id === product.categoryId)
+                            : null;
+                          return (
                             <button
-                              key={dish.id}
+                              key={product.id}
                               type="button"
-                              onClick={() => handleAddItem(dish.id, 'dish')}
+                              onClick={() => handleAddItem(product.id, 'product')}
                               className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
                             >
-                              <Soup className="w-3.5 h-3.5 text-orange-500" />
-                              {dish.name}
+                              <Component className="w-3.5 h-3.5 text-blue-500" />
+                              <span className="flex-1">{product.name}</span>
+                              {category && (
+                                <span className="text-muted-foreground text-xs flex items-center gap-1">
+                                  {category.emoji} {category.name}
+                                </span>
+                              )}
                             </button>
-                          ))}
-                        </div>
-                      )}
-                      {filteredProducts.length > 0 && (
-                        <div>
-                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
-                            <Component className="w-3.5 h-3.5 text-blue-500" />
-                            Продукты ({filteredProducts.length})
-                          </div>
-                          {filteredProducts.map((product) => {
-                            const category = product.categoryId
-                              ? categories.find((cat) => cat.id === product.categoryId)
-                              : null;
-                            return (
-                              <button
-                                key={product.id}
-                                type="button"
-                                onClick={() => handleAddItem(product.id, 'product')}
-                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
-                              >
-                                <Component className="w-3.5 h-3.5 text-blue-500" />
-                                <span className="flex-1">{product.name}</span>
-                                {category && (
-                                  <span className="text-muted-foreground text-xs flex items-center gap-1">
-                                    {category.emoji} {category.name}
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           )}

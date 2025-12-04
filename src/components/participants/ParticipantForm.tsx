@@ -161,7 +161,6 @@ const ParticipantForm: React.FC<ParticipantFormProps> = ({
                 icon={User}
                 disabled={isLoading}
                 autoFocus
-                className="text-base font-medium"
               />
             </FormField>
 

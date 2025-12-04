@@ -51,6 +51,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [minMenuWidth, setMinMenuWidth] = useState(0);
+  // Menu position state no longer needed without portal
   const [searchTerm, setSearchTerm] = useState(''); // Add search term state
 
   // Filter options based on search term
@@ -62,7 +63,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
   }, [options, searchTerm]);
 
   const selectedValues = useMemo(() => (Array.isArray(value) ? value : [value]), [value]);
-  const selectedOption = !isMulti ? options.find((opt) => opt.value === (value as string)) : null;
+  const selectedOption = !isMulti ? options.find((opt) => opt.value === String(value)) : null;
 
   const handleOutsideClick = useCallback((event: MouseEvent) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -112,9 +113,13 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
         onChange(optionValue);
         setIsOpen(false);
         setSearchTerm(''); // Clear search when selecting
+        // Keep focus on the trigger button
+        setTimeout(() => {
+          triggerRef.current?.focus();
+        }, 0);
       }
     },
-    [options, onChange, isMulti, selectedValues]
+    [options, onChange, isMulti, selectedValues, value]
   );
 
   useEffect(() => {
@@ -160,9 +165,13 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             }
           }}
           className={cn(
-            // Base Notion-style button - matches Input height
-            'flex items-center justify-between w-full h-10 px-4 py-2 text-left rounded-lg border transition-all duration-200',
-            'notion-focus-ring',
+            // Base styles - Notion-inspired to match Input component
+            'flex w-full text-sm transition-colors duration-200 border-transition',
+            'placeholder:text-muted-foreground text-foreground',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            'h-10 rounded-lg border border-border bg-card px-4 py-2',
+            'hover:bg-card-hover hover:border-border-hover hover:notion-shadow-sm',
+            'focus:shadow-md focus:ring-2 focus:ring-primary/20 focus:outline-none',
             'min-w-[220px]',
 
             // Active/inactive states
@@ -173,8 +182,8 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             // Disabled state
             disabled && 'bg-muted/50 text-muted-foreground cursor-not-allowed opacity-60',
 
-            // Open state
-            isOpen && 'border-primary/60 ring-2 ring-primary/20 bg-card'
+            // Open state (no additional styles when menu is open)
+            isOpen && ''
           )}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
@@ -219,12 +228,14 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             )}
           </div>
 
-          <ChevronDown
-            className={cn(
-              'w-4 h-4 transition-transform duration-200 flex-shrink-0 text-muted-foreground ml-2',
-              isOpen && 'rotate-180'
-            )}
-          />
+          <div className="flex items-center">
+            <ChevronDown
+              className={cn(
+                'w-4 h-4 transition-transform duration-200 flex-shrink-0 text-muted-foreground',
+                isOpen && 'rotate-180'
+              )}
+            />
+          </div>
         </button>
 
         {/* Dropdown Menu */}
@@ -261,12 +272,15 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
                 filteredOptions.map((option) => {
                   const checked = isMulti
                     ? selectedValues.includes(option.value)
-                    : (value as string) === option.value;
+                    : String(value) === String(option.value);
                   return (
                     <button
                       type="button"
                       key={option.value}
-                      onClick={() => handleOptionSelect(option.value)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOptionSelect(option.value);
+                      }}
                       disabled={option.disabled}
                       className={cn(
                         'w-full px-4 py-2.5 text-left text-sm transition-all duration-150 flex items-center gap-3',

@@ -139,7 +139,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
               onChange={handleChange}
               autoFocus
               placeholder="Например, Гречневая крупа"
-              className="text-base font-medium"
             />
           </FormField>
 
@@ -203,7 +202,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
               min="0"
               step="0.1"
               placeholder="0"
-              className="text-center"
             />
           </FormField>
           <FormField label="Белки (г)">
@@ -215,7 +213,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
               min="0"
               step="0.1"
               placeholder="0"
-              className="text-center"
             />
           </FormField>
           <FormField label="Жиры (г)">
@@ -227,7 +224,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
               min="0"
               step="0.1"
               placeholder="0"
-              className="text-center"
             />
           </FormField>
           <FormField label="Углеводы (г)">
@@ -239,7 +235,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
               min="0"
               step="0.1"
               placeholder="0"
-              className="text-center"
             />
           </FormField>
         </div>
@@ -278,7 +273,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
                       onChange={(e) => handlePortionChange(index, 'weight', e.target.value)}
                       required
                       min="0"
-                      className="text-center"
                     />
                   </FormField>
                 </div>

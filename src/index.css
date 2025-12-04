@@ -190,7 +190,10 @@
   background-color: rgb(var(--card-hover));
   border-color: rgb(var(--border-hover));
   @apply notion-shadow-xs;
-  transition: background-color 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out;
+  transition:
+    background-color 0.3s ease-out,
+    border-color 0.3s ease-out,
+    box-shadow 0.3s ease-out;
 }
 
 .unified-field-hover:focus {
@@ -199,7 +202,9 @@
 
 .unified-field-focus:focus {
   @apply shadow-md ring-2 ring-primary/20 outline-none;
-  transition: box-shadow 0.3s ease-out, ring 0.3s ease-out;
+  transition:
+    box-shadow 0.3s ease-out,
+    ring 0.3s ease-out;
 }
 
 /* Refined Notion-style shadows */

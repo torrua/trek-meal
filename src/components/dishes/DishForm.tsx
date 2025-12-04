@@ -180,7 +180,6 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
               onChange={(e) => setName(e.target.value)}
               autoFocus
               placeholder="Например, Плов туристический (с тушенкой)"
-              className="text-base font-medium"
             />
           </FormField>
 

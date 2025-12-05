@@ -249,7 +249,10 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={handleInlineCancel}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleInlineCancel();
+                  }}
                   disabled={isSubmitting}
                 >
                   Отмена
@@ -257,7 +260,10 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
                 <Button
                   type="button"
                   variant="primary"
-                  onClick={handleInlineSave}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleInlineSave();
+                  }}
                   disabled={isSubmitting || !editName.trim()}
                   icon={isSubmitting ? undefined : Save}
                   size="icon"
@@ -393,7 +399,10 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={handleInlineCancel}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleInlineCancel();
+                  }}
                   disabled={isSubmitting}
                 >
                   Отмена
@@ -401,7 +410,10 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
                 <Button
                   type="button"
                   variant="primary"
-                  onClick={handleInlineSave}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleInlineSave();
+                  }}
                   disabled={isSubmitting || !editName.trim()}
                   icon={isSubmitting ? undefined : Save}
                   size="icon"

@@ -115,7 +115,7 @@ const MealsPage: React.FC = () => {
   const handleEdit = useCallback((meal: Meal) => {
     setActiveId(meal.id);
     setIsDetailEditing(true);
-    setOpenSections((prev) => (prev.includes('basic-info') ? prev : [...prev, 'basic-info']));
+    // Не меняем состояние openSections - только пользователь управляет сворачиванием
     setDetailEditTrigger((t) => t + 1);
   }, []);
 

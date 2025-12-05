@@ -135,7 +135,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
         gradientVia="via-purple-500/5"
         gradientTo="to-pink-500/5"
         actionButton={
-          <Button variant="primary" onClick={() => setIsEditing(true)}>
+          <Button
+            variant="primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditing(true);
+            }}
+          >
             <Edit className="w-4 h-4 mr-2" />
             Редактировать
           </Button>

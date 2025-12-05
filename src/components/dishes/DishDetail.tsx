@@ -507,9 +507,9 @@ const DishDetail: React.FC<DishDetailProps> = ({
       if (editTriggerRef.current !== undefined && editTriggerRef.current !== editTrigger) {
         setIsEditing(true);
         if (dish) {
-          setName(dish.name);
-          setDescription(dish.description || '');
-          setFormProducts(JSON.parse(JSON.stringify(dish.products)));
+          setName(dish?.name || '');
+          setDescription(dish?.description || '');
+          setFormProducts(JSON.parse(JSON.stringify(dish?.products || [])));
         }
         onStartEdit?.();
       }
@@ -526,17 +526,17 @@ const DishDetail: React.FC<DishDetailProps> = ({
   const handleStartEdit = () => {
     if (!openSections.includes('basic-info')) onToggleSection('basic-info');
     setIsEditing(true);
-    setName(dish.name);
-    setDescription(dish.description || '');
-    setFormProducts(JSON.parse(JSON.stringify(dish.products)));
+    setName(dish?.name || '');
+    setDescription(dish?.description || '');
+    setFormProducts(JSON.parse(JSON.stringify(dish?.products || [])));
     onStartEdit?.();
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setName(dish.name);
-    setDescription(dish.description || '');
-    setFormProducts(JSON.parse(JSON.stringify(dish.products)));
+    setName(dish?.name || '');
+    setDescription(dish?.description || '');
+    setFormProducts(JSON.parse(JSON.stringify(dish?.products || [])));
     onFinishEdit?.();
   };
 
@@ -565,7 +565,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
       setIsSaveModalOpen(true);
     } else {
       // Only text changed, simple update
-      updateDish(dish.id, { name: trimmedName, description, products: validProducts });
+      updateDish(dish?.id || 0, { name: trimmedName, description, products: validProducts });
       setIsEditing(false);
       onFinishEdit?.();
     }
@@ -628,7 +628,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
     if (isEditing) {
       setFormProducts(formProducts.filter((_, i) => i !== productIndex));
     } else {
-      removeProductFromDish(dish.id, productIndex);
+      removeProductFromDish(dish?.id || 0, productIndex);
     }
   };
 
@@ -643,7 +643,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
         newProducts[editingPortionIndex].weight = newWeight;
         setFormProducts(newProducts);
       } else if (dish) {
-        updateProductInDish(dish.id, editingPortionIndex, newWeight);
+        updateProductInDish(dish?.id || 0, editingPortionIndex, newWeight);
       }
     }
     setEditingPortionIndex(null);
@@ -793,10 +793,25 @@ const DishDetail: React.FC<DishDetailProps> = ({
               className="flex items-center gap-2 min-w-[280px] justify-end"
               onClick={(e) => e.stopPropagation()}
             >
-              <Button type="button" variant="ghost" onClick={handleCancelEdit}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCancelEdit();
+                }}
+              >
                 Отмена
               </Button>
-              <Button type="button" variant="primary" onClick={handlePreSave} icon={Soup}>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePreSave();
+                }}
+                icon={Soup}
+              >
                 Сохранить изменения
               </Button>
             </div>
@@ -847,14 +862,14 @@ const DishDetail: React.FC<DishDetailProps> = ({
                   Название блюда
                 </label>
                 <div className="w-full h-10 px-4 py-2 bg-muted/50 border border-border rounded-lg text-sm text-foreground flex items-center">
-                  {dish.name}
+                  {dish?.name || ''}
                 </div>
               </div>
-              {dish.description && (
+              {dish?.description && (
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
                   <div className="flex w-full min-h-[84px] px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
-                    {dish.description}
+                    {dish?.description}
                   </div>
                 </div>
               )}

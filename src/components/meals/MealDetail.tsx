@@ -469,7 +469,10 @@ const MealDetail: React.FC<MealDetailProps> = ({
               <Button
                 type="button"
                 variant="primary"
-                onClick={handleStartEdit}
+                onClick={(e) => {
+                  e.stopPropagation(); // Предотвращаем распространение клика на CollapsibleSection
+                  handleStartEdit();
+                }}
                 icon={Edit}
                 size="icon"
               >

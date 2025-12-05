@@ -242,17 +242,38 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
         actionButton={
           isEditing ? (
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="ghost" onClick={handleCancel}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCancel();
+                }}
+              >
                 <X className="w-4 h-4 mr-2" />
                 Отмена
               </Button>
-              <Button size="sm" variant="primary" onClick={handleSave}>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSave();
+                }}
+              >
                 <Save className="w-4 h-4 mr-2" />
                 Сохранить
               </Button>
             </div>
           ) : (
-            <Button size="sm" variant="secondary" onClick={() => setIsEditing(true)}>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEditing(true);
+              }}
+            >
               <Edit className="w-4 h-4 mr-2" />
               Изменить
             </Button>

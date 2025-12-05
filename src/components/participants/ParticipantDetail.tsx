@@ -138,7 +138,7 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
   // Инициализация данных формы при изменении участника
   useEffect(() => {
     if (participant) {
-      const { id, ...data } = participant;
+      const { id: _id, ...data } = participant;
       setFormData(data);
     }
   }, [participant]);
@@ -181,12 +181,12 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
 
   const handleCancel = () => {
     // Сброс к исходным данным
-    const { id, ...data } = participant;
+    const { id: _id, ...data } = participant;
     setFormData(data);
     setIsEditing(false);
   };
 
-  const handleChange = (field: keyof ParticipantData, value: any) => {
+  const handleChange = (field: keyof ParticipantData, value: string | number | boolean) => {
     setFormData((prev) => (prev ? { ...prev, [field]: value } : null));
   };
 
@@ -207,17 +207,38 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
         actionButton={
           isEditing ? (
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="ghost" onClick={handleCancel}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCancel();
+                }}
+              >
                 <X className="w-4 h-4 mr-2" />
                 Отмена
               </Button>
-              <Button size="sm" variant="primary" onClick={handleSave}>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSave();
+                }}
+              >
                 <Save className="w-4 h-4 mr-2" />
                 Сохранить
               </Button>
             </div>
           ) : (
-            <Button size="sm" variant="secondary" onClick={() => setIsEditing(true)}>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEditing(true);
+              }}
+            >
               <Edit className="w-4 h-4 mr-2" />
               Изменить
             </Button>

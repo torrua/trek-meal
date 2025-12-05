@@ -18,6 +18,7 @@ import {
   Weight,
   Tag,
   Save,
+  ChevronDown,
 } from 'lucide-react';
 import {
   DndContext,
@@ -43,7 +44,6 @@ import DropdownSelect from '../../ui/DropdownSelect';
 import { calculateNutrition, isMealNameUnique } from './mealFormUtils';
 import { useMealStore } from '../../stores/useMealStore';
 import ItemContent from './ItemContent';
-import { AlertCircle } from 'lucide-react';
 
 interface MealFormProps {
   meal?: Meal | null;
@@ -157,6 +157,7 @@ const MealForm: React.FC<MealFormProps> = ({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [showHeaderNutrition, setShowHeaderNutrition] = useState(false);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
   const searchInputRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -324,6 +325,26 @@ const MealForm: React.FC<MealFormProps> = ({
     return activeId ? watchItems.find((item, idx) => fields[idx]?.id === activeId) : null;
   }, [activeId, watchItems, fields]);
 
+  // Helper function to calculate item weight consistently
+  const calculateItemWeight = (item: MealPlanItem, products: Product[], dishes: Dish[]): number => {
+    if (item.type === 'product') {
+      return Number(item.weight || 0);
+    } else if (item.type === 'dish') {
+      const dish = dishes.find((d) => d.id === item.itemId);
+      if (dish) {
+        return Number(dish.products.reduce((sum, dp) => sum + Number(dp.weight), 0));
+      }
+    }
+    return 0;
+  };
+
+  // Calculate total weight including dishes
+  const totalWeight = useMemo(() => {
+    return watchItems.reduce((total, item) => {
+      return total + calculateItemWeight(item, products, dishes);
+    }, 0);
+  }, [watchItems, products, dishes]);
+
   const totalNutrition = useMemo(() => {
     let calories = 0,
       proteins = 0,
@@ -484,9 +505,7 @@ const MealForm: React.FC<MealFormProps> = ({
             control={control}
             render={({ field }) => (
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Название приёма пищи
-                </label>
+                <label className="block text-sm font-medium text-foreground mb-2">Название *</label>
                 <Input
                   {...field}
                   ref={nameInputRef}
@@ -501,23 +520,11 @@ const MealForm: React.FC<MealFormProps> = ({
             )}
           />
           <Controller
-            name="description"
-            control={control}
-            render={({ field }) => (
-              <Textarea
-                {...field}
-                label="Краткое описание"
-                rows={3}
-                placeholder="Добавьте заметки или комментарии..."
-              />
-            )}
-          />
-          <Controller
             name="mealTypeId"
             control={control}
             render={({ field }) => (
               <DropdownSelect
-                label="Тип приёма пищи (необязательно)"
+                label="Тип"
                 icon={Tag}
                 options={[
                   { value: '', label: 'Не указан' },
@@ -531,6 +538,18 @@ const MealForm: React.FC<MealFormProps> = ({
                   field.onChange(val);
                 }}
                 placeholder="Выберите тип приёма пищи"
+              />
+            )}
+          />
+          <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+              <Textarea
+                {...field}
+                label="Описание"
+                rows={3}
+                placeholder="Добавьте заметки или комментарии..."
               />
             )}
           />
@@ -549,6 +568,63 @@ const MealForm: React.FC<MealFormProps> = ({
               <Hash className="w-3.5 h-3.5" />
               {watchItems.length}
             </span>
+          )
+        }
+        headerContent={
+          watchItems.length > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowHeaderNutrition(!showHeaderNutrition);
+              }}
+              className="flex items-center gap-1.5 px-3 h-9 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
+            >
+              {showHeaderNutrition ? (
+                <>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-1">
+                      <Flame className="w-4 h-4 text-orange-600" />
+                      <span className="font-semibold text-orange-600">
+                        {totalNutrition.calories}
+                      </span>
+                    </div>
+                    <div className="w-px h-4 bg-border" />
+                    <div className="flex items-center gap-1">
+                      <Beef className="w-4 h-4 text-blue-600" />
+                      <span className="font-semibold text-blue-600">{totalNutrition.proteins}</span>
+                    </div>
+                    <div className="w-px h-4 bg-border" />
+                    <div className="flex items-center gap-1">
+                      <Droplet className="w-4 h-4 text-yellow-600" />
+                      <span className="font-semibold text-yellow-600">{totalNutrition.fats}</span>
+                    </div>
+                    <div className="w-px h-4 bg-border" />
+                    <div className="flex items-center gap-1">
+                      <Wheat className="w-4 h-4 text-green-600" />
+                      <span className="font-semibold text-green-600">{totalNutrition.carbs}</span>
+                    </div>
+                  </div>
+                  <div className="w-px h-4 bg-border" />
+                  <div className="flex items-center gap-1">
+                    <Weight className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-semibold text-muted-foreground text-sm">
+                      {totalWeight}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
+                  <div className="flex items-center gap-1">
+                    <Weight className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-semibold text-muted-foreground text-sm">
+                      {totalWeight}
+                    </span>
+                  </div>
+                </>
+              )}
+            </button>
           )
         }
         gradientFrom="from-orange-500/5"
@@ -577,9 +653,6 @@ const MealForm: React.FC<MealFormProps> = ({
             <div
               ref={dropdownRef}
               className="fixed-dropdown-container bg-card border border-border rounded-lg shadow-2xl overflow-hidden"
-              // eslint-disable-next-line react/forbid-dom-props, react/forbid-prop-types
-              /* eslint-disable */
-              // Dynamic positioning styles - required for dropdown positioning
               style={{
                 top: `${dropdownPosition.top}px`,
                 left: `${dropdownPosition.left}px`,
@@ -604,8 +677,8 @@ const MealForm: React.FC<MealFormProps> = ({
                 ) as HTMLElement;
                 if (scrollContainer) {
                   // Check if this is a wheel event with deltaY property
-                  if ('deltaY' in e && typeof (e as any).deltaY === 'number') {
-                    scrollContainer.scrollTop += (e as any).deltaY;
+                  if ('deltaY' in e && typeof e.deltaY === 'number') {
+                    scrollContainer.scrollTop += e.deltaY;
                   }
                 }
               }}

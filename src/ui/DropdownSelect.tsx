@@ -244,11 +244,10 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             style={{ minWidth: `${minMenuWidth}px` }}
             className={cn(
               'absolute z-[9999] top-full left-0 mt-2 w-max max-w-xs',
-              'bg-card border border-border rounded-xl notion-shadow-lg',
-              'py-2 overflow-hidden notion-scale-in'
+              'bg-card border border-border/20 rounded-xl notion-shadow-lg',
+              'shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)]',
+              'overflow-hidden notion-scale-in'
             )}
-            role="listbox"
-            aria-label={label}
           >
             {/* Search Input */}
             {searchable && (
@@ -267,12 +266,15 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
               </div>
             )}
 
-            <div className="max-h-[320px] overflow-y-auto rounded-b-lg">
+            <div className="max-h-[320px] overflow-y-auto" role="listbox" aria-label={label}>
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((option, index) => {
                   const checked = isMulti
                     ? selectedValues.includes(option.value)
                     : String(value) === String(option.value);
+
+                  const isFirst = index === 0;
+                  const isLast = index === filteredOptions.length - 1;
 
                   return (
                     <button
@@ -288,10 +290,13 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
                         'notion-bg-hover',
                         checked && 'bg-primary/10 text-primary font-semibold',
                         option.disabled && 'text-muted-foreground/50 cursor-not-allowed',
-                        !option.disabled && 'text-foreground hover:text-foreground'
+                        !option.disabled && 'text-foreground hover:text-foreground',
+                        // Скругляем только нужные углы для выделенных элементов
+                        checked && isFirst && 'rounded-t-xl',
+                        checked && isLast && 'rounded-b-xl'
                       )}
                       role="option"
-                      aria-selected={checked}
+                      aria-selected={checked ? 'true' : 'false'}
                     >
                       {/* Option icon */}
                       {option.icon ? (

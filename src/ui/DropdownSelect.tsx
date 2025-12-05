@@ -267,12 +267,13 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
               </div>
             )}
 
-            <div className="max-h-[320px] overflow-y-auto">
+            <div className="max-h-[320px] overflow-y-auto rounded-b-lg">
               {filteredOptions.length > 0 ? (
-                filteredOptions.map((option) => {
+                filteredOptions.map((option, index) => {
                   const checked = isMulti
                     ? selectedValues.includes(option.value)
                     : String(value) === String(option.value);
+
                   return (
                     <button
                       type="button"

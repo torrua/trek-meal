@@ -137,7 +137,7 @@ const MealForm: React.FC<MealFormProps> = ({
     return z.object({
       name: z.string().optional(),
       description: z.string().optional(),
-      mealTypeId: z.number().optional(),
+      mealTypeId: z.string().optional(),
       items: z
         .array(
           z.object({
@@ -193,7 +193,7 @@ const MealForm: React.FC<MealFormProps> = ({
     defaultValues: {
       name: meal?.name || '',
       description: meal?.description || '',
-      mealTypeId: meal?.mealTypeId,
+      mealTypeId: meal?.mealTypeId ? String(meal.mealTypeId) : '',
       items: meal?.items || [],
     },
   });
@@ -405,6 +405,7 @@ const MealForm: React.FC<MealFormProps> = ({
     const name = watch('name');
     const description = watch('description');
     const mealTypeId = watch('mealTypeId');
+    const mealTypeIdNumber = mealTypeId && mealTypeId !== '' ? Number(mealTypeId) : undefined;
 
     // Clear previous validation errors
     setValidationErrors({});
@@ -438,7 +439,7 @@ const MealForm: React.FC<MealFormProps> = ({
     const mealData: MealData = {
       name: name.trim(),
       description,
-      mealTypeId,
+      mealTypeId: mealTypeIdNumber,
       items: watchItems.map(({ instanceId: _, ...item }) => item) as MealPlanItem[],
     };
     onSubmit(mealData);
@@ -527,8 +528,7 @@ const MealForm: React.FC<MealFormProps> = ({
                 ]}
                 value={String(field.value || '')}
                 onChange={(val) => {
-                  const value = val && val !== '' ? Number(val) : undefined;
-                  field.onChange(value);
+                  field.onChange(val);
                 }}
                 placeholder="Выберите тип приёма пищи"
               />

@@ -46,7 +46,7 @@ const MealTypesPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [isDetailEditing, setIsDetailEditing] = useState(false);
-  const [detailEditTrigger, setDetailEditTrigger] = useState(0);
+  const [detailEditTrigger, _setDetailEditTrigger] = useState(0);
   const [editSubmitTrigger, setEditSubmitTrigger] = useState(0);
   const [editCancelTrigger, setEditCancelTrigger] = useState(0);
 
@@ -407,7 +407,11 @@ const MealTypesPage: React.FC = () => {
                   key={mealType.id}
                   title={mealType.name}
                   meta={[
-                    { icon: Utensils, text: mealCounts[mealType.id] || 0, tooltip: 'Приёмы пищи' },
+                    {
+                      icon: Utensils,
+                      text: mealCounts[mealType.id] || 0,
+                      tooltip: 'Приёмы пищи',
+                    },
                   ]}
                   isSelected={activeId === mealType.id}
                   isMultiSelected={selectedMealTypeIds.includes(mealType.id)}
@@ -436,7 +440,6 @@ const MealTypesPage: React.FC = () => {
                   isMultiSelected={selectedMealTypeIds.includes(mealType.id)}
                   onSelect={() => _handleEdit(mealType)}
                   onMultiSelect={() => toggleMealTypeSelection(mealType.id)}
-                  borderColor="#6b7280"
                   menuItems={menuItems}
                   data-testid={`meal-type-card-${mealType.id}`}
                   showMultiSelect={showMultiSelect}

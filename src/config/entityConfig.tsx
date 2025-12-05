@@ -241,10 +241,10 @@ export const productEntityConfig: EntityConfig<Product> = {
   getBorderColor: (_p, ctx) => (ctx?.category as Category)?.color || '#0ea5e9',
   views: {
     card: {
-      title: (p) => p.name,
+      title: (product) => product.name,
       subtitle: (_p, ctx) => (ctx?.category as Category)?.name || 'Без категории',
-      details: (p) => [
-        { key: 'calories', icon: Flame, text: `${p.calories} ккал`, title: 'Ккал на 100г' },
+      details: (product) => [
+        { key: 'calories', icon: Flame, text: `${product.calories} ккал`, title: 'Ккал на 100г' },
       ],
     },
     listItem: {
@@ -277,8 +277,7 @@ export const dishEntityConfig: EntityConfig<Dish> = {
   views: {
     card: {
       title: (dish) => dish.name,
-      subtitle: () => 'Блюдо',
-      details: () => [],
+      details: (dish) => [],
     },
     listItem: {
       title: (d) => d.name,
@@ -390,3 +389,6 @@ export const equipmentCategoryEntityConfig: EntityConfig<EquipmentCategory> = {
     { label: 'Удалить', icon: Trash2, onClick: handlers.onDelete, className: 'text-danger' },
   ],
 };
+
+// Экспортируем для использования в других компонентах
+export { STATUS_CONFIG, getEffectiveStatus };

@@ -357,31 +357,26 @@ const ProductsPage: React.FC = () => {
                 calories: {
                   icon: Flame,
                   text: Math.round(product.calories || 0),
-                  className: 'text-orange-600',
                   tooltip: 'Ккал',
                 },
                 proteins: {
                   icon: Beef,
                   text: Math.round((product.proteins || 0) * 10) / 10,
-                  className: 'text-blue-600',
                   tooltip: 'Белки',
                 },
                 fats: {
                   icon: Droplet,
                   text: Math.round((product.fats || 0) * 10) / 10,
-                  className: 'text-yellow-600',
                   tooltip: 'Жиры',
                 },
                 carbs: {
                   icon: Wheat,
                   text: Math.round((product.carbs || 0) * 10) / 10,
-                  className: 'text-green-600',
                   tooltip: 'Углеводы',
                 },
                 portions: {
                   icon: PieChart, // Заменили Box на PieChart
                   text: product.portions.length,
-                  className: 'text-foreground',
                   tooltip: 'Вариантов порций',
                 },
               };
@@ -393,7 +388,6 @@ const ProductsPage: React.FC = () => {
                   key={product.id}
                   title={cardConfig.title(product)}
                   meta={metaItems}
-                  borderColor={productEntityConfig.getBorderColor(product, { category })}
                   isSelected={activeId === product.id}
                   isMultiSelected={selectedProductIds.includes(product.id)}
                   onSelect={() => setActiveId(product.id)}
@@ -415,22 +409,12 @@ const ProductsPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(product, { category })}
                   icon={productEntityConfig.getIcon(product)}
                   iconColor={productEntityConfig.getIconColor?.(product, { category })}
-                  // --- ПЕРЕДАЕМ ПОРЦИИ в details с новой иконкой ---
-                  details={[
-                    {
-                      key: 'portions',
-                      icon: PieChart,
-                      text: product.portions.length,
-                      title: 'Варианты порций',
-                    },
-                  ]}
                   variant="product"
                   nutrition={{
                     calories: Math.round(product.calories || 0),
-                    proteins: Math.round(product.proteins || 0),
-                    fats: Math.round(product.fats || 0),
-                    carbs: Math.round(product.carbs || 0),
-                    // Передаем portionCount
+                    proteins: Math.round((product.proteins || 0) * 10) / 10,
+                    fats: Math.round((product.fats || 0) * 10) / 10,
+                    carbs: Math.round((product.carbs || 0) * 10) / 10,
                     portionCount: product.portions.length,
                   }}
                   isSelected={activeId === product.id}
@@ -443,7 +427,6 @@ const ProductsPage: React.FC = () => {
                       setSelectedProductIds([product.id]);
                     }
                   }}
-                  borderColor={productEntityConfig.getBorderColor(product, { category })}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                 />

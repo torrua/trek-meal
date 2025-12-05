@@ -371,14 +371,11 @@ const EquipmentPage: React.FC = () => {
                         icon: Scale,
                         text: formatWeight(equipmentItem.weight),
                         tooltip: 'Вес',
-                        className: 'text-foreground',
                       }
                     : null,
                 type: {
                   icon: equipmentItem.type === 'personal' ? User : Users,
                   text: equipmentItem.type === 'personal' ? 'Личное' : 'Общее',
-                  className:
-                    equipmentItem.type === 'personal' ? 'text-blue-700' : 'text-purple-700',
                   tooltip: 'Тип снаряжения',
                 },
               };
@@ -392,7 +389,6 @@ const EquipmentPage: React.FC = () => {
                   key={equipmentItem.id}
                   title={cardConfig.title(equipmentItem)}
                   meta={metaItems}
-                  borderColor={equipmentEntityConfig.getBorderColor(equipmentItem, context)}
                   menuItems={actions}
                   isSelected={activeId === equipmentItem.id}
                   isMultiSelected={selectedEquipmentIds.includes(equipmentItem.id)}
@@ -417,7 +413,6 @@ const EquipmentPage: React.FC = () => {
                   isMultiSelected={selectedEquipmentIds.includes(equipmentItem.id)}
                   onSelect={() => setActiveId(equipmentItem.id)}
                   onMultiSelect={() => toggleEquipmentSelection(equipmentItem.id)}
-                  borderColor={equipmentEntityConfig.getBorderColor(equipmentItem, context)}
                   data-testid={`equipment-card-${equipmentItem.id}`}
                   showMultiSelect={showMultiSelect}
                   variant="info"

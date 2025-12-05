@@ -6,6 +6,7 @@ import {
   CirclePlus,
   Filter,
   Tag,
+  Component,
   Trash2,
   Copy,
   Share,
@@ -160,7 +161,7 @@ const CategoriesPage: React.FC = () => {
     return [
       {
         key: 'products',
-        icon: categoryEntityConfig.getIcon(category),
+        icon: Component,
         text: productCount,
         title: 'Продукты',
       },
@@ -331,13 +332,12 @@ const CategoriesPage: React.FC = () => {
                 onDelete: () => categoryManagement.handleRequestDelete(category),
               });
 
-              const context = { productCount };
+              const _context = { productCount };
 
               return (
                 <EntityCard
                   key={category.id}
                   title={categoryEntityConfig.views.card.title(category)}
-                  subtitle={categoryEntityConfig.views.card.subtitle?.(category, context)}
                   icon={categoryEntityConfig.getIcon(category)}
                   iconColor={categoryEntityConfig.getIconColor?.(category)}
                   details={getCategoryDetails(category, productCount)}
@@ -345,7 +345,6 @@ const CategoriesPage: React.FC = () => {
                   isMultiSelected={selectedCategoryIds.includes(category.id)}
                   onSelect={() => categoryManagement.setActiveId(category.id)}
                   onMultiSelect={() => toggleCategorySelection(category.id)}
-                  borderColor={categoryEntityConfig.getBorderColor(category)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                   viewMode={viewMode} // Pass viewMode to EntityCard

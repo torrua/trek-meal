@@ -387,7 +387,6 @@ const EquipmentCategoriesPage: React.FC = () => {
                   isMultiSelected={selectedCategoryIds.includes(category.id)}
                   onSelect={() => setActiveId(category.id)}
                   onMultiSelect={() => toggleCategorySelection(category.id)}
-                  borderColor={equipmentCategoryEntityConfig.getBorderColor(category)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                   viewMode={viewMode}

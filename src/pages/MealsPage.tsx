@@ -411,7 +411,6 @@ const MealsPage: React.FC = () => {
                         icon: Hash,
                         text: meal.items.length,
                         tooltip: 'Количество компонентов',
-                        className: 'text-muted-foreground',
                       }
                     : null,
                 mealType: meal.mealTypeId
@@ -419,7 +418,6 @@ const MealsPage: React.FC = () => {
                       icon: Tag,
                       text: mealTypes.find((mt) => mt.id === meal.mealTypeId)?.name || 'Тип',
                       tooltip: 'Тип приёма пищи',
-                      className: 'text-muted-foreground',
                     }
                   : null,
                 calories: {
@@ -450,7 +448,6 @@ const MealsPage: React.FC = () => {
                   icon: Weight,
                   text: Math.round(totalWeight),
                   tooltip: 'Общий вес',
-                  className: 'text-muted-foreground',
                 },
               };
 

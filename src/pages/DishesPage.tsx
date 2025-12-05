@@ -409,7 +409,6 @@ const DishesPage: React.FC = () => {
                 items: {
                   icon: Hash,
                   text: dish.products.length,
-                  className: 'text-foreground',
                   tooltip: 'Продуктов',
                 },
                 proteins: {
@@ -446,7 +445,6 @@ const DishesPage: React.FC = () => {
                     key={dish.id}
                     title={cardConfig.title(dish)}
                     meta={metaItems}
-                    borderColor={dishEntityConfig.getBorderColor(dish)}
                     isSelected={activeId === dish.id}
                     isMultiSelected={selectedDishIds.includes(dish.id)}
                     onSelect={isCardDisabled ? undefined : () => setActiveId(dish.id)}
@@ -467,7 +465,6 @@ const DishesPage: React.FC = () => {
                   <EntityCard
                     key={dish.id}
                     title={cardConfig.title(dish)}
-                    subtitle={cardConfig.subtitle?.(dish, { totalWeight })}
                     icon={dishEntityConfig.getIcon(dish)}
                     iconColor={dishEntityConfig.getIconColor?.(dish)}
                     details={[]}
@@ -484,7 +481,6 @@ const DishesPage: React.FC = () => {
                     isMultiSelected={selectedDishIds.includes(dish.id)}
                     onSelect={isCardDisabled ? undefined : () => setActiveId(dish.id)}
                     onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
-                    borderColor={dishEntityConfig.getBorderColor(dish)}
                     menuItems={actions}
                     showMultiSelect={showMultiSelect}
                   />

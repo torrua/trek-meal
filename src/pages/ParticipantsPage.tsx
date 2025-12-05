@@ -44,7 +44,7 @@ import { participantEntityConfig } from '../config/entityConfig';
 import { useIsMobile } from '../hooks/useIsMobile';
 
 const ParticipantsPage: React.FC = () => {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const {
@@ -348,7 +348,6 @@ const ParticipantsPage: React.FC = () => {
                   key={p.id}
                   title={cardConfig.title(p)}
                   meta={metaItems}
-                  borderColor={participantEntityConfig.getBorderColor(p)}
                   menuItems={actions}
                   isSelected={activeId === p.id}
                   isMultiSelected={selectedParticipantIds.includes(p.id)}
@@ -374,7 +373,6 @@ const ParticipantsPage: React.FC = () => {
                   isMultiSelected={selectedParticipantIds.includes(p.id)}
                   onSelect={() => onSelectParticipant(p.id)}
                   onMultiSelect={() => toggleParticipantSelection(p.id)}
-                  borderColor={participantEntityConfig.getBorderColor(p)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
                   variant="info"

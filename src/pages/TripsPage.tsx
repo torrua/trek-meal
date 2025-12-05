@@ -33,13 +33,13 @@ import EntityCard from '../ui/EntityCard';
 import EntityListItem, { MetaItem } from '../ui/EntityListItem';
 import TripForm from '../components/trips/TripForm';
 import type { Trip, TripData } from '../types'; // Import TripData
-import { tripEntityConfig } from '../config/entityConfig';
+import { tripEntityConfig, STATUS_CONFIG, getEffectiveStatus } from '../config/entityConfig';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { formatDate } from '../utils';
 import { exportBulkTripsToJson, importDataFromJson } from '../utils/backup';
 
 const TripsPage: React.FC = () => {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const { viewMode, toggleViewMode } = useViewMode('trips');
@@ -348,7 +348,6 @@ const TripsPage: React.FC = () => {
                       icon: Calendar,
                       text: formatDate(trip.startDate),
                       tooltip: 'Дата начала',
-                      className: 'text-foreground',
                     }
                   : null,
                 destination: trip.destination
@@ -356,7 +355,6 @@ const TripsPage: React.FC = () => {
                       icon: MapPin,
                       text: trip.destination,
                       tooltip: 'Место назначения',
-                      className: 'text-foreground',
                     }
                   : null,
                 participants:
@@ -365,7 +363,6 @@ const TripsPage: React.FC = () => {
                         icon: Users,
                         text: trip.participants.length,
                         tooltip: 'Участников',
-                        className: 'text-foreground',
                       }
                     : null,
               };
@@ -379,7 +376,6 @@ const TripsPage: React.FC = () => {
                   key={trip.id}
                   title={cardConfig.title(trip)}
                   meta={metaItems}
-                  borderColor={tripEntityConfig.getBorderColor(trip)}
                   menuItems={actions}
                   isSelected={activeId === trip.id}
                   isMultiSelected={selectedTripIds.includes(trip.id)}
@@ -392,7 +388,7 @@ const TripsPage: React.FC = () => {
                 <EntityCard
                   key={trip.id}
                   title={cardConfig.title(trip)}
-                  subtitle={cardConfig.subtitle && cardConfig.subtitle(trip)}
+                  subtitle={STATUS_CONFIG[getEffectiveStatus(trip)].label}
                   icon={tripEntityConfig.getIcon(trip)}
                   iconColor={tripEntityConfig.getIconColor && tripEntityConfig.getIconColor(trip)}
                   details={getTripDetails(trip)}
@@ -401,7 +397,6 @@ const TripsPage: React.FC = () => {
                   isMultiSelected={selectedTripIds.includes(trip.id)}
                   onSelect={() => onSelectTrip(trip.id)}
                   onMultiSelect={() => toggleTripSelection(trip.id)}
-                  borderColor={tripEntityConfig.getBorderColor(trip)}
                   showMultiSelect={showMultiSelect}
                   variant="neutral"
                 />

@@ -280,11 +280,11 @@ const EntityCard: React.FC<EntityCardProps> = ({
             {details.map((item) => (
               <div
                 key={item.key}
-                className="flex items-center gap-1.5 overflow-hidden"
+                className="flex items-center gap-0.5 overflow-hidden"
                 title={item.title}
               >
-                <item.icon className="h-3 w-3 flex-shrink-0 text-muted-foreground/70" />
-                <dd className={cn('truncate font-medium text-foreground/80', item.className)}>
+                <item.icon className="w-3 h-3 flex-shrink-0" />
+                <dd className={cn('truncate font-medium', item.className || 'text-foreground/80')}>
                   {item.text}
                 </dd>
               </div>
@@ -295,7 +295,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
 
       {/* Nutrition Footer */}
       {nutrition && (
-        <div className="mt-3">
+        <div className="mt-auto">
           <div ref={nutritionRef} className={cn('cq-nutrition text-xs', showBju && 'show-bju')}>
             {typeof nutrition.itemsCount === 'number' && (
               <div className="flex items-center gap-0.5">

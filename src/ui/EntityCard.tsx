@@ -305,28 +305,28 @@ const EntityCard: React.FC<EntityCardProps> = ({
             )}
 
             <div className="flex items-center gap-0.5">
-              <Flame className="w-3 h-3 text-orange-500 flex-shrink-0" />
+              <Flame className="w-3 h-3 text-orange-600 flex-shrink-0" />
               <span className="font-semibold text-orange-600">
                 {Math.round(nutrition.calories)}
               </span>
             </div>
 
             <div className="bju items-center gap-0.5">
-              <Beef className="w-3 h-3 text-blue-500 flex-shrink-0" />
+              <Beef className="w-3 h-3 text-blue-600 flex-shrink-0" />
               <span className="font-medium text-blue-600">
                 {Math.round(nutrition.proteins * 10) / 10}
               </span>
             </div>
 
             <div className="bju items-center gap-0.5">
-              <Droplet className="w-3 h-3 text-yellow-500 flex-shrink-0" />
+              <Droplet className="w-3 h-3 text-yellow-600 flex-shrink-0" />
               <span className="font-medium text-yellow-600">
                 {Math.round(nutrition.fats * 10) / 10}
               </span>
             </div>
 
             <div className="bju items-center gap-0.5">
-              <Wheat className="w-3 h-3 text-green-500 flex-shrink-0" />
+              <Wheat className="w-3 h-3 text-green-600 flex-shrink-0" />
               <span className="font-medium text-green-600">
                 {Math.round(nutrition.carbs * 10) / 10}
               </span>

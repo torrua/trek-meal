@@ -450,7 +450,7 @@ const MealsPage: React.FC = () => {
                   icon: Weight,
                   text: Math.round(totalWeight),
                   tooltip: 'Общий вес',
-                  className: 'text-foreground',
+                  className: 'text-muted-foreground',
                 },
               };
 

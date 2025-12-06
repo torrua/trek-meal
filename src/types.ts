@@ -4,7 +4,6 @@
 export interface Category {
   id: number;
   name: string;
-  color: string;
   emoji?: string;
 }
 export type CategoryData = Omit<Category, 'id'>;
@@ -144,7 +143,6 @@ export type EquipmentType = 'personal' | 'common';
 export interface EquipmentCategory {
   id: number;
   name: string;
-  color: string;
 }
 export type EquipmentCategoryData = Omit<EquipmentCategory, 'id'>;
 

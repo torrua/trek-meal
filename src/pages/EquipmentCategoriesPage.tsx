@@ -1,7 +1,6 @@
 // src/pages/EquipmentCategoriesPage.tsx
 
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   CirclePlus,
   Filter,
@@ -35,7 +34,6 @@ import {
 } from '../utils/backup';
 
 const EquipmentCategoriesPage: React.FC = () => {
-  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const equipmentCategoryStore = useEquipmentCategoryStore();
   const equipmentStore = useEquipmentStore();
@@ -253,7 +251,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                   <Check className="w-4 h-4" />
                 </Button>
                 <Button
-                  onClick={() => navigate('/equipment-categories/new')}
+                  onClick={() => alert('Форма создания категорий оборудования пока не реализована')}
                   variant="primary"
                   size="default"
                 >
@@ -363,7 +361,8 @@ const EquipmentCategoriesPage: React.FC = () => {
               ).length;
 
               const actions = equipmentCategoryEntityConfig.getActions({
-                onEdit: () => navigate(`/equipment-categories/${category.id}`),
+                onEdit: () =>
+                  alert('Форма редактирования категорий оборудования пока не реализована'),
                 onClone: () => handleClone(category),
                 onExport: () => handleExport(category),
                 onDelete: () => handleRequestDelete(category),
@@ -411,17 +410,9 @@ const EquipmentCategoriesPage: React.FC = () => {
                         <div className="space-y-4">
                           <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
                             <label className="block text-sm font-medium text-muted-foreground mb-2">
-                              Цвет метки
+                              Категория снаряжения
                             </label>
-                            <div className="flex items-center gap-3">
-                              <div
-                                className="w-8 h-8 rounded-lg border border-border shadow-sm"
-                                style={{ backgroundColor: selectedCategory.color }}
-                              />
-                              <span className="font-mono text-sm bg-background px-2 py-1 rounded border border-border">
-                                {selectedCategory.color}
-                              </span>
-                            </div>
+                            <div className="text-sm text-foreground">{selectedCategory.name}</div>
                           </div>
                         </div>
                       ),
@@ -430,10 +421,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-4">
-                      <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-white shadow-sm"
-                        style={{ backgroundColor: selectedCategory.color }}
-                      >
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-white shadow-sm bg-primary">
                         <Layers className="w-6 h-6" />
                       </div>
                       <div>
@@ -452,7 +440,9 @@ const EquipmentCategoriesPage: React.FC = () => {
                     </div>
                     <Button
                       variant="secondary"
-                      onClick={() => navigate(`/equipment-categories/${selectedCategory.id}`)}
+                      onClick={() =>
+                        alert('Форма редактирования категорий оборудования пока не реализована')
+                      }
                     >
                       <Edit className="w-4 h-4 sm:mr-2" />
                       <span className="hidden sm:inline">Изменить</span>
@@ -482,7 +472,10 @@ const EquipmentCategoriesPage: React.FC = () => {
             {searchTerm || hasActiveFilters ? 'Категории не найдены' : 'Категорий пока нет'}
           </h3>
           {!searchTerm && !hasActiveFilters && (
-            <Button onClick={() => navigate('/equipment-categories/new')} className="mt-4">
+            <Button
+              onClick={() => alert('Форма создания категорий оборудования пока не реализована')}
+              className="mt-4"
+            >
               <CirclePlus className="w-4 h-4 mr-2" />
               Добавить первую категорию
             </Button>

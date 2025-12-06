@@ -33,7 +33,6 @@ import {
   Scale,
   ExternalLink,
   Tag,
-  Utensils,
   Layers,
 } from 'lucide-react';
 
@@ -237,8 +236,8 @@ export const participantEntityConfig: EntityConfig<Participant> = {
 // --- PRODUCT ---
 export const productEntityConfig: EntityConfig<Product> = {
   getIcon: () => Component,
-  getIconColor: (_p, ctx) => (ctx?.category ? 'text-current' : 'text-navy-500'),
-  getBorderColor: (_p, ctx) => (ctx?.category as Category)?.color || '#0ea5e9',
+  getIconColor: (_p, _ctx) => /*category ? 'text-current' : */ 'text-navy-500',
+  getBorderColor: (_p, ctx) => '#0ea5e9',
   views: {
     card: {
       title: (product) => product.name,
@@ -277,7 +276,7 @@ export const dishEntityConfig: EntityConfig<Dish> = {
   views: {
     card: {
       title: (dish) => dish.name,
-      details: (dish) => [],
+      details: (_dish) => [],
     },
     listItem: {
       title: (d) => d.name,
@@ -294,8 +293,8 @@ export const dishEntityConfig: EntityConfig<Dish> = {
 // --- EQUIPMENT ---
 export const equipmentEntityConfig: EntityConfig<Equipment> = {
   getIcon: () => Backpack,
-  getIconColor: (_e, ctx) => (ctx?.category ? 'text-current' : 'text-gray-500'),
-  getBorderColor: (_e, ctx) => (ctx?.category as Category)?.color || '#6b7280',
+  getIconColor: (_e, _ctx) => /*category ? 'text-current' : */ 'text-gray-500',
+  getBorderColor: (_e, ctx) => '#6b7280',
   views: {
     card: {
       title: (e) => e.name,
@@ -331,7 +330,7 @@ export const equipmentEntityConfig: EntityConfig<Equipment> = {
 export const categoryEntityConfig: EntityConfig<Category> = {
   getIcon: () => Tag,
   getIconColor: () => 'text-gray-500',
-  getBorderColor: (c) => c.color || '#6b7280',
+  getBorderColor: () => '#6b7280',
   views: {
     card: {
       title: (c) => c.name,
@@ -374,11 +373,11 @@ export const mealTypeEntityConfig: EntityConfig<MealType> = {
 export const equipmentCategoryEntityConfig: EntityConfig<EquipmentCategory> = {
   getIcon: () => Layers,
   getIconColor: () => 'text-gray-500',
-  getBorderColor: (c) => c.color || '#6b7280',
+  getBorderColor: () => '#6b7280',
   views: {
     card: {
       title: (c) => c.name,
-      details: (c) => [{ key: 'color', icon: Tag, text: c.color, title: 'Цвет' }],
+      details: () => [],
     },
     listItem: { title: (c) => c.name },
   },

@@ -95,10 +95,7 @@ const DishContents = React.memo(
               </div>
               <div className="flex items-center gap-2">
                 {category && (
-                  <span
-                    className="text-[9px] px-1.5 py-0.5 rounded-full font-medium opacity-80 text-white"
-                    style={{ backgroundColor: category.color }}
-                  >
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium opacity-80 text-white bg-gray-500">
                     {category.name}
                   </span>
                 )}
@@ -109,8 +106,7 @@ const DishContents = React.memo(
         })}
       </div>
     );
-  },
-  (prev, next) => prev.dish.id === next.dish.id && prev.products === next.products
+  }
 );
 
 DishContents.displayName = 'DishContents';

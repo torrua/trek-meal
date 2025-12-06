@@ -1,7 +1,6 @@
 // src/components/categories/CategoryForm.tsx
 
 import React, { useState } from 'react';
-import { Palette } from 'lucide-react';
 import type { CategoryData } from '../../types';
 import Input from '../../ui/Input';
 import Button from '../../ui/Button';
@@ -13,34 +12,32 @@ interface CategoryFormProps {
   onCancel: () => void;
 }
 
-const PRESET_COLORS = [
-  '#ef4444',
-  '#f97316',
-  '#f59e0b',
-  '#eab308',
-  '#84cc16',
-  '#22c55e',
-  '#10b981',
-  '#14b8a6',
-  '#06b6d4',
-  '#0ea5e9',
-  '#3b82f6',
-  '#6366f1',
-  '#8b5cf6',
-  '#a855f7',
-  '#d946ef',
-  '#ec4899',
-];
+// Функция для проверки, является ли символ эмодзи
+const _isValidEmoji = (str: string): boolean => {
+  // Простое регулярное выражение для эмодзи
+  const emojiRegex =
+    /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F900}-\u{1F9FF}]/u;
+
+  // Проверяем каждый символ в строке
+  return str.split('').every((char) => emojiRegex.test(char));
+};
 
 const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCancel }) => {
   const [name, setName] = useState(category?.name || '');
-  const [color, setColor] = useState(category?.color || '#a855f7');
   const [emoji, setEmoji] = useState(category?.emoji || '📦');
+
+  const handleEmojiChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow only emoji characters, max 2 characters
+    if (value.length <= 2 && (value === '' || _isValidEmoji(value))) {
+      setEmoji(value);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      onSubmit({ name: name.trim(), color, emoji });
+      onSubmit({ name: name.trim(), emoji });
     }
   };
 
@@ -51,15 +48,9 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
         <label className="block text-sm font-medium text-foreground mb-3 tracking-tight">
           Предварительный просмотр
         </label>
-        <div
-          className="p-6 rounded-2xl border-2 bg-card transition-all duration-200"
-          style={{ borderColor: color }}
-        >
+        <div className="p-6 rounded-2xl border-2 bg-card transition-all duration-200 border-primary">
           <div className="flex items-center gap-4">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white notion-shadow-sm"
-              style={{ backgroundColor: color }}
-            >
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white notion-shadow-sm bg-primary">
               <span className="text-xl">{emoji || '📦'}</span>
             </div>
             <div className="min-w-0 flex-1">
@@ -85,61 +76,8 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
           </FormField>
 
           <FormField label="Эмодзи">
-            <Input
-              value={emoji}
-              onChange={(e) => setEmoji(e.target.value)}
-              placeholder="Например, 🌾"
-            />
+            <Input value={emoji} onChange={handleEmojiChange} placeholder="Например, 🌾" />
           </FormField>
-        </div>
-
-        {/* Color Selection */}
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-foreground tracking-tight">
-            Цвет категории
-          </label>
-
-          {/* Preset Colors Grid */}
-          <div className="grid grid-cols-8 gap-3">
-            {PRESET_COLORS.map((presetColor) => (
-              <button
-                key={presetColor}
-                type="button"
-                className={`aspect-square rounded-xl transition-all duration-200 hover:scale-110 notion-focus-ring ${
-                  color === presetColor
-                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 notion-shadow'
-                    : 'hover:notion-shadow-sm'
-                }`}
-                style={{ backgroundColor: presetColor }}
-                onClick={() => setColor(presetColor)}
-                title={presetColor}
-                aria-label={`Выбрать цвет ${presetColor}`}
-              />
-            ))}
-          </div>
-
-          {/* Custom Color Picker */}
-          <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl border notion-border-subtle">
-            <div className="flex items-center gap-3">
-              <Palette className="w-5 h-5 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Свой цвет:</span>
-            </div>
-            <div className="flex-1 flex items-center gap-3">
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="w-10 h-10 rounded-lg border notion-border-subtle cursor-pointer notion-focus-ring"
-              />
-              <input
-                type="text"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm bg-background border notion-border-subtle rounded-lg notion-focus-ring font-mono"
-                placeholder="#000000"
-              />
-            </div>
-          </div>
         </div>
 
         {/* Action Buttons */}

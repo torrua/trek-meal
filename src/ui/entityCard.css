@@ -5,8 +5,10 @@
 
 /* Ensure all EntityCard instances have a consistent base height */
 .cq-card {
+  container-type: inline-size;
   min-height: 88px;
   display: block;
+  transition: background 0.3s ease;
 }
 
 /* Nutrition grid: равномерное распределение по всей ширине */

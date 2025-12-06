@@ -17,15 +17,15 @@ const useCategoryStore = create<CategoryState>()(
   persist(
     (set, get) => ({
       categories: [
-        { id: 1, name: 'Крупы и макароны', color: '#f59e0b', emoji: '🌾' },
-        { id: 2, name: 'Консервы', color: '#84cc16', emoji: '🥫' },
-        { id: 3, name: 'Мясо и сублиматы', color: '#ef4444', emoji: '🥩' },
-        { id: 4, name: 'Сладкое и снеки', color: '#d946ef', emoji: '🍪' },
-        { id: 5, name: 'Напитки', color: '#3b82f6', emoji: '☕' },
-        { id: 6, name: 'Молочные продукты', color: '#6366f1', emoji: '🥛' },
-        { id: 7, name: 'Овощи и фрукты', color: '#22c55e', emoji: '🥕' },
-        { id: 8, name: 'Специи и соусы', color: '#a855f7', emoji: '🧂' },
-        { id: 9, name: 'Хлеб и выпечка', color: '#eab308', emoji: '🥖' },
+        { id: 1, name: 'Крупы и макароны', emoji: '🌾' },
+        { id: 2, name: 'Консервы', emoji: '🥫' },
+        { id: 3, name: 'Мясо и сублиматы', emoji: '🥩' },
+        { id: 4, name: 'Сладкое и снеки', emoji: '🍪' },
+        { id: 5, name: 'Напитки', emoji: '☕' },
+        { id: 6, name: 'Молочные продукты', emoji: '🥛' },
+        { id: 7, name: 'Овощи и фрукты', emoji: '🥕' },
+        { id: 8, name: 'Специи и соусы', emoji: '🧂' },
+        { id: 9, name: 'Хлеб и выпечка', emoji: '🥖' },
       ],
       addCategory: (data: CategoryData) => {
         const newCategory = { id: Date.now(), ...data };

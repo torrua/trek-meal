@@ -50,7 +50,15 @@ interface EntityCardProps {
   linkTo?: string;
   description?: string;
   showMultiSelect?: boolean;
-  variant?: 'neutral' | 'meal' | 'info' | 'composition' | 'dish' | 'product' | 'meal-type';
+  variant?:
+    | 'neutral'
+    | 'meal'
+    | 'info'
+    | 'composition'
+    | 'dish'
+    | 'product'
+    | 'meal-type'
+    | 'category';
   nutrition?: {
     calories: number;
     proteins: number;
@@ -182,6 +190,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
     'meal-type': '[background:var(--color-meal-type-gradient)]',
     dish: '[background:var(--color-dish-gradient)]',
     product: '[background:var(--color-product-gradient)]',
+    category: '[background:var(--color-meal-type-gradient)]',
   };
 
   const cardClasses = cn(

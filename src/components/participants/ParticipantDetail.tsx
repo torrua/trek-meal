@@ -385,7 +385,6 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
                   { icon: Calendar, text: formatDate(trip.startDate) },
                   { icon: MapPin, text: trip.destination || '—' },
                 ]}
-                borderColor={tripEntityConfig.getBorderColor(trip)}
                 menuItems={[
                   {
                     label: 'Открыть',
@@ -434,7 +433,6 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
                 <EntityListItem
                   key={item.id}
                   title={item.name}
-                  borderColor={category?.color || '#gray'}
                   meta={[{ icon: Scale, text: `${item.weight} г` }]}
                   menuItems={[
                     {

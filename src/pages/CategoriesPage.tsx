@@ -1,7 +1,7 @@
 // src/pages/CategoriesPage.tsx
 
-import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   CirclePlus,
   Filter,
@@ -9,46 +9,49 @@ import {
   Component,
   Trash2,
   Copy,
-  Share,
   X,
-  Check,
+  CheckSquare,
   CheckCheck,
   LayoutList,
   Grid3X3,
-  UploadCloud,
+  Download,
+  Upload,
 } from 'lucide-react';
 import useCategoryStore from '../stores/useCategoryStore';
 import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
 import { useCategoryManagement } from '../hooks/useCategoryManagement';
-import type { Category } from '../types';
-// Editing moved to dedicated page
+import { useIsMobile } from '../hooks/useIsMobile';
+import type { Category, ImportedJsonData } from '../types';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
+import Modal from '../ui/Modal';
 import EntityCard from '../ui/EntityCard';
+import EntityListItem, { MetaItem } from '../ui/EntityListItem';
 import CategoryFiltersComponent, {
   CategoryFilters,
 } from '../components/categories/CategoryFiltersComponent';
 import CategoryDetail from '../components/categories/CategoryDetail';
 import { categoryEntityConfig } from '../config/entityConfig';
-import { useViewMode } from '../hooks/useViewMode'; // Import the new hook
-import {
-  exportCategoryToJson,
-  exportBulkCategoriesToJson,
-  importDataFromJson,
-} from '../utils/backup';
+import { useViewMode } from '../hooks/useViewMode';
+import { exportCategoryToJson, exportBulkCategoriesToJson } from '../utils/backup';
 
 const CategoriesPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const categoryStore = useCategoryStore();
   const productStore = useProductStore();
-  const { searchTerm } = useSearchStore();
+  const { searchTerm: _searchTerm } = useSearchStore();
+  const isMobile = useIsMobile();
 
   const [filters, setFilters] = useState<CategoryFilters>({
     hasProducts: 'all',
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [_importFileContent, setImportFileContent] = useState<ImportedJsonData | null>(null);
 
   const categoryManagement = useCategoryManagement({
     enableUrlSync: true,
@@ -61,6 +64,42 @@ const CategoriesPage: React.FC = () => {
   const [showMultiSelect, setShowMultiSelect] = useState(false);
   // Add state for bulk delete confirmation
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // Collapsible sections state for CategoryDetail
+  const [openSections, setOpenSections] = useState<string[]>(['basic-info', 'usage']);
+  const [editTrigger, _setEditTrigger] = useState(0);
+  const [editSubmitTrigger, _setEditSubmitTrigger] = useState(0);
+  const [editCancelTrigger, _setEditCancelTrigger] = useState(0);
+
+  const handleToggleSection = (sectionId: string) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
+  };
+
+  // URL synchronization - handle selectedId query parameter
+  useEffect(() => {
+    const selectedId = searchParams.get('selectedId');
+    if (
+      selectedId &&
+      categoryManagement.filteredCategories.some((c) => c.id === Number(selectedId))
+    ) {
+      categoryManagement.setActiveId(Number(selectedId));
+      setSearchParams({}, { replace: true });
+      // Scroll to the detail pane
+      setTimeout(() => {
+        const detailPane = document.getElementById('category-detail-pane');
+        if (detailPane) {
+          detailPane.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [
+    searchParams,
+    categoryManagement.filteredCategories,
+    categoryManagement.setActiveId,
+    setSearchParams,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hasActiveFilters = useMemo(
     () => Object.values(filters).some((v) => v !== 'all'),
@@ -133,10 +172,31 @@ const CategoriesPage: React.FC = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      importDataFromJson(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const jsonContent = e.target?.result as string;
+          const data = JSON.parse(jsonContent);
+          setImportFileContent(data);
+          setShowImportModal(true);
+        } catch (error) {
+          console.error('Error parsing JSON file:', error);
+          // Show error toast
+        }
+      };
+      reader.readAsText(file);
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const _handleInlineCreate = useCallback(
+    (formData: Omit<Category, 'id'>) => {
+      const created = categoryStore.addCategory(formData);
+      categoryManagement.setActiveId(created.id);
+      setCreatingCategory(false);
+    },
+    [categoryStore, categoryManagement]
+  );
 
   const handleClone = useCallback(
     (category: Category) => {
@@ -156,18 +216,6 @@ const CategoriesPage: React.FC = () => {
     }
   }, []);
 
-  // Function to transform category details to match EntityCard's DetailItem type
-  const getCategoryDetails = (category: Category, productCount: number) => {
-    return [
-      {
-        key: 'products',
-        icon: Component,
-        text: productCount,
-        title: 'Продукты',
-      },
-    ];
-  };
-
   // View mode state
   const { viewMode, toggleViewMode } = useViewMode('categories'); // Use the new hook
 
@@ -183,12 +231,12 @@ const CategoriesPage: React.FC = () => {
         tabIndex={-1}
       />
       {/* Заголовок и кнопки */}
-      <div className="mb-6 sm:mb-8">
+      <div className="mb-6 sm:mb-8 px-4 sm:px-2">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
-            Категории
+            Категории продуктов
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-[320px] justify-end">
             {!showMultiSelect ? (
               <>
                 <Button
@@ -208,24 +256,13 @@ const CategoriesPage: React.FC = () => {
                 <Button
                   variant="secondary"
                   size="icon"
-                  onClick={() => fileInputRef.current?.click()}
                   title="Импорт"
                   aria-label="Импорт"
+                  onClick={() => fileInputRef.current?.click()}
                 >
-                  <UploadCloud className="w-4 h-4" />
+                  <Download className="w-4 h-4" />
                 </Button>
 
-                <Button
-                  onClick={toggleMultiSelect}
-                  variant="secondary"
-                  size="icon"
-                  title="Выделить"
-                  aria-label="Выделить"
-                >
-                  <Check className="w-4 h-4" />
-                </Button>
-
-                {/* View mode toggle button */}
                 <Button
                   onClick={toggleViewMode}
                   variant="secondary"
@@ -241,7 +278,20 @@ const CategoriesPage: React.FC = () => {
                 </Button>
 
                 <Button
-                  onClick={() => navigate('/categories/new')}
+                  onClick={toggleMultiSelect}
+                  variant="secondary"
+                  size="icon"
+                  title="Выделить"
+                  aria-label="Выделить"
+                >
+                  <CheckSquare className="w-4 h-4" />
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    setCreatingCategory(true);
+                    categoryManagement.setActiveId(null);
+                  }}
                   variant="primary"
                   size="default"
                 >
@@ -250,12 +300,9 @@ const CategoriesPage: React.FC = () => {
                 </Button>
               </>
             ) : (
-              <div className="flex items-center gap-2">
-                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 h-10">
-                  <span>{selectedCategoryIds.length}</span>
-                  <span className="text-primary/70">
-                    из {categoryManagement.filteredCategories.length} выделено
-                  </span>
+              <div className="flex items-center gap-2 h-9 min-w-[320px] justify-end">
+                <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center">
+                  <span>{`${selectedCategoryIds.length} из ${categoryManagement.filteredCategories.length} выделено`}</span>
                 </div>
 
                 <Button
@@ -287,7 +334,7 @@ const CategoriesPage: React.FC = () => {
                     disabled={selectedCategoryIds.length === 0}
                     title="Экспорт"
                   >
-                    <Share className="w-4 h-4" />
+                    <Upload className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="danger"
@@ -317,46 +364,122 @@ const CategoriesPage: React.FC = () => {
       )}
 
       {/* Основной контент */}
-      {categoryManagement.filteredCategories.length > 0 ? (
+      {categoryManagement.filteredCategories.length > 0 || creatingCategory ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <div className="lg:col-span-1 space-y-3 overflow-y-auto max-h-[calc(100vh-12rem)] pr-2 custom-scrollbar pl-1 pb-4 pt-2">
+          <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)] pl-1 pb-4 pt-2">
             {categoryManagement.filteredCategories.map((category) => {
               const productCount = productStore.products.filter(
                 (p) => p.categoryId === category.id
               ).length;
 
-              const actions = categoryEntityConfig.getActions({
-                onEdit: () => navigate(`/categories/${category.id}/edit`),
-                onClone: () => handleClone(category),
-                onExport: () => handleExport(category),
-                onDelete: () => categoryManagement.handleRequestDelete(category),
-              });
+              const actions = categoryEntityConfig
+                .getActions({
+                  onEdit: () => navigate(`/categories/${category.id}/edit`),
+                  onClone: () => handleClone(category),
+                  onExport: () => handleExport(category),
+                  onDelete: () => categoryManagement.handleRequestDelete(category),
+                })
+                .map((action) => ({
+                  ...action,
+                  onClick: (e: React.MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (action.label === 'Редактировать') {
+                      navigate(`/categories/${category.id}/edit`);
+                    } else if (action.label === 'Клонировать') {
+                      handleClone(category);
+                    } else if (action.label === 'Экспорт') {
+                      handleExport(category);
+                    } else if (action.label === 'Удалить') {
+                      categoryManagement.handleRequestDelete(category);
+                    }
+                  },
+                }));
 
-              const _context = { productCount };
+              const metaMap: Record<string, MetaItem | null> = {
+                products:
+                  productCount > 0
+                    ? {
+                        icon: Component,
+                        text: productCount,
+                        tooltip: 'Продукты',
+                      }
+                    : null,
+              };
 
-              return (
+              const metaItems = Object.values(metaMap).filter(
+                (item): item is MetaItem => item !== null
+              );
+
+              return viewMode === 'compact' ? (
+                <EntityListItem
+                  key={category.id}
+                  title={categoryEntityConfig.views.card.title(category)}
+                  meta={metaItems}
+                  isSelected={categoryManagement.activeId === category.id}
+                  isMultiSelected={selectedCategoryIds.includes(category.id)}
+                  onSelect={() => categoryManagement.setActiveId(category.id)}
+                  onMultiSelect={() => toggleCategorySelection(category.id)}
+                  onRequestMultiSelectMode={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedCategoryIds([category.id]);
+                    }
+                  }}
+                  menuItems={actions}
+                  showMultiSelect={showMultiSelect}
+                  variant="category"
+                />
+              ) : (
                 <EntityCard
                   key={category.id}
                   title={categoryEntityConfig.views.card.title(category)}
                   icon={categoryEntityConfig.getIcon(category)}
                   iconColor={categoryEntityConfig.getIconColor?.(category)}
-                  details={getCategoryDetails(category, productCount)}
                   isSelected={categoryManagement.activeId === category.id}
                   isMultiSelected={selectedCategoryIds.includes(category.id)}
                   onSelect={() => categoryManagement.setActiveId(category.id)}
                   onMultiSelect={() => toggleCategorySelection(category.id)}
+                  onRequestMultiSelectMode={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedCategoryIds([category.id]);
+                    }
+                  }}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
-                  viewMode={viewMode} // Pass viewMode to EntityCard
+                  variant="category"
+                  details={[
+                    {
+                      key: 'products',
+                      icon: Component,
+                      text: productCount,
+                      title: 'Продукты',
+                    },
+                  ]}
                 />
               );
             })}
           </div>
 
-          <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
-            {categoryManagement.selectedCategory ? (
+          <div
+            className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar pt-2"
+            id="category-detail-pane"
+          >
+            {creatingCategory || categoryManagement.selectedCategory ? (
               <CategoryDetail
                 category={categoryManagement.selectedCategory}
+                openSections={openSections}
+                onToggleSection={handleToggleSection}
+                editTrigger={creatingCategory ? 1 : editTrigger}
+                editSubmitTrigger={editSubmitTrigger}
+                editCancelTrigger={editCancelTrigger}
+                onStartEdit={undefined}
+                onFinishEdit={() => {
+                  if (creatingCategory) {
+                    setCreatingCategory(false);
+                  }
+                }}
                 onEdit={() =>
                   categoryManagement.selectedCategory &&
                   navigate(`/categories/${categoryManagement.selectedCategory.id}/edit`)
@@ -380,21 +503,72 @@ const CategoriesPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="text-center py-16 px-6 text-muted-foreground">
+        <div className="h-full flex flex-col items-center justify-center py-16">
           <Tag className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <h3 className="text-lg font-medium text-foreground">
-            {searchTerm || hasActiveFilters ? 'Категории не найдены' : 'Категорий пока нет'}
-          </h3>
-          {!searchTerm && !hasActiveFilters && (
-            <Button onClick={categoryManagement.handleAddNew} className="mt-4">
+          <h3 className="text-lg font-medium text-foreground">Категорий пока нет</h3>
+          <p className="text-sm text-muted-foreground mt-2">
+            Создайте первую категорию для организации продуктов.
+          </p>
+          <div className="mt-4 inline-block">
+            <Button
+              onClick={() => {
+                setCreatingCategory(true);
+                categoryManagement.setActiveId(null);
+              }}
+              variant="primary"
+              size="default"
+            >
               <CirclePlus className="w-4 h-4 mr-2" />
-              Добавить первую категорию
+              Добавить категорию
             </Button>
-          )}
+          </div>
         </div>
       )}
 
-      {/* Editing handled via CategoryDetailPage routes */}
+      {/* Mobile modal support */}
+      {isMobile && categoryManagement.activeId !== null && (
+        <div className="lg:hidden">
+          <Modal
+            isOpen={categoryManagement.activeId !== null}
+            onClose={() => categoryManagement.setActiveId(null)}
+            title={categoryManagement.selectedCategory?.name || 'Детали'}
+          >
+            <CategoryDetail
+              category={categoryManagement.selectedCategory}
+              onEdit={() => {
+                if (categoryManagement.selectedCategory) {
+                  navigate(`/categories/${categoryManagement.selectedCategory.id}/edit`);
+                  categoryManagement.setActiveId(null);
+                }
+              }}
+              onEditProduct={categoryManagement.handleEditProduct}
+              onDeleteProduct={categoryManagement.handleDeleteProductRequest}
+              openSections={openSections}
+              onToggleSection={handleToggleSection}
+              editTrigger={editTrigger}
+              editSubmitTrigger={editSubmitTrigger}
+              editCancelTrigger={editCancelTrigger}
+              onStartEdit={undefined}
+              onFinishEdit={undefined}
+            />
+          </Modal>
+        </div>
+      )}
+
+      {/* Import modal */}
+      <Modal
+        isOpen={showImportModal}
+        onClose={() => {
+          setShowImportModal(false);
+          setImportFileContent(null);
+        }}
+        title="Импорт категорий"
+      >
+        <div className="p-4">
+          <p className="text-muted-foreground mb-4">Выберите файл JSON для импорта категорий.</p>
+          {/* Add import form component here if needed */}
+        </div>
+      </Modal>
 
       <ConfirmModal
         isOpen={!!categoryManagement.categoryToDelete}

@@ -8,24 +8,13 @@ import { Tag, Package, Edit, Copy, Trash2, Share } from 'lucide-react';
 interface CardViewConfig<T> {
   title: (entity: T) => string;
   subtitle?: (entity: T, context?: Record<string, unknown>) => string | React.ReactNode;
-  details: (entity: T, context?: Record<string, unknown>) => any[];
+  details: (entity: T, context?: Record<string, unknown>) => unknown[];
 }
 
 interface ListItemViewConfig<T> {
   title: (entity: T, context?: Record<string, unknown>) => string;
   details?: (entity: T, context?: Record<string, unknown>) => (string | React.ReactNode)[];
-  actions?: (handlers: Record<string, (entity: T) => void>) => any[];
-}
-
-interface EntityConfig<T> {
-  getIcon: (entity: T, context?: Record<string, unknown>) => React.ElementType;
-  getIconColor?: (entity: T, context?: Record<string, unknown>) => string;
-  getBorderColor: (entity: T, context?: Record<string, unknown>) => string;
-  views: {
-    card: CardViewConfig<T>;
-    listItem: ListItemViewConfig<T>;
-  };
-  getActions: (handlers: any) => any[];
+  actions?: (handlers: Record<string, (entity: T) => void>) => unknown[];
 }
 
 type CategoryActions = {
@@ -35,10 +24,32 @@ type CategoryActions = {
   onDelete: (entity: Category) => void;
 };
 
+interface EntityConfig<T> {
+  getIcon: (entity: T, context?: Record<string, unknown>) => React.ElementType;
+  getIconColor?: (entity: T, context?: Record<string, unknown>) => string;
+  getBorderColor: (entity: T, context?: Record<string, unknown>) => string;
+  views: {
+    card: CardViewConfig<T>;
+    listItem: ListItemViewConfig<T>;
+  };
+  getActions: (handlers: CategoryActions) => unknown[];
+}
+
 export const categoryEntityConfig: EntityConfig<Category> = {
-  getIcon: () => Tag,
+  getIcon: (category) => {
+    // Если у категории есть эмодзи, возвращаем компонент с эмодзи
+    if (category.emoji) {
+      const EmojiComponent = () => (
+        <span className="text-lg flex items-center justify-center">{category.emoji}</span>
+      );
+      EmojiComponent.displayName = 'CategoryEmoji';
+      return EmojiComponent;
+    }
+    // Иначе используем Tag по умолчанию
+    return Tag;
+  },
   getIconColor: () => 'text-gray-500',
-  getBorderColor: (category) => category.color || '#6b7280',
+  getBorderColor: () => '#6b7280',
   views: {
     card: {
       title: (category) => category.name,

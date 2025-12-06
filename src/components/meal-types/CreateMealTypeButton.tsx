@@ -20,15 +20,18 @@ const CreateMealTypeButton: React.FC<CreateMealTypeButtonProps> = ({
   showText = true,
   disabled = false,
 }) => {
+  // If showText is false, we should use icon size
+  const effectiveSize = !showText ? 'icon' : size;
+
   return (
     <Button
       variant={variant}
-      size={size}
+      size={effectiveSize}
       onClick={onClick}
       className={className}
       disabled={disabled}
     >
-      <CirclePlus className="w-4 h-4 sm:mr-2" />
+      <CirclePlus className="w-4 h-4" />
       {showText && <span className="hidden sm:inline">Добавить тип</span>}
     </Button>
   );

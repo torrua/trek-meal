@@ -18,6 +18,8 @@ import {
   UploadCloud,
   MapPin,
   Backpack,
+  Download,
+  CheckSquare,
 } from 'lucide-react';
 import { useViewMode } from '../hooks/useViewMode';
 import { useParticipantsManagement } from '../hooks/useParticipantsManagement';
@@ -216,7 +218,7 @@ const ParticipantsPage: React.FC = () => {
                   onClick={() => fileInputRef.current?.click()}
                   title="Импорт"
                 >
-                  <UploadCloud className="w-4 h-4" />
+                  <Download className="w-4 h-4" />
                 </Button>
 
                 <Button onClick={toggleViewMode} variant="secondary" size="icon" title="Вид">
@@ -233,16 +235,15 @@ const ParticipantsPage: React.FC = () => {
                   size="icon"
                   title="Выделить"
                 >
-                  <Check className="w-4 h-4" />
+                  <CheckSquare className="w-4 h-4" />
                 </Button>
                 <Button
                   onClick={handleAddNew}
                   variant="primary"
-                  size="default"
+                  size="icon"
                   disabled={isCreating || isEditing}
                 >
-                  <UserRoundPlus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Добавить участника</span>
+                  <UserRoundPlus className="w-4 h-4" />
                 </Button>
               </>
             ) : (

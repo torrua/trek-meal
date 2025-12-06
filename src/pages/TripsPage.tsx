@@ -18,6 +18,8 @@ import {
   LayoutList,
   Grid3X3,
   UploadCloud,
+  Download,
+  CheckSquare,
 } from 'lucide-react';
 import { useTripsManagement } from '../hooks/useTripsManagement';
 import { useViewMode } from '../hooks/useViewMode';
@@ -240,7 +242,7 @@ const TripsPage: React.FC = () => {
                   onClick={() => fileInputRef.current?.click()}
                   title="Импорт"
                 >
-                  <UploadCloud className="w-4 h-4" />
+                  <Download className="w-4 h-4" />
                 </Button>
 
                 <Button onClick={toggleViewMode} variant="secondary" size="icon" title="Вид">
@@ -257,11 +259,10 @@ const TripsPage: React.FC = () => {
                   size="icon"
                   title="Выделить"
                 >
-                  <Check className="w-4 h-4" />
+                  <CheckSquare className="w-4 h-4" />
                 </Button>
-                <Button onClick={handleAddNew} variant="primary" size="default">
-                  <MapPinPlus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Создать поход</span>
+                <Button onClick={handleAddNew} variant="primary" size="icon">
+                  <MapPinPlus className="w-4 h-4" />
                 </Button>
               </>
             ) : (

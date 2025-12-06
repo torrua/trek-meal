@@ -55,6 +55,7 @@ interface CollapsibleSectionProps {
   gradientFrom?: string;
   gradientVia?: string;
   gradientTo?: string;
+  gradientCssVar?: string; // Add this new prop
   className?: string;
   disableToggle?: boolean;
 }
@@ -72,18 +73,22 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   gradientFrom = 'from-blue-500/5',
   gradientVia = 'via-purple-500/5',
   gradientTo = 'to-pink-500/5',
+  gradientCssVar, // Add this new prop
   className,
   disableToggle = false,
 }) => {
   const defaultShadow = 'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]';
 
+  // Use CSS variable gradient if provided, otherwise use Tailwind classes
+  const gradientClass = gradientCssVar
+    ? `[background:${gradientCssVar}]`
+    : `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo}`;
+
   return (
     <div
       className={`${className || 'border border-border'} ${defaultShadow} rounded-xl relative transform`}
     >
-      <div
-        className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} rounded-xl absolute inset-0`}
-      ></div>
+      <div className={`${gradientClass} rounded-xl absolute inset-0`}></div>
       <div className="relative">
         <div
           className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -472,13 +477,11 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
         {mealType && usageCount > 0 && (
           <CollapsibleSection
             id="usage"
-            title="Использование"
+            title="Приёмы пищи" // Renamed from "Использование" to "Приёмы пищи"
             icon={<Tag className="w-4 h-4 text-green-600" />}
             isOpen={openSections.includes('usage')}
             onToggle={onToggleSection}
-            gradientFrom="from-green-500/5"
-            gradientVia="via-teal-500/5"
-            gradientTo="to-blue-500/5"
+            gradientCssVar="var(--color-meal-type-gradient)" // Use MealType gradient for the section
             summaryContent={
               usageCount > 0 && (
                 <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -530,7 +533,7 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
                         <div
                           key={meal.id}
                           data-meal-id={meal.id}
-                          className="[background:var(--color-meal-composition-gradient)] border border-[#10b981]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] show-nutrition:p-3"
+                          className="bg-card [background:var(--color-meal-composition-gradient)] border border-border rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all duration-200 hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
                         >
                           <div className="space-y-1">
                             {/* Header Row */}

@@ -274,9 +274,8 @@ const ProductsPage: React.FC = () => {
                 >
                   <CheckSquare className="w-4 h-4" />
                 </Button>
-                <Button onClick={handleAddNew} variant="primary" size="default">
-                  <CirclePlus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Добавить продукт</span>
+                <Button onClick={handleAddNew} variant="primary" size="icon">
+                  <CirclePlus className="w-4 h-4" />
                 </Button>
               </>
             ) : (

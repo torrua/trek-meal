@@ -293,10 +293,9 @@ const CategoriesPage: React.FC = () => {
                     categoryManagement.setActiveId(null);
                   }}
                   variant="primary"
-                  size="default"
+                  size="icon"
                 >
-                  <CirclePlus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Добавить категорию</span>
+                  <CirclePlus className="w-4 h-4" />
                 </Button>
               </>
             ) : (

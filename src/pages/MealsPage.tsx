@@ -297,6 +297,7 @@ const MealsPage: React.FC = () => {
                     setOpenSections(['basic-info', 'composition']);
                   }}
                   disabled={isDetailEditing || creatingMeal}
+                  showText={false}
                 />
               </>
             ) : (

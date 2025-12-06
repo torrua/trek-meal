@@ -21,6 +21,8 @@ import {
   Scale,
   User,
   Users,
+  Download,
+  CheckSquare,
 } from 'lucide-react';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
@@ -249,7 +251,7 @@ const EquipmentPage: React.FC = () => {
                   title="Импорт"
                   aria-label="Импорт"
                 >
-                  <UploadCloud className="w-4 h-4" />
+                  <Download className="w-4 h-4" />
                 </Button>
 
                 <Button
@@ -273,11 +275,10 @@ const EquipmentPage: React.FC = () => {
                   title="Выделить"
                   aria-label="Выделить"
                 >
-                  <Check className="w-4 h-4" />
+                  <CheckSquare className="w-4 h-4" />
                 </Button>
-                <Button onClick={handleAddNew} variant="primary" size="default">
-                  <CirclePlus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Добавить снаряжение</span>
+                <Button onClick={handleAddNew} variant="primary" size="icon">
+                  <CirclePlus className="w-4 h-4" />
                 </Button>
               </>
             ) : (

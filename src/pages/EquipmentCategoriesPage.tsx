@@ -16,6 +16,8 @@ import {
   UploadCloud,
   Info,
   Edit,
+  Download,
+  CheckSquare,
 } from 'lucide-react';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
@@ -226,7 +228,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                   onClick={() => fileInputRef.current?.click()}
                   title="Импорт"
                 >
-                  <UploadCloud className="w-4 h-4" />
+                  <Download className="w-4 h-4" />
                 </Button>
 
                 <Button
@@ -248,15 +250,14 @@ const EquipmentCategoriesPage: React.FC = () => {
                   size="icon"
                   title="Выделить"
                 >
-                  <Check className="w-4 h-4" />
+                  <CheckSquare className="w-4 h-4" />
                 </Button>
                 <Button
                   onClick={() => alert('Форма создания категорий оборудования пока не реализована')}
                   variant="primary"
-                  size="default"
+                  size="icon"
                 >
-                  <CirclePlus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Добавить категорию</span>
+                  <CirclePlus className="w-4 h-4" />
                 </Button>
               </>
             ) : (

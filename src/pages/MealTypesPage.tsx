@@ -13,8 +13,10 @@ import {
   CheckCheck,
   LayoutList,
   Grid3X3,
+  Download,
   UploadCloud,
   Tag,
+  CheckSquare,
 } from 'lucide-react';
 import useMealTypesStore from '../stores/useMealTypesStore';
 import useMealStore from '../stores/useMealStore';
@@ -289,7 +291,7 @@ const MealTypesPage: React.FC = () => {
                   title="Импорт"
                   aria-label="Импорт"
                 >
-                  <UploadCloud className="w-4 h-4" />
+                  <Download className="w-4 h-4" />
                 </Button>
 
                 <Button
@@ -311,11 +313,12 @@ const MealTypesPage: React.FC = () => {
                   size="icon"
                   title="Выделить"
                 >
-                  <Check className="w-4 h-4" />
+                  <CheckSquare className="w-4 h-4" />
                 </Button>
                 <CreateMealTypeButton
                   onClick={handleCreateNew}
                   disabled={isDetailEditing || isCreatingNew}
+                  showText={false}
                 />
               </>
             ) : (

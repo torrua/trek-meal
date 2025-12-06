@@ -303,11 +303,10 @@ const DishesPage: React.FC = () => {
                 <Button
                   onClick={handleAddNew}
                   variant="primary"
-                  size="default"
+                  size="icon"
                   disabled={isDetailEditing}
                 >
-                  <CirclePlus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Добавить блюдо</span>
+                  <CirclePlus className="w-4 h-4" />
                 </Button>
               </>
             ) : (

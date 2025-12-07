@@ -176,7 +176,7 @@ const ParticipantsPage: React.FC = () => {
 
   // При клике на карточку в списке
   const onSelectParticipant = (id: number) => {
-    setActiveId(id);
+    setActiveId(activeId === id ? null : id);
     setIsCreating(false);
     setIsEditing(false);
   };

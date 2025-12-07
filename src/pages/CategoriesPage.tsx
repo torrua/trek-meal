@@ -94,12 +94,7 @@ const CategoriesPage: React.FC = () => {
         }
       }, 100);
     }
-  }, [
-    searchParams,
-    categoryManagement.filteredCategories,
-    categoryManagement.setActiveId,
-    setSearchParams,
-  ]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchParams, categoryManagement.filteredCategories, categoryManagement, setSearchParams]);
 
   const hasActiveFilters = useMemo(
     () => Object.values(filters).some((v) => v !== 'all'),
@@ -417,7 +412,11 @@ const CategoriesPage: React.FC = () => {
                   meta={metaItems}
                   isSelected={categoryManagement.activeId === category.id}
                   isMultiSelected={selectedCategoryIds.includes(category.id)}
-                  onSelect={() => categoryManagement.setActiveId(category.id)}
+                  onSelect={() =>
+                    categoryManagement.setActiveId(
+                      categoryManagement.activeId === category.id ? null : category.id
+                    )
+                  }
                   onMultiSelect={() => toggleCategorySelection(category.id)}
                   onRequestMultiSelectMode={() => {
                     if (!showMultiSelect) {
@@ -437,7 +436,11 @@ const CategoriesPage: React.FC = () => {
                   iconColor={categoryEntityConfig.getIconColor?.(category)}
                   isSelected={categoryManagement.activeId === category.id}
                   isMultiSelected={selectedCategoryIds.includes(category.id)}
-                  onSelect={() => categoryManagement.setActiveId(category.id)}
+                  onSelect={() =>
+                    categoryManagement.setActiveId(
+                      categoryManagement.activeId === category.id ? null : category.id
+                    )
+                  }
                   onMultiSelect={() => toggleCategorySelection(category.id)}
                   onRequestMultiSelectMode={() => {
                     if (!showMultiSelect) {

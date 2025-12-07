@@ -183,14 +183,14 @@ const EntityCard: React.FC<EntityCardProps> = ({
   };
 
   const gradientByVariant: Record<NonNullable<EntityCardProps['variant']>, string> = {
-    neutral: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
-    info: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
-    composition: '[background:var(--color-meal-composition-gradient)]',
-    meal: '[background:var(--color-meal-composition-gradient)]',
-    'meal-type': '[background:var(--color-meal-type-gradient)]',
-    dish: '[background:var(--color-dish-gradient)]',
-    product: '[background:var(--color-product-gradient)]',
-    category: '[background:var(--color-meal-type-gradient)]',
+    neutral: 'gradient-neutral',
+    info: 'gradient-equipment',
+    composition: 'gradient-meal',
+    meal: 'gradient-meal',
+    'meal-type': 'gradient-category',
+    dish: 'gradient-dish',
+    product: 'gradient-product',
+    category: 'gradient-category',
   };
 
   const cardClasses = cn(

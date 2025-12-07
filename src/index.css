@@ -266,6 +266,62 @@
   background-color: rgb(var(--muted) / 0.6);
 }
 
+/* Search menu item styles */
+.search-menu-item {
+  @apply w-full px-4 py-2.5 text-left text-sm transition-all duration-150 flex items-center gap-3 hover:bg-primary/10 text-foreground hover:text-foreground;
+}
+
+/* View mode field styles */
+.view-mode-field {
+  @apply bg-card border border-border rounded-lg text-sm text-foreground;
+}
+
+.view-mode-single-line {
+  @apply w-full h-10 px-4 py-2 flex items-center;
+}
+
+.view-mode-multi-line {
+  @apply flex w-full min-h-[84px] px-4 py-2.5 whitespace-pre-wrap box-border;
+}
+
+/* Card gradient styles */
+.gradient-primary {
+  @apply bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5;
+}
+
+.gradient-nutrition {
+  @apply bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5;
+}
+
+.gradient-composition {
+  @apply bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-blue-500/5;
+}
+
+/* Entity card gradients */
+.gradient-dish {
+  background: linear-gradient(45deg, #fed7aa 0%, #fef3c7 100%);
+}
+
+.gradient-product {
+  background: linear-gradient(45deg, #dbeafe 0%, #eff6ff 100%);
+}
+
+.gradient-meal {
+  background: linear-gradient(45deg, #dcfce7 0%, #f0fdf4 100%);
+}
+
+.gradient-neutral {
+  background: linear-gradient(45deg, #dbeafe 0%, #f3e8ff 50%, #fef3c7 100%);
+}
+
+.gradient-category {
+  background: linear-gradient(45deg, #f3e8ff 0%, #faf5ff 100%);
+}
+
+.gradient-equipment {
+  background: linear-gradient(45deg, #e5e7eb 0%, #f3f4f6 100%);
+}
+
 .notion-border-subtle {
   border-color: rgb(var(--border));
 }

@@ -394,7 +394,7 @@ const ProductsPage: React.FC = () => {
                   meta={metaItems}
                   isSelected={activeId === product.id}
                   isMultiSelected={selectedProductIds.includes(product.id)}
-                  onSelect={() => setActiveId(product.id)}
+                  onSelect={() => setActiveId(activeId === product.id ? null : product.id)}
                   onMultiSelect={() => toggleProductSelection(product.id)}
                   onRequestMultiSelectMode={() => {
                     if (!showMultiSelect) {
@@ -423,7 +423,7 @@ const ProductsPage: React.FC = () => {
                   }}
                   isSelected={activeId === product.id}
                   isMultiSelected={selectedProductIds.includes(product.id)}
-                  onSelect={() => setActiveId(product.id)}
+                  onSelect={() => setActiveId(activeId === product.id ? null : product.id)}
                   onMultiSelect={() => toggleProductSelection(product.id)}
                   onRequestMultiSelectMode={() => {
                     if (!showMultiSelect) {

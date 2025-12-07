@@ -418,7 +418,7 @@ const MealTypesPage: React.FC = () => {
                   ]}
                   isSelected={activeId === mealType.id}
                   isMultiSelected={selectedMealTypeIds.includes(mealType.id)}
-                  onSelect={() => _handleEdit(mealType)}
+                  onSelect={() => setActiveId(activeId === mealType.id ? null : mealType.id)}
                   onMultiSelect={() => toggleMealTypeSelection(mealType.id)}
                   menuItems={menuItems}
                   data-testid={`meal-type-card-${mealType.id}`}
@@ -441,7 +441,7 @@ const MealTypesPage: React.FC = () => {
                   ]}
                   isSelected={activeId === mealType.id}
                   isMultiSelected={selectedMealTypeIds.includes(mealType.id)}
-                  onSelect={() => _handleEdit(mealType)}
+                  onSelect={() => setActiveId(activeId === mealType.id ? null : mealType.id)}
                   onMultiSelect={() => toggleMealTypeSelection(mealType.id)}
                   menuItems={menuItems}
                   data-testid={`meal-type-card-${mealType.id}`}

@@ -55,7 +55,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 }) => {
   return (
     <div
-      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-hidden`}
+      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-hidden ${gradientFrom.includes('gradient-') ? gradientFrom : ''}`}
     >
       <div
         className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -131,9 +131,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
         icon={<Info className="w-4 h-4 text-primary" />}
         isOpen={openSections.includes('info')}
         onToggle={handleToggleSection}
-        gradientFrom="from-blue-500/5"
-        gradientVia="via-purple-500/5"
-        gradientTo="to-pink-500/5"
+        gradientFrom="gradient-primary"
+        gradientVia=""
+        gradientTo=""
         actionButton={
           <Button
             variant="primary"
@@ -206,9 +206,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
         icon={<BarChart className="w-4 h-4 text-primary" />}
         isOpen={openSections.includes('nutrition')}
         onToggle={handleToggleSection}
-        gradientFrom="from-orange-500/5"
-        gradientVia="via-yellow-500/5"
-        gradientTo="to-green-500/5"
+        gradientFrom="gradient-nutrition"
+        gradientVia=""
+        gradientTo=""
       >
         <div className="pt-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -247,9 +247,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
         icon={<PieChart className="w-4 h-4 text-primary" />}
         isOpen={openSections.includes('portions')}
         onToggle={handleToggleSection}
-        gradientFrom="from-purple-500/5"
-        gradientVia="via-pink-500/5"
-        gradientTo="to-blue-500/5"
+        gradientFrom="gradient-composition"
+        gradientVia=""
+        gradientTo=""
         summaryContent={
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Hash className="w-3.5 h-3.5" />

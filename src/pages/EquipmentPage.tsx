@@ -393,7 +393,9 @@ const EquipmentPage: React.FC = () => {
                   menuItems={actions}
                   isSelected={activeId === equipmentItem.id}
                   isMultiSelected={selectedEquipmentIds.includes(equipmentItem.id)}
-                  onSelect={() => setActiveId(equipmentItem.id)}
+                  onSelect={() =>
+                    setActiveId(activeId === equipmentItem.id ? null : equipmentItem.id)
+                  }
                   onMultiSelect={() => toggleEquipmentSelection(equipmentItem.id)}
                   showMultiSelect={showMultiSelect}
                   variant="info"
@@ -412,7 +414,9 @@ const EquipmentPage: React.FC = () => {
                   menuItems={actions}
                   isSelected={activeId === equipmentItem.id}
                   isMultiSelected={selectedEquipmentIds.includes(equipmentItem.id)}
-                  onSelect={() => setActiveId(equipmentItem.id)}
+                  onSelect={() =>
+                    setActiveId(activeId === equipmentItem.id ? null : equipmentItem.id)
+                  }
                   onMultiSelect={() => toggleEquipmentSelection(equipmentItem.id)}
                   data-testid={`equipment-card-${equipmentItem.id}`}
                   showMultiSelect={showMultiSelect}

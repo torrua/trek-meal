@@ -475,7 +475,7 @@ const DishesPage: React.FC = () => {
                 <div
                   key={dish.id}
                   data-dish-id={dish.id}
-                  className={isCardDisabled ? 'opacity-50 pointer-events-none' : ''}
+                  className={isCardDisabled ? 'opacity-50' : ''}
                 >
                   <EntityListItem
                     key={dish.id}
@@ -486,7 +486,7 @@ const DishesPage: React.FC = () => {
                     onSelect={() => {
                       if (!isCardDisabled) {
                         setIsCreating(false);
-                        setActiveId(dish.id);
+                        setActiveId(activeId === dish.id ? null : dish.id);
                       }
                     }}
                     onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
@@ -504,8 +504,16 @@ const DishesPage: React.FC = () => {
               ) : (
                 <div
                   key={dish.id}
+                  onClick={() =>
+                    console.log(
+                      'Card div clicked for dish:',
+                      dish.id,
+                      'isCardDisabled:',
+                      isCardDisabled
+                    )
+                  }
                   data-dish-id={dish.id}
-                  className={isCardDisabled ? 'opacity-50 pointer-events-none' : ''}
+                  className={isCardDisabled ? 'opacity-50' : ''}
                 >
                   <EntityCard
                     key={dish.id}
@@ -527,7 +535,7 @@ const DishesPage: React.FC = () => {
                     onSelect={() => {
                       if (!isCardDisabled) {
                         setIsCreating(false);
-                        setActiveId(dish.id);
+                        setActiveId(activeId === dish.id ? null : dish.id);
                       }
                     }}
                     onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}

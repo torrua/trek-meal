@@ -3,21 +3,19 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   CirclePlus,
+  CheckCheck,
   Filter,
   Layers,
   Trash2,
   Copy,
   Share,
   X,
-  Check,
-  CheckCheck,
+  CheckSquare,
   LayoutList,
   Grid3X3,
-  UploadCloud,
   Info,
   Edit,
   Download,
-  CheckSquare,
 } from 'lucide-react';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
@@ -375,6 +373,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                   title={equipmentCategoryEntityConfig.views.card.title(category)}
                   icon={equipmentCategoryEntityConfig.getIcon(category)}
                   iconColor={equipmentCategoryEntityConfig.getIconColor?.(category)}
+                  variant="category"
                   details={[
                     {
                       key: 'equipment',
@@ -385,7 +384,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                   ]}
                   isSelected={activeId === category.id}
                   isMultiSelected={selectedCategoryIds.includes(category.id)}
-                  onSelect={() => setActiveId(category.id)}
+                  onSelect={() => setActiveId(activeId === category.id ? null : category.id)}
                   onMultiSelect={() => toggleCategorySelection(category.id)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}

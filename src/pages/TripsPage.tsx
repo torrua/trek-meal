@@ -112,7 +112,7 @@ const TripsPage: React.FC = () => {
   };
 
   const onSelectTrip = (id: number) => {
-    setActiveId(id);
+    setActiveId(activeId === id ? null : id);
     setIsCreating(false);
     setIsEditing(false);
   };

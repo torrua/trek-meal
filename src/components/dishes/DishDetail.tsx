@@ -56,7 +56,6 @@ import FormField from '../../ui/FormField';
 import DropdownSelect from '../../ui/DropdownSelect';
 import { toast } from 'react-hot-toast';
 import Modal from '../../ui/Modal';
-import { tripEntityConfig } from '../../config/entityConfig';
 
 interface DishDetailProps {
   dish: Dish | null;
@@ -527,7 +526,6 @@ const DishDetail: React.FC<DishDetailProps> = ({
 
   const isBasicInfoOpen = openSections.includes('basic-info');
   const isProductsOpen = openSections.includes('products');
-  const isTripsOpen = openSections.includes('trips');
 
   // Инициализация при смене режима isCreating
   useEffect(() => {
@@ -901,9 +899,9 @@ const DishDetail: React.FC<DishDetailProps> = ({
             </Button>
           )
         }
-        gradientFrom="from-blue-500/5"
-        gradientVia="via-purple-500/5"
-        gradientTo="to-pink-500/5"
+        gradientFrom="gradient-primary"
+        gradientVia=""
+        gradientTo=""
       >
         <div className="space-y-4 pt-4">
           {isEditing ? (
@@ -1212,30 +1210,18 @@ const DishDetail: React.FC<DishDetailProps> = ({
 
       {/* Trips Section - Hide if creating */}
       {!isCreating && tripsUsingDish.length > 0 && (
-        <CollapsibleSection
-          id="trips"
-          title="Походы"
-          icon={<MapPin className="w-4 h-4 text-primary" />}
-          isOpen={isTripsOpen}
-          onToggle={onToggleSection}
-          gradientFrom="from-purple-500/5"
-          gradientVia="via-pink-500/5"
-          gradientTo="to-red-500/5"
-        >
-          <div className="pt-4 space-y-2">
-            {tripsUsingDish.map((t) => {
-              const listItemConfig = tripEntityConfig.views.listItem;
-              return (
-                <div
-                  key={t.id}
-                  className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg flex items-center gap-2 cursor-pointer hover:bg-purple-500/10"
-                  onClick={() => handleViewTrip(t.id)}
-                >
-                  <MapPin className="w-4 h-4 text-purple-500" />
-                  <span className="font-medium text-sm">{listItemConfig.title(t)}</span>
-                </div>
-              );
-            })}
+        <CollapsibleSection title="Поездки" icon={MapPin} gradientFrom="gradient-primary">
+          <div className="space-y-2">
+            {tripsUsingDish.map((t) => (
+              <div
+                key={t.id}
+                className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg flex items-center gap-2 cursor-pointer hover:bg-purple-500/10"
+                onClick={() => handleViewTrip(t.id)}
+              >
+                <MapPin className="w-4 h-4 text-purple-500" />
+                <span className="font-medium text-sm">{listItemConfig.title(t)}</span>
+              </div>
+            ))}
           </div>
         </CollapsibleSection>
       )}

@@ -490,6 +490,7 @@ const MealsPage: React.FC = () => {
                     mealType: mealTypes.find((mt) => mt.id === meal.mealTypeId),
                   })}
                   icon={mealEntityConfig.getIcon(meal)}
+                  iconColor={mealEntityConfig.getIconColor?.()}
                   isSelected={activeId === meal.id}
                   isMultiSelected={selectedMealIds.includes(meal.id)}
                   onSelect={

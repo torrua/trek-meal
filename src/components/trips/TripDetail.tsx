@@ -236,9 +236,9 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
         icon={Info}
         isOpen={openSections.includes('info')}
         onToggle={handleToggleSection}
-        gradientFrom="from-blue-500/5"
-        gradientVia="via-cyan-500/5"
-        gradientTo="to-teal-500/5"
+        gradientFrom="gradient-trip"
+        gradientVia=""
+        gradientTo=""
         actionButton={
           isEditing ? (
             <div className="flex items-center gap-2">
@@ -409,9 +409,9 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
         icon={Users}
         isOpen={openSections.includes('participants')}
         onToggle={handleToggleSection}
-        gradientFrom="from-purple-500/5"
-        gradientVia="via-fuchsia-500/5"
-        gradientTo="to-pink-500/5"
+        gradientFrom="gradient-participant"
+        gradientVia=""
+        gradientTo=""
         actionButton={
           <Button
             size="sm"
@@ -461,9 +461,9 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
         icon={Utensils}
         isOpen={openSections.includes('summary')}
         onToggle={handleToggleSection}
-        gradientFrom="from-orange-500/5"
-        gradientVia="via-amber-500/5"
-        gradientTo="to-yellow-500/5"
+        gradientFrom="gradient-nutrition"
+        gradientVia=""
+        gradientTo=""
         actionButton={
           <Button size="sm" variant="primary" onClick={handleNavigateToPlanning}>
             <HandPlatter className="w-4 h-4 mr-2" />

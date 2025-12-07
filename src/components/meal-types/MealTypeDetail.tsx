@@ -333,7 +333,7 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
   const usageCount = usageMeals.length;
 
   // Calculate nutrition totals for a meal
-  const calculateMealNutrition = (meal: Meal) => {
+  const _calculateMealNutrition = (meal: Meal) => {
     const products = useProductStore.getState().products;
     const dishes = useDishStore.getState().dishes;
 
@@ -382,9 +382,9 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
           icon={<Info className="w-4 h-4 text-primary" />}
           isOpen={openSections.includes('basic-info')}
           onToggle={onToggleSection}
-          gradientFrom="from-purple-500/5"
-          gradientVia="via-yellow-500/5"
-          gradientTo="to-pink-500/5"
+          gradientFrom="gradient-category"
+          gradientVia=""
+          gradientTo=""
           actionButton={
             !isInlineEditing && mealType ? (
               <Button

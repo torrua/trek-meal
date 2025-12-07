@@ -9,12 +9,12 @@ import {
   Copy,
   Share,
   X,
-  Check,
+  _Check,
   CheckCheck,
   LayoutList,
   Grid3X3,
   Download,
-  UploadCloud,
+  _UploadCloud,
   Tag,
   CheckSquare,
 } from 'lucide-react';
@@ -430,7 +430,7 @@ const MealTypesPage: React.FC = () => {
                   key={mealType.id}
                   title={mealTypeEntityConfig.views.card.title(mealType)}
                   icon={mealTypeEntityConfig.getIcon(mealType)}
-                  iconColor="text-purple-600"
+                  iconColor={mealTypeEntityConfig.getIconColor?.(mealType)}
                   details={[
                     {
                       key: 'meals',

@@ -5,7 +5,6 @@ import {
   Info,
   Edit,
   Save,
-  Package,
   Hash,
   Flame,
   Beef,
@@ -192,7 +191,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
         onToggleSection('basic-info');
       }
       setEditName(category.name);
-      setEditDescription(category.description || '');
+      setEditDescription('');
       setEditEmoji(category.emoji || '');
       setIsInlineEditing(true);
     }
@@ -206,7 +205,6 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
         // Редактирование существующей категории
         await updateCategory(category.id, {
           name: editName,
-          description: editDescription,
           emoji: editEmoji,
         });
         toast.success('Категория обновлена');
@@ -233,7 +231,6 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
         // Создание новой категории
         await addCategory({
           name: editName,
-          description: editDescription,
           emoji: editEmoji,
         });
         toast.success('Категория создана');
@@ -278,9 +275,9 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
             icon={<Info className="w-4 h-4 text-primary" />}
             isOpen={openSections.includes('basic-info')}
             onToggle={onToggleSection}
-            gradientFrom="from-blue-500/5"
-            gradientVia="via-purple-500/5"
-            gradientTo="to-pink-500/5"
+            gradientFrom="gradient-category"
+            gradientVia=""
+            gradientTo=""
             actionButton={
               <div className="flex gap-2">
                 <Button
@@ -383,9 +380,9 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
         icon={<Info className="w-4 h-4 text-primary" />}
         isOpen={openSections.includes('basic-info')}
         onToggle={onToggleSection}
-        gradientFrom="from-purple-500/5"
-        gradientVia="via-yellow-500/5"
-        gradientTo="to-pink-500/5"
+        gradientFrom="gradient-category"
+        gradientVia=""
+        gradientTo=""
         actionButton={
           !isInlineEditing && category ? (
             <Button
@@ -472,9 +469,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-                <div className="view-mode-field view-mode-multi-line">
-                  {category?.description || 'Нет описания'}
-                </div>
+                <div className="view-mode-field view-mode-multi-line">Нет описания</div>
               </div>
 
               <div>

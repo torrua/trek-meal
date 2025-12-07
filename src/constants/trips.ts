@@ -24,17 +24,17 @@ export const DIFFICULTY_CONFIG: Record<
   easy: {
     label: 'Легкий',
     icon: Gauge,
-    colorClassName: 'text-green-500 dark:text-green-300',
+    colorClassName: 'text-[#7B1FA2]',
   },
   medium: {
     label: 'Средний',
     icon: Gauge,
-    colorClassName: 'text-yellow-600 dark:text-yellow-400',
+    colorClassName: 'text-[#7B1FA2]',
   },
   hard: {
     label: 'Сложный',
     icon: Gauge,
-    colorClassName: 'text-red-600 dark:text-red-400',
+    colorClassName: 'text-[#7B1FA2]',
   },
 };
 

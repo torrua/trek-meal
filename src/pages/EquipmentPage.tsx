@@ -11,11 +11,9 @@ import {
   Copy,
   Share,
   X,
-  Check,
   CheckCheck,
   LayoutList,
   Grid3X3,
-  UploadCloud,
   Edit,
   ExternalLink,
   Scale,
@@ -398,7 +396,7 @@ const EquipmentPage: React.FC = () => {
                   }
                   onMultiSelect={() => toggleEquipmentSelection(equipmentItem.id)}
                   showMultiSelect={showMultiSelect}
-                  variant="info"
+                  variant="equipment"
                 />
               ) : (
                 <EntityCard
@@ -407,7 +405,7 @@ const EquipmentPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(equipmentItem, context)}
                   icon={equipmentEntityConfig.getIcon(equipmentItem)}
                   iconColor={equipmentEntityConfig.getIconColor?.(equipmentItem, context)}
-                  details={cardConfig.details(equipmentItem, context).map((detail, index) => ({
+                  details={cardConfig.details?.(equipmentItem, context)?.map((detail, index) => ({
                     ...detail,
                     key: `equipment-detail-${index}`,
                   }))}
@@ -420,7 +418,7 @@ const EquipmentPage: React.FC = () => {
                   onMultiSelect={() => toggleEquipmentSelection(equipmentItem.id)}
                   data-testid={`equipment-card-${equipmentItem.id}`}
                   showMultiSelect={showMultiSelect}
-                  variant="info"
+                  variant="equipment"
                 />
               );
             })}

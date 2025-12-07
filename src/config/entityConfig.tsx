@@ -37,63 +37,69 @@ import {
 } from 'lucide-react';
 
 // ... (Types definition remains same)
-type TripActions = {
-  onEdit: (e: Trip) => void;
-  onClone: (e: Trip) => void;
-  onExport: (e: Trip) => void;
-  onDelete: (e: Trip) => void;
-  onView?: (e: Trip) => void;
-  onRemove?: (e: Trip) => void;
-};
-type ParticipantActions = {
-  onEdit: (e: Participant) => void;
-  onAddToTrip: (e: Participant) => void;
-  onClone: (e: Participant) => void;
-  onExport: (e: Participant) => void;
-  onDelete: (e: Participant) => void;
-  onView?: (e: Participant) => void;
-  onRemove?: (e: Participant) => void;
-};
-type ProductActions = {
-  onEdit: (e: Product) => void;
-  onClone: (e: Product) => void;
-  onExport: (e: Product) => void;
-  onDelete: (e: Product) => void;
-  onView?: (e: Product) => void;
-  onEditPortion?: (e: Product) => void;
-  onRemove?: (e: Product) => void;
-};
-type DishActions = {
-  onEdit: (e: Dish) => void;
-  onClone: (e: Dish) => void;
-  onExport: (e: Dish) => void;
-  onDelete: (e: Dish) => void;
-};
-type EquipmentActions = {
-  onEdit: (e: Equipment) => void;
-  onClone: (e: Equipment) => void;
-  onExport: (e: Equipment) => void;
-  onDelete: (e: Equipment) => void;
-  onView?: (e: Equipment) => void;
-};
-type CategoryActions = {
-  onEdit: (e: Category) => void;
-  onClone: (e: Category) => void;
-  onExport: (e: Category) => void;
-  onDelete: (e: Category) => void;
-};
-type EquipmentCategoryActions = {
-  onEdit: (e: EquipmentCategory) => void;
-  onClone: (e: EquipmentCategory) => void;
-  onExport: (e: EquipmentCategory) => void;
-  onDelete: (e: EquipmentCategory) => void;
+type _TripActions = ActionHandler<Trip> & {
+  onEdit?: (entity: Trip) => void;
+  onClone?: (entity: Trip) => void;
+  onExport?: (entity: Trip) => void;
+  onDelete?: (entity: Trip) => void;
+  onView?: (entity: Trip) => void;
+  onRemove?: (entity: Trip) => void;
 };
 
-type MealTypeActions = {
-  onEdit: (e: MealType) => void;
-  onClone: (e: MealType) => void;
-  onExport: (e: MealType) => void;
-  onDelete: (e: MealType) => void;
+type _ParticipantActions = ActionHandler<Participant> & {
+  onEdit?: (entity: Participant) => void;
+  onAddToTrip?: (entity: Participant) => void;
+  onClone?: (entity: Participant) => void;
+  onExport?: (entity: Participant) => void;
+  onDelete?: (entity: Participant) => void;
+  onView?: (entity: Participant) => void;
+  onRemove?: (entity: Participant) => void;
+};
+
+type _ProductActions = ActionHandler<Product> & {
+  onEdit?: (entity: Product) => void;
+  onClone?: (entity: Product) => void;
+  onExport?: (entity: Product) => void;
+  onDelete?: (entity: Product) => void;
+  onView?: (entity: Product) => void;
+  onEditPortion?: (entity: Product) => void;
+  onRemove?: (entity: Product) => void;
+};
+
+type _DishActions = ActionHandler<Dish> & {
+  onEdit?: (entity: Dish) => void;
+  onClone?: (entity: Dish) => void;
+  onExport?: (entity: Dish) => void;
+  onDelete?: (entity: Dish) => void;
+};
+
+type _EquipmentActions = ActionHandler<Equipment> & {
+  onEdit?: (entity: Equipment) => void;
+  onClone?: (entity: Equipment) => void;
+  onExport?: (entity: Equipment) => void;
+  onDelete?: (entity: Equipment) => void;
+  onView?: (entity: Equipment) => void;
+};
+
+type _CategoryActions = ActionHandler<Category> & {
+  onEdit?: (entity: Category) => void;
+  onClone?: (entity: Category) => void;
+  onExport?: (entity: Category) => void;
+  onDelete?: (entity: Category) => void;
+};
+
+type _EquipmentCategoryActions = ActionHandler<EquipmentCategory> & {
+  onEdit?: (entity: EquipmentCategory) => void;
+  onClone?: (entity: EquipmentCategory) => void;
+  onExport?: (entity: EquipmentCategory) => void;
+  onDelete?: (entity: EquipmentCategory) => void;
+};
+
+type _MealTypeActions = ActionHandler<MealType> & {
+  onEdit?: (entity: MealType) => void;
+  onClone?: (entity: MealType) => void;
+  onExport?: (entity: MealType) => void;
+  onDelete?: (entity: MealType) => void;
 };
 
 interface CardDetail {
@@ -107,7 +113,7 @@ interface CardDetail {
 interface CardViewConfig<T> {
   title: (entity: T) => string;
   subtitle?: (entity: T, context?: Record<string, unknown>) => string;
-  details?: (entity: T) => CardDetail[];
+  details?: (entity: T, context?: Record<string, unknown>) => CardDetail[];
   listItem?: { title: (entity: T) => string };
 }
 
@@ -120,11 +126,11 @@ interface ListItemViewConfig<T> {
 interface MenuItem {
   label: string;
   icon: React.ElementType;
-  onClick: (...args: any[]) => void;
+  onClick: (...args: Record<string, unknown>[]) => void;
   className?: string;
 }
 
-type ActionHandler<T> =
+type ActionHandler<T = Record<string, unknown>> =
   | Record<string, (entity: T) => void>
   | {
       onEdit?: (entity: T) => void;
@@ -142,7 +148,7 @@ interface EntityConfig<T> {
     card: CardViewConfig<T>;
     listItem: ListItemViewConfig<T>;
   };
-  getActions: (handlers: ActionHandler<T>) => MenuItem[];
+  getActions: <A extends ActionHandler<T>>(handlers: A) => MenuItem[];
 }
 
 // --- TRIP ---
@@ -175,22 +181,27 @@ export const tripEntityConfig: EntityConfig<Trip> = {
         </span>,
         <span key="status">{STATUS_CONFIG[getEffectiveStatus(trip)].label}</span>,
       ],
-      actions: (handlers) => [
-        { label: 'Открыть', icon: ExternalLink, onClick: handlers.onView },
+      actions: (_handlers) => [
+        { label: 'Открыть', icon: ExternalLink, onClick: () => console.log('Open trip') },
         {
           label: 'Убрать из списка',
           icon: Trash2,
-          onClick: handlers.onRemove,
+          onClick: () => console.log('Remove trip from list'),
           className: 'text-danger',
         },
       ],
     },
   },
-  getActions: (handlers: TripActions) => [
-    { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
-    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
-    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
-    { label: 'Удалить', icon: Trash2, onClick: handlers.onDelete, className: 'text-danger' },
+  getActions: (_handlers) => [
+    { label: 'Редактировать', icon: Edit, onClick: () => console.log('Edit trip') },
+    { label: 'Клонировать', icon: Copy, onClick: () => console.log('Clone trip') },
+    { label: 'Экспорт', icon: Share, onClick: () => console.log('Export trip') },
+    {
+      label: 'Удалить',
+      icon: Trash2,
+      onClick: () => console.log('Delete trip'),
+      className: 'text-danger',
+    },
   ],
 };
 
@@ -206,12 +217,12 @@ export const participantEntityConfig: EntityConfig<Participant> = {
         const age = calculateAge(p.birthDate);
         return age ? `${age} лет` : p.age === 'child' ? 'Ребенок' : 'Взрослый';
       },
-      details: (p, context) => [
-        { key: 'trips', icon: MapPin, text: context?.tripCount as number, title: 'Походы' },
+      details: (p, ctx) => [
+        { key: 'trips', icon: MapPin, text: ctx?.tripCount as number, title: 'Походы' },
         {
           key: 'equipment',
           icon: Backpack,
-          text: context?.equipmentCount as number,
+          text: ctx?.equipmentCount as number,
           title: 'Снаряжение',
         },
       ],
@@ -219,26 +230,40 @@ export const participantEntityConfig: EntityConfig<Participant> = {
     listItem: {
       title: (p) => p.name,
       details: (p) => [EXPERIENCE_CONFIG[p.experienceLevel].label],
-      actions: (handlers) => [
-        { label: 'Открыть', icon: ExternalLink, onClick: handlers.onView },
-        { label: 'Удалить', icon: Trash2, onClick: handlers.onRemove, className: 'text-danger' },
+      actions: (_handlers) => [
+        { label: 'Открыть', icon: ExternalLink, onClick: () => console.log('Open participant') },
+        {
+          label: 'Удалить',
+          icon: Trash2,
+          onClick: () => console.log('Delete participant'),
+          className: 'text-danger',
+        },
       ],
     },
   },
-  getActions: (handlers: ParticipantActions) => [
-    { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
-    { label: 'Добавить в поход', icon: MapPinPlus, onClick: handlers.onAddToTrip },
-    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
-    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
-    { label: 'Удалить', icon: Trash2, onClick: handlers.onDelete, className: 'text-danger' },
+  getActions: (_handlers) => [
+    { label: 'Редактировать', icon: Edit, onClick: () => console.log('Edit participant') },
+    {
+      label: 'Добавить в поход',
+      icon: MapPinPlus,
+      onClick: () => console.log('Add participant to trip'),
+    },
+    { label: 'Клонировать', icon: Copy, onClick: () => console.log('Clone participant') },
+    { label: 'Экспорт', icon: Share, onClick: () => console.log('Export participant') },
+    {
+      label: 'Удалить',
+      icon: Trash2,
+      onClick: () => console.log('Delete participant'),
+      className: 'text-danger',
+    },
   ],
 };
 
 // --- PRODUCT ---
 export const productEntityConfig: EntityConfig<Product> = {
   getIcon: () => Component,
-  getIconColor: (_p, _ctx) => /*category ? 'text-current' : */ 'text-navy-500',
-  getBorderColor: (_p, ctx) => '#0ea5e9',
+  getIconColor: (_p, _ctx) => 'text-[#0277BD]',
+  getBorderColor: (_p, _ctx) => '#0ea5e9',
   views: {
     card: {
       title: (product) => product.name,
@@ -254,25 +279,35 @@ export const productEntityConfig: EntityConfig<Product> = {
           <Scale className="w-3 h-3" /> {(ctx?.dishProduct as DishProduct)?.weight} г
         </span>,
       ],
-      actions: (handlers) => [
-        { label: 'Открыть', icon: ExternalLink, onClick: handlers.onView },
-        { label: 'Изменить вес', icon: Edit, onClick: handlers.onEditPortion },
-        { label: 'Убрать', icon: Trash2, onClick: handlers.onRemove, className: 'text-danger' },
+      actions: (_handlers) => [
+        { label: 'Открыть', icon: ExternalLink, onClick: () => console.log('Open product') },
+        { label: 'Изменить вес', icon: Edit, onClick: () => console.log('Edit product portion') },
+        {
+          label: 'Убрать',
+          icon: Trash2,
+          onClick: () => console.log('Remove product'),
+          className: 'text-danger',
+        },
       ],
     },
   },
-  getActions: (handlers: ProductActions) => [
-    { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
-    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
-    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
-    { label: 'Удалить', icon: Trash2, onClick: handlers.onDelete, className: 'text-danger' },
+  getActions: (_handlers) => [
+    { label: 'Редактировать', icon: Edit, onClick: () => console.log('Edit product') },
+    { label: 'Клонировать', icon: Copy, onClick: () => console.log('Clone product') },
+    { label: 'Экспорт', icon: Share, onClick: () => console.log('Export product') },
+    {
+      label: 'Удалить',
+      icon: Trash2,
+      onClick: () => console.log('Delete product'),
+      className: 'text-danger',
+    },
   ],
 };
 
 // --- DISH ---
 export const dishEntityConfig: EntityConfig<Dish> = {
   getIcon: () => Soup,
-  getIconColor: () => 'text-autumn-leaf-500',
+  getIconColor: () => 'text-[#EF6C00]',
   getBorderColor: () => 'oklch(69.78% 0.197 45.40)',
   views: {
     card: {
@@ -283,19 +318,24 @@ export const dishEntityConfig: EntityConfig<Dish> = {
       title: (d) => d.name,
     },
   },
-  getActions: (handlers: DishActions) => [
-    { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
-    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
-    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
-    { label: 'Удалить', icon: Trash2, onClick: handlers.onDelete, className: 'text-danger' },
+  getActions: (_handlers) => [
+    { label: 'Редактировать', icon: Edit, onClick: () => console.log('Edit dish') },
+    { label: 'Клонировать', icon: Copy, onClick: () => console.log('Clone dish') },
+    { label: 'Экспорт', icon: Share, onClick: () => console.log('Export dish') },
+    {
+      label: 'Удалить',
+      icon: Trash2,
+      onClick: () => console.log('Delete dish'),
+      className: 'text-danger',
+    },
   ],
 };
 
 // --- EQUIPMENT ---
 export const equipmentEntityConfig: EntityConfig<Equipment> = {
   getIcon: () => Backpack,
-  getIconColor: (_e, _ctx) => /*category ? 'text-current' : */ 'text-gray-500',
-  getBorderColor: (_e, ctx) => '#6b7280',
+  getIconColor: (_e, _ctx) => 'text-[#283593]',
+  getBorderColor: (_e, _ctx) => '#6b7280',
   views: {
     card: {
       title: (e) => e.name,
@@ -316,21 +356,42 @@ export const equipmentEntityConfig: EntityConfig<Equipment> = {
     listItem: {
       title: (e) => e.name,
       details: (e, ctx) => [ctx?.formattedWeight as string],
-      actions: (handlers) => [{ label: 'Открыть', icon: ExternalLink, onClick: handlers.onView }],
+      actions: (_handlers) => [
+        { label: 'Просмотр', icon: ExternalLink, onClick: () => console.log('View equipment') },
+        { label: 'Редактировать', icon: Edit, onClick: () => console.log('Edit equipment') },
+        {
+          label: 'Добавить в поход',
+          icon: MapPinPlus,
+          onClick: () => console.log('Add equipment to trip'),
+        },
+        { label: 'Клонировать', icon: Copy, onClick: () => console.log('Clone equipment') },
+        { label: 'Экспорт', icon: Share, onClick: () => console.log('Export equipment') },
+        {
+          label: 'Удалить',
+          icon: Trash2,
+          onClick: () => console.log('Delete equipment'),
+          className: 'text-danger',
+        },
+      ],
     },
   },
-  getActions: (handlers: EquipmentActions) => [
-    { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
-    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
-    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
-    { label: 'Удалить', icon: Trash2, onClick: handlers.onDelete, className: 'text-danger' },
+  getActions: (_handlers) => [
+    { label: 'Редактировать', icon: Edit, onClick: () => console.log('Edit equipment') },
+    { label: 'Клонировать', icon: Copy, onClick: () => console.log('Clone equipment') },
+    { label: 'Экспорт', icon: Share, onClick: () => console.log('Export equipment') },
+    {
+      label: 'Удалить',
+      icon: Trash2,
+      onClick: () => console.log('Delete equipment'),
+      className: 'text-danger',
+    },
   ],
 };
 
 // --- CATEGORY ---
 export const categoryEntityConfig: EntityConfig<Category> = {
   getIcon: () => Tag,
-  getIconColor: () => 'text-gray-500',
+  getIconColor: () => 'text-[#F57F17]',
   getBorderColor: () => '#6b7280',
   views: {
     card: {
@@ -342,18 +403,23 @@ export const categoryEntityConfig: EntityConfig<Category> = {
     },
     listItem: { title: (c) => c.name },
   },
-  getActions: (handlers: CategoryActions) => [
-    { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
-    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
-    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
-    { label: 'Удалить', icon: Trash2, onClick: handlers.onDelete, className: 'text-danger' },
+  getActions: (_handlers) => [
+    { label: 'Редактировать', icon: Edit, onClick: () => console.log('Edit category') },
+    { label: 'Клонировать', icon: Copy, onClick: () => console.log('Clone category') },
+    { label: 'Экспорт', icon: Share, onClick: () => console.log('Export category') },
+    {
+      label: 'Удалить',
+      icon: Trash2,
+      onClick: () => console.log('Delete category'),
+      className: 'text-danger',
+    },
   ],
 };
 
 // --- MEAL TYPE ---
 export const mealTypeEntityConfig: EntityConfig<MealType> = {
   getIcon: () => Tag,
-  getIconColor: () => 'text-gray-500',
+  getIconColor: () => 'text-[#F57F17]',
   getBorderColor: () => '#6b7280',
   views: {
     card: {
@@ -362,18 +428,23 @@ export const mealTypeEntityConfig: EntityConfig<MealType> = {
     },
     listItem: { title: (mt) => mt.name },
   },
-  getActions: (handlers: MealTypeActions) => [
-    { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
-    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
-    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
-    { label: 'Удалить', icon: Trash2, onClick: handlers.onDelete, className: 'text-danger' },
+  getActions: (_handlers) => [
+    { label: 'Редактировать', icon: Edit, onClick: () => console.log('Edit meal type') },
+    { label: 'Клонировать', icon: Copy, onClick: () => console.log('Clone meal type') },
+    { label: 'Экспорт', icon: Share, onClick: () => console.log('Export meal type') },
+    {
+      label: 'Удалить',
+      icon: Trash2,
+      onClick: () => console.log('Delete meal type'),
+      className: 'text-danger',
+    },
   ],
 };
 
 // --- EQUIP CATEGORY ---
 export const equipmentCategoryEntityConfig: EntityConfig<EquipmentCategory> = {
   getIcon: () => Layers,
-  getIconColor: () => 'text-gray-500',
+  getIconColor: () => 'text-[#F57F17]',
   getBorderColor: () => '#6b7280',
   views: {
     card: {
@@ -382,11 +453,16 @@ export const equipmentCategoryEntityConfig: EntityConfig<EquipmentCategory> = {
     },
     listItem: { title: (c) => c.name },
   },
-  getActions: (handlers: EquipmentCategoryActions) => [
-    { label: 'Редактировать', icon: Edit, onClick: handlers.onEdit },
-    { label: 'Клонировать', icon: Copy, onClick: handlers.onClone },
-    { label: 'Экспорт', icon: Share, onClick: handlers.onExport },
-    { label: 'Удалить', icon: Trash2, onClick: handlers.onDelete, className: 'text-danger' },
+  getActions: (_handlers) => [
+    { label: 'Редактировать', icon: Edit, onClick: () => console.log('Edit equipment category') },
+    { label: 'Клонировать', icon: Copy, onClick: () => console.log('Clone equipment category') },
+    { label: 'Экспорт', icon: Share, onClick: () => console.log('Export equipment category') },
+    {
+      label: 'Удалить',
+      icon: Trash2,
+      onClick: () => console.log('Delete equipment category'),
+      className: 'text-danger',
+    },
   ],
 };
 

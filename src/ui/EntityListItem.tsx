@@ -31,7 +31,10 @@ interface EntityListItemProps {
     | 'dish'
     | 'product'
     | 'meal-type'
-    | 'category';
+    | 'category'
+    | 'equipment'
+    | 'participant'
+    | 'trip';
   onRequestMultiSelectMode?: () => void;
 }
 
@@ -57,6 +60,9 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
     dish: 'gradient-dish',
     product: 'gradient-product',
     category: 'gradient-category',
+    equipment: 'gradient-equipment',
+    participant: 'gradient-participant',
+    trip: 'gradient-trip',
   };
 
   const itemClasses = cn(
@@ -141,9 +147,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
                   className={cn('flex items-center gap-0.5 text-xs font-medium', item.className)}
                   title={item.tooltip}
                 >
-                  <item.icon
-                    className={cn('w-3.5 h-3.5', item.className || 'text-muted-foreground')}
-                  />
+                  <item.icon className={cn('w-3.5 h-3.5 text-muted-foreground')} />
                   <span className={cn('tabular-nums', item.className)}>{item.text}</span>
                 </div>
               );

@@ -58,7 +58,10 @@ interface EntityCardProps {
     | 'dish'
     | 'product'
     | 'meal-type'
-    | 'category';
+    | 'category'
+    | 'equipment'
+    | 'participant'
+    | 'trip';
   nutrition?: {
     calories: number;
     proteins: number;
@@ -191,6 +194,9 @@ const EntityCard: React.FC<EntityCardProps> = ({
     dish: 'gradient-dish',
     product: 'gradient-product',
     category: 'gradient-category',
+    equipment: 'gradient-equipment',
+    participant: 'gradient-participant',
+    trip: 'gradient-trip',
   };
 
   const cardClasses = cn(
@@ -228,13 +234,11 @@ const EntityCard: React.FC<EntityCardProps> = ({
               </button>
             </div>
           ) : (
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-colors duration-200">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/80 transition-colors duration-200">
               {typeof Icon === 'function' ? (
                 <Icon />
               ) : (
-                <Icon
-                  className={`h-4 w-4 ${variant === 'meal' ? 'text-green-600' : variant === 'meal-type' ? 'text-purple-600' : 'text-primary'}`}
-                />
+                <Icon className={`h-4 w-4 ${_iconColor || 'text-primary'}`} />
               )}
             </div>
           )}
@@ -292,7 +296,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
                 className="flex items-center gap-0.5 overflow-hidden"
                 title={item.title}
               >
-                <item.icon className="w-3 h-3 flex-shrink-0" />
+                <item.icon className="w-3 h-3 flex-shrink-0 text-muted-foreground" />
                 <dd className={cn('truncate font-medium', item.className || 'text-foreground/80')}>
                   {item.text}
                 </dd>
@@ -314,29 +318,29 @@ const EntityCard: React.FC<EntityCardProps> = ({
             )}
 
             <div className="flex items-center gap-0.5">
-              <Flame className="w-3 h-3 text-orange-600 flex-shrink-0" />
-              <span className="font-semibold text-orange-600">
+              <Flame className="w-3 h-3 text-orange-500 flex-shrink-0" />
+              <span className="font-semibold text-orange-500">
                 {Math.round(nutrition.calories)}
               </span>
             </div>
 
             <div className="bju items-center gap-0.5">
-              <Beef className="w-3 h-3 text-blue-600 flex-shrink-0" />
-              <span className="font-medium text-blue-600">
+              <Beef className="w-3 h-3 text-blue-500 flex-shrink-0" />
+              <span className="font-medium text-blue-500">
                 {Math.round(nutrition.proteins * 10) / 10}
               </span>
             </div>
 
             <div className="bju items-center gap-0.5">
-              <Droplet className="w-3 h-3 text-yellow-600 flex-shrink-0" />
-              <span className="font-medium text-yellow-600">
+              <Droplet className="w-3 h-3 text-yellow-500 flex-shrink-0" />
+              <span className="font-medium text-yellow-500">
                 {Math.round(nutrition.fats * 10) / 10}
               </span>
             </div>
 
             <div className="bju items-center gap-0.5">
-              <Wheat className="w-3 h-3 text-green-600 flex-shrink-0" />
-              <span className="font-medium text-green-600">
+              <Wheat className="w-3 h-3 text-green-500 flex-shrink-0" />
+              <span className="font-medium text-green-500">
                 {Math.round(nutrition.carbs * 10) / 10}
               </span>
             </div>

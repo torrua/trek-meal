@@ -1,16 +1,17 @@
 // src/config/mealEntityConfig.tsx
 import { Utensils, Edit, Trash2 } from 'lucide-react';
-import type { Meal } from '../types';
+import type { Meal, MealType } from '../types';
 
 // Lightweight config object shaped like other entity configs
 export const mealEntityConfig = {
   getIcon: (_meal: Meal) => Utensils,
+  getIconColor: () => 'text-[#388E3C]',
   getBorderColor: (_meal: Meal) => '#6b7280', // gray-500
   views: {
     card: {
       title: (meal: Meal) => meal.name,
-      subtitle: (_meal: Meal, ctx: any) => ctx?.mealType?.name || 'Без типа',
-      details: (meal: Meal, ctx: any) => [
+      subtitle: (_meal: Meal, ctx?: { mealType?: MealType }) => ctx?.mealType?.name || 'Без типа',
+      details: (meal: Meal, _ctx?: { mealType?: MealType }) => [
         {
           key: 'items',
           icon: Utensils,

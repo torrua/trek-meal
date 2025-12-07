@@ -310,16 +310,28 @@
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
 }
 
-.gradient-neutral {
-  background: linear-gradient(45deg, #dbeafe 0%, #f3e8ff 50%, #fef3c7 100%);
+.gradient-equipment {
+  background: linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%);
+}
+
+.gradient-participant {
+  background: linear-gradient(135deg, #ffccbc 0%, #ffab91 100%);
+}
+
+.gradient-trip {
+  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
 }
 
 .gradient-category {
-  background: linear-gradient(45deg, #f3e8ff 0%, #faf5ff 100%);
+  background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
 }
 
-.gradient-equipment {
-  background: linear-gradient(45deg, #e5e7eb 0%, #f3f4f6 100%);
+.gradient-portions {
+  background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+}
+
+.gradient-neutral {
+  background: linear-gradient(45deg, #dbeafe 0%, #f3e8ff 50%, #fef3c7 100%);
 }
 
 .notion-border-subtle {

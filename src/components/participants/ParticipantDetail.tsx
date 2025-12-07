@@ -201,9 +201,9 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
         icon={User}
         isOpen={sections.includes('info')}
         onToggle={toggleSection}
-        gradientFrom="from-blue-500/5"
-        gradientVia="via-cyan-500/5"
-        gradientTo="to-teal-500/5"
+        gradientFrom="gradient-participant"
+        gradientVia=""
+        gradientTo=""
         actionButton={
           isEditing ? (
             <div className="flex items-center gap-2">
@@ -365,9 +365,9 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
         icon={MapPin}
         isOpen={sections.includes('trips')}
         onToggle={toggleSection}
-        gradientFrom="from-orange-500/5"
-        gradientVia="via-amber-500/5"
-        gradientTo="to-yellow-500/5"
+        gradientFrom="gradient-trip"
+        gradientVia=""
+        gradientTo=""
         actionButton={
           <Button size="sm" variant="primary" onClick={onAddToTrip}>
             <MapPinPlus className="w-4 h-4 sm:mr-2" />
@@ -416,9 +416,9 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
         icon={Backpack}
         isOpen={sections.includes('equipment')}
         onToggle={toggleSection}
-        gradientFrom="from-purple-500/5"
-        gradientVia="via-pink-500/5"
-        gradientTo="to-rose-500/5"
+        gradientFrom="gradient-equipment"
+        gradientVia=""
+        gradientTo=""
         actionButton={
           <Button size="sm" variant="ghost" onClick={() => navigate('/equipment')}>
             <ExternalLink className="w-4 h-4" />
@@ -428,7 +428,7 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
         <div className="space-y-2 pt-2">
           {participantEquipment.length > 0 ? (
             participantEquipment.map((item) => {
-              const category = categories.find((c) => c.id === item.categoryId);
+              const _category = categories.find((c) => c.id === item.categoryId);
               return (
                 <EntityListItem
                   key={item.id}

@@ -17,7 +17,7 @@ export const useTripDates = (initialData: TripData | null) => {
     const end = initialData?.endDate ? parseISO(initialData.endDate) : null;
     setDateRange([start, end]);
     setDays(initialData?.days || 1);
-  }, [initialData]);
+  }, [initialData?.startDate, initialData?.endDate, initialData?.days]);
 
   const handleDateRangeChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;

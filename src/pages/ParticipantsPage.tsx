@@ -11,11 +11,9 @@ import {
   Copy,
   Share,
   X,
-  Check,
   CheckCheck,
   LayoutList,
   Grid3X3,
-  UploadCloud,
   MapPin,
   Backpack,
   Download,
@@ -355,7 +353,7 @@ const ParticipantsPage: React.FC = () => {
                   onSelect={() => onSelectParticipant(p.id)}
                   onMultiSelect={() => toggleParticipantSelection(p.id)}
                   showMultiSelect={showMultiSelect}
-                  variant="info"
+                  variant="participant"
                 />
               ) : (
                 <EntityCard
@@ -365,8 +363,8 @@ const ParticipantsPage: React.FC = () => {
                   icon={participantEntityConfig.getIcon(p)}
                   iconColor={participantEntityConfig.getIconColor?.(p)}
                   details={cardConfig
-                    .details(p, { tripCount, equipmentCount })
-                    .map((detail, index) => ({
+                    .details?.(p, { tripCount, equipmentCount })
+                    ?.map((detail, index) => ({
                       ...detail,
                       key: `participant-detail-${index}`,
                     }))}
@@ -376,7 +374,7 @@ const ParticipantsPage: React.FC = () => {
                   onMultiSelect={() => toggleParticipantSelection(p.id)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
-                  variant="info"
+                  variant="participant"
                 />
               );
             })}

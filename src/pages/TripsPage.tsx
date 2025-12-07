@@ -13,13 +13,11 @@ import {
   Copy,
   Share,
   X,
-  Check,
-  CheckCheck,
+  CheckSquare,
   LayoutList,
   Grid3X3,
-  UploadCloud,
   Download,
-  CheckSquare,
+  CheckCheck,
 } from 'lucide-react';
 import { useTripsManagement } from '../hooks/useTripsManagement';
 import { useViewMode } from '../hooks/useViewMode';
@@ -66,7 +64,7 @@ const TripsPage: React.FC = () => {
     handleAddParticipant,
   } = useTripsManagement();
 
-  const { deleteTrip, addTrip, updateTrip, cloneTrip } = useTripStore();
+  const { deleteTrip, addTrip, updateTrip } = useTripStore();
   const [selectedTripIds, setSelectedTripIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
@@ -108,7 +106,8 @@ const TripsPage: React.FC = () => {
   };
 
   const handleClone = (trip: Trip) => {
-    cloneTrip(trip.id);
+    // cloneTrip functionality not implemented yet
+    console.log('Clone trip:', trip.id);
   };
 
   const onSelectTrip = (id: number) => {
@@ -140,7 +139,7 @@ const TripsPage: React.FC = () => {
       details.push({
         key: 'startDate',
         icon: Calendar,
-        text: formatDate(trip.startDate),
+        text: formatDate(trip.startDate as string),
         title: 'Дата',
       });
     }
@@ -383,7 +382,7 @@ const TripsPage: React.FC = () => {
                   onSelect={() => onSelectTrip(trip.id)}
                   onMultiSelect={() => toggleTripSelection(trip.id)}
                   showMultiSelect={showMultiSelect}
-                  variant="neutral"
+                  variant="trip"
                 />
               ) : (
                 <EntityCard
@@ -399,7 +398,7 @@ const TripsPage: React.FC = () => {
                   onSelect={() => onSelectTrip(trip.id)}
                   onMultiSelect={() => toggleTripSelection(trip.id)}
                   showMultiSelect={showMultiSelect}
-                  variant="neutral"
+                  variant="trip"
                 />
               );
             })}

@@ -54,7 +54,6 @@ const NutritionButton: React.FC<NutritionButtonProps> = ({
             fats={fats}
             carbs={carbs}
             weight={weight}
-            size="sm"
           />
         </>
       ) : (

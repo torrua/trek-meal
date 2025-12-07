@@ -488,4 +488,76 @@ body:not(.dropdown-open) .max-w-screen-2xl {
   );
   --color-meal-composition-gradient-selected: linear-gradient(45deg, #bbf7d0 0%, #dcfce7 100%);
   --color-meal-type-gradient-selected: linear-gradient(45deg, #e9d5ff 0%, #f3e8ff 100%);
+
+  /* Nutrition colors - unified system */
+  --nutrition-calories: #ea580c;
+  --nutrition-proteins: #2563eb;
+  --nutrition-fats: #ca8a04;
+  --nutrition-carbs: #059669;
+  --nutrition-weight: #71717a;
+  --nutrition-separator: #e4e4e7;
+
+  /* Nutrition sizes */
+  --nutrition-gap: 8px;
+  --nutrition-item-gap: 4px;
+  --nutrition-icon-size: 16px;
+  --nutrition-font-size: 14px;
+  --nutrition-separator-height: 20px;
+}
+
+/* Nutrition Display Styles - using CSS variables */
+.nutrition-display {
+  display: flex;
+  align-items: center;
+  gap: var(--nutrition-gap);
+  font-size: var(--nutrition-font-size);
+}
+
+.nutrition-item {
+  display: flex;
+  align-items: center;
+  gap: var(--nutrition-item-gap);
+}
+
+.nutrition-icon {
+  flex-shrink: 0;
+  width: var(--nutrition-icon-size);
+  height: var(--nutrition-icon-size);
+}
+
+.nutrition-value {
+  font-size: var(--nutrition-font-size);
+  font-weight: 600;
+}
+
+/* Nutrition colors - using CSS variables */
+.nutrition-icon--calories,
+.nutrition-value--calories {
+  color: var(--nutrition-calories);
+}
+
+.nutrition-icon--proteins,
+.nutrition-value--proteins {
+  color: var(--nutrition-proteins);
+}
+
+.nutrition-icon--fats,
+.nutrition-value--fats {
+  color: var(--nutrition-fats);
+}
+
+.nutrition-icon--carbs,
+.nutrition-value--carbs {
+  color: var(--nutrition-carbs);
+}
+
+.nutrition-icon--weight,
+.nutrition-value--weight {
+  color: var(--nutrition-weight);
+}
+
+.nutrition-separator {
+  width: 1px;
+  height: var(--nutrition-separator-height);
+  background-color: var(--nutrition-separator);
 }

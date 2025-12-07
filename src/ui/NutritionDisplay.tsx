@@ -12,7 +12,6 @@ export interface NutritionDisplayProps {
   fats: number;
   carbs: number;
   weight?: number;
-  size?: 'sm' | 'md';
   showSeparators?: boolean;
   className?: string;
 }
@@ -23,71 +22,52 @@ const NutritionDisplay: React.FC<NutritionDisplayProps> = ({
   fats,
   carbs,
   weight,
-  size = 'md',
   showSeparators = true,
   className,
 }) => {
-  const sizeClasses = {
-    sm: {
-      container: 'text-sm gap-2',
-      icon: 'w-4 h-4',
-      value: 'text-sm font-semibold',
-      separator: 'w-px h-5',
-    },
-    md: {
-      container: 'text-sm gap-2',
-      icon: 'w-4 h-4',
-      value: 'text-sm font-semibold',
-      separator: 'w-px h-5',
-    },
-  };
-
-  const currentSize = sizeClasses[size];
-
-  const containerClasses = cn('flex items-center', currentSize.container, className);
-
-  const iconClasses = cn('flex-shrink-0', currentSize.icon);
-
-  const valueClasses = currentSize.value;
-  const separatorClasses = cn('bg-border', currentSize.separator);
+  const containerClasses = cn('nutrition-display', className);
 
   return (
     <div className={containerClasses}>
       {/* Калории */}
-      <div className="flex items-center gap-1">
-        <Flame className={cn(iconClasses, 'text-orange-600')} />
-        <span className={cn(valueClasses, 'text-orange-600')}>{Math.round(calories)}</span>
+      <div className="nutrition-item">
+        <Flame className="nutrition-icon nutrition-icon--calories" />
+        <span className="nutrition-value nutrition-value--calories">{Math.round(calories)}</span>
       </div>
 
       {/* Разделитель после калорий */}
-      {showSeparators && <div className={separatorClasses} />}
+      {showSeparators && <div className="nutrition-separator" />}
 
       {/* Белки */}
-      <div className="flex items-center gap-1">
-        <Beef className={cn(iconClasses, 'text-blue-600')} />
-        <span className={cn(valueClasses, 'text-blue-600')}>{Math.round(proteins * 10) / 10}</span>
+      <div className="nutrition-item">
+        <Beef className="nutrition-icon nutrition-icon--proteins" />
+        <span className="nutrition-value nutrition-value--proteins">
+          {Math.round(proteins * 10) / 10}
+        </span>
       </div>
 
       {/* Жиры */}
-      <div className="flex items-center gap-1">
-        <Droplet className={cn(iconClasses, 'text-yellow-600')} />
-        <span className={cn(valueClasses, 'text-yellow-600')}>{Math.round(fats * 10) / 10}</span>
+      <div className="nutrition-item">
+        <Droplet className="nutrition-icon nutrition-icon--fats" />
+        <span className="nutrition-value nutrition-value--fats">{Math.round(fats * 10) / 10}</span>
       </div>
 
       {/* Углеводы */}
-      <div className="flex items-center gap-1">
-        <Wheat className={cn(iconClasses, 'text-green-600')} />
-        <span className={cn(valueClasses, 'text-green-600')}>{Math.round(carbs * 10) / 10}</span>
+      <div className="nutrition-item">
+        <Wheat className="nutrition-icon nutrition-icon--carbs" />
+        <span className="nutrition-value nutrition-value--carbs">
+          {Math.round(carbs * 10) / 10}
+        </span>
       </div>
 
       {/* Разделитель после углеводов */}
-      {showSeparators && <div className={separatorClasses} />}
+      {showSeparators && <div className="nutrition-separator" />}
 
       {/* Вес */}
       {typeof weight === 'number' && (
-        <div className="flex items-center gap-1">
-          <span className={cn(valueClasses, 'text-muted-foreground')}>{Math.round(weight)}</span>
-          <Weight className={cn(iconClasses, 'text-muted-foreground')} />
+        <div className="nutrition-item">
+          <span className="nutrition-value nutrition-value--weight">{Math.round(weight)}</span>
+          <Weight className="nutrition-icon nutrition-icon--weight" />
         </div>
       )}
     </div>

@@ -457,14 +457,14 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
               <>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Название</label>
-                  <div className="w-full h-10 px-4 py-2 bg-card border border-border rounded-lg text-sm text-foreground flex items-center">
+                  <div className="view-mode-field view-mode-single-line">
                     {mealType?.name || ''}
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-                  <div className="flex w-full min-h-[84px] px-4 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
+                  <div className="view-mode-field view-mode-multi-line">
                     {mealType?.description || 'Нет описания'}
                   </div>
                 </div>

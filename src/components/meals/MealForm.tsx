@@ -727,7 +727,7 @@ const MealForm: React.FC<MealFormProps> = ({
                             key={dish.id}
                             type="button"
                             onClick={() => handleAddItem(dish.id, 'dish')}
-                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
+                            className="search-menu-item"
                           >
                             <Soup className="w-3.5 h-3.5 text-orange-500" />
                             {dish.name}
@@ -750,7 +750,7 @@ const MealForm: React.FC<MealFormProps> = ({
                               key={product.id}
                               type="button"
                               onClick={() => handleAddItem(product.id, 'product')}
-                              className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors flex items-center gap-2 rounded"
+                              className="search-menu-item"
                             >
                               <Component className="w-3.5 h-3.5 text-blue-500" />
                               <span className="flex-1">{product.name}</span>

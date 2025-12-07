@@ -262,7 +262,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
             product.portions.map((portion: ProductPortion, index: number) => (
               <div
                 key={index}
-                className="flex items-center justify-between px-4 py-3 bg-card/50 border border-border rounded-lg hover:bg-card hover:shadow-sm transition-all"
+                className="view-mode-field flex items-center justify-between px-4 py-3 hover:bg-card hover:shadow-sm transition-all"
               >
                 <div className="flex items-center gap-3">
                   {/* Иконка: Circle для неделимой, PieChart для делимой */}

@@ -559,7 +559,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
             return (
               <div
                 key={idx}
-                className="flex items-center gap-2 px-3 h-8 bg-card border border-border rounded-md text-sm group"
+                className="view-mode-field flex items-center gap-2 px-3 h-8 rounded-md group"
               >
                 <span className="flex items-center gap-1.5 flex-1 min-w-0">
                   <IconComponent className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />

@@ -467,21 +467,19 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
             <>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Название</label>
-                <div className="w-full h-10 px-4 py-2 bg-card border border-border rounded-lg text-sm text-foreground flex items-center">
-                  {category?.name || ''}
-                </div>
+                <div className="view-mode-field view-mode-single-line">{category?.name || ''}</div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-                <div className="flex w-full min-h-[84px] px-4 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
+                <div className="view-mode-field view-mode-multi-line">
                   {category?.description || 'Нет описания'}
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Эмодзи</label>
-                <div className="w-full h-10 px-4 py-2 bg-card border border-border rounded-lg text-sm text-foreground flex items-center gap-2">
+                <div className="view-mode-field view-mode-single-line flex items-center gap-2">
                   {category?.emoji && <span className="text-lg">{category.emoji}</span>}
                   {category?.emoji || 'Нет эмодзи'}
                 </div>

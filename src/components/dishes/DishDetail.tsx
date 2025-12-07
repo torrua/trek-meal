@@ -21,7 +21,6 @@ import {
   AlertTriangle,
   Save,
   Copy,
-  GripVertical,
   Plus,
   ExternalLink,
 } from 'lucide-react';
@@ -186,7 +185,7 @@ const ProductContentReadOnly: React.FC<{
                 e.stopPropagation();
                 setShowNutrition(!showNutrition);
               }}
-              className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-lg border border-border hover:bg-muted transition-all"
+              className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
             >
               {showNutrition ? (
                 <>
@@ -243,7 +242,7 @@ const ProductContentReadOnly: React.FC<{
                   e.stopPropagation();
                   onEditPortion();
                 }}
-                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border border-border"
+                className="!border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/15 text-blue-600"
                 title="Открыть продукт"
               >
                 <Edit className="w-4 h-4" />
@@ -256,7 +255,7 @@ const ProductContentReadOnly: React.FC<{
                   e.stopPropagation();
                   onRemove();
                 }}
-                className="bg-danger/10 hover:bg-danger/20 text-danger border border-border"
+                className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
                 title="Удалить продукт"
               >
                 <Trash2 className="w-4 h-4" />
@@ -271,7 +270,7 @@ const ProductContentReadOnly: React.FC<{
         product.portions.length > 0 &&
         showPortionDetails && (
           <div className="pt-2">
-            <div className="flex items-center justify-between px-3 h-8 bg-card border border-border rounded-md text-sm">
+            <div className="view-mode-field flex items-center justify-between px-3 h-8 rounded-md">
               <span className="flex items-center gap-1.5">
                 <PortionIcon className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="text-muted-foreground font-medium text-sm">
@@ -389,84 +388,84 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
   onDelete,
   onViewProduct,
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: product.productId,
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: isDragging ? 'none' : transition,
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="[background:var(--color-product-gradient)] border border-[#3b82f6]/30 rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
-    >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted/50 rounded"
-          >
-            <GripVertical className="w-4 h-4 text-muted-foreground" />
+    <div ref={setNodeRef} className="touch-none" style={style}>
+      <div className="[background:var(--color-product-gradient)] border border-[#3b82f6]/30 rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Component
+              className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
+              role="button"
+              tabIndex={0}
+              aria-label="Перетащить продукт"
+              {...attributes}
+              {...listeners}
+            />
+            <span className="font-medium flex items-center gap-2">
+              {selectedProduct?.name || 'Product not found'}
+            </span>
           </div>
-          <span className="font-medium text-sm flex items-center gap-2">
-            <Component className="w-3.5 h-3.5 text-foreground" />
-            {selectedProduct?.name || 'Product not found'}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <EditableProductNutrition product={selectedProduct || null} weight={product.weight} />
-          {selectedProduct && onViewProduct && (
+          <div className="flex items-center gap-2">
+            <EditableProductNutrition product={selectedProduct || null} weight={product.weight} />
+            {selectedProduct && onViewProduct && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => onViewProduct(selectedProduct.id)}
+                className="!border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/15 text-blue-600"
+                title="Перейти к продукту"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            )}
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
-              onClick={() => onViewProduct(selectedProduct.id)}
-              className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border border-border"
-              title="Перейти к продукту"
+              onClick={() => onDelete(index)}
+              className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
+              title="Удалить продукт"
             >
-              <ExternalLink className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" />
             </Button>
-          )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => onDelete(index)}
-            className="bg-danger/10 hover:bg-danger/20 text-danger border border-border"
-            title="Удалить продукт"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="pt-2">
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Порция</label>
-            <DropdownSelect
-              value={currentPortion?.value || ''}
-              onChange={(value) => typeof value === 'string' && onPortionChange(index, value)}
-              options={portionOptions}
-              placeholder="Выберите порцию..."
-              icon={currentPortion?.icon || PieChart}
-            />
           </div>
-          <div className="w-24">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Вес (г)</label>
-            <Input
-              type="number"
-              value={product.weight || ''}
-              onChange={(e) => onWeightChange(index, e.target.value)}
-              placeholder="Вес"
-              className="text-center"
-              min="1"
-            />
+        </div>
+
+        <div className="pt-2">
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Порция</label>
+              <DropdownSelect
+                value={currentPortion?.value || ''}
+                onChange={(value) => typeof value === 'string' && onPortionChange(index, value)}
+                options={portionOptions}
+                placeholder="Выберите порцию..."
+                icon={currentPortion?.icon || PieChart}
+              />
+            </div>
+            <div className="w-24">
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
+                Вес (г)
+              </label>
+              <Input
+                type="number"
+                value={product.weight || ''}
+                onChange={(e) => onWeightChange(index, e.target.value)}
+                placeholder="Вес"
+                className="text-center"
+                min="1"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -501,6 +500,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [showHeaderNutrition, setShowHeaderNutrition] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const editTriggerRef = useRef<number | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -933,16 +933,12 @@ const DishDetail: React.FC<DishDetailProps> = ({
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Название блюда
                 </label>
-                <div className="w-full h-10 px-4 py-2 bg-muted/50 border border-border rounded-lg text-sm text-foreground flex items-center">
-                  {dish?.name || ''}
-                </div>
+                <div className="view-mode-field view-mode-single-line">{dish?.name || ''}</div>
               </div>
               {dish?.description && (
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-                  <div className="flex w-full min-h-[84px] px-4 py-2.5 bg-muted/50 border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
-                    {dish?.description}
-                  </div>
+                  <div className="view-mode-field view-mode-multi-line">{dish?.description}</div>
                 </div>
               )}
             </>
@@ -1031,36 +1027,92 @@ const DishDetail: React.FC<DishDetailProps> = ({
             <div className="relative mb-4" ref={searchInputRef}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
-                <input
+                <Input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setShowAddMenu(true)}
-                  placeholder="Найти продукт..."
-                  className="w-full pl-10 pr-3 py-2.5 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  onFocus={() => {
+                    setIsFocused(true);
+                    setShowAddMenu(true);
+                  }}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder={!isFocused && !searchQuery ? 'Найти продукт или блюдо...' : ''}
+                  className={
+                    !isFocused && !searchQuery
+                      ? 'text-center pl-10 focus:ring-primary'
+                      : 'text-left pl-10 focus:ring-primary'
+                  }
                 />
               </div>
               {showAddMenu && (
                 <div
                   ref={dropdownRef}
-                  className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto p-1"
+                  className="absolute top-full left-0 right-0 mt-2 rounded-lg border border-border bg-card shadow-2xl overflow-hidden z-50"
+                  style={{ maxHeight: '300px' }}
+                  onWheel={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const scrollContainer = dropdownRef.current?.querySelector(
+                      '.absolute-dropdown-scrollbar'
+                    ) as HTMLElement;
+                    if (scrollContainer && e instanceof WheelEvent) {
+                      scrollContainer.scrollTop += e.deltaY;
+                    }
+                  }}
+                  onTouchMove={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const scrollContainer = dropdownRef.current?.querySelector(
+                      '.absolute-dropdown-scrollbar'
+                    ) as HTMLElement;
+                    if (scrollContainer) {
+                      if ('deltaY' in e && typeof e.deltaY === 'number') {
+                        scrollContainer.scrollTop += e.deltaY;
+                      }
+                    }
+                  }}
                 >
-                  {filteredProducts.length === 0 ? (
-                    <div className="p-3 text-center text-sm text-muted-foreground">
-                      Ничего не найдено
-                    </div>
-                  ) : (
-                    filteredProducts.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => handleAddProduct(p.id)}
-                        className="w-full text-left px-3 py-2 hover:bg-muted rounded flex items-center gap-2 text-sm"
-                      >
-                        <Component className="w-3.5 h-3.5 text-blue-500" /> {p.name}
-                      </button>
-                    ))
-                  )}
+                  <div
+                    className="p-2 absolute-dropdown-scrollbar"
+                    tabIndex={0}
+                    onTouchMove={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    {filteredProducts.length === 0 ? (
+                      <div className="px-3 py-8 text-center text-sm text-muted-foreground">
+                        Ничего не найдено
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                          <Component className="w-3.5 h-3.5 text-blue-500" />
+                          Продукты ({filteredProducts.length})
+                        </div>
+                        {filteredProducts.map((p) => {
+                          const category = p.categoryId
+                            ? categories.find((cat) => cat.id === p.categoryId)
+                            : null;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => handleAddProduct(p.id)}
+                              className="search-menu-item"
+                            >
+                              <Component className="w-3.5 h-3.5 text-blue-500" />
+                              <span className="flex-1">{p.name}</span>
+                              {category && (
+                                <span className="text-muted-foreground text-xs flex items-center gap-1">
+                                  {category.emoji} {category.name}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -1100,7 +1152,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
 
                     // Добавляем "Свой вес..." только если текущий вес не соответствует стандартным порциям
                     const hasCustomWeight = !selectedProduct?.portions.some(
-                      (port) => port.weight === p.weight
+                      (port) => Number(port.weight) === Number(p.weight)
                     );
                     if (hasCustomWeight) {
                       portionOptions.push({

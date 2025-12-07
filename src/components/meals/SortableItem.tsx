@@ -34,7 +34,6 @@ const SortableItem: React.FC<SortableItemProps> = ({
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: isDragging ? 'none' : transition,
-    opacity: isDragging ? 0.5 : 1,
   };
 
   // Используем ItemContent для всех элементов (и блюд, и продуктов)

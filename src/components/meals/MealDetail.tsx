@@ -302,7 +302,7 @@ const ItemContentReadOnly: React.FC<{
 
       {isProduct && portions && portions.length > 0 && item.weight && showProductPortion && (
         <div className="pt-2">
-          <div className="flex items-center justify-between px-3 h-8 bg-card border border-border rounded-md text-sm">
+          <div className="view-mode-field flex items-center justify-between px-3 h-8 rounded-md">
             <span className="flex items-center gap-1.5">
               <CurrentPortionIcon className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-muted-foreground font-medium text-sm">
@@ -488,9 +488,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
                 <label className="block text-sm font-medium text-foreground mb-2">
                   Название приёма пищи
                 </label>
-                <div className="w-full h-10 px-4 py-2 bg-card border border-border rounded-lg text-sm text-foreground flex items-center">
-                  {meal.name}
-                </div>
+                <div className="view-mode-field view-mode-single-line">{meal.name}</div>
               </div>
 
               {meal.description && (
@@ -498,9 +496,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Краткое описание
                   </label>
-                  <div className="flex w-full min-h-[84px] px-4 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
-                    {meal.description}
-                  </div>
+                  <div className="view-mode-field view-mode-multi-line">{meal.description}</div>
                 </div>
               )}
               {meal.mealTypeId && (
@@ -508,7 +504,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Тип приёма пищи
                   </label>
-                  <div className="w-full h-10 px-4 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground flex items-center">
+                  <div className="view-mode-field view-mode-single-line">
                     {mealTypes.find((mt) => mt.id === meal.mealTypeId)?.name || 'Неизвестный тип'}
                   </div>
                 </div>

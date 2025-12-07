@@ -375,273 +375,271 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
   const usageCount = categoryProducts.length;
 
   return (
-    <div className="pt-2">
-      <div className="space-y-4">
-        {/* Basic Info Section */}
-        <CollapsibleSection
-          id="basic-info"
-          title="Основная информация"
-          icon={<Info className="w-4 h-4 text-primary" />}
-          isOpen={openSections.includes('basic-info')}
-          onToggle={onToggleSection}
-          gradientFrom="from-purple-500/5"
-          gradientVia="via-yellow-500/5"
-          gradientTo="to-pink-500/5"
-          actionButton={
-            !isInlineEditing && category ? (
+    <div className="space-y-4 pl-1">
+      {/* Basic Info Section */}
+      <CollapsibleSection
+        id="basic-info"
+        title="Основная информация"
+        icon={<Info className="w-4 h-4 text-primary" />}
+        isOpen={openSections.includes('basic-info')}
+        onToggle={onToggleSection}
+        gradientFrom="from-purple-500/5"
+        gradientVia="via-yellow-500/5"
+        gradientTo="to-pink-500/5"
+        actionButton={
+          !isInlineEditing && category ? (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleInlineEdit();
+              }}
+              icon={Edit}
+              size="icon"
+            >
+              {/* Пусто - только иконка */}
+            </Button>
+          ) : isInlineEditing ? (
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleInlineCancel();
+                }}
+                disabled={isSubmitting}
+              >
+                Отмена
+              </Button>
               <Button
                 type="button"
                 variant="primary"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleInlineEdit();
+                  handleInlineSave();
                 }}
-                icon={Edit}
+                disabled={isSubmitting || !editName.trim()}
+                icon={isSubmitting ? undefined : Save}
                 size="icon"
               >
-                {/* Пусто - только иконка */}
+                {isSubmitting ? 'Сохранение...' : ''}
               </Button>
-            ) : isInlineEditing ? (
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleInlineCancel();
-                  }}
+            </div>
+          ) : null
+        }
+        disableToggle={isInlineEditing}
+      >
+        <div className="space-y-4">
+          {isInlineEditing ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Название</label>
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Введите название категории"
                   disabled={isSubmitting}
-                >
-                  Отмена
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleInlineSave();
-                  }}
-                  disabled={isSubmitting || !editName.trim()}
-                  icon={isSubmitting ? undefined : Save}
-                  size="icon"
-                >
-                  {isSubmitting ? 'Сохранение...' : ''}
-                </Button>
+                />
               </div>
-            ) : null
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
+                <Textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Введите описание (необязательно)"
+                  disabled={isSubmitting}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Эмодзи</label>
+                <Input
+                  value={editEmoji}
+                  onChange={_handleEmojiChange}
+                  placeholder="Введите эмодзи (необязательно)"
+                  disabled={isSubmitting}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Название</label>
+                <div className="w-full h-10 px-4 py-2 bg-card border border-border rounded-lg text-sm text-foreground flex items-center">
+                  {category?.name || ''}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
+                <div className="flex w-full min-h-[84px] px-4 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
+                  {category?.description || 'Нет описания'}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">Эмодзи</label>
+                <div className="w-full h-10 px-4 py-2 bg-card border border-border rounded-lg text-sm text-foreground flex items-center gap-2">
+                  {category?.emoji && <span className="text-lg">{category.emoji}</span>}
+                  {category?.emoji || 'Нет эмодзи'}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </CollapsibleSection>
+
+      {/* Usage Section - только для существующих категорий с продуктами */}
+      {category && usageCount > 0 && (
+        <CollapsibleSection
+          id="usage"
+          title="Продукты"
+          icon={<ProductComponent className="w-4 h-4 text-blue-600" />}
+          isOpen={openSections.includes('usage')}
+          onToggle={onToggleSection}
+          gradientCssVar="var(--color-meal-type-gradient)"
+          summaryContent={
+            usageCount > 0 && (
+              <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Hash className="w-3.5 h-3.5" />
+                {usageCount}
+              </span>
+            )
           }
-          disableToggle={isInlineEditing}
         >
-          <div className="space-y-4">
-            {isInlineEditing ? (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Название</label>
-                  <Input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Введите название категории"
-                    disabled={isSubmitting}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-                  <Textarea
-                    value={editDescription}
-                    onChange={(e) => setEditDescription(e.target.value)}
-                    placeholder="Введите описание (необязательно)"
-                    disabled={isSubmitting}
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Эмодзи</label>
-                  <Input
-                    value={editEmoji}
-                    onChange={_handleEmojiChange}
-                    placeholder="Введите эмодзи (необязательно)"
-                    disabled={isSubmitting}
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Название</label>
-                  <div className="w-full h-10 px-4 py-2 bg-card border border-border rounded-lg text-sm text-foreground flex items-center">
-                    {category?.name || ''}
-                  </div>
-                </div>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-3">
+              {categoryProducts.length > 0 ? (
+                categoryProducts
+                  .filter((product: Product) => !deletedProducts.has(product.id))
+                  .map((product: Product) => {
+                    return (
+                      <div
+                        key={product.id}
+                        data-product-id={product.id}
+                        className="[background:var(--color-product-gradient)] border border-blue-500/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+                      >
+                        <div className="space-y-1">
+                          {/* Header Row */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <ProductComponent className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                              <h4 className="font-medium text-foreground truncate">
+                                {product.name}
+                              </h4>
+                            </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-                  <div className="flex w-full min-h-[84px] px-4 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground whitespace-pre-wrap box-border">
-                    {category?.description || 'Нет описания'}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Эмодзи</label>
-                  <div className="w-full h-10 px-4 py-2 bg-card border border-border rounded-lg text-sm text-foreground flex items-center gap-2">
-                    {category?.emoji && <span className="text-lg">{category.emoji}</span>}
-                    {category?.emoji || 'Нет эмодзи'}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </CollapsibleSection>
-
-        {/* Usage Section - только для существующих категорий с продуктами */}
-        {category && usageCount > 0 && (
-          <CollapsibleSection
-            id="usage"
-            title="Продукты"
-            icon={<ProductComponent className="w-4 h-4 text-blue-600" />}
-            isOpen={openSections.includes('usage')}
-            onToggle={onToggleSection}
-            gradientCssVar="var(--color-meal-type-gradient)"
-            summaryContent={
-              usageCount > 0 && (
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Hash className="w-3.5 h-3.5" />
-                  {usageCount}
-                </span>
-              )
-            }
-          >
-            <div className="space-y-4 pt-4">
-              <div className="space-y-3">
-                {categoryProducts.length > 0 ? (
-                  categoryProducts
-                    .filter((product: Product) => !deletedProducts.has(product.id))
-                    .map((product: Product) => {
-                      return (
-                        <div
-                          key={product.id}
-                          data-product-id={product.id}
-                          className="[background:var(--color-product-gradient)] border border-blue-500/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
-                        >
-                          <div className="space-y-1">
-                            {/* Header Row */}
+                            {/* Action buttons */}
                             <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <ProductComponent className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                                <h4 className="font-medium text-foreground truncate">
-                                  {product.name}
-                                </h4>
-                              </div>
+                              {/* Nutrition block */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowProductNutrition((prev) => ({
+                                    ...prev,
+                                    [product.id]: !prev[product.id],
+                                  }));
+                                }}
+                                className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
+                              >
+                                {showProductNutrition[product.id] ? (
+                                  <>
+                                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-sm font-semibold text-orange-600">
+                                        {Math.round(product.calories || 0)}
+                                      </span>
+                                      <Flame className="w-4 h-4 text-orange-600" />
+                                    </div>
+                                    <div className="w-px h-4 bg-border" />
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-sm font-semibold text-blue-600">
+                                        {Math.round((product.proteins || 0) * 10) / 10}
+                                      </span>
+                                      <Beef className="w-4 h-4 text-blue-600" />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-sm font-semibold text-yellow-600">
+                                        {Math.round((product.fats || 0) * 10) / 10}
+                                      </span>
+                                      <Droplet className="w-4 h-4 text-yellow-600" />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-sm font-semibold text-green-600">
+                                        {Math.round((product.carbs || 0) * 10) / 10}
+                                      </span>
+                                      <Wheat className="w-4 h-4 text-green-600" />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-sm font-semibold text-orange-600">
+                                        {Math.round(product.calories || 0)}
+                                      </span>
+                                      <Flame className="w-4 h-4 text-orange-600" />
+                                    </div>
+                                  </>
+                                )}
+                              </button>
 
-                              {/* Action buttons */}
-                              <div className="flex items-center gap-2">
-                                {/* Nutrition block */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowProductNutrition((prev) => ({
-                                      ...prev,
-                                      [product.id]: !prev[product.id],
-                                    }));
-                                  }}
-                                  className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
-                                >
-                                  {showProductNutrition[product.id] ? (
-                                    <>
-                                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-sm font-semibold text-orange-600">
-                                          {Math.round(product.calories || 0)}
-                                        </span>
-                                        <Flame className="w-4 h-4 text-orange-600" />
-                                      </div>
-                                      <div className="w-px h-4 bg-border" />
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-sm font-semibold text-blue-600">
-                                          {Math.round((product.proteins || 0) * 10) / 10}
-                                        </span>
-                                        <Beef className="w-4 h-4 text-blue-600" />
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-sm font-semibold text-yellow-600">
-                                          {Math.round((product.fats || 0) * 10) / 10}
-                                        </span>
-                                        <Droplet className="w-4 h-4 text-yellow-600" />
-                                      </div>
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-sm font-semibold text-green-600">
-                                          {Math.round((product.carbs || 0) * 10) / 10}
-                                        </span>
-                                        <Wheat className="w-4 h-4 text-green-600" />
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
-                                      <div className="flex items-center gap-1">
-                                        <span className="text-sm font-semibold text-orange-600">
-                                          {Math.round(product.calories || 0)}
-                                        </span>
-                                        <Flame className="w-4 h-4 text-orange-600" />
-                                      </div>
-                                    </>
-                                  )}
-                                </button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/products?selectedId=${product.id}`);
+                                }}
+                                className="!border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/15 text-blue-600"
+                                title="Открыть продукт"
+                              >
+                                <SquareArrowOutUpRight className="w-4 h-4" />
+                              </Button>
 
+                              {/* Delete button - only shown in edit mode */}
+                              {isInlineEditing && (
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="icon-sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    navigate(`/products?selectedId=${product.id}`);
+                                    // Optimistically remove product from the list
+                                    setDeletedProducts((prev) => {
+                                      const newSet = new Set(prev);
+                                      newSet.add(product.id);
+                                      return newSet;
+                                    });
+                                    toast.success(
+                                      'Продукт помечен для удаления. Нажмите "Сохранить" для подтверждения'
+                                    );
                                   }}
-                                  className="!border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/15 text-blue-600"
-                                  title="Открыть продукт"
+                                  className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
+                                  title="Удалить продукт из категории"
                                 >
-                                  <SquareArrowOutUpRight className="w-4 h-4" />
+                                  <Trash2 className="w-4 h-4" />
                                 </Button>
-
-                                {/* Delete button - only shown in edit mode */}
-                                {isInlineEditing && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      // Optimistically remove product from the list
-                                      setDeletedProducts((prev) => {
-                                        const newSet = new Set(prev);
-                                        newSet.add(product.id);
-                                        return newSet;
-                                      });
-                                      toast.success(
-                                        'Продукт помечен для удаления. Нажмите "Сохранить" для подтверждения'
-                                      );
-                                    }}
-                                    className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
-                                    title="Удалить продукт из категории"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                )}
-                              </div>
+                              )}
                             </div>
                           </div>
                         </div>
-                      );
-                    })
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <ProductComponent className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm">Нет продуктов в этой категории</p>
-                  </div>
-                )}
-              </div>
+                      </div>
+                    );
+                  })
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <ProductComponent className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">Нет продуктов в этой категории</p>
+                </div>
+              )}
             </div>
-          </CollapsibleSection>
-        )}
-      </div>
+          </div>
+        </CollapsibleSection>
+      )}
     </div>
   );
 };

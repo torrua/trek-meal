@@ -89,6 +89,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.5;
+    margin: 0;
+    padding: 0;
   }
 
   /* Notion-style headings */
@@ -114,13 +116,29 @@
 
 /* Notion-style scrollbar */
 .notion-scrollbar {
+  /* Modern browsers - place scrollbar on left */
+  direction: rtl;
   scrollbar-width: thin;
   scrollbar-color: rgb(var(--muted-foreground) / 0.3) transparent;
+  scrollbar-gutter: stable;
+}
+
+/* Safari/iOS fallback - reserve space using border */
+@supports not (scrollbar-gutter: stable) {
+  .notion-scrollbar {
+    border-left: 8px solid transparent;
+  }
 }
 
 .notion-scrollbar::-webkit-scrollbar {
   width: 8px;
   height: 8px;
+  scrollbar-gutter: stable;
+}
+
+/* Fix content direction back to LTR */
+.notion-scrollbar > * {
+  direction: ltr;
 }
 
 .notion-scrollbar::-webkit-scrollbar-track {

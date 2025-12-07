@@ -473,6 +473,7 @@ const DishesPage: React.FC = () => {
 
               return viewMode === 'compact' ? (
                 <div
+                  key={dish.id}
                   data-dish-id={dish.id}
                   className={isCardDisabled ? 'opacity-50 pointer-events-none' : ''}
                 >
@@ -497,11 +498,12 @@ const DishesPage: React.FC = () => {
                     }}
                     menuItems={actions}
                     showMultiSelect={showMultiSelect}
-                    variant="meal"
+                    variant="dish"
                   />
                 </div>
               ) : (
                 <div
+                  key={dish.id}
                   data-dish-id={dish.id}
                   className={isCardDisabled ? 'opacity-50 pointer-events-none' : ''}
                 >

@@ -106,6 +106,7 @@ interface CardDetail {
 
 interface CardViewConfig<T> {
   title: (entity: T) => string;
+  subtitle?: (entity: T, context?: Record<string, unknown>) => string;
   details?: (entity: T) => CardDetail[];
   listItem?: { title: (entity: T) => string };
 }

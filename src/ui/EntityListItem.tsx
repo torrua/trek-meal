@@ -49,8 +49,8 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
   onRequestMultiSelectMode,
 }) => {
   const gradientByVariant: Record<NonNullable<EntityListItemProps['variant']>, string> = {
-    neutral: 'bg-gradient-to-r from-blue-50 to-white dark:from-blue-900/10 dark:to-transparent',
-    info: 'bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5',
+    neutral: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
+    info: 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5',
     composition: '[background:var(--color-meal-composition-gradient)]',
     meal: '[background:var(--color-meal-composition-gradient)]',
     'meal-type': '[background:var(--color-meal-type-gradient)]',
@@ -142,10 +142,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
                   title={item.tooltip}
                 >
                   <item.icon
-                    className={cn(
-                      'w-3.5 h-3.5',
-                      item.className ? 'opacity-90' : 'text-muted-foreground'
-                    )}
+                    className={cn('w-3.5 h-3.5', item.className || 'text-muted-foreground')}
                   />
                   <span className={cn('tabular-nums', item.className)}>{item.text}</span>
                 </div>

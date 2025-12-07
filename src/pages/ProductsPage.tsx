@@ -356,26 +356,31 @@ const ProductsPage: React.FC = () => {
                 calories: {
                   icon: Flame,
                   text: Math.round(product.calories || 0),
+                  className: 'text-orange-600',
                   tooltip: 'Ккал',
                 },
                 proteins: {
                   icon: Beef,
                   text: Math.round((product.proteins || 0) * 10) / 10,
+                  className: 'text-blue-600',
                   tooltip: 'Белки',
                 },
                 fats: {
                   icon: Droplet,
                   text: Math.round((product.fats || 0) * 10) / 10,
+                  className: 'text-yellow-600',
                   tooltip: 'Жиры',
                 },
                 carbs: {
                   icon: Wheat,
                   text: Math.round((product.carbs || 0) * 10) / 10,
+                  className: 'text-green-600',
                   tooltip: 'Углеводы',
                 },
                 portions: {
                   icon: PieChart, // Заменили Box на PieChart
                   text: product.portions.length,
+                  className: 'text-foreground',
                   tooltip: 'Вариантов порций',
                 },
               };
@@ -399,7 +404,7 @@ const ProductsPage: React.FC = () => {
                   }}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
-                  variant="neutral"
+                  variant="product"
                 />
               ) : (
                 <EntityCard

@@ -143,6 +143,7 @@ const ProductContentReadOnly: React.FC<{
   canRemove: boolean;
 }> = ({ dishProduct, product, onEditPortion, onRemove, canRemove }) => {
   const [showNutrition, setShowNutrition] = useState(!canRemove);
+  const [showPortionDetails, setShowPortionDetails] = useState(false);
 
   const nutrition = useMemo(() => {
     if (!product || !dishProduct.weight) return null;
@@ -163,8 +164,17 @@ const ProductContentReadOnly: React.FC<{
   const PortionIcon = portion?.isIndivisible ? Circle : PieChart;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
+    <div className="space-y-1">
+      <div
+        className={`flex items-center gap-2 ${
+          product.portions && product.portions.length > 0 ? 'cursor-pointer' : ''
+        }`}
+        onClick={() => {
+          if (product.portions && product.portions.length > 0) {
+            setShowPortionDetails(!showPortionDetails);
+          }
+        }}
+      >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
           <h4 className="font-medium text-foreground truncate">{product.name}</h4>
@@ -256,21 +266,25 @@ const ProductContentReadOnly: React.FC<{
         </div>
       </div>
 
-      {dishProduct.weight && (
-        <div className="pt-2">
-          <div className="flex items-center gap-2 h-8 px-3 bg-card border border-border rounded-lg text-sm">
-            <PortionIcon className="w-4 h-4 text-muted-foreground" />
-            <span className="font-medium text-muted-foreground">
-              {portion
-                ? portion.name
-                : selectedProduct?.portions.some((port) => port.weight === dishProduct.weight)
-                  ? 'Порция'
-                  : 'Свой вес'}
-            </span>
-            <span className="text-muted-foreground">({dishProduct.weight} г)</span>
+      {dishProduct.weight &&
+        product.portions &&
+        product.portions.length > 0 &&
+        showPortionDetails && (
+          <div className="pt-2">
+            <div className="flex items-center justify-between px-3 h-8 bg-card border border-border rounded-md text-sm">
+              <span className="flex items-center gap-1.5">
+                <PortionIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-muted-foreground font-medium text-sm">
+                  {portion ? portion.name : 'Другой'}
+                </span>
+              </span>
+              <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
+                <Weight className="w-3.5 h-3.5" />
+                {dishProduct.weight}
+              </span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 };

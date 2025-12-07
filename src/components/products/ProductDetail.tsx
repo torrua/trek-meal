@@ -247,7 +247,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
         icon={<PieChart className="w-4 h-4 text-primary" />}
         isOpen={openSections.includes('portions')}
         onToggle={handleToggleSection}
-        gradientFrom="gradient-composition"
+        gradientFrom="gradient-product"
         gradientVia=""
         gradientTo=""
         summaryContent={

@@ -799,8 +799,8 @@ const MealForm: React.FC<MealFormProps> = ({
                 <div
                   className={`rounded-xl p-3 shadow-2xl z-50 border ${
                     (activeItem as MealPlanItem).type === 'product'
-                      ? '[background:var(--color-product-gradient)] border border-[#3b82f6] shadow-[0_4px_8px_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.15)]'
-                      : '[background:var(--color-dish-gradient)] border border-[#f59e0b] shadow-[0_4px_8px_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.15)]'
+                      ? 'gradient-product border border-[#3b82f6] shadow-[0_4px_8px_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.15)]'
+                      : 'gradient-dish border border-[#f59e0b] shadow-[0_4px_8px_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.15)]'
                   }`}
                 >
                   <ItemContent

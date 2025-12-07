@@ -44,8 +44,8 @@ const SortableItem: React.FC<SortableItemProps> = ({
       <div
         className={`${
           isDish
-            ? '[background:var(--color-dish-gradient)] border border-[#f97316]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
-            : '[background:var(--color-product-gradient)] border border-[#3b82f6]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+            ? 'gradient-dish border border-[#f97316]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+            : 'gradient-product border border-[#3b82f6]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
         } rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]`}
       >
         <ItemContent

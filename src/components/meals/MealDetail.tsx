@@ -589,10 +589,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
                 </button>
               )
             }
-            gradientFrom="from-orange-500/5"
-            gradientVia="via-yellow-500/5"
-            gradientTo="to-green-500/5"
-            className="[background:var(--color-meal-composition-gradient)] border border-border"
+            gradientFrom="gradient-meal"
           >
             <div className="space-y-4 pt-4">
               <div className="space-y-3">
@@ -600,8 +597,8 @@ const MealDetail: React.FC<MealDetailProps> = ({
                   watchItems.map((item, index) => {
                     const isProduct = item.type === 'product';
                     const itemStyle = isProduct
-                      ? '[background:var(--color-product-gradient)] border border-[#3b82f6]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
-                      : '[background:var(--color-dish-gradient)] border border-[#f97316]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]';
+                      ? 'gradient-product border border-[#3b82f6]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+                      : 'gradient-dish border border-[#f97316]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]';
 
                     return (
                       <div

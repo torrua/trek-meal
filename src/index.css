@@ -299,15 +299,15 @@
 
 /* Entity card gradients */
 .gradient-dish {
-  background: linear-gradient(45deg, #fed7aa 0%, #fef3c7 100%);
+  background: linear-gradient(to right, #fed7aa 0%, #fef3c7 100%);
 }
 
 .gradient-product {
-  background: linear-gradient(45deg, #dbeafe 0%, #eff6ff 100%);
+  background: linear-gradient(to right, #dbeafe 0%, #eff6ff 100%);
 }
 
 .gradient-meal {
-  background: linear-gradient(45deg, #dcfce7 0%, #f0fdf4 100%);
+  background: linear-gradient(to right, #bbf7d0 0%, #f0fdf4 100%);
 }
 
 .gradient-neutral {

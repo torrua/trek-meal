@@ -398,7 +398,7 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
 
   return (
     <div ref={setNodeRef} className="touch-none" style={style}>
-      <div className="[background:var(--color-product-gradient)] border border-[#3b82f6]/30 rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
+      <div className="gradient-product border border-[#3b82f6]/30 rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Component
@@ -1014,10 +1014,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
             </button>
           )
         }
-        gradientFrom=""
-        gradientVia=""
-        gradientTo=""
-        className="[background:var(--color-dish-gradient)] border border-border rounded-xl overflow-visible shadow-md"
+        gradientFrom="gradient-dish"
       >
         <div className="space-y-4 pt-4">
           {/* Search for adding products - доступен в режиме редактирования */}
@@ -1190,7 +1187,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                   return (
                     <div
                       key={index}
-                      className="[background:var(--color-product-gradient)] border border-[#3b82f6]/30 rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="gradient-product border border-[#3b82f6]/30 rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
                     >
                       <ProductContentReadOnly
                         dishProduct={dishProduct}

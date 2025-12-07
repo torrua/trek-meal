@@ -22,6 +22,7 @@ import {
   Save,
   Copy,
   GripVertical,
+  Plus,
 } from 'lucide-react';
 import {
   DndContext,
@@ -41,7 +42,7 @@ import {
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNavigate } from 'react-router-dom';
-import type { Dish, DishProduct, Product } from '../../types';
+import type { Dish, DishProduct, Product, DishData } from '../../types';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
 import useCategoryStore from '../../stores/useCategoryStore';
@@ -59,12 +60,15 @@ import { tripEntityConfig } from '../../config/entityConfig';
 
 interface DishDetailProps {
   dish: Dish | null;
+  isCreating?: boolean; // Новый проп
   onEdit: () => void;
   editTrigger?: number;
   openSections: string[];
   onToggleSection: (sectionId: string) => void;
   onStartEdit?: () => void;
   onFinishEdit?: () => void;
+  onSaveNew?: (data: DishData) => void; // Коллбэк для сохранения нового
+  onCancelCreation?: () => void; // Коллбэк для отмены создания
   editSubmitTrigger?: number;
   editCancelTrigger?: number;
 }
@@ -453,12 +457,15 @@ const CUSTOM_WEIGHT_VALUE = '-1';
 
 const DishDetail: React.FC<DishDetailProps> = ({
   dish,
+  isCreating = false,
   onEdit: _onEdit,
   editTrigger,
   openSections,
   onToggleSection,
   onStartEdit,
   onFinishEdit,
+  onSaveNew,
+  onCancelCreation,
   editSubmitTrigger: _editSubmitTrigger,
   editCancelTrigger: _editCancelTrigger,
 }) => {
@@ -478,6 +485,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const prevIsCreatingRef = useRef<boolean>(false);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -496,17 +504,49 @@ const DishDetail: React.FC<DishDetailProps> = ({
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [saveAsName, setSaveAsName] = useState('');
 
-  // --- ВОТ ЭТИ СТРОКИ БЫЛИ ПРОПУЩЕНЫ ---
   const isBasicInfoOpen = openSections.includes('basic-info');
   const isProductsOpen = openSections.includes('products');
   const isTripsOpen = openSections.includes('trips');
-  // -------------------------------------
+
+  // Инициализация при смене режима isCreating
+  useEffect(() => {
+    if (isCreating) {
+      setIsEditing(true);
+      setName('');
+      setDescription('');
+      setFormProducts([]);
+      onStartEdit?.();
+    }
+  }, [isCreating, onStartEdit]);
+
+  // Переход из режима создания в режим просмотра
+  useEffect(() => {
+    // Срабатывает только при переходе из режима создания в режим просмотра
+    if (prevIsCreatingRef.current && !isCreating && dish && isEditing) {
+      setIsEditing(false);
+      setName(dish.name || '');
+      setDescription(dish.description || '');
+      setFormProducts(JSON.parse(JSON.stringify(dish.products || [])));
+      onFinishEdit?.();
+    }
+    // Обновляем ref
+    prevIsCreatingRef.current = isCreating;
+  }, [isCreating, dish, isEditing, onFinishEdit]);
+
+  // Инициализация при смене блюда (только для режима просмотра)
+  useEffect(() => {
+    if (dish && !isCreating && !isEditing) {
+      setName(dish.name || '');
+      setDescription(dish.description || '');
+      setFormProducts(JSON.parse(JSON.stringify(dish.products || [])));
+    }
+  }, [dish, dish?.id, isCreating, isEditing]);
 
   useEffect(() => {
     if (typeof editTrigger === 'number') {
       if (editTriggerRef.current !== undefined && editTriggerRef.current !== editTrigger) {
         setIsEditing(true);
-        if (dish) {
+        if (dish && !isCreating) {
           setName(dish?.name || '');
           setDescription(dish?.description || '');
           setFormProducts(JSON.parse(JSON.stringify(dish?.products || [])));
@@ -515,7 +555,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
       }
       editTriggerRef.current = editTrigger;
     }
-  }, [editTrigger, onStartEdit, dish]);
+  }, [editTrigger, onStartEdit, dish, isCreating]);
 
   useEffect(() => {
     if (isEditing && containerRef.current) {
@@ -533,19 +573,24 @@ const DishDetail: React.FC<DishDetailProps> = ({
   };
 
   const handleCancelEdit = () => {
-    setIsEditing(false);
-    setName(dish?.name || '');
-    setDescription(dish?.description || '');
-    setFormProducts(JSON.parse(JSON.stringify(dish?.products || [])));
-    onFinishEdit?.();
+    if (isCreating) {
+      onCancelCreation?.();
+    } else {
+      setIsEditing(false);
+      setName(dish?.name || '');
+      setDescription(dish?.description || '');
+      setFormProducts(JSON.parse(JSON.stringify(dish?.products || [])));
+      onFinishEdit?.();
+    }
   };
 
   // Check if composition changed
   const hasCompositionChanged = useMemo(() => {
+    if (isCreating) return false; // Для нового не проверяем изменение состава относительно "старого"
     if (!dish) return false;
     if (dish.products.length !== formProducts.length) return true;
     return JSON.stringify(dish.products) !== JSON.stringify(formProducts);
-  }, [dish, formProducts]);
+  }, [dish, formProducts, isCreating]);
 
   const handlePreSave = () => {
     const trimmedName = name.trim();
@@ -559,6 +604,15 @@ const DishDetail: React.FC<DishDetailProps> = ({
       return;
     }
 
+    if (isCreating) {
+      // Сохранение нового блюда
+      onSaveNew?.({ name: trimmedName, description, products: validProducts });
+      // Сбрасываем режим редактирования - родительский компонент переключит isCreating в false
+      setIsEditing(false);
+      return;
+    }
+
+    // Редактирование существующего
     // If products changed, show modal choice
     if (hasCompositionChanged) {
       setSaveAsName(`${trimmedName} (копия)`);
@@ -572,13 +626,16 @@ const DishDetail: React.FC<DishDetailProps> = ({
   };
 
   const handleConfirmSave = (action: 'replace' | 'new') => {
-    if (!dish) return;
+    if (!dish && !isCreating) return;
 
     const validProducts = formProducts.filter((p) => p.productId > 0 && p.weight > 0);
 
-    if (action === 'replace') {
+    if (action === 'replace' && dish) {
       updateDish(dish.id, { name, description, products: validProducts });
       toast.success('Блюдо обновлено');
+      setIsSaveModalOpen(false);
+      setIsEditing(false);
+      onFinishEdit?.();
     } else {
       if (!saveAsName.trim()) {
         toast.error('Введите имя для нового блюда');
@@ -586,11 +643,10 @@ const DishDetail: React.FC<DishDetailProps> = ({
       }
       addDish({ name: saveAsName, description, products: validProducts });
       toast.success('Создано новое блюдо');
+      setIsSaveModalOpen(false);
+      setIsEditing(false);
+      onFinishEdit?.();
     }
-
-    setIsSaveModalOpen(false);
-    setIsEditing(false);
-    onFinishEdit?.();
   };
 
   const currentProducts = useMemo(
@@ -598,7 +654,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
     [isEditing, formProducts, dish]
   );
 
-  const tripsUsingDish = dish ? getTripsUsingDish(dish.id) : [];
+  const tripsUsingDish = dish && !isCreating ? getTripsUsingDish(dish.id) : [];
   const totalWeight = currentProducts.reduce((sum, p) => sum + p.weight, 0);
 
   const totalNutrition = useMemo(() => {
@@ -627,8 +683,8 @@ const DishDetail: React.FC<DishDetailProps> = ({
   const handleDeleteProduct = (productIndex: number) => {
     if (isEditing) {
       setFormProducts(formProducts.filter((_, i) => i !== productIndex));
-    } else {
-      removeProductFromDish(dish?.id || 0, productIndex);
+    } else if (dish) {
+      removeProductFromDish(dish.id, productIndex);
     }
   };
 
@@ -643,7 +699,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
         newProducts[editingPortionIndex].weight = newWeight;
         setFormProducts(newProducts);
       } else if (dish) {
-        updateProductInDish(dish?.id || 0, editingPortionIndex, newWeight);
+        updateProductInDish(dish.id, editingPortionIndex, newWeight);
       }
     }
     setEditingPortionIndex(null);
@@ -667,21 +723,9 @@ const DishDetail: React.FC<DishDetailProps> = ({
     navigate(`/trips/${tripId}`);
   };
 
-  const _handleProductChange = (index: number, selectedValue: string) => {
-    const newProducts = [...formProducts];
-    const productId = Number(selectedValue) || 0;
-    newProducts[index].productId = productId;
-    const product = allProducts.find((p: Product) => p.id === productId);
-    newProducts[index].weight = product?.portions?.[0]?.weight || 100;
-    setFormProducts(newProducts);
-  };
-
   const handlePortionChange = (index: number, selectedValue: string) => {
     const newProducts = [...formProducts];
-    if (selectedValue === CUSTOM_WEIGHT_VALUE) {
-      // Logic handled by UI state usually, but here we just keep current weight or set default
-      // User will edit weight manually
-    } else {
+    if (selectedValue !== CUSTOM_WEIGHT_VALUE) {
       newProducts[index].weight = Number(selectedValue) || 0;
       setFormProducts(newProducts);
     }
@@ -705,8 +749,6 @@ const DishDetail: React.FC<DishDetailProps> = ({
       }
     }
   };
-
-  const _addProductField = () => setFormProducts([...formProducts, { productId: 0, weight: 0 }]);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return allProducts;
@@ -778,13 +820,22 @@ const DishDetail: React.FC<DishDetailProps> = ({
         : currentProducts[editingPortionIndex] || null
       : null;
 
+  // Если нет блюда и не режим создания, не рендерим ничего (или плейсхолдер снаружи)
+  if (!dish && !isCreating) return null;
+
   return (
     <div className="space-y-6 pl-1" ref={containerRef}>
       {/* Basic Info Section */}
       <CollapsibleSection
         id="basic-info"
-        title="Основная информация"
-        icon={<Info className="w-4 h-4 text-primary" />}
+        title={isCreating ? 'Новое блюдо' : 'Основная информация'}
+        icon={
+          isCreating ? (
+            <Plus className="w-4 h-4 text-primary" />
+          ) : (
+            <Info className="w-4 h-4 text-primary" />
+          )
+        }
         isOpen={isBasicInfoOpen}
         onToggle={onToggleSection}
         actionButton={
@@ -812,7 +863,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                 }}
                 icon={Soup}
               >
-                Сохранить изменения
+                {isCreating ? 'Создать блюдо' : 'Сохранить изменения'}
               </Button>
             </div>
           ) : (
@@ -840,7 +891,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  autoFocus
+                  autoFocus={isCreating}
                   placeholder="Например, Плов"
                   className="text-base font-medium"
                 />
@@ -953,7 +1004,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
         gradientTo="to-green-500/5"
       >
         <div className="space-y-4 pt-4">
-          {/* Search for adding products */}
+          {/* Search for adding products - доступен в режиме редактирования */}
           {isEditing && (
             <div className="relative mb-4" ref={searchInputRef}>
               <div className="relative">
@@ -990,6 +1041,17 @@ const DishDetail: React.FC<DishDetailProps> = ({
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Empty State for creation */}
+          {isEditing && formProducts.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg border border-dashed border-border">
+              <Soup className="w-10 h-10 mx-auto mb-3 opacity-20" />
+              <p className="text-sm">Список продуктов пуст.</p>
+              <p className="text-xs mt-1 opacity-70">
+                Воспользуйтесь поиском выше, чтобы добавить ингредиенты.
+              </p>
             </div>
           )}
 
@@ -1067,7 +1129,8 @@ const DishDetail: React.FC<DishDetailProps> = ({
         </div>
       </CollapsibleSection>
 
-      {tripsUsingDish.length > 0 && (
+      {/* Trips Section - Hide if creating */}
+      {!isCreating && tripsUsingDish.length > 0 && (
         <CollapsibleSection
           id="trips"
           title="Походы"

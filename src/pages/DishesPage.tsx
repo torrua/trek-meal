@@ -27,7 +27,7 @@ import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
 import useSearchStore from '../stores/useSearchStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
-import type { Dish } from '../types';
+import type { Dish, DishData } from '../types';
 import EntityCard from '../ui/EntityCard';
 import EntityListItem, { MetaItem } from '../ui/EntityListItem';
 import DishDetail from '../components/dishes/DishDetail';
@@ -39,9 +39,9 @@ import { useViewMode } from '../hooks/useViewMode';
 import { exportDishToJson, exportBulkDishesToJson, importDataFromJson } from '../utils/backup';
 
 const DishesPage: React.FC = () => {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { dishes, deleteDish } = useDishStore();
+  const { dishes, deleteDish, addDish } = useDishStore();
   const { isDishInUse } = useTripStore();
   const { products: allProducts } = useProductStore();
   const { searchTerm } = useSearchStore();
@@ -50,6 +50,10 @@ const DishesPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [activeId, setActiveId] = useState<number | null>(null);
+
+  // Новое состояние для режима создания
+  const [isCreating, setIsCreating] = useState(false);
+
   const [detailEditTrigger, setDetailEditTrigger] = useState(0);
   const [isDetailEditing, setIsDetailEditing] = useState(false);
   const [dishToDelete, setDishToDelete] = useState<Dish | null>(null);
@@ -67,9 +71,9 @@ const DishesPage: React.FC = () => {
     const selectedId = searchParams.get('selectedId');
     if (selectedId && dishes.some((d) => d.id === Number(selectedId))) {
       setActiveId(Number(selectedId));
+      setIsCreating(false); // Выключаем создание при выборе
       setSearchParams({}, { replace: true });
 
-      // Прокрутка к карточке блюда
       setTimeout(() => {
         const element = document.querySelector(`[data-dish-id="${selectedId}"]`);
         if (element) {
@@ -102,12 +106,39 @@ const DishesPage: React.FC = () => {
     [activeId, dishes]
   );
 
+  // Изменено: теперь просто включаем режим создания в текущем Layout
   const handleAddNew = useCallback(() => {
-    navigate('/dishes/new');
-  }, [navigate]);
+    setActiveId(null);
+    setIsCreating(true);
+    setIsDetailEditing(true);
+    // Открываем нужные секции сразу
+    setOpenSections(['basic-info', 'products']);
+  }, []);
+
+  // Callback для сохранения нового блюда из DishDetail
+  const handleSaveNewDish = useCallback(
+    (data: DishData) => {
+      const newDish = addDish(data);
+      if (newDish) {
+        setIsCreating(false);
+        setActiveId(newDish.id);
+        setIsDetailEditing(false);
+        toast.success('Блюдо создано успешно');
+      }
+    },
+    [addDish]
+  );
+
+  // Callback для отмены создания
+  const handleCancelCreation = useCallback(() => {
+    setIsCreating(false);
+    setIsDetailEditing(false);
+    setActiveId(null);
+  }, []);
 
   const handleEdit = useCallback((dish: Dish) => {
     setActiveId(dish.id);
+    setIsCreating(false);
     setIsDetailEditing(true);
     setOpenSections((prev) => (prev.includes('basic-info') ? prev : [...prev, 'basic-info']));
     setDetailEditTrigger((t) => t + 1);
@@ -304,7 +335,8 @@ const DishesPage: React.FC = () => {
                   onClick={handleAddNew}
                   variant="primary"
                   size="icon"
-                  disabled={isDetailEditing}
+                  disabled={isDetailEditing && !isCreating} // Разрешаем клик, если мы не в режиме редактирования существующего
+                  className={isCreating ? 'bg-primary/80' : ''}
                 >
                   <CirclePlus className="w-4 h-4" />
                 </Button>
@@ -364,7 +396,7 @@ const DishesPage: React.FC = () => {
         </div>
       </div>
 
-      {filteredDishes.length > 0 ? (
+      {filteredDishes.length > 0 || isCreating ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           <div className="lg:col-span-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar max-h-[calc(100vh-12rem)] pl-1 pb-4 pt-2">
             {filteredDishes.map((dish) => {
@@ -397,6 +429,7 @@ const DishesPage: React.FC = () => {
                 }));
 
               const isCardDisabled = isDetailEditing && dish.id !== activeId;
+              const isSelected = activeId === dish.id;
 
               const metaMap: Record<string, MetaItem> = {
                 calories: {
@@ -439,14 +472,22 @@ const DishesPage: React.FC = () => {
               const metaItems = visibleFields.map((id) => metaMap[id]).filter(Boolean);
 
               return viewMode === 'compact' ? (
-                <div data-dish-id={dish.id}>
+                <div
+                  data-dish-id={dish.id}
+                  className={isCardDisabled ? 'opacity-50 pointer-events-none' : ''}
+                >
                   <EntityListItem
                     key={dish.id}
                     title={cardConfig.title(dish)}
                     meta={metaItems}
-                    isSelected={activeId === dish.id}
+                    isSelected={isSelected}
                     isMultiSelected={selectedDishIds.includes(dish.id)}
-                    onSelect={isCardDisabled ? undefined : () => setActiveId(dish.id)}
+                    onSelect={() => {
+                      if (!isCardDisabled) {
+                        setIsCreating(false);
+                        setActiveId(dish.id);
+                      }
+                    }}
                     onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
                     onRequestMultiSelectMode={() => {
                       if (!showMultiSelect) {
@@ -460,7 +501,10 @@ const DishesPage: React.FC = () => {
                   />
                 </div>
               ) : (
-                <div data-dish-id={dish.id}>
+                <div
+                  data-dish-id={dish.id}
+                  className={isCardDisabled ? 'opacity-50 pointer-events-none' : ''}
+                >
                   <EntityCard
                     key={dish.id}
                     title={cardConfig.title(dish)}
@@ -476,9 +520,14 @@ const DishesPage: React.FC = () => {
                       weight: Math.round(totalWeight),
                       itemsCount: dish.products.length,
                     }}
-                    isSelected={activeId === dish.id}
+                    isSelected={isSelected}
                     isMultiSelected={selectedDishIds.includes(dish.id)}
-                    onSelect={isCardDisabled ? undefined : () => setActiveId(dish.id)}
+                    onSelect={() => {
+                      if (!isCardDisabled) {
+                        setIsCreating(false);
+                        setActiveId(dish.id);
+                      }
+                    }}
                     onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
                     menuItems={actions}
                     showMultiSelect={showMultiSelect}
@@ -489,15 +538,19 @@ const DishesPage: React.FC = () => {
           </div>
 
           <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar pt-2">
-            {selectedDish ? (
+            {/* Рендерим DishDetail если выбрано блюдо ИЛИ если режим создания */}
+            {selectedDish || isCreating ? (
               <DishDetail
                 dish={selectedDish}
+                isCreating={isCreating}
                 onEdit={() => selectedDish && handleEdit(selectedDish)}
                 editTrigger={detailEditTrigger}
                 openSections={openSections}
                 onToggleSection={handleToggleSection}
                 onStartEdit={() => setIsDetailEditing(true)}
                 onFinishEdit={() => setIsDetailEditing(false)}
+                onSaveNew={handleSaveNewDish}
+                onCancelCreation={handleCancelCreation}
                 editSubmitTrigger={_editSubmitTrigger}
                 editCancelTrigger={_editCancelTrigger}
               />
@@ -509,7 +562,8 @@ const DishesPage: React.FC = () => {
                   </div>
                   <h3 className="text-lg font-medium text-foreground mb-2">Выберите блюдо</h3>
                   <p className="text-muted-foreground">
-                    Кликните на карточку для просмотра состава.
+                    Кликните на карточку для просмотра состава или нажмите &quot;Плюс&quot; для
+                    создания.
                   </p>
                 </div>
               </div>

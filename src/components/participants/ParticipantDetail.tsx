@@ -14,7 +14,6 @@ import {
   Trash2,
   ExternalLink,
   Scale,
-  ChevronDown,
   FileText,
   Save,
   X,
@@ -44,8 +43,8 @@ interface CollapsibleSectionProps {
   title: string;
   icon: React.ElementType;
   children: React.ReactNode;
-  isOpen: boolean;
-  onToggle: (id: string) => void;
+  isOpen?: boolean;
+  onToggle?: () => void;
   actionButton?: React.ReactNode;
   headerContent?: React.ReactNode;
   gradientFrom?: string;
@@ -83,9 +82,6 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         </div>
         <div className="flex items-center gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
           {actionButton}
-          <ChevronDown
-            className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          />
         </div>
       </div>
       {isOpen && <div className="p-5 pt-0">{children}</div>}

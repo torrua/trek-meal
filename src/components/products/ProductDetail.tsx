@@ -5,7 +5,6 @@ import {
   Info,
   Edit,
   BarChart,
-  ChevronDown,
   Flame,
   Beef,
   Droplet,
@@ -29,8 +28,8 @@ interface CollapsibleSectionProps {
   title: string;
   icon: React.ReactNode;
   children: React.ReactNode;
-  isOpen: boolean;
-  onToggle: (id: string) => void;
+  isOpen?: boolean;
+  onToggle?: () => void;
   actionButton?: React.ReactNode;
   summaryContent?: React.ReactNode;
   headerContent?: React.ReactNode;
@@ -71,9 +70,6 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         <div className="flex items-center gap-2 min-w-[200px] justify-end">
           {actionButton}
           {headerContent}
-          <ChevronDown
-            className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          />
         </div>
       </div>
       {isOpen && <div className="p-6 pt-0">{children}</div>}

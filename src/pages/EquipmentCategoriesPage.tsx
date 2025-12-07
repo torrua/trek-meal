@@ -16,6 +16,7 @@ import {
   Info,
   Edit,
   Download,
+  Backpack,
 } from 'lucide-react';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
@@ -24,6 +25,7 @@ import type { EquipmentCategory } from '../types';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard from '../ui/EntityCard';
+import EntityListItem, { _MetaItem } from '../ui/EntityListItem';
 import DetailPane from '../ui/DetailPane'; // Импортируем DetailPane
 import { equipmentCategoryEntityConfig } from '../config/entityConfig';
 import { useViewMode } from '../hooks/useViewMode';
@@ -367,7 +369,35 @@ const EquipmentCategoriesPage: React.FC = () => {
                 onDelete: () => handleRequestDelete(category),
               });
 
-              return (
+              const entityListActions = actions.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
+              return viewMode === 'compact' ? (
+                <EntityListItem
+                  key={category.id}
+                  title={equipmentCategoryEntityConfig.views.card.title(category)}
+                  meta={[
+                    {
+                      icon: Backpack,
+                      text: equipmentCount,
+                      tooltip: 'Снаряжение',
+                    },
+                  ]}
+                  isSelected={activeId === category.id}
+                  isMultiSelected={selectedCategoryIds.includes(category.id)}
+                  onSelect={() => setActiveId(activeId === category.id ? null : category.id)}
+                  onMultiSelect={() => toggleCategorySelection(category.id)}
+                  menuItems={entityListActions}
+                  showMultiSelect={showMultiSelect}
+                  variant="category"
+                />
+              ) : (
                 <EntityCard
                   key={category.id}
                   title={equipmentCategoryEntityConfig.views.card.title(category)}
@@ -377,7 +407,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                   details={[
                     {
                       key: 'equipment',
-                      icon: equipmentCategoryEntityConfig.getIcon(category),
+                      icon: Backpack,
                       text: equipmentCount,
                       title: 'Снаряжение',
                     },
@@ -388,7 +418,6 @@ const EquipmentCategoriesPage: React.FC = () => {
                   onMultiSelect={() => toggleCategorySelection(category.id)}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
-                  viewMode={viewMode}
                 />
               );
             })}

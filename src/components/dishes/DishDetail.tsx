@@ -56,6 +56,7 @@ import FormField from '../../ui/FormField';
 import DropdownSelect from '../../ui/DropdownSelect';
 import { toast } from 'react-hot-toast';
 import Modal from '../../ui/Modal';
+import { tripEntityConfig } from '../../config/entityConfig';
 
 interface DishDetailProps {
   dish: Dish | null;
@@ -1216,7 +1217,9 @@ const DishDetail: React.FC<DishDetailProps> = ({
                 onClick={() => handleViewTrip(t.id)}
               >
                 <MapPin className="w-4 h-4 text-purple-500" />
-                <span className="font-medium text-sm">{listItemConfig.title(t)}</span>
+                <span className="font-medium text-sm">
+                  {tripEntityConfig.views.listItem.title(t)}
+                </span>
               </div>
             ))}
           </div>

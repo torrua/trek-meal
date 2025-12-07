@@ -2,7 +2,6 @@
 
 import React from 'react';
 import cn from 'classnames';
-import { ChevronDown } from 'lucide-react';
 
 interface Section {
   id: string;
@@ -76,27 +75,6 @@ const DetailPane: React.FC<DetailPaneProps> = ({
                   {/* Action buttons area */}
                   <div className="flex items-center gap-3 flex-shrink-0 min-h-[24px]">
                     {actionButton && <div onClick={(e) => e.stopPropagation()}>{actionButton}</div>}
-
-                    {onToggleSection && typeof onToggleSection === 'function' && (
-                      <button
-                        className={cn(
-                          'p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-all duration-200',
-                          'hover:bg-muted/60 notion-focus-ring'
-                        )}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onToggleSection(id);
-                        }}
-                        aria-label={isOpen ? 'Свернуть раздел' : 'Развернуть раздел'}
-                      >
-                        <ChevronDown
-                          className={cn(
-                            'w-5 h-5 transition-transform duration-300 ease-out',
-                            isOpen && 'rotate-180'
-                          )}
-                        />
-                      </button>
-                    )}
                   </div>
                 </div>
 

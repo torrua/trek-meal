@@ -23,6 +23,7 @@ import {
   Copy,
   GripVertical,
   Plus,
+  ExternalLink,
 } from 'lucide-react';
 import {
   DndContext,
@@ -87,6 +88,7 @@ interface CollapsibleSectionProps {
   gradientFrom?: string;
   gradientVia?: string;
   gradientTo?: string;
+  className?: string;
 }
 
 const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
@@ -102,10 +104,14 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   gradientFrom = 'from-blue-500/5',
   gradientVia = 'via-purple-500/5',
   gradientTo = 'to-pink-500/5',
+  className,
 }) => {
   return (
     <div
-      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-visible`}
+      className={
+        className ||
+        `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-visible shadow-md`
+      }
     >
       <div
         className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -121,9 +127,6 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         <div className="flex items-center gap-2 min-w-[200px] justify-end">
           {actionButton}
           {headerContent}
-          <ChevronDown
-            className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-          />
         </div>
       </div>
       {isOpen && <div className="p-6 pt-0">{children}</div>}
@@ -163,7 +166,7 @@ const ProductContentReadOnly: React.FC<{
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <PortionIcon className="w-4 h-4 text-blue-500 flex-shrink-0" />
+          <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
           <h4 className="font-medium text-foreground truncate">{product.name}</h4>
         </div>
         <div className="flex items-center gap-2">
@@ -230,8 +233,8 @@ const ProductContentReadOnly: React.FC<{
                   e.stopPropagation();
                   onEditPortion();
                 }}
-                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600"
-                title="Изменить вес"
+                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border border-border"
+                title="Открыть продукт"
               >
                 <Edit className="w-4 h-4" />
               </Button>
@@ -243,7 +246,7 @@ const ProductContentReadOnly: React.FC<{
                   e.stopPropagation();
                   onRemove();
                 }}
-                className="bg-danger/10 hover:bg-danger/20 text-danger"
+                className="bg-danger/10 hover:bg-danger/20 text-danger border border-border"
                 title="Удалить продукт"
               >
                 <Trash2 className="w-4 h-4" />
@@ -254,11 +257,15 @@ const ProductContentReadOnly: React.FC<{
       </div>
 
       {dishProduct.weight && (
-        <div className="pt-2 border-t border-border/50">
-          <div className="flex items-center gap-2 px-3 py-2 text-sm bg-card border border-border rounded-lg">
+        <div className="pt-2">
+          <div className="flex items-center gap-2 h-8 px-3 bg-card border border-border rounded-lg text-sm">
             <PortionIcon className="w-4 h-4 text-muted-foreground" />
             <span className="font-medium text-muted-foreground">
-              {portion ? portion.name : 'Другая порция'}
+              {portion
+                ? portion.name
+                : selectedProduct?.portions.some((port) => port.weight === dishProduct.weight)
+                  ? 'Порция'
+                  : 'Свой вес'}
             </span>
             <span className="text-muted-foreground">({dishProduct.weight} г)</span>
           </div>
@@ -381,7 +388,7 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3"
+      className="[background:var(--color-product-gradient)] border border-[#3b82f6]/30 rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -393,7 +400,7 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
             <GripVertical className="w-4 h-4 text-muted-foreground" />
           </div>
           <span className="font-medium text-sm flex items-center gap-2">
-            <Component className="w-3.5 h-3.5 text-blue-500" />
+            <Component className="w-3.5 h-3.5 text-foreground" />
             {selectedProduct?.name || 'Product not found'}
           </span>
         </div>
@@ -405,10 +412,10 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
               variant="ghost"
               size="icon-sm"
               onClick={() => onViewProduct(selectedProduct.id)}
-              className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600"
+              className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border border-border"
               title="Перейти к продукту"
             >
-              <Edit className="w-4 h-4" />
+              <ExternalLink className="w-4 h-4" />
             </Button>
           )}
           <Button
@@ -416,7 +423,7 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
             variant="ghost"
             size="icon-sm"
             onClick={() => onDelete(index)}
-            className="bg-danger/10 hover:bg-danger/20 text-danger"
+            className="bg-danger/10 hover:bg-danger/20 text-danger border border-border"
             title="Удалить продукт"
           >
             <Trash2 className="w-4 h-4" />
@@ -424,7 +431,7 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
         </div>
       </div>
 
-      <div className="pt-2 border-t border-border/50">
+      <div className="pt-2">
         <div className="flex gap-3">
           <div className="flex-1">
             <label className="block text-xs font-medium text-muted-foreground mb-1">Порция</label>
@@ -999,9 +1006,10 @@ const DishDetail: React.FC<DishDetailProps> = ({
             </button>
           )
         }
-        gradientFrom="from-orange-500/5"
-        gradientVia="via-yellow-500/5"
-        gradientTo="to-green-500/5"
+        gradientFrom=""
+        gradientVia=""
+        gradientTo=""
+        className="[background:var(--color-dish-gradient)] border border-border rounded-xl overflow-visible shadow-md"
       >
         <div className="space-y-4 pt-4">
           {/* Search for adding products - доступен в режиме редактирования */}
@@ -1075,12 +1083,19 @@ const DishDetail: React.FC<DishDetailProps> = ({
                         menuLabel: `${port.name} (${port.weight} г)`,
                         icon: port.isIndivisible ? Circle : PieChart,
                       })) || [];
-                    portionOptions.push({
-                      value: CUSTOM_WEIGHT_VALUE,
-                      label: 'Свой вес...',
-                      menuLabel: 'Свой вес...',
-                      icon: PieChart,
-                    });
+
+                    // Добавляем "Свой вес..." только если текущий вес не соответствует стандартным порциям
+                    const hasCustomWeight = !selectedProduct?.portions.some(
+                      (port) => port.weight === p.weight
+                    );
+                    if (hasCustomWeight) {
+                      portionOptions.push({
+                        value: CUSTOM_WEIGHT_VALUE,
+                        label: 'Свой вес...',
+                        menuLabel: 'Свой вес...',
+                        icon: PieChart,
+                      });
+                    }
 
                     const currentPortion =
                       portionOptions.find((opt) => Number(opt.value) === p.weight) ||
@@ -1111,7 +1126,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                   return (
                     <div
                       key={index}
-                      className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3 hover:shadow-sm transition-all"
+                      className="[background:var(--color-product-gradient)] border border-[#3b82f6]/30 rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
                     >
                       <ProductContentReadOnly
                         dishProduct={dishProduct}

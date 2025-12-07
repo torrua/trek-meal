@@ -647,10 +647,8 @@ const MealForm: React.FC<MealFormProps> = ({
             </button>
           )
         }
-        gradientFrom="from-orange-500/5"
-        gradientVia="via-yellow-500/5"
-        gradientTo="to-green-500/5"
-        className="[background:var(--color-meal-composition-gradient)] border border-border"
+        gradientFrom="gradient-meal"
+        className="border border-border"
       >
         <div className="relative mb-4" ref={searchInputRef}>
           <div className="relative">

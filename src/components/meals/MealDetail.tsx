@@ -7,15 +7,10 @@ import {
   Hash,
   Component,
   Soup,
-  Flame,
-  Beef,
-  Droplet,
-  Wheat,
   Weight,
   Edit,
   PieChart,
   Circle,
-  ChevronDown,
 } from 'lucide-react';
 import type { Meal, Product, Dish, MealPlanItem } from '../../types';
 import useProductStore from '../../stores/useProductStore';
@@ -25,6 +20,7 @@ import Button from '../../ui/Button';
 import MealForm from './MealForm';
 import { useMealStore } from '../../stores/useMealStore';
 import { calculateNutrition } from './mealFormUtils';
+import NutritionButton from '../../ui/NutritionButton';
 
 interface MealDetailProps {
   meal: Meal | null;
@@ -69,17 +65,16 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   gradientTo = 'to-pink-500/5',
   className,
 }) => {
-  // Определяем тень как константу, чтобы использовать везде
-  const defaultShadow = 'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]';
+  // Удалена unused переменная после замены на shadow-md
 
   return (
     <div
-      // Применяем defaultShadow ко всем блокам
+      // Применяем shadow-md ко всем блокам для консистентности
       // Если className передан, используем его, иначе стандартный border
-      className={`${className || 'border border-border'} ${defaultShadow} rounded-xl relative transform`}
+      className={`${className || ''} collapsible-section`}
     >
       <div
-        className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} rounded-xl absolute inset-0`}
+        className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} collapsible-section-gradient`}
       ></div>
       <div className="relative">
         <div
@@ -111,7 +106,6 @@ const ItemContentReadOnly: React.FC<{
 }> = ({ item, products, dishes }) => {
   const [showDishIngredients, setShowDishIngredients] = useState(false);
   const [showProductPortion, setShowProductPortion] = useState(false);
-  const [showNutrition, setShowNutrition] = useState(false);
 
   const selectedItem =
     item.type === 'product'
@@ -237,65 +231,13 @@ const ItemContentReadOnly: React.FC<{
         <div className="flex items-center gap-2">
           {/* Show nutrition button if we have a selected item and nutrition data */}
           {selectedItem && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowNutrition(!showNutrition);
-              }}
-              className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
-            >
-              {showNutrition ? (
-                <>
-                  {nutrition && (
-                    <>
-                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
-                      <div className="flex items-center gap-1">
-                        <Flame className="w-4 h-4 text-orange-600" />
-                        <span className="text-sm font-semibold text-orange-600">
-                          {nutrition.calories}
-                        </span>
-                      </div>
-                      <div className="w-px h-4 bg-border" />
-                      <div className="flex items-center gap-1">
-                        <Beef className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm font-semibold text-blue-600">
-                          {nutrition.proteins}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Droplet className="w-4 h-4 text-yellow-600" />
-                        <span className="text-sm font-semibold text-yellow-600">
-                          {nutrition.fats}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Wheat className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-semibold text-green-600">
-                          {nutrition.carbs}
-                        </span>
-                      </div>
-                      <div className="w-px h-4 bg-border" />
-                    </>
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Weight className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-semibold text-muted-foreground">
-                      {displayWeight || 0}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
-                  <div className="flex items-center gap-1">
-                    <Weight className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-semibold text-muted-foreground">
-                      {displayWeight || 0}
-                    </span>
-                  </div>
-                </>
-              )}
-            </button>
+            <NutritionButton
+              calories={nutrition?.calories || 0}
+              proteins={nutrition?.proteins || 0}
+              fats={nutrition?.fats || 0}
+              carbs={nutrition?.carbs || 0}
+              weight={displayWeight}
+            />
           )}
         </div>
       </div>
@@ -310,8 +252,8 @@ const ItemContentReadOnly: React.FC<{
               </span>
             </span>
             <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-              <Weight className="w-3.5 h-3.5" />
               {item.weight}
+              <Weight className="w-3.5 h-3.5" />
             </span>
           </div>
         </div>
@@ -333,8 +275,8 @@ const ItemContentReadOnly: React.FC<{
                   </span>
                 </span>
                 <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-                  <Weight className="w-3.5 h-3.5" />
                   {ingredient.weight}
+                  <Weight className="w-3.5 h-3.5" />
                 </span>
               </div>
             );
@@ -361,7 +303,6 @@ const MealDetail: React.FC<MealDetailProps> = ({
   const { updateMeal } = useMealStore();
   const { mealTypes } = useMealTypesStore();
   const [isEditing, setIsEditing] = useState(false);
-  const [showHeaderNutrition, setShowHeaderNutrition] = useState(false);
   const editTriggerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
@@ -479,9 +420,9 @@ const MealDetail: React.FC<MealDetailProps> = ({
                 {/* Empty - only icon */}
               </Button>
             }
-            gradientFrom="from-blue-500/5"
-            gradientVia="via-purple-500/5"
-            gradientTo="to-pink-500/5"
+            gradientFrom="gradient-basic-info"
+            gradientVia=""
+            gradientTo=""
           >
             <div className="space-y-4 pt-4">
               <div>
@@ -528,95 +469,41 @@ const MealDetail: React.FC<MealDetailProps> = ({
             }
             headerContent={
               watchItems.length > 0 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowHeaderNutrition(!showHeaderNutrition);
-                  }}
-                  className="flex items-center gap-1.5 px-3 h-9 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
-                >
-                  {showHeaderNutrition ? (
-                    <>
-                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
-                      <div className="flex items-center gap-2 text-sm">
-                        <div className="flex items-center gap-1">
-                          <Flame className="w-4 h-4 text-orange-600" />
-                          <span className="font-semibold text-orange-600">
-                            {totalNutrition.calories}
-                          </span>
-                        </div>
-                        <div className="w-px h-4 bg-border" />
-                        <div className="flex items-center gap-1">
-                          <Beef className="w-4 h-4 text-blue-600" />
-                          <span className="font-semibold text-blue-600">
-                            {totalNutrition.proteins}
-                          </span>
-                        </div>
-                        <div className="w-px h-4 bg-border" />
-                        <div className="flex items-center gap-1">
-                          <Droplet className="w-4 h-4 text-yellow-600" />
-                          <span className="font-semibold text-yellow-600">
-                            {totalNutrition.fats}
-                          </span>
-                        </div>
-                        <div className="w-px h-4 bg-border" />
-                        <div className="flex items-center gap-1">
-                          <Wheat className="w-4 h-4 text-green-600" />
-                          <span className="font-semibold text-green-600">
-                            {totalNutrition.carbs}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="w-px h-4 bg-border" />
-                      <div className="flex items-center gap-1">
-                        <Weight className="w-4 h-4 text-muted-foreground" />
-                        <span className="font-semibold text-muted-foreground text-sm">
-                          {totalWeight}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
-                      <div className="flex items-center gap-1">
-                        <Weight className="w-4 h-4 text-muted-foreground" />
-                        <span className="font-semibold text-muted-foreground text-sm">
-                          {totalWeight}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </button>
+                <NutritionButton
+                  calories={totalNutrition.calories}
+                  proteins={totalNutrition.proteins}
+                  fats={totalNutrition.fats}
+                  carbs={totalNutrition.carbs}
+                  weight={totalWeight}
+                />
               )
             }
             gradientFrom="gradient-meal"
           >
             <div className="space-y-4 pt-4">
-              <div className="space-y-3">
-                {watchItems.length > 0 ? (
-                  watchItems.map((item, index) => {
-                    const isProduct = item.type === 'product';
-                    const itemStyle = isProduct
-                      ? 'gradient-product border border-[#3b82f6]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
-                      : 'gradient-dish border border-[#f97316]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]';
+              {watchItems.length > 0 ? (
+                watchItems.map((item, index) => {
+                  const isProduct = item.type === 'product';
+                  const itemStyle = isProduct
+                    ? 'gradient-product border border-[#3b82f6]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
+                    : 'gradient-dish border border-[#f97316]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]';
 
-                    return (
-                      <div
-                        key={item.instanceId || `${item.type}-${item.itemId}-${index}`}
-                        className={`${itemStyle} rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]`}
-                      >
-                        <ItemContentReadOnly item={item} products={products} dishes={dishes} />
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm">Пусто</p>
-                    <p className="text-xs mt-1">Добавьте продукты или блюда</p>
-                  </div>
-                )}
-              </div>
+                  return (
+                    <div
+                      key={item.instanceId || `${item.type}-${item.itemId}-${index}`}
+                      className={`${itemStyle} rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]`}
+                    >
+                      <ItemContentReadOnly item={item} products={products} dishes={dishes} />
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">Пусто</p>
+                  <p className="text-xs mt-1">Добавьте продукты или блюда</p>
+                </div>
+              )}
             </div>
           </CollapsibleSection>
         </>

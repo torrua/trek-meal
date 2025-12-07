@@ -45,7 +45,7 @@ interface CollapsibleSectionProps {
   icon: React.ElementType;
   children: React.ReactNode;
   isOpen?: boolean;
-  onToggle?: () => void;
+  onToggle?: (sectionId: string) => void;
   actionButton?: React.ReactNode;
   headerContent?: React.ReactNode;
   gradientFrom?: string;
@@ -68,11 +68,11 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 }) => {
   return (
     <div
-      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-hidden transition-all duration-200`}
+      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} collapsible-section`}
     >
       <div
         className="flex items-center justify-between gap-3 p-5 cursor-pointer hover:bg-white/40 dark:hover:bg-black/10 transition-colors"
-        onClick={() => onToggle(id)}
+        onClick={() => onToggle?.(id)}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-background/60 border border-black/5 dark:border-white/10 shadow-sm flex-shrink-0">
@@ -232,7 +232,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
         icon={Info}
         isOpen={openSections.includes('info')}
         onToggle={handleToggleSection}
-        gradientFrom="gradient-trip"
+        gradientFrom="gradient-basic-info"
         gradientVia=""
         gradientTo=""
         actionButton={
@@ -436,7 +436,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
                   meta={(listItemConfig.details?.(p) || [])
                     .filter((d): d is string => typeof d === 'string')
                     .map((text) => ({ icon: participantEntityConfig.getIcon(p), text }))}
-                  menuItems={actions}
+                  menuItems={actions as any}
                   onSelect={() => handleNavigateToParticipant(p.id)}
                   variant="info"
                 />

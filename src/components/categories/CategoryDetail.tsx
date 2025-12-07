@@ -74,7 +74,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   className,
   disableToggle = false,
 }) => {
-  const defaultShadow = 'shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)]';
+  // Удалена unused переменная после замены на shadow-md
 
   // Use CSS variable if provided, otherwise use Tailwind gradient classes
   const gradientClass = gradientCssVar
@@ -82,10 +82,8 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
     : `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo}`;
 
   return (
-    <div
-      className={`${className || 'border border-border'} ${defaultShadow} rounded-xl relative transform`}
-    >
-      <div className={`${gradientClass} rounded-xl absolute inset-0`}></div>
+    <div className={`${className || ''} collapsible-section`}>
+      <div className={`${gradientClass} collapsible-section-gradient`}></div>
       <div className="relative">
         <div
           className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -219,7 +217,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
           for (const product of productsToUpdate) {
             await useProductStore.getState().updateProduct(product.id, {
               ...product,
-              categoryId: undefined,
+              categoryId: null,
             });
           }
 
@@ -275,7 +273,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
             icon={<Info className="w-4 h-4 text-primary" />}
             isOpen={openSections.includes('basic-info')}
             onToggle={onToggleSection}
-            gradientFrom="gradient-category"
+            gradientFrom="gradient-basic-info"
             gradientVia=""
             gradientTo=""
             actionButton={

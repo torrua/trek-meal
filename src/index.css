@@ -302,6 +302,19 @@
   @apply bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5;
 }
 
+.gradient-basic-info {
+  @apply bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5;
+}
+
+/* CollapsibleSection общие стили */
+.collapsible-section {
+  @apply shadow-md rounded-xl relative transform overflow-visible;
+}
+
+.collapsible-section-gradient {
+  @apply rounded-xl absolute inset-px;
+}
+
 .gradient-nutrition {
   @apply bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5;
 }
@@ -328,7 +341,7 @@
 }
 
 .gradient-participant {
-  background: linear-gradient(135deg, #ffccbc 0%, #ffab91 100%);
+  background: linear-gradient(135deg, #ffd0c4 0%, #ffab91 100%);
 }
 
 .gradient-trip {

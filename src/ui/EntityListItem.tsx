@@ -80,7 +80,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
   };
 
   const itemClasses = cn(
-    'group flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3 text-left cursor-pointer',
+    'group flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3 text-left cursor-pointer shadow-sm',
     gradientByVariant[variant],
     {
       'border border-border': !isSelected,

@@ -6,7 +6,6 @@ import {
   CirclePlus,
   Filter,
   Backpack,
-  Info,
   Trash2,
   Copy,
   Share,
@@ -14,13 +13,11 @@ import {
   CheckCheck,
   LayoutList,
   Grid3X3,
-  Edit,
-  ExternalLink,
+  Download,
+  CheckSquare,
   Scale,
   User,
   Users,
-  Download,
-  CheckSquare,
 } from 'lucide-react';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../stores/useEquipmentCategoryStore';
@@ -35,8 +32,7 @@ import EquipmentFiltersComponent, {
 } from '../components/equipment/EquipmentFiltersComponent';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
-import DetailPane from '../ui/DetailPane';
-import InfoField from '../ui/InfoField';
+import EquipmentDetail from '../components/equipment/EquipmentDetail';
 import { equipmentEntityConfig } from '../config/entityConfig';
 import { useViewMode } from '../hooks/useViewMode';
 import {
@@ -57,7 +53,6 @@ const EquipmentPage: React.FC = () => {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [equipmentToDelete, setEquipmentToDelete] = useState<Equipment | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [openSections, setOpenSections] = useState<string[]>(['info']);
 
   const [filters, setFilters] = useState<EquipmentFilters>({
     categoryId: 'all',
@@ -117,12 +112,6 @@ const EquipmentPage: React.FC = () => {
       deleteEquipment(equipmentToDelete.id);
       setEquipmentToDelete(null);
     }
-  };
-
-  const handleToggleSection = (sectionId: string) => {
-    setOpenSections((prev) =>
-      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
-    );
   };
 
   const formatWeight = (weight: number) => {
@@ -408,7 +397,6 @@ const EquipmentPage: React.FC = () => {
                   title={cardConfig.title(equipmentItem)}
                   meta={metaItems}
                   menuItems={entityListActions}
-                  borderColor={equipmentEntityConfig.getBorderColor?.(equipmentItem, context)}
                   variant="equipment"
                 />
               ) : (
@@ -418,7 +406,6 @@ const EquipmentPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(equipmentItem, context)}
                   icon={equipmentEntityConfig.getIcon(equipmentItem)}
                   iconColor={equipmentEntityConfig.getIconColor?.(equipmentItem, context)}
-                  borderColor={equipmentEntityConfig.getBorderColor?.(equipmentItem, context)}
                   variant="equipment"
                   details={cardConfig.details?.(equipmentItem, context)?.map((detail, index) => ({
                     ...detail,
@@ -438,99 +425,9 @@ const EquipmentPage: React.FC = () => {
             })}
           </div>
 
-          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)] pt-2">
+          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)] overflow-y-auto">
             {selectedEquipment ? (
-              <DetailPane
-                sections={[
-                  {
-                    id: 'info',
-                    title: 'Основная информация',
-                    icon: Info,
-                    actionButton: (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEdit(selectedEquipment)}
-                        title="Редактировать снаряжение"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    ),
-                    content: (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <InfoField
-                            icon={Scale}
-                            label="Вес"
-                            value={formatWeight(selectedEquipment.weight)}
-                          />
-                          <InfoField
-                            icon={selectedEquipment.type === 'personal' ? User : Users}
-                            label="Тип"
-                            value={selectedEquipment.type === 'personal' ? 'Личное' : 'Общее'}
-                          />
-                          {selectedEquipment.ownerId &&
-                            (() => {
-                              const owner = participants.find(
-                                (p) => p.id === selectedEquipment.ownerId
-                              );
-                              return owner ? (
-                                <InfoField icon={User} label="Владелец" value={owner.name} />
-                              ) : null;
-                            })()}
-                        </div>
-                        {selectedEquipment.description && (
-                          <div className="p-3 bg-muted/50 rounded-lg">
-                            <label className="block text-sm font-medium text-muted-foreground mb-2">
-                              Описание
-                            </label>
-                            <p className="text-foreground">{selectedEquipment.description}</p>
-                          </div>
-                        )}
-                        {selectedEquipment.link && (
-                          <div>
-                            <label className="block text-sm font-medium text-muted-foreground mb-2">
-                              Ссылка
-                            </label>
-                            <a
-                              href={selectedEquipment.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                              Открыть ссылку
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    ),
-                  },
-                ]}
-                openSections={openSections}
-                onToggleSection={handleToggleSection}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Backpack className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-foreground">
-                        {selectedEquipment.name}
-                      </h2>
-                      <p className="text-muted-foreground">
-                        {categories.find((c) => c.id === selectedEquipment.categoryId)?.name ||
-                          'Без категории'}
-                      </p>
-                    </div>
-                  </div>
-                  <Button variant="secondary" onClick={() => handleEdit(selectedEquipment)}>
-                    <Edit className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Редактировать</span>
-                  </Button>
-                </div>
-              </DetailPane>
+              <EquipmentDetail equipment={selectedEquipment} />
             ) : (
               <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">

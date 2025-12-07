@@ -2,17 +2,11 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
-  Edit,
   Soup,
   Info,
-  Flame,
-  Beef,
-  Droplet,
-  Wheat,
   Weight,
   MapPin,
   Component,
-  ChevronDown,
   Hash,
   Trash2,
   Search,
@@ -49,7 +43,6 @@ import useCategoryStore from '../../stores/useCategoryStore';
 import useTripStore from '../../stores/useTripStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import Button from '../../ui/Button';
-import EditPortionModal from './EditPortionModal';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import FormField from '../../ui/FormField';
@@ -57,6 +50,7 @@ import DropdownSelect from '../../ui/DropdownSelect';
 import { toast } from 'react-hot-toast';
 import Modal from '../../ui/Modal';
 import { tripEntityConfig } from '../../config/entityConfig';
+import NutritionButton from '../../ui/NutritionButton';
 
 interface DishDetailProps {
   dish: Dish | null;
@@ -109,7 +103,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
     <div
       className={
         className ||
-        `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-visible shadow-md`
+        `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} collapsible-section`
       }
     >
       <div
@@ -139,11 +133,9 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 const ProductContentReadOnly: React.FC<{
   dishProduct: DishProduct;
   product: Product;
-  onEditPortion: () => void;
   onRemove: () => void;
   canRemove: boolean;
-}> = ({ dishProduct, product, onEditPortion, onRemove, canRemove }) => {
-  const [showNutrition, setShowNutrition] = useState(!canRemove);
+}> = ({ dishProduct, product, onRemove, canRemove }) => {
   const [showPortionDetails, setShowPortionDetails] = useState(false);
 
   const nutrition = useMemo(() => {
@@ -182,87 +174,28 @@ const ProductContentReadOnly: React.FC<{
         </div>
         <div className="flex items-center gap-2">
           {nutrition && dishProduct.weight && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowNutrition(!showNutrition);
-              }}
-              className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
-            >
-              {showNutrition ? (
-                <>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
-                  <div className="flex items-center gap-1">
-                    <Flame className="w-4 h-4 text-orange-600" />
-                    <span className="text-sm font-semibold text-orange-600">
-                      {nutrition.calories}
-                    </span>
-                  </div>
-                  <div className="w-px h-4 bg-border" />
-                  <div className="flex items-center gap-1">
-                    <Beef className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-semibold text-blue-600">
-                      {nutrition.proteins}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Droplet className="w-4 h-4 text-yellow-600" />
-                    <span className="text-sm font-semibold text-yellow-600">{nutrition.fats}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Wheat className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-semibold text-green-600">{nutrition.carbs}</span>
-                  </div>
-                  <div className="w-px h-4 bg-border" />
-                  <div className="flex items-center gap-1">
-                    <Weight className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-semibold text-muted-foreground">
-                      {dishProduct.weight}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
-                  <div className="flex items-center gap-1">
-                    <Weight className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-semibold text-muted-foreground">
-                      {dishProduct.weight}
-                    </span>
-                  </div>
-                </>
-              )}
-            </button>
+            <NutritionButton
+              calories={nutrition.calories}
+              proteins={nutrition.proteins}
+              fats={nutrition.fats}
+              carbs={nutrition.carbs}
+              weight={dishProduct.weight}
+            />
           )}
           {canRemove && (
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditPortion();
-                }}
-                className="!border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/15 text-blue-600"
-                title="Открыть продукт"
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemove();
-                }}
-                className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
-                title="Удалить продукт"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+              className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
+              title="Удалить продукт"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
           )}
         </div>
       </div>
@@ -280,8 +213,8 @@ const ProductContentReadOnly: React.FC<{
                 </span>
               </span>
               <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-                <Weight className="w-3.5 h-3.5" />
                 {dishProduct.weight}
+                <Weight className="w-3.5 h-3.5" />
               </span>
             </div>
           </div>
@@ -295,8 +228,6 @@ const EditableProductNutrition: React.FC<{ product: Product | null; weight: numb
   product,
   weight,
 }) => {
-  const [show, setShow] = useState(true);
-
   if (!product || !weight) return null;
 
   const multiplier = weight / 100;
@@ -308,51 +239,14 @@ const EditableProductNutrition: React.FC<{ product: Product | null; weight: numb
   };
 
   return (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        setShow(!show);
-      }}
-      className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-lg border border-border hover:bg-muted transition-all text-xs"
+    <NutritionButton
+      calories={nutrition.calories}
+      proteins={nutrition.proteins}
+      fats={nutrition.fats}
+      carbs={nutrition.carbs}
+      weight={weight}
       title={`${nutrition.calories} ккал`}
-      type="button"
-    >
-      {show ? (
-        <>
-          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
-          <div className="flex items-center gap-1">
-            <Flame className="w-4 h-4 text-orange-600" />
-            <span className="text-sm font-semibold text-orange-600">{nutrition.calories}</span>
-          </div>
-          <div className="w-px h-4 bg-border" />
-          <div className="flex items-center gap-1">
-            <Beef className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-semibold text-blue-600">{nutrition.proteins}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Droplet className="w-4 h-4 text-yellow-600" />
-            <span className="text-sm font-semibold text-yellow-600">{nutrition.fats}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Wheat className="w-4 h-4 text-green-600" />
-            <span className="text-sm font-semibold text-green-600">{nutrition.carbs}</span>
-          </div>
-          <div className="w-px h-4 bg-border" />
-          <div className="flex items-center gap-1">
-            <Weight className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-semibold text-muted-foreground">{weight}</span>
-          </div>
-        </>
-      ) : (
-        <>
-          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
-          <div className="flex items-center gap-1">
-            <Weight className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-semibold text-muted-foreground">{weight}</span>
-          </div>
-        </>
-      )}
-    </button>
+    />
   );
 };
 
@@ -491,14 +385,12 @@ const DishDetail: React.FC<DishDetailProps> = ({
 }) => {
   const navigate = useNavigate();
   const { products: allProducts } = useProductStore();
-  const { removeProductFromDish, updateProductInDish, updateDish, addDish } = useDishStore();
+  const { removeProductFromDish, updateDish, addDish } = useDishStore();
   const { getTripsUsingDish } = useTripStore();
   const { categories } = useCategoryStore();
   const { searchByCategory } = useSettingsStore();
 
-  const [editingPortionIndex, setEditingPortionIndex] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [showHeaderNutrition, setShowHeaderNutrition] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -708,27 +600,6 @@ const DishDetail: React.FC<DishDetailProps> = ({
     }
   };
 
-  const handleEditPortion = (productIndex: number) => {
-    setEditingPortionIndex(productIndex);
-  };
-
-  const handleSavePortion = (newWeight: number) => {
-    if (editingPortionIndex !== null) {
-      if (isEditing) {
-        const newProducts = [...formProducts];
-        newProducts[editingPortionIndex].weight = newWeight;
-        setFormProducts(newProducts);
-      } else if (dish) {
-        updateProductInDish(dish.id, editingPortionIndex, newWeight);
-      }
-    }
-    setEditingPortionIndex(null);
-  };
-
-  const handleClosePortionModal = () => {
-    setEditingPortionIndex(null);
-  };
-
   const confirmProductNavigation = () => {
     if (!isEditing) return true;
     return window.confirm('Несохранённые изменения будут потеряны. Продолжить?');
@@ -822,24 +693,6 @@ const DishDetail: React.FC<DishDetailProps> = ({
     };
   }, [showAddMenu]);
 
-  const editingProduct =
-    editingPortionIndex !== null
-      ? allProducts.find(
-          (p) =>
-            p.id ===
-            (isEditing
-              ? formProducts[editingPortionIndex]?.productId
-              : currentProducts[editingPortionIndex]?.productId)
-        ) || null
-      : null;
-
-  const editingDishProduct =
-    editingPortionIndex !== null
-      ? isEditing
-        ? formProducts[editingPortionIndex] || null
-        : currentProducts[editingPortionIndex] || null
-      : null;
-
   // Если нет блюда и не режим создания, не рендерим ничего (или плейсхолдер снаружи)
   if (!dish && !isCreating) return null;
 
@@ -894,13 +747,13 @@ const DishDetail: React.FC<DishDetailProps> = ({
                 e.stopPropagation();
                 handleStartEdit();
               }}
-              icon={Edit}
+              icon={Soup}
             >
               Редактировать
             </Button>
           )
         }
-        gradientFrom="gradient-primary"
+        gradientFrom="gradient-basic-info"
         gradientVia=""
         gradientTo=""
       >
@@ -962,57 +815,13 @@ const DishDetail: React.FC<DishDetailProps> = ({
         }
         headerContent={
           currentProducts.length > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowHeaderNutrition(!showHeaderNutrition);
-              }}
-              className="flex items-center gap-1.5 px-3 py-2 bg-muted/50 rounded-lg border border-border hover:bg-muted transition-all"
-            >
-              {showHeaderNutrition ? (
-                <>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Flame className="w-3.5 h-3.5 text-orange-600" />
-                      <span className="font-semibold text-orange-600">
-                        {totalNutrition.calories}
-                      </span>
-                    </div>
-                    <div className="w-px h-4 bg-border" />
-                    <div className="flex items-center gap-1">
-                      <Beef className="w-3.5 h-3.5 text-blue-600" />
-                      <span className="font-semibold text-blue-600">{totalNutrition.proteins}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Droplet className="w-3.5 h-3.5 text-yellow-600" />
-                      <span className="font-semibold text-yellow-600">{totalNutrition.fats}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Wheat className="w-3.5 h-3.5 text-green-600" />
-                      <span className="font-semibold text-green-600">{totalNutrition.carbs}</span>
-                    </div>
-                  </div>
-                  <div className="w-px h-4 bg-border" />
-                  <div className="flex items-center gap-1">
-                    <Weight className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="font-semibold text-muted-foreground text-sm">
-                      {totalWeight}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
-                  <div className="flex items-center gap-1">
-                    <Weight className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="font-semibold text-muted-foreground text-sm">
-                      {totalWeight}
-                    </span>
-                  </div>
-                </>
-              )}
-            </button>
+            <NutritionButton
+              calories={totalNutrition.calories}
+              proteins={totalNutrition.proteins}
+              fats={totalNutrition.fats}
+              carbs={totalNutrition.carbs}
+              weight={totalWeight}
+            />
           )
         }
         gradientFrom="gradient-dish"
@@ -1193,7 +1002,6 @@ const DishDetail: React.FC<DishDetailProps> = ({
                       <ProductContentReadOnly
                         dishProduct={dishProduct}
                         product={product}
-                        onEditPortion={() => handleEditPortion(index)}
                         onRemove={() => handleDeleteProduct(index)}
                         canRemove={isEditing ? currentProducts.length > 1 : false}
                       />
@@ -1209,8 +1017,11 @@ const DishDetail: React.FC<DishDetailProps> = ({
       {/* Trips Section - Hide if creating */}
       {!isCreating && tripsUsingDish.length > 0 && (
         <CollapsibleSection
+          id="trips"
           title="Поездки"
           icon={<MapPin className="h-4 w-4" />}
+          isOpen={openSections.includes('trips')}
+          onToggle={onToggleSection}
           gradientFrom="gradient-primary"
         >
           <div className="space-y-2">
@@ -1229,14 +1040,6 @@ const DishDetail: React.FC<DishDetailProps> = ({
           </div>
         </CollapsibleSection>
       )}
-
-      <EditPortionModal
-        isOpen={editingPortionIndex !== null}
-        onClose={handleClosePortionModal}
-        onSave={handleSavePortion}
-        product={editingProduct}
-        dishProduct={editingDishProduct}
-      />
 
       {/* Save Strategy Modal */}
       <Modal

@@ -29,7 +29,7 @@ interface CollapsibleSectionProps {
   icon: React.ReactNode;
   children: React.ReactNode;
   isOpen?: boolean;
-  onToggle?: () => void;
+  onToggle?: (sectionId: string) => void;
   actionButton?: React.ReactNode;
   summaryContent?: React.ReactNode;
   headerContent?: React.ReactNode;
@@ -54,11 +54,11 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 }) => {
   return (
     <div
-      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-hidden ${gradientFrom.includes('gradient-') ? gradientFrom : ''}`}
+      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} collapsible-section ${gradientFrom.includes('gradient-') ? gradientFrom : ''}`}
     >
       <div
         className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
-        onClick={() => onToggle(id)}
+        onClick={() => onToggle?.(id)}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
@@ -127,7 +127,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product, editTrigger }) =
         icon={<Info className="w-4 h-4 text-primary" />}
         isOpen={openSections.includes('info')}
         onToggle={handleToggleSection}
-        gradientFrom="gradient-primary"
+        gradientFrom="gradient-basic-info"
         gradientVia=""
         gradientTo=""
         actionButton={

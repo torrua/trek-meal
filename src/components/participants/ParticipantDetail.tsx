@@ -44,7 +44,7 @@ interface CollapsibleSectionProps {
   icon: React.ElementType;
   children: React.ReactNode;
   isOpen?: boolean;
-  onToggle?: () => void;
+  onToggle?: (sectionId: string) => void;
   actionButton?: React.ReactNode;
   headerContent?: React.ReactNode;
   gradientFrom?: string;
@@ -67,11 +67,11 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
 }) => {
   return (
     <div
-      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-hidden transition-all duration-200`}
+      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} collapsible-section`}
     >
       <div
         className="flex items-center justify-between gap-3 p-5 cursor-pointer hover:bg-white/40 dark:hover:bg-black/10 transition-colors"
-        onClick={() => onToggle(id)}
+        onClick={() => onToggle?.(id)}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-background/60 border border-black/5 dark:border-white/10 shadow-sm flex-shrink-0">
@@ -197,7 +197,7 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
         icon={User}
         isOpen={sections.includes('info')}
         onToggle={toggleSection}
-        gradientFrom="gradient-participant"
+        gradientFrom="gradient-basic-info"
         gradientVia=""
         gradientTo=""
         actionButton={
@@ -258,7 +258,9 @@ const ParticipantDetail: React.FC<ParticipantDetailProps> = ({
                     icon={Award}
                     options={EXPERIENCE_OPTIONS}
                     value={formData.experienceLevel}
-                    onChange={(val) => handleChange('experienceLevel', val)}
+                    onChange={(val) =>
+                      handleChange('experienceLevel', Array.isArray(val) ? val[0] : val)
+                    }
                   />
                 </div>
               </div>

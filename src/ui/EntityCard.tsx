@@ -214,7 +214,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
   };
 
   const cardClasses = cn(
-    'group relative flex flex-col rounded-xl p-4 cursor-pointer bg-card',
+    'group relative flex flex-col rounded-xl p-4 cursor-pointer bg-card shadow-sm',
     gradientByVariant[variant],
     {
       'border border-border': !isSelected,

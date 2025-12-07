@@ -25,7 +25,7 @@ import type { EquipmentCategory } from '../types';
 import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard from '../ui/EntityCard';
-import EntityListItem, { _MetaItem } from '../ui/EntityListItem';
+import EntityListItem from '../ui/EntityListItem';
 import DetailPane from '../ui/DetailPane'; // Импортируем DetailPane
 import { equipmentCategoryEntityConfig } from '../config/entityConfig';
 import { useViewMode } from '../hooks/useViewMode';
@@ -369,6 +369,15 @@ const EquipmentCategoriesPage: React.FC = () => {
                 onDelete: () => handleRequestDelete(category),
               });
 
+              const entityActions = actions.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
               const entityListActions = actions.map((action) => ({
                 ...action,
                 onClick: (e: React.MouseEvent) => {
@@ -395,6 +404,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                   onMultiSelect={() => toggleCategorySelection(category.id)}
                   menuItems={entityListActions}
                   showMultiSelect={showMultiSelect}
+                  borderColor={equipmentCategoryEntityConfig.getBorderColor?.(category)}
                   variant="category"
                 />
               ) : (
@@ -403,6 +413,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                   title={equipmentCategoryEntityConfig.views.card.title(category)}
                   icon={equipmentCategoryEntityConfig.getIcon(category)}
                   iconColor={equipmentCategoryEntityConfig.getIconColor?.(category)}
+                  borderColor={equipmentCategoryEntityConfig.getBorderColor?.(category)}
                   variant="category"
                   details={[
                     {
@@ -416,7 +427,7 @@ const EquipmentCategoriesPage: React.FC = () => {
                   isMultiSelected={selectedCategoryIds.includes(category.id)}
                   onSelect={() => setActiveId(activeId === category.id ? null : category.id)}
                   onMultiSelect={() => toggleCategorySelection(category.id)}
-                  menuItems={actions}
+                  menuItems={entityActions}
                   showMultiSelect={showMultiSelect}
                 />
               );

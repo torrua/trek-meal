@@ -342,8 +342,26 @@ const TripsPage: React.FC = () => {
                 onDelete: () => handleRequestDelete(trip),
               });
 
-              const metaMap: Record<string, MetaItem | null> = {
-                dates: trip.startDate
+              const entityActions = actions.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
+              const entityListActions = actions.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
+              const metaMap: Record<string, MetaItem> = {
+                startDate: trip.startDate
                   ? {
                       icon: Calendar,
                       text: formatDate(trip.startDate),
@@ -376,29 +394,45 @@ const TripsPage: React.FC = () => {
                   key={trip.id}
                   title={cardConfig.title(trip)}
                   meta={metaItems}
-                  menuItems={actions}
-                  isSelected={activeId === trip.id}
-                  isMultiSelected={selectedTripIds.includes(trip.id)}
-                  onSelect={() => onSelectTrip(trip.id)}
-                  onMultiSelect={() => toggleTripSelection(trip.id)}
-                  showMultiSelect={showMultiSelect}
+                  menuItems={entityListActions}
+                  borderColor={tripEntityConfig.getBorderColor?.(trip)}
                   variant="trip"
                 />
               ) : (
                 <EntityCard
                   key={trip.id}
                   title={cardConfig.title(trip)}
-                  subtitle={STATUS_CONFIG[getEffectiveStatus(trip)].label}
+                  subtitle={cardConfig.subtitle?.(trip)}
                   icon={tripEntityConfig.getIcon(trip)}
-                  iconColor={tripEntityConfig.getIconColor && tripEntityConfig.getIconColor(trip)}
-                  details={getTripDetails(trip)}
-                  menuItems={actions}
+                  iconColor={tripEntityConfig.getIconColor?.(trip)}
+                  borderColor={tripEntityConfig.getBorderColor?.(trip)}
+                  variant="trip"
+                  details={[
+                    {
+                      key: 'dates',
+                      icon: Calendar,
+                      text: trip.startDate ? formatDate(trip.startDate) : 'Нет даты',
+                      title: 'Начало',
+                    },
+                    {
+                      key: 'participants',
+                      icon: Users,
+                      text: trip.participants.length,
+                      title: 'Участники',
+                    },
+                  ]}
                   isSelected={activeId === trip.id}
                   isMultiSelected={selectedTripIds.includes(trip.id)}
                   onSelect={() => onSelectTrip(trip.id)}
                   onMultiSelect={() => toggleTripSelection(trip.id)}
+                  onRequestMultiSelectMode={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedTripIds([trip.id]);
+                    }
+                  }}
+                  menuItems={entityActions}
                   showMultiSelect={showMultiSelect}
-                  variant="trip"
                 />
               );
             })}

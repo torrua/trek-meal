@@ -36,7 +36,7 @@ export interface DetailItem {
 interface EntityCardProps {
   title: string;
   subtitle?: React.ReactNode;
-  icon: React.ElementType | (() => React.ReactElement);
+  icon: React.ElementType | React.ReactElement;
   iconColor?: string;
   details?: DetailItem[];
   menuItems?: MenuItem[];
@@ -164,11 +164,6 @@ const EntityCard: React.FC<EntityCardProps> = ({
         onSelect?.();
       }
     },
-    onDoubleClick: (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      onRequestMultiSelectMode?.();
-    },
     onKeyDown: (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -178,6 +173,11 @@ const EntityCard: React.FC<EntityCardProps> = ({
           onSelect?.();
         }
       }
+    },
+    onDoubleClick: (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onRequestMultiSelectMode?.();
     },
     role: 'button',
     tabIndex: onSelect ? 0 : -1,
@@ -199,12 +199,26 @@ const EntityCard: React.FC<EntityCardProps> = ({
     trip: 'gradient-trip',
   };
 
+  const ringColorByVariant: Record<NonNullable<EntityCardProps['variant']>, string> = {
+    neutral: 'ring-blue-500/35',
+    info: 'ring-indigo-500/35',
+    composition: 'ring-green-500/35',
+    meal: 'ring-green-500/35',
+    'meal-type': 'ring-yellow-500/35',
+    dish: 'ring-orange-500/35',
+    product: 'ring-sky-500/35',
+    category: 'ring-yellow-500/35',
+    equipment: 'ring-indigo-500/35',
+    participant: 'ring-orange-500/35',
+    trip: 'ring-purple-500/35',
+  };
+
   const cardClasses = cn(
     'group relative flex flex-col rounded-xl p-4 cursor-pointer bg-card',
     gradientByVariant[variant],
     {
       'border border-border': !isSelected,
-      'shadow-md ring-2 ring-primary/20': isSelected,
+      [`shadow-md ring-2 ${ringColorByVariant[variant]}`]: isSelected,
     },
     className
   );
@@ -235,8 +249,8 @@ const EntityCard: React.FC<EntityCardProps> = ({
             </div>
           ) : (
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/80 transition-colors duration-200">
-              {typeof Icon === 'function' ? (
-                <Icon />
+              {React.isValidElement(Icon) ? (
+                Icon
               ) : (
                 <Icon className={`h-4 w-4 ${_iconColor || 'text-primary'}`} />
               )}

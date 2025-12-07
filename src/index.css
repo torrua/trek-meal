@@ -45,6 +45,19 @@
     /* Focus ring */
     --ring: 35 131 226;
 
+    /* Entity ring colors by variant */
+    --ring-neutral: 59 130 246;
+    --ring-info: 99 102 241;
+    --ring-composition: 34 197 94;
+    --ring-meal: 34 197 94;
+    --ring-meal-type: 234 179 8;
+    --ring-dish: 249 115 22;
+    --ring-product: 14 165 233;
+    --ring-category: 234 179 8;
+    --ring-equipment: 99 102 241;
+    --ring-participant: 249 115 22;
+    --ring-trip: 168 85 247;
+
     /* Secondary */
     --secondary: 247 246 243;
     --secondary-foreground: 55 53 47;

@@ -1,6 +1,6 @@
 // src/hooks/useTripDates.ts
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { addDays, differenceInCalendarDays, parseISO } from 'date-fns';
 import type { TripData } from '../types';
 
@@ -11,12 +11,35 @@ export const useTripDates = (initialData: TripData | null) => {
   // Внутреннее состояние для количества дней
   const [days, setDays] = useState(initialData?.days || 1);
 
+  // Отслеживаем предыдущие значения для сравнения
+  const prevDataRef = useRef<{
+    startDate?: string;
+    endDate?: string;
+    days?: number;
+  } | null>(null);
+
   // Эффект для инициализации и синхронизации с внешними данными
   useEffect(() => {
-    const start = initialData?.startDate ? parseISO(initialData.startDate) : null;
-    const end = initialData?.endDate ? parseISO(initialData.endDate) : null;
-    setDateRange([start, end]);
-    setDays(initialData?.days || 1);
+    const currentData = {
+      startDate: initialData?.startDate,
+      endDate: initialData?.endDate,
+      days: initialData?.days,
+    };
+
+    // Проверяем, изменились ли данные
+    const hasChanged =
+      !prevDataRef.current ||
+      currentData.startDate !== prevDataRef.current.startDate ||
+      currentData.endDate !== prevDataRef.current.endDate ||
+      currentData.days !== prevDataRef.current.days;
+
+    if (hasChanged) {
+      const start = currentData.startDate ? parseISO(currentData.startDate) : null;
+      const end = currentData.endDate ? parseISO(currentData.endDate) : null;
+      setDateRange([start, end]);
+      setDays(currentData.days || 1);
+      prevDataRef.current = currentData;
+    }
   }, [initialData?.startDate, initialData?.endDate, initialData?.days]);
 
   const handleDateRangeChange = (dates: [Date | null, Date | null]) => {

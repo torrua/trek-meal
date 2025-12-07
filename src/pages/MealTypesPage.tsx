@@ -405,6 +405,24 @@ const MealTypesPage: React.FC = () => {
                 },
               ];
 
+              const entityActions = menuItems.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
+              const entityListActions = menuItems.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
               return viewMode === 'compact' ? (
                 <EntityListItem
                   key={mealType.id}
@@ -420,9 +438,10 @@ const MealTypesPage: React.FC = () => {
                   isMultiSelected={selectedMealTypeIds.includes(mealType.id)}
                   onSelect={() => setActiveId(activeId === mealType.id ? null : mealType.id)}
                   onMultiSelect={() => toggleMealTypeSelection(mealType.id)}
-                  menuItems={menuItems}
+                  menuItems={entityListActions}
                   data-testid={`meal-type-card-${mealType.id}`}
                   showMultiSelect={showMultiSelect}
+                  borderColor={mealTypeEntityConfig.getBorderColor?.(mealType)}
                   variant="meal-type"
                 />
               ) : (
@@ -431,6 +450,8 @@ const MealTypesPage: React.FC = () => {
                   title={mealTypeEntityConfig.views.card.title(mealType)}
                   icon={mealTypeEntityConfig.getIcon(mealType)}
                   iconColor={mealTypeEntityConfig.getIconColor?.(mealType)}
+                  borderColor={mealTypeEntityConfig.getBorderColor?.(mealType)}
+                  variant="meal-type"
                   details={[
                     {
                       key: 'meals',
@@ -443,10 +464,15 @@ const MealTypesPage: React.FC = () => {
                   isMultiSelected={selectedMealTypeIds.includes(mealType.id)}
                   onSelect={() => setActiveId(activeId === mealType.id ? null : mealType.id)}
                   onMultiSelect={() => toggleMealTypeSelection(mealType.id)}
-                  menuItems={menuItems}
+                  onRequestMultiSelectMode={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedMealTypeIds([mealType.id]);
+                    }
+                  }}
+                  menuItems={entityActions}
                   data-testid={`meal-type-card-${mealType.id}`}
                   showMultiSelect={showMultiSelect}
-                  variant="meal-type"
                 />
               );
             })}

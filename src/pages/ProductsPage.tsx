@@ -352,6 +352,24 @@ const ProductsPage: React.FC = () => {
                 onDelete: () => handleRequestDelete(product),
               });
 
+              const entityActions = actions.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
+              const entityListActions = actions.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
               const metaMap: Record<string, MetaItem> = {
                 calories: {
                   icon: Flame,
@@ -402,8 +420,9 @@ const ProductsPage: React.FC = () => {
                       setSelectedProductIds([product.id]);
                     }
                   }}
-                  menuItems={actions}
+                  menuItems={entityListActions}
                   showMultiSelect={showMultiSelect}
+                  borderColor={productEntityConfig.getBorderColor?.(product, { category })}
                   variant="product"
                 />
               ) : (
@@ -413,6 +432,7 @@ const ProductsPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(product, { category })}
                   icon={productEntityConfig.getIcon(product)}
                   iconColor={productEntityConfig.getIconColor?.(product, { category })}
+                  borderColor={productEntityConfig.getBorderColor?.(product, { category })}
                   variant="product"
                   nutrition={{
                     calories: Math.round(product.calories || 0),
@@ -431,7 +451,7 @@ const ProductsPage: React.FC = () => {
                       setSelectedProductIds([product.id]);
                     }
                   }}
-                  menuItems={actions}
+                  menuItems={entityActions}
                   showMultiSelect={showMultiSelect}
                 />
               );

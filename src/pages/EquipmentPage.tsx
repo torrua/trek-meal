@@ -357,6 +357,25 @@ const EquipmentPage: React.FC = () => {
                 onExport: () => handleExport(equipmentItem),
                 onDelete: () => handleRequestDelete(equipmentItem),
               });
+
+              const entityActions = actions.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
+              const entityListActions = actions.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
               const context = {
                 category,
                 owner,
@@ -388,14 +407,8 @@ const EquipmentPage: React.FC = () => {
                   key={equipmentItem.id}
                   title={cardConfig.title(equipmentItem)}
                   meta={metaItems}
-                  menuItems={actions}
-                  isSelected={activeId === equipmentItem.id}
-                  isMultiSelected={selectedEquipmentIds.includes(equipmentItem.id)}
-                  onSelect={() =>
-                    setActiveId(activeId === equipmentItem.id ? null : equipmentItem.id)
-                  }
-                  onMultiSelect={() => toggleEquipmentSelection(equipmentItem.id)}
-                  showMultiSelect={showMultiSelect}
+                  menuItems={entityListActions}
+                  borderColor={equipmentEntityConfig.getBorderColor?.(equipmentItem, context)}
                   variant="equipment"
                 />
               ) : (
@@ -405,11 +418,13 @@ const EquipmentPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(equipmentItem, context)}
                   icon={equipmentEntityConfig.getIcon(equipmentItem)}
                   iconColor={equipmentEntityConfig.getIconColor?.(equipmentItem, context)}
+                  borderColor={equipmentEntityConfig.getBorderColor?.(equipmentItem, context)}
+                  variant="equipment"
                   details={cardConfig.details?.(equipmentItem, context)?.map((detail, index) => ({
                     ...detail,
                     key: `equipment-detail-${index}`,
                   }))}
-                  menuItems={actions}
+                  menuItems={entityActions}
                   isSelected={activeId === equipmentItem.id}
                   isMultiSelected={selectedEquipmentIds.includes(equipmentItem.id)}
                   onSelect={() =>
@@ -418,7 +433,6 @@ const EquipmentPage: React.FC = () => {
                   onMultiSelect={() => toggleEquipmentSelection(equipmentItem.id)}
                   data-testid={`equipment-card-${equipmentItem.id}`}
                   showMultiSelect={showMultiSelect}
-                  variant="equipment"
                 />
               );
             })}

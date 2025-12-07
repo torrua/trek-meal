@@ -65,12 +65,26 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
     trip: 'gradient-trip',
   };
 
+  const ringColorByVariant: Record<NonNullable<EntityListItemProps['variant']>, string> = {
+    neutral: 'ring-blue-500/35',
+    info: 'ring-indigo-500/35',
+    composition: 'ring-green-500/35',
+    meal: 'ring-green-500/35',
+    'meal-type': 'ring-yellow-500/35',
+    dish: 'ring-orange-500/35',
+    product: 'ring-sky-500/35',
+    category: 'ring-yellow-500/35',
+    equipment: 'ring-indigo-500/35',
+    participant: 'ring-orange-500/35',
+    trip: 'ring-purple-500/35',
+  };
+
   const itemClasses = cn(
     'group flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3 text-left cursor-pointer',
     gradientByVariant[variant],
     {
       'border border-border': !isSelected,
-      'shadow-md ring-2 ring-primary/20': isSelected,
+      [`shadow-md ring-2 ${ringColorByVariant[variant]}`]: isSelected,
     }
   );
 

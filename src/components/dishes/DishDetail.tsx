@@ -118,7 +118,9 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
-            {icon}
+            {typeof icon === 'function'
+              ? React.createElement(icon, { className: 'h-4 w-4' })
+              : icon}
           </div>
           <h2 className="text-lg font-semibold truncate">{title}</h2>
           {summaryContent && <div className="ml-2 flex-shrink-0">{summaryContent}</div>}
@@ -404,8 +406,6 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
           <div className="flex items-center gap-2">
             <Component
               className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
-              role="button"
-              tabIndex={0}
               aria-label="Перетащить продукт"
               {...attributes}
               {...listeners}
@@ -1208,7 +1208,11 @@ const DishDetail: React.FC<DishDetailProps> = ({
 
       {/* Trips Section - Hide if creating */}
       {!isCreating && tripsUsingDish.length > 0 && (
-        <CollapsibleSection title="Поездки" icon={MapPin} gradientFrom="gradient-primary">
+        <CollapsibleSection
+          title="Поездки"
+          icon={<MapPin className="h-4 w-4" />}
+          gradientFrom="gradient-primary"
+        >
           <div className="space-y-2">
             {tripsUsingDish.map((t) => (
               <div

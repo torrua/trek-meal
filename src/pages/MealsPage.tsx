@@ -480,6 +480,7 @@ const MealsPage: React.FC = () => {
                   }}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
+                  borderColor={mealEntityConfig.getBorderColor?.(meal)}
                   variant="meal"
                 />
               ) : (
@@ -491,6 +492,7 @@ const MealsPage: React.FC = () => {
                   })}
                   icon={mealEntityConfig.getIcon(meal)}
                   iconColor={mealEntityConfig.getIconColor?.()}
+                  borderColor={mealEntityConfig.getBorderColor?.(meal)}
                   isSelected={activeId === meal.id}
                   isMultiSelected={selectedMealIds.includes(meal.id)}
                   onSelect={

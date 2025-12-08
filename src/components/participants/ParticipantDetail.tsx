@@ -23,7 +23,7 @@ import useTripStore from '../../stores/useTripStore';
 import useEquipmentStore from '../../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../../stores/useEquipmentCategoryStore';
 import useParticipantStore from '../../stores/useParticipantStore'; // Добавили импорт стора
-import { formatDate } from '../../utils/index';
+import { formatDate } from '../../utils';
 import { EXPERIENCE_CONFIG, EXPERIENCE_OPTIONS } from '../../constants/participants'; // Импорт опций
 import { useNavigate } from 'react-router-dom';
 import { isFuture, parseISO } from 'date-fns';

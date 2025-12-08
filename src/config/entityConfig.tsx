@@ -12,7 +12,7 @@ import type {
   MealType,
   EquipmentCategory,
 } from '../types';
-import { formatDate, getEffectiveStatus, calculateAge } from '../utils/index';
+import { formatDate, getEffectiveStatus, calculateAge } from '../utils';
 import { DIFFICULTY_CONFIG, STATUS_CONFIG } from '../constants/trips';
 import { EXPERIENCE_CONFIG } from '../constants/participants';
 import {

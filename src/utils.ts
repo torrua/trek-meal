@@ -1,6 +1,6 @@
 // src/utils.ts
 
-import { parseISO } from 'date-fns';
+import { parseISO, isAfter, isBefore, startOfDay } from 'date-fns';
 import type { Trip, Product, Participant, Dish, MealPlanItem } from './types';
 
 export const calculateAge = (birthDateString?: string): number | null => {
@@ -19,6 +19,24 @@ export const calculateAge = (birthDateString?: string): number | null => {
     console.error('Invalid date format for age calculation:', birthDateString);
     return null;
   }
+};
+
+export const getEffectiveStatus = (
+  trip: Pick<Trip, 'status' | 'startDate' | 'endDate'>
+): 'planning' | 'active' | 'completed' => {
+  if (trip.status !== 'planning') {
+    return trip.status;
+  }
+  const today = startOfDay(new Date());
+  const start = parseISO(trip.startDate);
+  const end = parseISO(trip.endDate);
+  if (isBefore(today, start)) {
+    return 'planning';
+  }
+  if (isAfter(today, end)) {
+    return 'completed';
+  }
+  return 'active';
 };
 
 export const getMealName = (mealNumber: number, totalMeals: number): string => {

@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import useTripStore from '../stores/useTripStore';
 import useSearchStore from '../stores/useSearchStore';
 import type { Trip, TripData } from '../types';
-import { getEffectiveStatus } from '../utils/index';
+import { getEffectiveStatus } from '../utils';
 import { toast } from 'react-hot-toast';
 import { exportTripToJson } from '../utils/backup';
 

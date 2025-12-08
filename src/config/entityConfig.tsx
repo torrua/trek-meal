@@ -14,7 +14,7 @@ import type {
 } from '../types';
 import { formatDate, getEffectiveStatus, calculateAge } from '../utils/index';
 import { DIFFICULTY_CONFIG, STATUS_CONFIG } from '../constants/trips';
-import { EXPERIENCE_CONFIG, GENDER_CONFIG } from '../constants/participants';
+import { EXPERIENCE_CONFIG } from '../constants/participants';
 import {
   MapPin,
   Users,
@@ -143,22 +143,17 @@ type ActionHandler<T = Record<string, unknown>> =
 interface EntityConfig<T> {
   getIcon: (entity: T, context?: Record<string, unknown>) => React.ElementType;
   getIconColor?: (entity: T, context?: Record<string, unknown>) => string;
-  getBorderColor: (entity: T, context?: Record<string, unknown>) => string;
   views: {
     card: CardViewConfig<T>;
     listItem: ListItemViewConfig<T>;
   };
-  getActions: <A extends ActionHandler<T>>(handlers: A) => MenuItem[];
+  getActions: (options: ActionHandler<T>) => MenuItem[];
 }
 
 // --- TRIP ---
 export const tripEntityConfig: EntityConfig<Trip> = {
   getIcon: (trip) => DIFFICULTY_CONFIG[trip.difficulty].icon,
   getIconColor: (trip) => DIFFICULTY_CONFIG[trip.difficulty].colorClassName,
-  getBorderColor: (trip) => {
-    const status = getEffectiveStatus(trip);
-    return status === 'planning' ? '#f97316' : status === 'active' ? '#8b5cf6' : '#6b7280';
-  },
   views: {
     card: {
       title: (trip) => trip.name,
@@ -209,7 +204,6 @@ export const tripEntityConfig: EntityConfig<Trip> = {
 export const participantEntityConfig: EntityConfig<Participant> = {
   getIcon: (p) => EXPERIENCE_CONFIG[p.experienceLevel].icon,
   getIconColor: (p) => EXPERIENCE_CONFIG[p.experienceLevel].colorClassName,
-  getBorderColor: (p) => GENDER_CONFIG[p.gender].color,
   views: {
     card: {
       title: (p) => p.name,
@@ -263,7 +257,6 @@ export const participantEntityConfig: EntityConfig<Participant> = {
 export const productEntityConfig: EntityConfig<Product> = {
   getIcon: () => Component,
   getIconColor: (_p, _ctx) => 'text-[#0277BD]',
-  getBorderColor: (_p, _ctx) => '#0ea5e9',
   views: {
     card: {
       title: (product) => product.name,
@@ -308,7 +301,6 @@ export const productEntityConfig: EntityConfig<Product> = {
 export const dishEntityConfig: EntityConfig<Dish> = {
   getIcon: () => Soup,
   getIconColor: () => 'text-[#EF6C00]',
-  getBorderColor: () => 'oklch(69.78% 0.197 45.40)',
   views: {
     card: {
       title: (dish) => dish.name,
@@ -335,7 +327,6 @@ export const dishEntityConfig: EntityConfig<Dish> = {
 export const equipmentEntityConfig: EntityConfig<Equipment> = {
   getIcon: () => Backpack,
   getIconColor: (_e, _ctx) => 'text-[#283593]',
-  getBorderColor: (_e, _ctx) => '#6b7280',
   views: {
     card: {
       title: (e) => e.name,
@@ -392,7 +383,6 @@ export const equipmentEntityConfig: EntityConfig<Equipment> = {
 export const categoryEntityConfig: EntityConfig<Category> = {
   getIcon: () => Tag,
   getIconColor: () => 'text-[#F57F17]',
-  getBorderColor: () => '#6b7280',
   views: {
     card: {
       title: (c) => c.name,
@@ -420,7 +410,6 @@ export const categoryEntityConfig: EntityConfig<Category> = {
 export const mealTypeEntityConfig: EntityConfig<MealType> = {
   getIcon: () => Tag,
   getIconColor: () => 'text-[#F57F17]',
-  getBorderColor: () => '#6b7280',
   views: {
     card: {
       title: (mt) => mt.name,
@@ -445,7 +434,6 @@ export const mealTypeEntityConfig: EntityConfig<MealType> = {
 export const equipmentCategoryEntityConfig: EntityConfig<EquipmentCategory> = {
   getIcon: () => Layers,
   getIconColor: () => 'text-[#F57F17]',
-  getBorderColor: () => '#6b7280',
   views: {
     card: {
       title: (c) => c.name,

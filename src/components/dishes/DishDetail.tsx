@@ -107,7 +107,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       }
     >
       <div
-        className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
+        className="flex items-center justify-between gap-3 p-6 cursor-pointer"
         onClick={() => onToggle(id)}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -852,8 +852,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
               {showAddMenu && (
                 <div
                   ref={dropdownRef}
-                  className="absolute top-full left-0 right-0 mt-2 rounded-lg bg-card overflow-hidden z-50"
-                  style={{ maxHeight: '300px' }}
+                  className="absolute top-full left-0 right-0 mt-2 rounded-lg bg-card overflow-hidden z-50 max-h-[300px]"
                   onWheel={(e) => {
                     e.stopPropagation();
                     e.preventDefault();

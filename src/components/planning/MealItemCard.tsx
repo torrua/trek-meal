@@ -44,7 +44,6 @@ const MealItemCard: React.FC<MealItemCardProps> = ({
   const bgColor = isDish
     ? 'bg-orange-500/5 hover:bg-orange-500/10'
     : 'bg-blue-500/5 hover:bg-blue-500/10';
-  const borderColor = isDish ? 'border-orange-500/20' : 'border-blue-500/20';
   const Icon = isDish ? ChefHat : Component;
   const iconColor = isDish ? 'text-[#EF6C00]' : 'text-[#0277BD]';
 
@@ -57,7 +56,7 @@ const MealItemCard: React.FC<MealItemCardProps> = ({
   const showIngredients = isDish && children;
 
   return (
-    <div className={`${bgColor} border ${borderColor} rounded-lg transition-all duration-200`}>
+    <div className={`${bgColor} border border-border rounded-lg`}>
       <div className="flex items-center p-3 gap-3">
         {/* Drag Handle */}
         {dragHandleProps && (

@@ -71,7 +71,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} collapsible-section`}
     >
       <div
-        className="flex items-center justify-between gap-3 p-5 cursor-pointer hover:bg-white/40 dark:hover:bg-black/10 transition-colors"
+        className="flex items-center justify-between gap-3 p-5 cursor-pointer"
         onClick={() => onToggle?.(id)}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">

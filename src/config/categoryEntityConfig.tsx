@@ -27,7 +27,6 @@ type CategoryActions = {
 interface EntityConfig<T> {
   getIcon: (entity: T, context?: Record<string, unknown>) => React.ElementType;
   getIconColor?: (entity: T, context?: Record<string, unknown>) => string;
-  getBorderColor: (entity: T, context?: Record<string, unknown>) => string;
   views: {
     card: CardViewConfig<T>;
     listItem: ListItemViewConfig<T>;
@@ -49,7 +48,6 @@ export const categoryEntityConfig: EntityConfig<Category> = {
     return Tag;
   },
   getIconColor: () => 'text-gray-500',
-  getBorderColor: () => '#6b7280',
   views: {
     card: {
       title: (category) => category.name,

@@ -26,7 +26,7 @@ const InfoField: React.FC<InfoFieldProps> = ({
 }) => (
   <div
     className={cn(
-      'rounded-xl border notion-border-subtle transition-all duration-200 notion-bg-hover bg-card',
+      'rounded-xl border notion-border-subtle notion-bg-hover bg-card',
       'hover:border-border hover:notion-shadow-sm',
       variant === 'default' ? 'p-4' : 'p-3',
       className

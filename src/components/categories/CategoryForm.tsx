@@ -48,7 +48,7 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ category, onSubmit, onCance
         <label className="block text-sm font-medium text-foreground mb-3 tracking-tight">
           Предварительный просмотр
         </label>
-        <div className="p-6 rounded-2xl border-2 bg-card transition-all duration-200 border-primary">
+        <div className="p-6 rounded-2xl border-2 bg-card border-primary">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white notion-shadow-sm bg-primary">
               <span className="text-xl">{emoji || '📦'}</span>

@@ -129,10 +129,10 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
                 onMultiSelect?.(!isMultiSelected);
               }}
               className={cn(
-                'flex h-5 w-5 items-center justify-center rounded border transition-all duration-200',
+                'flex h-5 w-5 items-center justify-center rounded border',
                 isMultiSelected
                   ? 'bg-primary border-primary text-primary-foreground'
-                  : 'border-border bg-background/50 hover:border-primary/50'
+                  : 'border-border bg-background/50'
               )}
               aria-label={isMultiSelected ? 'Снять выделение' : 'Выделить'}
             >
@@ -181,7 +181,7 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
                   e.preventDefault();
                   e.stopPropagation();
                 }}
-                className="h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground/70 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                className="h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground/70 transition-colors"
                 aria-label="Меню действий"
               >
                 <MoreHorizontal className="h-4 w-4" />

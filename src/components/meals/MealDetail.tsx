@@ -386,7 +386,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
   return (
     <div className="space-y-6" ref={containerRef}>
       {isEditing && meal ? (
-        <div className="transition-all duration-200 ease-in-out">
+        <div>
           <MealForm
             meal={meal}
             onSubmit={handleSave}

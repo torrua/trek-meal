@@ -9,12 +9,10 @@ import {
   Copy,
   Share,
   X,
-  _Check,
   CheckCheck,
   LayoutList,
   Grid3X3,
   Download,
-  _UploadCloud,
   Tag,
   CheckSquare,
 } from 'lucide-react';
@@ -56,7 +54,7 @@ const MealTypesPage: React.FC = () => {
   const [selectedMealTypeIds, setSelectedMealTypeIds] = useState<number[]>([]);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
 
-  // Detail Pane state
+  // Detail section state
   const [openSections, setOpenSections] = useState<string[]>(['basic-info']);
 
   const sortedMealTypes = useMemo(() => {
@@ -410,7 +408,7 @@ const MealTypesPage: React.FC = () => {
                 onClick: (e: React.MouseEvent) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  action.onClick();
+                  action.onClick(e);
                 },
               }));
 
@@ -419,7 +417,7 @@ const MealTypesPage: React.FC = () => {
                 onClick: (e: React.MouseEvent) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  action.onClick();
+                  action.onClick(e);
                 },
               }));
 
@@ -441,7 +439,6 @@ const MealTypesPage: React.FC = () => {
                   menuItems={entityListActions}
                   data-testid={`meal-type-card-${mealType.id}`}
                   showMultiSelect={showMultiSelect}
-                  borderColor={mealTypeEntityConfig.getBorderColor?.(mealType)}
                   variant="meal-type"
                 />
               ) : (
@@ -450,7 +447,6 @@ const MealTypesPage: React.FC = () => {
                   title={mealTypeEntityConfig.views.card.title(mealType)}
                   icon={mealTypeEntityConfig.getIcon(mealType)}
                   iconColor={mealTypeEntityConfig.getIconColor?.(mealType)}
-                  borderColor={mealTypeEntityConfig.getBorderColor?.(mealType)}
                   variant="meal-type"
                   details={[
                     {
@@ -478,7 +474,7 @@ const MealTypesPage: React.FC = () => {
             })}
           </div>
 
-          {/* Detail panel (Right Column) */}
+          {/* Detail section (Right Column) */}
           <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {isCreatingNew ? (
               <div className="pl-1 pb-4">
@@ -543,7 +539,7 @@ const MealTypesPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           <div className="lg:col-span-1 space-y-3 pl-1 pb-4">{/* Пустой левый блок */}</div>
 
-          {/* Detail panel (Right Column) */}
+          {/* Detail section (Right Column) */}
           <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
             {isCreatingNew ? (
               <div className="pl-1 pb-4">

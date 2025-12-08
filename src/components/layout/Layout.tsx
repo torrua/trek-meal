@@ -117,7 +117,7 @@ const Layout: React.FC = () => {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-200 notion-focus-ring"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 notion-focus-ring"
                   aria-label={isSidebarOpen ? 'Скрыть боковую панель' : 'Показать боковую панель'}
                 >
                   {isSidebarOpen ? (
@@ -145,7 +145,6 @@ const Layout: React.FC = () => {
                         'w-full pl-10 pr-4 py-2 text-sm bg-muted/60 border border-transparent rounded-lg',
                         'placeholder:text-muted-foreground/60 text-foreground',
                         'focus:outline-none focus:ring-2 focus:ring-primary/30 focus:bg-card focus:border-border',
-                        'transition-all duration-200',
                         'disabled:opacity-50 disabled:cursor-not-allowed'
                       )}
                     />

@@ -47,7 +47,7 @@ const NavLinkItem = ({
   <NavLink
     to={item.path}
     className={cn(
-      'group flex items-center gap-3 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap',
+      'group flex items-center gap-3 rounded-lg text-sm font-medium whitespace-nowrap',
       'notion-focus-ring',
       isNested ? 'py-2 pr-3 pl-9' : 'px-3 py-2.5',
       isActive

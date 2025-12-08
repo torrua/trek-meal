@@ -14,7 +14,6 @@ import {
   LayoutList,
   Grid3X3,
   Info,
-  Edit,
   Download,
   Backpack,
 } from 'lucide-react';
@@ -26,7 +25,7 @@ import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard from '../ui/EntityCard';
 import EntityListItem from '../ui/EntityListItem';
-import DetailPane from '../ui/DetailPane'; // Импортируем DetailPane
+import CollapsibleSection from '../ui/CollapsibleSection';
 import { equipmentCategoryEntityConfig } from '../config/entityConfig';
 import { useViewMode } from '../hooks/useViewMode';
 import {
@@ -55,7 +54,7 @@ const EquipmentCategoriesPage: React.FC = () => {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<EquipmentCategory | null>(null);
 
-  // Detail Pane state
+  // Detail section state
   const [openSections, setOpenSections] = useState<string[]>(['info']);
 
   const filteredCategories = useMemo(() => {
@@ -404,7 +403,6 @@ const EquipmentCategoriesPage: React.FC = () => {
                   onMultiSelect={() => toggleCategorySelection(category.id)}
                   menuItems={entityListActions}
                   showMultiSelect={showMultiSelect}
-                  borderColor={equipmentCategoryEntityConfig.getBorderColor?.(category)}
                   variant="category"
                 />
               ) : (
@@ -413,7 +411,6 @@ const EquipmentCategoriesPage: React.FC = () => {
                   title={equipmentCategoryEntityConfig.views.card.title(category)}
                   icon={equipmentCategoryEntityConfig.getIcon(category)}
                   iconColor={equipmentCategoryEntityConfig.getIconColor?.(category)}
-                  borderColor={equipmentCategoryEntityConfig.getBorderColor?.(category)}
                   variant="category"
                   details={[
                     {
@@ -434,62 +431,34 @@ const EquipmentCategoriesPage: React.FC = () => {
             })}
           </div>
 
-          {/* Right Column with DetailPane */}
-          <div className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar">
+          {/* Right Column with Detail Section */}
+          <div
+            className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar pt-2"
+            id="equipment-category-detail-pane"
+          >
             {selectedCategory ? (
-              <div className="h-full pl-1">
-                <DetailPane
-                  openSections={openSections}
-                  onToggleSection={handleToggleSection}
-                  sections={[
-                    {
-                      id: 'info',
-                      title: 'Свойства категории',
-                      icon: Info,
-                      content: (
-                        <div className="space-y-4">
-                          <div className="p-4 bg-muted/30 rounded-xl border border-border/50">
-                            <label className="block text-sm font-medium text-muted-foreground mb-2">
-                              Категория снаряжения
-                            </label>
-                            <div className="text-sm text-foreground">{selectedCategory.name}</div>
-                          </div>
-                        </div>
-                      ),
-                    },
-                  ]}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-white shadow-sm bg-primary">
-                        <Layers className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-foreground">
-                          {selectedCategory.name}
-                        </h2>
-                        <p className="text-muted-foreground">
-                          {
-                            equipmentStore.equipment.filter(
-                              (e) => e.categoryId === selectedCategory.id
-                            ).length
-                          }{' '}
-                          единиц снаряжения
-                        </p>
-                      </div>
+              <CollapsibleSection
+                id="info"
+                title="Основная информация"
+                icon={<Info className="w-4 h-4 text-primary" />}
+                isOpen={openSections.includes('info')}
+                onToggle={handleToggleSection}
+                gradientFrom="gradient-basic-info"
+                gradientVia=""
+                gradientTo=""
+                className="gradient-basic-info"
+              >
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Название
+                    </label>
+                    <div className="view-mode-field view-mode-single-line">
+                      {selectedCategory.name}
                     </div>
-                    <Button
-                      variant="secondary"
-                      onClick={() =>
-                        alert('Форма редактирования категорий оборудования пока не реализована')
-                      }
-                    >
-                      <Edit className="w-4 h-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Изменить</span>
-                    </Button>
                   </div>
-                </DetailPane>
-              </div>
+                </div>
+              </CollapsibleSection>
             ) : (
               <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">

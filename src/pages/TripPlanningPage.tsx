@@ -14,7 +14,7 @@ import useCategoryStore from '../stores/useCategoryStore'; // Исправлен
 
 // Components & UI
 import DropdownSelect from '../ui/DropdownSelect';
-import DetailPane from '../ui/DetailPane';
+import CollapsibleSection from '../ui/CollapsibleSection';
 import TripForm from '../components/trips/TripForm';
 import DishForm from '../components/dishes/DishForm';
 import Button from '../ui/Button';
@@ -129,7 +129,7 @@ const MealSlotBase: React.FC<MealSlotProps> = ({
   );
 
   return (
-    <div className="bg-card rounded-xl border border-border p-4 space-y-4 hover:shadow-sm transition-all duration-200">
+    <div className="bg-card rounded-xl border border-border p-4 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -380,110 +380,123 @@ const TripPlanningPage: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <DetailPane
-          openSections={openSections}
-          onToggleSection={handleToggleSection}
-          sections={Array.from({ length: trip.days }).map((_, dayIndex) => {
-            const day = dayIndex + 1;
-            const dayNutrition = calculateDayNutrition(trip, day, products, dishes);
-            const dayMeals = trip.dayMeals?.[day.toString()] || [];
+        <div className="h-full flex flex-col bg-card rounded-2xl border border-border overflow-hidden">
+          {/* Header section */}
+          <div className="flex-shrink-0 p-8 border-b border-border bg-card">
+            <></>
+          </div>
 
-            return {
-              id: `day-${day}`,
-              title: (
-                <div className="flex items-baseline gap-3">
-                  <span className="font-semibold">День {day}</span>
-                  <span className="text-xs font-normal text-muted-foreground flex gap-2">
-                    <span className="flex items-center gap-1">
-                      <Flame className="w-3 h-3" /> {dayNutrition.calories}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Scale className="w-3 h-3" /> {dayNutrition.totalWeightForAllUsers} г
-                    </span>
-                  </span>
-                </div>
-              ),
-              icon: CalendarDays,
-              content: (
-                <div className="space-y-6">
-                  <DropdownSelect
-                    label=""
-                    icon={Plus}
-                    options={mealTemplateOptions}
-                    value=""
-                    onChange={(val) =>
-                      typeof val === 'string' && val && handleAddTemplateToDay(day, val)
+          {/* Scrollable sections */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="h-full overflow-y-auto custom-scrollbar">
+              {Array.from({ length: trip.days }).map((_, dayIndex) => {
+                const day = dayIndex + 1;
+                const dayNutrition = calculateDayNutrition(trip, day, products, dishes);
+                const dayMeals = trip.dayMeals?.[day.toString()] || [];
+
+                return (
+                  <CollapsibleSection
+                    key={`day-${day}`}
+                    id={`day-${day}`}
+                    title={
+                      <div className="flex items-baseline gap-3">
+                        <span className="font-semibold">День {day}</span>
+                        <span className="text-xs font-normal text-muted-foreground flex gap-2">
+                          <span className="flex items-center gap-1">
+                            <Flame className="w-3 h-3" /> {dayNutrition.calories}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Scale className="w-3 h-3" /> {dayNutrition.totalWeightForAllUsers} г
+                          </span>
+                        </span>
+                      </div>
                     }
-                    placeholder="Добавить приём пищи (из шаблона)"
-                    containerClassName="max-w-md"
-                  />
-                  {dayMeals.length === 0 ? (
-                    <div className="text-center py-8 px-4 border-2 border-dashed border-muted rounded-lg bg-muted/5">
-                      <p className="text-sm text-muted-foreground">
-                        На этот день ничего не запланировано.
-                      </p>
-                    </div>
-                  ) : (
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragStart={handleDragStart}
-                      onDragEnd={(e: DragEndEvent) => handleDragEnd(e, day)}
-                      onDragCancel={() => setActiveDragId(null)}
-                    >
-                      <SortableContext
-                        items={dayMeals.map((m) => m.instanceId)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        <div className="grid gap-4">
-                          {dayMeals.map((meal) => (
-                            <SortableMealSlot
-                              key={meal.instanceId}
-                              id={meal.instanceId}
-                              day={day}
-                              meal={meal}
-                              trip={trip}
-                              products={products}
-                              dishes={dishes}
-                              categories={categories}
-                              groupedMealOptions={groupedMealOptions}
-                              expandedDishes={expandedDishes}
-                              handlers={handlers}
-                            />
-                          ))}
+                    icon={<CalendarDays className="w-4 h-4 text-primary" />}
+                    isOpen={openSections.includes(`day-${day}`)}
+                    onToggle={handleToggleSection}
+                    gradientFrom="gradient-primary"
+                    showBorder={false}
+                    padding="lg"
+                  >
+                    <div className="space-y-6">
+                      <DropdownSelect
+                        label=""
+                        icon={Plus}
+                        options={mealTemplateOptions}
+                        value=""
+                        onChange={(val) =>
+                          typeof val === 'string' && val && handleAddTemplateToDay(day, val)
+                        }
+                        placeholder="Добавить приём пищи (из шаблона)"
+                        containerClassName="max-w-md"
+                      />
+                      {dayMeals.length === 0 ? (
+                        <div className="text-center py-8 px-4 border-2 border-dashed border-muted rounded-lg bg-muted/5">
+                          <p className="text-sm text-muted-foreground">
+                            На этот день ничего не запланировано.
+                          </p>
                         </div>
-                      </SortableContext>
-                      <DragOverlay>
-                        {activeDragId &&
-                          (() => {
-                            const activeMeal = Object.values(trip.dayMeals)
-                              .flat()
-                              .find((m) => m.instanceId === activeDragId);
-                            if (!activeMeal) return null;
-                            return (
-                              <MealSlot
-                                day={day}
-                                meal={activeMeal}
-                                trip={trip}
-                                products={products}
-                                dishes={dishes}
-                                categories={categories}
-                                groupedMealOptions={groupedMealOptions}
-                                expandedDishes={expandedDishes}
-                                handlers={handlers}
-                              />
-                            );
-                          })()}
-                      </DragOverlay>
-                    </DndContext>
-                  )}
-                </div>
-              ),
-            };
-          })}
-        >
-          <></>
-        </DetailPane>
+                      ) : (
+                        <DndContext
+                          sensors={sensors}
+                          collisionDetection={closestCenter}
+                          onDragStart={handleDragStart}
+                          onDragEnd={(e: DragEndEvent) => handleDragEnd(e, day)}
+                          onDragCancel={() => setActiveDragId(null)}
+                        >
+                          <SortableContext
+                            items={dayMeals.map((m) => m.instanceId)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <div className="grid gap-4">
+                              {dayMeals.map((meal) => (
+                                <SortableMealSlot
+                                  key={meal.instanceId}
+                                  id={meal.instanceId}
+                                  day={day}
+                                  meal={meal}
+                                  trip={trip}
+                                  products={products}
+                                  dishes={dishes}
+                                  categories={categories}
+                                  groupedMealOptions={groupedMealOptions}
+                                  expandedDishes={expandedDishes}
+                                  handlers={handlers}
+                                />
+                              ))}
+                            </div>
+                          </SortableContext>
+                          <DragOverlay>
+                            {activeDragId &&
+                              (() => {
+                                const activeMeal = Object.values(trip.dayMeals)
+                                  .flat()
+                                  .find((m) => m.instanceId === activeDragId);
+                                if (!activeMeal) return null;
+                                return (
+                                  <MealSlot
+                                    day={day}
+                                    meal={activeMeal}
+                                    trip={trip}
+                                    products={products}
+                                    dishes={dishes}
+                                    categories={categories}
+                                    groupedMealOptions={groupedMealOptions}
+                                    expandedDishes={expandedDishes}
+                                    handlers={handlers}
+                                  />
+                                );
+                              })()}
+                          </DragOverlay>
+                        </DndContext>
+                      )}
+                    </div>
+                  </CollapsibleSection>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* --- Modals --- */}

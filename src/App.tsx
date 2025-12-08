@@ -21,7 +21,6 @@ function App() {
         <Route index element={<Navigate to="/trips" replace />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="dishes" element={<DishesPage />} />
-        <Route path="dishes/new" element={<DishesPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="meal-types" element={<MealTypesPage />} />
         <Route path="equipment" element={<EquipmentPage />} />

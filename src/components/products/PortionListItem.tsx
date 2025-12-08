@@ -23,14 +23,11 @@ const PortionListItem: React.FC<PortionListItemProps> = ({
         // Base styling with Notion-style hover effects
         'group relative rounded-lg border transition-all duration-150',
         'bg-card border-border hover:bg-card-hover hover:border-border-hover',
-
         // Padding
-        'p-3'
+        'p-3',
+        // Blue left border
+        'border-l-[3px] border-l-[var(--notion-blue)]'
       )}
-      style={{
-        borderLeftWidth: '3px',
-        borderLeftColor: 'var(--notion-blue)',
-      }}
       data-testid={`portion-${portion.name}`}
     >
       <div className="flex items-center gap-3 min-h-[1.5rem]">
@@ -60,7 +57,7 @@ const PortionListItem: React.FC<PortionListItemProps> = ({
                 e.stopPropagation();
                 onEdit();
               }}
-              className="p-1.5 rounded-md transition-all duration-200 hover:bg-muted/60 active:scale-95 text-muted-foreground hover:text-foreground"
+              className="p-1.5 rounded-md hover:bg-muted/60 active:scale-95 text-muted-foreground hover:text-foreground"
               title="Редактировать порцию"
               aria-label={`Редактировать порцию ${portion.name}`}
             >
@@ -72,7 +69,7 @@ const PortionListItem: React.FC<PortionListItemProps> = ({
                   e.stopPropagation();
                   onDelete();
                 }}
-                className="p-1.5 rounded-md transition-all duration-200 hover:bg-danger/10 active:scale-95 text-danger"
+                className="p-1.5 rounded-md hover:bg-danger/10 active:scale-95 text-danger"
                 title="Удалить порцию"
                 aria-label={`Удалить порцию ${portion.name}`}
               >

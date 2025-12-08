@@ -6,7 +6,6 @@ import type { Meal, MealType } from '../types';
 export const mealEntityConfig = {
   getIcon: (_meal: Meal) => Utensils,
   getIconColor: () => 'text-[#388E3C]',
-  getBorderColor: (_meal: Meal) => '#6b7280', // gray-500
   views: {
     card: {
       title: (meal: Meal) => meal.name,

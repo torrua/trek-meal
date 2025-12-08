@@ -89,7 +89,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       <div className={`${gradientClass} collapsible-section-gradient`}></div>
       <div className="relative">
         <div
-          className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
+          className="flex items-center justify-between gap-3 p-6 cursor-pointer"
           onClick={() => {
             // Don't toggle section when disableToggle is true
             if (!disableToggle) {
@@ -531,7 +531,7 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
                         <div
                           key={meal.id}
                           data-meal-id={meal.id}
-                          className="bg-card [background:var(--color-meal-composition-gradient)] border border-border rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all duration-200 hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+                          className="bg-card [background:var(--color-meal-composition-gradient)] border border-border rounded-xl p-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
                         >
                           <div className="space-y-1">
                             {/* Header Row */}

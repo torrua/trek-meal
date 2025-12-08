@@ -85,7 +85,7 @@ const Modal: React.FC<ModalProps> = ({
                 onClick={onClose}
                 className={cn(
                   'p-2 rounded-lg text-muted-foreground hover:text-foreground',
-                  'hover:bg-muted/60 transition-all duration-200',
+                  'hover:bg-muted/60',
                   'notion-focus-ring flex-shrink-0'
                 )}
                 aria-label="Закрыть"

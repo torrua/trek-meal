@@ -86,11 +86,11 @@ const CategoriesPage: React.FC = () => {
     ) {
       categoryManagement.setActiveId(Number(selectedId));
       setSearchParams({}, { replace: true });
-      // Scroll to the detail pane
+      // Scroll to the detail section
       setTimeout(() => {
-        const detailPane = document.getElementById('category-detail-pane');
-        if (detailPane) {
-          detailPane.scrollIntoView({ behavior: 'smooth' });
+        const detailSection = document.getElementById('category-detail-pane');
+        if (detailSection) {
+          detailSection.scrollIntoView({ behavior: 'smooth' });
         }
       }, 100);
     }

@@ -237,10 +237,10 @@ const EntityCard: React.FC<EntityCardProps> = ({
                   onMultiSelect?.(!isMultiSelected);
                 }}
                 className={cn(
-                  'flex h-5 w-5 items-center justify-center rounded border transition-all duration-200',
+                  'flex h-5 w-5 items-center justify-center rounded border',
                   isMultiSelected
                     ? 'bg-primary border-primary text-primary-foreground'
-                    : 'border-primary/40 bg-card hover:border-primary/60'
+                    : 'border-primary/40 bg-card'
                 )}
                 aria-label={isMultiSelected ? 'Снять выделение' : 'Выделить'}
               >
@@ -282,7 +282,7 @@ const EntityCard: React.FC<EntityCardProps> = ({
                     e.preventDefault();
                     e.stopPropagation();
                   }}
-                  className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground/70 hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                  className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground/70 transition-colors"
                   aria-label="Меню действий"
                 >
                   <MoreHorizontal className="h-4 w-4" />

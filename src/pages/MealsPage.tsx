@@ -85,11 +85,11 @@ const MealsPage: React.FC = () => {
       });
       // Remove the query parameter from the URL
       setSearchParams({}, { replace: true });
-      // Scroll to the detail pane
+      // Scroll to the detail section
       setTimeout(() => {
-        const detailPane = document.getElementById('meal-detail-pane');
-        if (detailPane) {
-          detailPane.scrollIntoView({ behavior: 'smooth' });
+        const detailSection = document.getElementById('meal-detail-pane');
+        if (detailSection) {
+          detailSection.scrollIntoView({ behavior: 'smooth' });
         }
       }, 100);
       return;
@@ -102,11 +102,11 @@ const MealsPage: React.FC = () => {
       });
       // Remove the query parameter from the URL
       setSearchParams({}, { replace: true });
-      // Scroll to the detail pane
+      // Scroll to the detail section
       setTimeout(() => {
-        const detailPane = document.getElementById('meal-detail-pane');
-        if (detailPane) {
-          detailPane.scrollIntoView({ behavior: 'smooth' });
+        const detailSection = document.getElementById('meal-detail-pane');
+        if (detailSection) {
+          detailSection.scrollIntoView({ behavior: 'smooth' });
         }
       }, 100);
     }

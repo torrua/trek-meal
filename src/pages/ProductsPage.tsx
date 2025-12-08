@@ -1,6 +1,7 @@
 // src/pages/ProductsPage.tsx
 
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import {
   CirclePlus,
@@ -69,7 +70,9 @@ const ProductsPage: React.FC = () => {
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
     if (selectedId && products.some((p) => p.id === Number(selectedId))) {
-      setActiveId(Number(selectedId));
+      flushSync(() => {
+        setActiveId(Number(selectedId));
+      });
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, products, setSearchParams]);
@@ -422,7 +425,6 @@ const ProductsPage: React.FC = () => {
                   }}
                   menuItems={entityListActions}
                   showMultiSelect={showMultiSelect}
-                  borderColor={productEntityConfig.getBorderColor?.(product, { category })}
                   variant="product"
                 />
               ) : (
@@ -432,7 +434,6 @@ const ProductsPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(product, { category })}
                   icon={productEntityConfig.getIcon(product)}
                   iconColor={productEntityConfig.getIconColor?.(product, { category })}
-                  borderColor={productEntityConfig.getBorderColor?.(product, { category })}
                   variant="product"
                   nutrition={{
                     calories: Math.round(product.calories || 0),

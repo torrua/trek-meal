@@ -1,6 +1,7 @@
 // src/hooks/useTripDates.ts
 
 import { useState, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { addDays, differenceInCalendarDays, parseISO } from 'date-fns';
 import type { TripData } from '../types';
 
@@ -36,8 +37,10 @@ export const useTripDates = (initialData: TripData | null) => {
     if (hasChanged) {
       const start = currentData.startDate ? parseISO(currentData.startDate) : null;
       const end = currentData.endDate ? parseISO(currentData.endDate) : null;
-      setDateRange([start, end]);
-      setDays(currentData.days || 1);
+      flushSync(() => {
+        setDateRange([start, end]);
+        setDays(currentData.days || 1);
+      });
       prevDataRef.current = currentData;
     }
   }, [initialData?.startDate, initialData?.endDate, initialData?.days]);

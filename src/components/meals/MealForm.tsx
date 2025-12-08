@@ -1,5 +1,5 @@
 // src/components/meals/MealForm.tsx - Improved version
-import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,7 +28,7 @@ import Input from '../../ui/Input';
 import Button from '../../ui/Button';
 import SortableItemComponent from './SortableItem';
 import DropdownSelect from '../../ui/DropdownSelect';
-import { calculateNutrition, isMealNameUnique } from './mealFormUtils';
+import { calculateNutrition } from './mealFormUtils';
 import { useMealStore } from '../../stores/useMealStore';
 import ItemContent from './ItemContent';
 
@@ -119,7 +119,7 @@ const MealForm: React.FC<MealFormProps> = ({
   const { products } = useProductStore();
   const { dishes } = useDishStore();
   const { categories } = useCategoryStore();
-  const { meals } = useMealStore();
+  const { meals: _meals } = useMealStore();
   const { mealTypes } = useMealTypesStore();
   const navigate = useNavigate();
 
@@ -414,7 +414,7 @@ const MealForm: React.FC<MealFormProps> = ({
     }
   };
 
-  const processSubmit = useCallback(() => {
+  const processSubmit = () => {
     const name = watch('name');
     const description = watch('description');
     const mealTypeId = watch('mealTypeId');
@@ -427,21 +427,22 @@ const MealForm: React.FC<MealFormProps> = ({
     if (!name || !name.trim()) {
       setValidationErrors((prev) => ({
         ...prev,
-        name: 'Название приёма пищи не может быть пустым',
+        name: 'Название приёма пищи обязательно',
       }));
       return;
     }
 
-    // Check uniqueness before submitting
-    if (name && !isMealNameUnique(name, meals, meal?.id)) {
+    // Validate meal type
+    if (!mealTypeIdNumber) {
       setValidationErrors((prev) => ({
         ...prev,
-        name: 'Приём пищи с таким названием уже существует',
+        mealTypeId: 'Тип приёма пищи обязателен',
       }));
       return;
     }
 
-    if (watchItems.length === 0) {
+    // Validate items
+    if (!watchItems || watchItems.length === 0) {
       setValidationErrors((prev) => ({
         ...prev,
         items: 'Приём пищи должен содержать хотя бы один продукт или блюдо',
@@ -456,7 +457,7 @@ const MealForm: React.FC<MealFormProps> = ({
       items: watchItems.map(({ instanceId: _, ...item }) => item) as MealPlanItem[],
     };
     onSubmit(mealData);
-  }, [watch, watchItems, onSubmit, meals, meal?.id, setValidationErrors]);
+  };
 
   // Use the passed openSections prop or default values
   const currentOpenSections = openSections ?? ['basic-info', 'composition'];

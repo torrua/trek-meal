@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import useTripStore from '../stores/useTripStore';
 import useSearchStore from '../stores/useSearchStore';
@@ -32,11 +33,13 @@ export function useTripsManagement(options: UseTripsManagementOptions = {}) {
   const [isAddParticipantModalOpen, setAddParticipantModalOpen] = useState(false);
 
   // URL sync
-  useMemo(() => {
+  useEffect(() => {
     if (!enableUrlSync) return;
     const selectedId = searchParams.get('selectedId');
     if (selectedId && trips.some((t) => t.id === Number(selectedId))) {
-      setActiveId(Number(selectedId));
+      flushSync(() => {
+        setActiveId(Number(selectedId));
+      });
       setSearchParams({}, { replace: true });
     }
   }, [enableUrlSync, searchParams, setSearchParams, trips]);

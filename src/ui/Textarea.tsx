@@ -1,6 +1,6 @@
 // src/ui/Textarea.tsx
 
-import React from 'react';
+import React, { useId } from 'react';
 import cn from 'classnames';
 import { AlertCircle } from 'lucide-react';
 
@@ -12,8 +12,8 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, error, containerClassName, ...props }, ref) => {
-    const textareaId =
-      props.id || props.name || `textarea-${Math.random().toString(36).substr(2, 9)}`;
+    const generatedId = useId();
+    const textareaId = props.id || props.name || `textarea-${generatedId}`;
 
     return (
       <div className={cn('w-full', containerClassName)}>

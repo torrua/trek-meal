@@ -1,6 +1,6 @@
 // src/ui/Input.tsx
 
-import React from 'react';
+import React, { useId } from 'react';
 import cn from 'classnames';
 import { AlertCircle } from 'lucide-react';
 
@@ -32,7 +32,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
-    const inputId = name || `input-${Math.random().toString(36).substr(2, 9)}`;
+    const generatedId = useId();
+    const inputId = name || `input-${generatedId}`;
 
     return (
       <div className={cn('w-full space-y-2', containerClassName)}>

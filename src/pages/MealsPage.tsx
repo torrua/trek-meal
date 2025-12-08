@@ -1,6 +1,7 @@
 // src/pages/MealsPage.tsx
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import {
   Utensils,
   Trash2,
@@ -79,7 +80,9 @@ const MealsPage: React.FC = () => {
 
     // Handle mealId parameter (from meal type usage block)
     if (mealId && meals.some((m) => m.id === Number(mealId))) {
-      setActiveId(Number(mealId));
+      flushSync(() => {
+        setActiveId(Number(mealId));
+      });
       // Remove the query parameter from the URL
       setSearchParams({}, { replace: true });
       // Scroll to the detail pane
@@ -94,7 +97,9 @@ const MealsPage: React.FC = () => {
 
     // Handle selectedId parameter (existing logic)
     if (selectedId && meals.some((m) => m.id === Number(selectedId))) {
-      setActiveId(Number(selectedId));
+      flushSync(() => {
+        setActiveId(Number(selectedId));
+      });
       // Remove the query parameter from the URL
       setSearchParams({}, { replace: true });
       // Scroll to the detail pane
@@ -480,7 +485,6 @@ const MealsPage: React.FC = () => {
                   }}
                   menuItems={actions}
                   showMultiSelect={showMultiSelect}
-                  borderColor={mealEntityConfig.getBorderColor?.(meal)}
                   variant="meal"
                 />
               ) : (
@@ -492,7 +496,6 @@ const MealsPage: React.FC = () => {
                   })}
                   icon={mealEntityConfig.getIcon(meal)}
                   iconColor={mealEntityConfig.getIconColor?.()}
-                  borderColor={mealEntityConfig.getBorderColor?.(meal)}
                   isSelected={activeId === meal.id}
                   isMultiSelected={selectedMealIds.includes(meal.id)}
                   onSelect={

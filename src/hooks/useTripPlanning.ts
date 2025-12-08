@@ -15,14 +15,7 @@ import useTripStore from '../stores/useTripStore';
 import useProductStore from '../stores/useProductStore';
 import useDishStore from '../stores/useDishStore';
 import { useMealStore } from '../stores/useMealStore';
-import type {
-  Product,
-  Dish,
-  DishData,
-  MealPlanItem,
-  SubmitDishAction,
-  MealInstance,
-} from '../types';
+import type { Dish, DishData, MealPlanItem, SubmitDishAction, MealInstance } from '../types';
 
 type SelectMealOption = { value: string; label: string };
 type GroupedMealOption = { label: string; options: SelectMealOption[] };

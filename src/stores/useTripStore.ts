@@ -306,7 +306,9 @@ const useTripStore = create<TripState>()(
             trip.dayMeals &&
             Object.values(trip.dayMeals).length > 0 &&
             Object.values(trip.dayMeals).some(
-              (day) => day.length > 0 && typeof (day[0] as any)?.mealTypeId !== 'undefined'
+              (day) =>
+                day.length > 0 &&
+                typeof (day[0] as { mealTypeId?: number })?.mealTypeId !== 'undefined'
             )
           ) {
             const newDayMeals: { [dayNumber: string]: MealInstance[] } = {};
@@ -314,7 +316,12 @@ const useTripStore = create<TripState>()(
             const newSelectedMeals = { ...trip.selectedMeals };
 
             for (const dayStr in oldDayMeals) {
-              const oldDayMealInstances = oldDayMeals[dayStr] as any[];
+              const oldDayMealInstances = oldDayMeals[dayStr] as {
+                instanceId: string;
+                title: string;
+                description?: string;
+                mealTypeId?: number;
+              }[];
               newDayMeals[dayStr] = oldDayMealInstances.map((oldInstance) => {
                 const newInstance: MealInstance = {
                   instanceId: oldInstance.instanceId,

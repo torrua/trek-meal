@@ -17,7 +17,7 @@ import {
   Trash2,
   Tag,
 } from 'lucide-react';
-import type { MealType, Meal } from '../../types';
+import type { MealType, Meal, MealPlanItem } from '../../types';
 import Button from '../../ui/Button';
 import MealTypeForm from './MealTypeForm';
 import Input from '../../ui/Input';
@@ -505,7 +505,7 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
                         totalCarbs = 0,
                         totalWeight = 0;
 
-                      meal.items.forEach((item: any) => {
+                      meal.items.forEach((item: MealPlanItem) => {
                         const nutrition = calculateNutrition(item, products, dishes);
                         if (nutrition) {
                           totalCalories += nutrition.calories;

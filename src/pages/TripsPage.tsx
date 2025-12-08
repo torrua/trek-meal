@@ -33,7 +33,7 @@ import EntityCard from '../ui/EntityCard';
 import EntityListItem, { MetaItem } from '../ui/EntityListItem';
 import TripForm from '../components/trips/TripForm';
 import type { Trip, TripData } from '../types'; // Import TripData
-import { tripEntityConfig, STATUS_CONFIG, getEffectiveStatus } from '../config/entityConfig';
+import { tripEntityConfig } from '../config/entityConfig';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { formatDate } from '../utils';
 import { exportBulkTripsToJson, importDataFromJson } from '../utils/backup';
@@ -116,31 +116,28 @@ const TripsPage: React.FC = () => {
     setIsEditing(false);
   };
 
-  const getTripDetails = (trip: Trip) => {
-    const details = [
+  const _getTripDetails = (_trip: Trip): MetaItem[] => {
+    const details: MetaItem[] = [
       {
-        key: 'participants',
         icon: Users,
-        text: trip.participants.length,
-        title: 'Участники',
+        text: _trip.participants.length,
+        tooltip: 'Участники',
       },
     ];
 
-    if (trip.destination) {
+    if (_trip.destination) {
       details.push({
-        key: 'destination',
         icon: MapPin,
-        text: trip.destination,
-        title: 'Место',
+        text: _trip.destination,
+        tooltip: 'Место',
       });
     }
 
-    if (trip.startDate) {
+    if (_trip.startDate) {
       details.push({
-        key: 'startDate',
         icon: Calendar,
-        text: formatDate(trip.startDate as string),
-        title: 'Дата',
+        text: formatDate(_trip.startDate),
+        tooltip: 'Дата',
       });
     }
 
@@ -360,7 +357,7 @@ const TripsPage: React.FC = () => {
                 },
               }));
 
-              const metaMap: Record<string, MetaItem> = {
+              const metaMap: Record<string, MetaItem | null> = {
                 startDate: trip.startDate
                   ? {
                       icon: Calendar,
@@ -379,7 +376,7 @@ const TripsPage: React.FC = () => {
                   trip.participants.length > 0
                     ? {
                         icon: Users,
-                        text: trip.participants.length,
+                        text: trip.participants.length as number,
                         tooltip: 'Участников',
                       }
                     : null,
@@ -395,7 +392,6 @@ const TripsPage: React.FC = () => {
                   title={cardConfig.title(trip)}
                   meta={metaItems}
                   menuItems={entityListActions}
-                  borderColor={tripEntityConfig.getBorderColor?.(trip)}
                   variant="trip"
                 />
               ) : (
@@ -405,7 +401,6 @@ const TripsPage: React.FC = () => {
                   subtitle={cardConfig.subtitle?.(trip)}
                   icon={tripEntityConfig.getIcon(trip)}
                   iconColor={tripEntityConfig.getIconColor?.(trip)}
-                  borderColor={tripEntityConfig.getBorderColor?.(trip)}
                   variant="trip"
                   details={[
                     {

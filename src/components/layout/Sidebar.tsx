@@ -40,7 +40,7 @@ const NavLinkItem = ({
   isActive,
   isNested = false,
 }: {
-  item: any;
+  item: { path: string; label: string; icon: React.ComponentType<{ className?: string }> };
   isActive: boolean;
   isNested?: boolean;
 }) => (
@@ -63,7 +63,13 @@ const NavLinkItem = ({
   </NavLink>
 );
 
-const Sidebar = ({ isSidebarOpen, location }: { isSidebarOpen: boolean; location: any }) => {
+const Sidebar = ({
+  isSidebarOpen,
+  location,
+}: {
+  isSidebarOpen: boolean;
+  location: { pathname: string };
+}) => {
   return (
     <aside
       className={cn(

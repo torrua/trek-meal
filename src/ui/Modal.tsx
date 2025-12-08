@@ -102,7 +102,7 @@ const Modal: React.FC<ModalProps> = ({
         </div>
       </div>
     </div>,
-    document.getElementById('root-portal')!
+    document.getElementById('root-portal') || document.body
   );
 };
 

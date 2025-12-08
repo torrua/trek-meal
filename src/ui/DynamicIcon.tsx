@@ -30,7 +30,9 @@ const DynamicIcon: React.FC<DynamicIconProps> = ({ name, ...props }) => {
   }
 
   // Type assertion to ensure it can be used as a JSX component
-  const ValidIconComponent = IconComponent as React.ComponentType<any>;
+  const ValidIconComponent = IconComponent as React.ComponentType<
+    React.SVGAttributes<SVGSVGElement>
+  >;
 
   return <ValidIconComponent {...props} />;
 };

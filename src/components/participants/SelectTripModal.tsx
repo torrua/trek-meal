@@ -134,11 +134,11 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
                       <div className="font-medium">Даты</div>
                       <div>
                         {formatDate(
-                          tripOptions.find((o) => o.value === selectedTrip)!.trip.startDate
+                          tripOptions.find((o) => o.value === selectedTrip)?.trip.startDate ?? ''
                         )}{' '}
                         -{' '}
                         {formatDate(
-                          tripOptions.find((o) => o.value === selectedTrip)!.trip.endDate
+                          tripOptions.find((o) => o.value === selectedTrip)?.trip.endDate ?? ''
                         )}
                       </div>
                     </div>
@@ -148,7 +148,7 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
                     <div>
                       <div className="font-medium">Место</div>
                       <div className="truncate">
-                        {tripOptions.find((o) => o.value === selectedTrip)!.trip.destination ||
+                        {tripOptions.find((o) => o.value === selectedTrip)?.trip.destination ||
                           'Место не указано'}
                       </div>
                     </div>
@@ -159,18 +159,16 @@ const SelectTripModal: React.FC<SelectTripModalProps> = ({
                       <div className="font-medium">Участники</div>
                       <div>
                         Текущих:{' '}
-                        {
-                          tripOptions.find((o) => o.value === selectedTrip)!.trip.participants
-                            .length
-                        }
+                        {tripOptions.find((o) => o.value === selectedTrip)?.trip.participants
+                          .length ?? 0}
                       </div>
                     </div>
                   </div>
-                  {tripOptions.find((o) => o.value === selectedTrip)!.trip.description && (
+                  {tripOptions.find((o) => o.value === selectedTrip)?.trip.description && (
                     <div className="sm:col-span-2 text-sm text-muted-foreground">
                       <div className="font-medium mb-1">Описание</div>
                       <p className="line-clamp-2">
-                        {tripOptions.find((o) => o.value === selectedTrip)!.trip.description}
+                        {tripOptions.find((o) => o.value === selectedTrip)?.trip.description}
                       </p>
                     </div>
                   )}

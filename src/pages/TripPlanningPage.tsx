@@ -1,15 +1,9 @@
 // src/pages/TripPlanningPage.tsx
 
-import React, { useMemo, useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SingleValue } from 'react-select';
-import {
-  DndContext,
-  closestCenter,
-  DragOverlay,
-  DragEndEvent,
-  DragStartEvent,
-} from '@dnd-kit/core';
+import { DndContext, closestCenter, DragOverlay, DragEndEvent } from '@dnd-kit/core';
 import { verticalListSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -46,16 +40,7 @@ import {
 } from 'lucide-react';
 
 // Types
-import type {
-  Trip,
-  Product,
-  Dish,
-  DishData,
-  MealPlanItem,
-  Category,
-  SubmitDishAction,
-  MealInstance,
-} from '../types';
+import type { Trip, Product, Dish, MealPlanItem, Category, MealInstance } from '../types';
 
 // --- Type Definitions ---
 
@@ -81,7 +66,7 @@ const DishContents = React.memo(
   ({ dish, products, categories }: { dish: Dish; products: Product[]; categories: Category[] }) => {
     return (
       <div className="space-y-1.5 text-xs">
-        {dish.products.map((p, idx) => {
+        {dish.products.map((p: { productId: number; weight: number }, idx: number) => {
           const product = products.find((ap) => ap.id === p.productId);
           const category = product ? categories.find((c) => c.id === product.categoryId) : null;
           return (
@@ -295,7 +280,7 @@ const SortableMealSlot = ({ id, ...props }: SortableMealSlotProps) => {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="touch-none">
+    <div ref={setNodeRef} style={style} className="touch-none" data-testid="sortable-meal-slot">
       <MealSlot {...props} dragHandleProps={{ ...attributes, ...listeners }} />
     </div>
   );
@@ -496,7 +481,9 @@ const TripPlanningPage: React.FC = () => {
               ),
             };
           })}
-        />
+        >
+          <></>
+        </DetailPane>
       </div>
 
       {/* --- Modals --- */}

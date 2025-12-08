@@ -9,11 +9,10 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import useTripStore from '../stores/useTripStore';
-import { Trip } from '../types';
 
 export const useTripPlanningLogic = (tripId?: string) => {
   const numericTripId = tripId ? parseInt(tripId, 10) : undefined;
-  const { getMigratedTrips, reorderMealsInDay, updateTrip } = useTripStore();
+  const { getMigratedTrips, reorderMealsInDay } = useTripStore();
 
   // Получаем поход
   const trip = useMemo(

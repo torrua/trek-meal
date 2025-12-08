@@ -429,6 +429,15 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
                 onRemove: () => handleRequestRemove(p),
               });
 
+              const entityListActions = actions?.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
               return (
                 <EntityListItem
                   key={p.id}
@@ -436,7 +445,7 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
                   meta={(listItemConfig.details?.(p) || [])
                     .filter((d): d is string => typeof d === 'string')
                     .map((text) => ({ icon: participantEntityConfig.getIcon(p), text }))}
-                  menuItems={actions as any}
+                  menuItems={entityListActions}
                   onSelect={() => handleNavigateToParticipant(p.id)}
                   variant="info"
                 />

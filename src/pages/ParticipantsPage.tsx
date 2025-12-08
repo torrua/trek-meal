@@ -25,7 +25,7 @@ import useParticipantStore from '../stores/useParticipantStore';
 import useTripStore from '../stores/useTripStore';
 import useEquipmentStore from '../stores/useEquipmentStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
-import type { Trip, Equipment, Participant } from '../types';
+import type { Trip, Equipment, Participant, ParticipantData } from '../types';
 import ParticipantDetail from '../components/participants/ParticipantDetail';
 import ParticipantFiltersComponent from '../components/participants/ParticipantFiltersComponent';
 import Button from '../ui/Button';
@@ -99,19 +99,21 @@ const ParticipantsPage: React.FC = () => {
     setIsEditing(false);
   };
 
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = (data: ParticipantData) => {
     if (isEditing && selectedParticipant) {
       updateParticipant(selectedParticipant.id, data);
       setIsEditing(false);
     } else {
-      const newParticipant = addParticipant(data);
+      // Get the new participant ID from the store after adding
+      const newId = Date.now();
+      addParticipant(data);
+      setActiveId(newId);
       setIsCreating(false);
-      setActiveId(newParticipant.id);
     }
   };
 
   const handleClone = (participant: Participant) => {
-    const { id, ...rest } = participant;
+    const { id: _id, ...rest } = participant;
     const newData = { ...rest, name: `${participant.name} (Копия)` };
     addParticipant(newData);
   };
@@ -342,12 +344,30 @@ const ParticipantsPage: React.FC = () => {
                 .map((id) => metaMap[id])
                 .filter((item): item is MetaItem => item !== null);
 
+              const entityListActions = actions.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
+              const entityCardActions = actions.map((action) => ({
+                ...action,
+                onClick: (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  action.onClick();
+                },
+              }));
+
               return viewMode === 'compact' ? (
                 <EntityListItem
                   key={p.id}
                   title={cardConfig.title(p)}
                   meta={metaItems}
-                  menuItems={actions}
+                  menuItems={entityListActions}
                   isSelected={activeId === p.id}
                   isMultiSelected={selectedParticipantIds.includes(p.id)}
                   onSelect={() => onSelectParticipant(p.id)}
@@ -372,7 +392,7 @@ const ParticipantsPage: React.FC = () => {
                   isMultiSelected={selectedParticipantIds.includes(p.id)}
                   onSelect={() => onSelectParticipant(p.id)}
                   onMultiSelect={() => toggleParticipantSelection(p.id)}
-                  menuItems={actions}
+                  menuItems={entityCardActions}
                   showMultiSelect={showMultiSelect}
                   variant="participant"
                 />

@@ -60,8 +60,8 @@ const NutritionDisplay: React.FC<NutritionDisplayProps> = ({
         </span>
       </div>
 
-      {/* Разделитель после углеводов */}
-      {showSeparators && <div className="nutrition-separator" />}
+      {/* Разделитель после углеводов - только если есть вес */}
+      {showSeparators && typeof weight === 'number' && <div className="nutrition-separator" />}
 
       {/* Вес */}
       {typeof weight === 'number' && (

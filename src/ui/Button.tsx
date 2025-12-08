@@ -5,35 +5,15 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import cn from 'classnames';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 notion-focus-ring disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden',
   {
     variants: {
       variant: {
-        primary: [
-          'bg-primary text-primary-foreground notion-shadow-xs',
-          'hover:bg-primary-hover hover:notion-shadow-sm hover:-translate-y-0.5',
-          'active:scale-[0.98] active:translate-y-0',
-        ],
-        danger: [
-          'bg-danger text-danger-foreground notion-shadow-xs',
-          'hover:bg-danger/90 hover:notion-shadow-sm hover:-translate-y-0.5',
-          'active:scale-[0.98] active:translate-y-0',
-        ],
-        secondary: [
-          'bg-muted text-foreground border border-border',
-          'hover:bg-muted/80 hover:border-border-hover hover:notion-shadow-xs hover:-translate-y-0.5',
-          'active:scale-[0.98] active:translate-y-0',
-        ],
-        ghost: [
-          'text-muted-foreground border border-transparent', // Добавили прозрачную рамку
-          'hover:text-foreground hover:bg-muted/60 hover:border-border', // При наведении делаем рамку видимой
-          'active:scale-[0.98]',
-        ],
-        outline: [
-          'border border-border text-foreground bg-card',
-          'hover:bg-muted/40 hover:border-border-hover hover:-translate-y-0.5',
-          'active:scale-[0.98] active:translate-y-0',
-        ],
+        primary: ['bg-primary text-primary-foreground'],
+        danger: ['bg-danger text-danger-foreground'],
+        secondary: ['bg-muted text-foreground'],
+        ghost: ['text-muted-foreground'],
+        outline: ['text-foreground bg-card'],
       },
       size: {
         default: 'h-9 px-4 py-2',

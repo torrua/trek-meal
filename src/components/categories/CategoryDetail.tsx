@@ -6,17 +6,13 @@ import {
   Edit,
   Save,
   Hash,
-  Flame,
-  Beef,
-  Droplet,
-  Wheat,
   SquareArrowOutUpRight,
   Trash2,
   Component as ProductComponent,
-  ChevronDown,
 } from 'lucide-react';
 import type { Category, Product } from '../../types';
 import Button from '../../ui/Button';
+import NutritionButton from '../../ui/NutritionButton';
 import CategoryForm from './CategoryForm';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
@@ -52,7 +48,6 @@ interface CollapsibleSectionProps {
   gradientFrom?: string;
   gradientVia?: string;
   gradientTo?: string;
-  gradientCssVar?: string; // New prop for direct CSS variable usage
   className?: string;
   disableToggle?: boolean;
 }
@@ -70,23 +65,23 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   gradientFrom = 'from-blue-500/5',
   gradientVia = 'via-purple-500/5',
   gradientTo = 'to-pink-500/5',
-  gradientCssVar, // New prop
   className,
   disableToggle = false,
 }) => {
   // Удалена unused переменная после замены на shadow-md
 
-  // Use CSS variable if provided, otherwise use Tailwind gradient classes
-  const gradientClass = gradientCssVar
-    ? `[background:${gradientCssVar}]`
-    : `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo}`;
-
   return (
     <div className={`${className || ''} collapsible-section`}>
-      <div className={`${gradientClass} collapsible-section-gradient`}></div>
+      <div
+        className={`${
+          gradientFrom.includes('gradient-')
+            ? gradientFrom
+            : `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo}`
+        } collapsible-section-gradient`}
+      ></div>
       <div className="relative">
         <div
-          className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
+          className="flex items-center justify-between gap-3 p-6 cursor-pointer"
           onClick={() => {
             // Don't toggle section when disableToggle is true
             if (!disableToggle) {
@@ -142,7 +137,6 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
   const [editEmoji, setEditEmoji] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletedProducts, setDeletedProducts] = useState<Set<number>>(new Set());
-  const [showProductNutrition, setShowProductNutrition] = useState<Record<number, boolean>>({});
   const navigate = useNavigate();
 
   // Handler for emoji input with validation
@@ -276,6 +270,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
             gradientFrom="gradient-basic-info"
             gradientVia=""
             gradientTo=""
+            className="gradient-basic-info"
             actionButton={
               <div className="flex gap-2">
                 <Button
@@ -378,9 +373,10 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
         icon={<Info className="w-4 h-4 text-primary" />}
         isOpen={openSections.includes('basic-info')}
         onToggle={onToggleSection}
-        gradientFrom="gradient-category"
+        gradientFrom="gradient-basic-info"
         gradientVia=""
         gradientTo=""
+        className="gradient-basic-info"
         actionButton={
           !isInlineEditing && category ? (
             <Button
@@ -490,7 +486,8 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
           icon={<ProductComponent className="w-4 h-4 text-blue-600" />}
           isOpen={openSections.includes('usage')}
           onToggle={onToggleSection}
-          gradientCssVar="var(--color-meal-type-gradient)"
+          gradientFrom="gradient-category"
+          className="gradient-category"
           summaryContent={
             usageCount > 0 && (
               <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -510,7 +507,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
                       <div
                         key={product.id}
                         data-product-id={product.id}
-                        className="[background:var(--color-product-gradient)] border border-blue-500/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)] rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+                        className="gradient-product rounded-xl p-3"
                       >
                         <div className="space-y-1">
                           {/* Header Row */}
@@ -525,57 +522,13 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
                             {/* Action buttons */}
                             <div className="flex items-center gap-2">
                               {/* Nutrition block */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShowProductNutrition((prev) => ({
-                                    ...prev,
-                                    [product.id]: !prev[product.id],
-                                  }));
-                                }}
-                                className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
-                              >
-                                {showProductNutrition[product.id] ? (
-                                  <>
-                                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-sm font-semibold text-orange-600">
-                                        {Math.round(product.calories || 0)}
-                                      </span>
-                                      <Flame className="w-4 h-4 text-orange-600" />
-                                    </div>
-                                    <div className="w-px h-4 bg-border" />
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-sm font-semibold text-blue-600">
-                                        {Math.round((product.proteins || 0) * 10) / 10}
-                                      </span>
-                                      <Beef className="w-4 h-4 text-blue-600" />
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-sm font-semibold text-yellow-600">
-                                        {Math.round((product.fats || 0) * 10) / 10}
-                                      </span>
-                                      <Droplet className="w-4 h-4 text-yellow-600" />
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-sm font-semibold text-green-600">
-                                        {Math.round((product.carbs || 0) * 10) / 10}
-                                      </span>
-                                      <Wheat className="w-4 h-4 text-green-600" />
-                                    </div>
-                                  </>
-                                ) : (
-                                  <>
-                                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-sm font-semibold text-orange-600">
-                                        {Math.round(product.calories || 0)}
-                                      </span>
-                                      <Flame className="w-4 h-4 text-orange-600" />
-                                    </div>
-                                  </>
-                                )}
-                              </button>
+                              <NutritionButton
+                                calories={product.calories}
+                                proteins={product.proteins}
+                                fats={product.fats}
+                                carbs={product.carbs}
+                                weight={product.weight}
+                              />
 
                               <Button
                                 type="button"

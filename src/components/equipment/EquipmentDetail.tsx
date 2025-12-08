@@ -77,7 +77,7 @@ const EquipmentDetail: React.FC<EquipmentDetailProps> = ({
   return (
     <>
       {/* Basic Info Section */}
-      <div className="bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-xl border border-border p-6">
+      <div className="gradient-basic-info rounded-xl p-6">
         <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <Info className="w-4 h-4 text-primary" />

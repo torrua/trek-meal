@@ -34,7 +34,11 @@ interface DishFormProps {
 }
 
 type ProductOption = { value: string; label: string };
-type PortionOption = { value: string; label: string; icon?: any };
+type PortionOption = {
+  value: string;
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+};
 
 const CUSTOM_WEIGHT_VALUE = '-1';
 
@@ -162,7 +166,7 @@ const DishForm: React.FC<DishFormProps> = ({ dish, dishToClone, onSubmit, onCanc
           </div>
 
           {dishToClone && (
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl flex items-start gap-3">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-start gap-3">
               <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-800 dark:text-blue-200">
                 <p className="font-medium mb-1">Создание новой версии</p>

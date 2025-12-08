@@ -60,25 +60,23 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   actionButton,
   summaryContent,
   headerContent,
-  gradientFrom = 'from-blue-500/5',
-  gradientVia = 'via-purple-500/5',
-  gradientTo = 'to-pink-500/5',
+  gradientFrom = 'gradient-basic-info',
+  gradientVia = '',
+  gradientTo = '',
   className,
 }) => {
-  // Удалена unused переменная после замены на shadow-md
-
   return (
-    <div
-      // Применяем shadow-md ко всем блокам для консистентности
-      // Если className передан, используем его, иначе стандартный border
-      className={`${className || ''} collapsible-section`}
-    >
+    <div className={`${className || ''} collapsible-section`}>
       <div
-        className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} collapsible-section-gradient`}
+        className={`${
+          gradientFrom.includes('gradient-')
+            ? gradientFrom
+            : `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo}`
+        } collapsible-section-gradient`}
       ></div>
       <div className="relative">
         <div
-          className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
+          className="flex items-center justify-between gap-3 p-6 cursor-pointer"
           onClick={() => onToggle(id)}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -244,7 +242,7 @@ const ItemContentReadOnly: React.FC<{
 
       {isProduct && portions && portions.length > 0 && item.weight && showProductPortion && (
         <div className="pt-2">
-          <div className="view-mode-field flex items-center justify-between px-3 h-8 rounded-md">
+          <div className="view-mode-field view-mode-single-line flex items-center justify-between">
             <span className="flex items-center gap-1.5">
               <CurrentPortionIcon className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-muted-foreground font-medium text-sm">
@@ -266,7 +264,7 @@ const ItemContentReadOnly: React.FC<{
             return (
               <div
                 key={idx}
-                className="flex items-center justify-between px-3 h-8 bg-card border border-border rounded-md text-sm"
+                className="view-mode-field view-mode-single-line flex items-center justify-between"
               >
                 <span className="flex items-center gap-1.5">
                   <IconComponent className="w-3.5 h-3.5 text-muted-foreground" />
@@ -386,9 +384,9 @@ const MealDetail: React.FC<MealDetailProps> = ({
   };
 
   return (
-    <div className="space-y-6 pl-1 pb-4" ref={containerRef}>
+    <div className="space-y-6" ref={containerRef}>
       {isEditing && meal ? (
-        <div className="mt-0 transition-all duration-200 ease-in-out pl-1">
+        <div className="transition-all duration-200 ease-in-out">
           <MealForm
             meal={meal}
             onSubmit={handleSave}
@@ -424,27 +422,21 @@ const MealDetail: React.FC<MealDetailProps> = ({
             gradientVia=""
             gradientTo=""
           >
-            <div className="space-y-4 pt-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Название приёма пищи
-                </label>
+            <div className="space-y-3 pt-4">
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-foreground mb-2">Название *</label>
                 <div className="view-mode-field view-mode-single-line">{meal.name}</div>
               </div>
 
               {meal.description && (
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Краткое описание
-                  </label>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
                   <div className="view-mode-field view-mode-multi-line">{meal.description}</div>
                 </div>
               )}
               {meal.mealTypeId && (
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Тип приёма пищи
-                  </label>
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-foreground mb-2">Тип</label>
                   <div className="view-mode-field view-mode-single-line">
                     {mealTypes.find((mt) => mt.id === meal.mealTypeId)?.name || 'Неизвестный тип'}
                   </div>
@@ -480,18 +472,16 @@ const MealDetail: React.FC<MealDetailProps> = ({
             }
             gradientFrom="gradient-meal"
           >
-            <div className="space-y-4 pt-4">
+            <div className="space-y-3 pt-4">
               {watchItems.length > 0 ? (
                 watchItems.map((item, index) => {
                   const isProduct = item.type === 'product';
-                  const itemStyle = isProduct
-                    ? 'gradient-product border border-[#3b82f6]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
-                    : 'gradient-dish border border-[#f97316]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]';
+                  const itemStyle = isProduct ? 'gradient-product' : 'gradient-dish';
 
                   return (
                     <div
                       key={item.instanceId || `${item.type}-${item.itemId}-${index}`}
-                      className={`${itemStyle} rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]`}
+                      className={`${itemStyle} rounded-xl p-3`}
                     >
                       <ItemContentReadOnly item={item} products={products} dishes={dishes} />
                     </div>
@@ -500,8 +490,8 @@ const MealDetail: React.FC<MealDetailProps> = ({
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">Пусто</p>
-                  <p className="text-xs mt-1">Добавьте продукты или блюда</p>
+                  <p className="text-sm">Добавьте продукты или блюда</p>
+                  <p className="text-xs mt-1">Перетаскивайте элементы для изменения порядка</p>
                 </div>
               )}
             </div>

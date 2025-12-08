@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, Weight } from 'lucide-react';
+import { ChevronDown, Weight, Flame } from 'lucide-react';
 import cn from 'classnames';
 import NutritionDisplay from './NutritionDisplay';
 
@@ -25,7 +25,7 @@ const NutritionButton: React.FC<NutritionButtonProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const buttonClasses = cn(
-    'flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-all',
+    'flex items-center gap-1.5 px-3 py-2 rounded-lg',
     {
       'bg-muted': isExpanded,
       'bg-muted/50': !isExpanded,
@@ -47,7 +47,7 @@ const NutritionButton: React.FC<NutritionButtonProps> = ({
     >
       {isExpanded ? (
         <>
-          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
+          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90" />
           <NutritionDisplay
             calories={calories}
             proteins={proteins}
@@ -58,10 +58,18 @@ const NutritionButton: React.FC<NutritionButtonProps> = ({
         </>
       ) : (
         <>
-          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
+          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90" />
           <div className="flex items-center gap-1">
-            <span className="text-sm font-semibold text-muted-foreground">{weight || 0}</span>
-            <Weight className="w-4 h-4 text-muted-foreground" />
+            <span
+              className={`text-sm font-semibold ${weight ? 'nutrition-text--weight' : 'nutrition-text--calories'}`}
+            >
+              {weight ? weight : calories}
+            </span>
+            {weight ? (
+              <Weight className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <Flame className="w-4 h-4 nutrition-text--calories" />
+            )}
           </div>
         </>
       )}

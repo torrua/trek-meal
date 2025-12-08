@@ -4,10 +4,6 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
   Component,
   Soup,
-  Flame,
-  Beef,
-  Droplet,
-  Wheat,
   Weight,
   ChevronDown,
   Trash2,
@@ -17,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { Product, Dish, MealPlanItem, ProductPortion } from '../../types';
 import Button from '../../ui/Button';
+import NutritionButton from '../../ui/NutritionButton';
 
 // ВНЕШНИЙ КЭШ: Сохраняет состояние открытости блоков
 const itemExpansionCache = new Map<string, boolean>();
@@ -101,7 +98,6 @@ const ItemContent: React.FC<ItemContentProps> = ({
 
   const [showPortionDropdown, setShowPortionDropdown] = useState(false);
   const [showDishIngredients, setShowDishIngredients] = useState(false);
-  const [showNutrition, setShowNutrition] = useState(false);
 
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const portionDropdownRef = useRef<HTMLDivElement>(null);
@@ -344,81 +340,40 @@ const ItemContent: React.FC<ItemContentProps> = ({
 
         {/* Nutrition block - отдельная кнопка, клик не должен всплывать */}
         {(nutrition || (isProduct && selectedItem && displayWeight && displayWeight > 0)) && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation(); // Останавливаем всплытие, чтобы не сработало сворачивание
-              setShowNutrition(!showNutrition);
-            }}
-            className="flex items-center gap-1.5 h-8 px-2.5 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
-          >
-            {showNutrition ? (
-              <>
-                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-semibold text-orange-600">
-                    {nutrition
-                      ? nutrition.calories
-                      : isProduct && selectedItem
-                        ? Math.round((selectedItem as Product).calories * (displayWeight / 100))
-                        : 0}
-                  </span>
-                  <Flame className="w-4 h-4 text-orange-600" />
-                </div>
-                <div className="w-px h-4 bg-border" />
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-semibold text-blue-600">
-                    {nutrition
-                      ? nutrition.proteins
-                      : isProduct && selectedItem
-                        ? Math.round(
-                            (selectedItem as Product).proteins * (displayWeight / 100) * 10
-                          ) / 10
-                        : 0}
-                  </span>
-                  <Beef className="w-4 h-4 text-blue-600" />
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-semibold text-yellow-600">
-                    {nutrition
-                      ? nutrition.fats
-                      : isProduct && selectedItem
-                        ? Math.round((selectedItem as Product).fats * (displayWeight / 100) * 10) /
-                          10
-                        : 0}
-                  </span>
-                  <Droplet className="w-4 h-4 text-yellow-600" />
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-semibold text-green-600">
-                    {nutrition
-                      ? nutrition.carbs
-                      : isProduct && selectedItem
-                        ? Math.round((selectedItem as Product).carbs * (displayWeight / 100) * 10) /
-                          10
-                        : 0}
-                  </span>
-                  <Wheat className="w-4 h-4 text-green-600" />
-                </div>
-                <div className="w-px h-4 bg-border" />
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    {displayWeight}
-                  </span>
-                  <Weight className="w-4 h-4 text-muted-foreground" />
-                </div>
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    {displayWeight}
-                  </span>
-                  <Weight className="w-4 h-4 text-muted-foreground" />
-                </div>
-              </>
-            )}
-          </button>
+          <div onClick={(e) => e.stopPropagation()}>
+            <NutritionButton
+              calories={
+                nutrition
+                  ? nutrition.calories
+                  : isProduct && selectedItem
+                    ? Math.round((selectedItem as Product).calories * (displayWeight / 100))
+                    : 0
+              }
+              proteins={
+                nutrition
+                  ? nutrition.proteins
+                  : isProduct && selectedItem
+                    ? Math.round((selectedItem as Product).proteins * (displayWeight / 100) * 10) /
+                      10
+                    : 0
+              }
+              fats={
+                nutrition
+                  ? nutrition.fats
+                  : isProduct && selectedItem
+                    ? Math.round((selectedItem as Product).fats * (displayWeight / 100) * 10) / 10
+                    : 0
+              }
+              carbs={
+                nutrition
+                  ? nutrition.carbs
+                  : isProduct && selectedItem
+                    ? Math.round((selectedItem as Product).carbs * (displayWeight / 100) * 10) / 10
+                    : 0
+              }
+              weight={displayWeight}
+            />
+          </div>
         )}
 
         {/* Actions - кнопки редактирования/удаления */}
@@ -433,7 +388,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
                   e.stopPropagation(); // Останавливаем всплытие
                   onEditItem();
                 }}
-                className="!border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/15 text-blue-600"
+                className="!border-blue-500/20 bg-blue-500/10 text-blue-600"
                 title="Открыть блюдо"
               >
                 <SquareArrowOutUpRight className="w-4 h-4" />
@@ -448,7 +403,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
                   e.stopPropagation(); // Останавливаем всплытие
                   onRemove();
                 }}
-                className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
+                className="!border-danger/20 bg-danger/10 text-danger"
                 title="Удалить"
               >
                 <Trash2 className="w-4 h-4" />
@@ -470,10 +425,8 @@ const ItemContent: React.FC<ItemContentProps> = ({
                   setShowPortionDropdown(!showPortionDropdown);
                 }
               }}
-              className={`flex items-center px-3 h-8 text-sm bg-card border border-border rounded-md transition-all ${
-                hasMultiplePortions
-                  ? 'hover:bg-muted hover:border-primary/30 cursor-pointer'
-                  : 'cursor-default opacity-90'
+              className={`view-mode-field view-mode-single-line flex items-center ${
+                hasMultiplePortions ? 'cursor-pointer' : 'cursor-default opacity-90'
               }`}
             >
               <span className="flex items-center gap-1.5 flex-1">
@@ -529,7 +482,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
                         e.preventDefault();
                         handlePortionSelect(portion, e);
                       }}
-                      className={`w-full text-left px-3 h-8 text-sm hover:bg-muted transition-colors flex items-center justify-between rounded-md ${Number(portion.weight) === Number(item.weight) ? 'bg-primary/10 text-primary' : ''}`}
+                      className={`view-mode-field view-mode-single-line w-full text-left flex items-center justify-between ${Number(portion.weight) === Number(item.weight) ? 'bg-primary/10 text-primary' : ''}`}
                     >
                       <span className="flex items-center gap-2">
                         <OptionIcon className="w-3.5 h-3.5 text-muted-foreground opacity-70" />
@@ -559,7 +512,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
             return (
               <div
                 key={idx}
-                className="view-mode-field flex items-center gap-2 px-3 h-8 rounded-md group"
+                className="view-mode-field view-mode-single-line flex items-center gap-2 group"
               >
                 <span className="flex items-center gap-1.5 flex-1 min-w-0">
                   <IconComponent className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
@@ -574,7 +527,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
 
                 {/* Action buttons */}
                 {(onEditDishIngredient || onRemoveDishIngredient) && (
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 opacity-100">
                     {onEditDishIngredient && (
                       <Button
                         type="button"
@@ -585,7 +538,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
                           const product = products.find((p) => p.name === ingredient.name);
                           if (product) onEditDishIngredient(product.id);
                         }}
-                        className="!border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/15 text-blue-600"
+                        className="!border-blue-500/20 bg-blue-500/10 text-blue-600"
                         title="Открыть продукт"
                       >
                         <SquareArrowOutUpRight className="w-3 h-3" />
@@ -601,7 +554,7 @@ const ItemContent: React.FC<ItemContentProps> = ({
                           const product = products.find((p) => p.name === ingredient.name);
                           if (product) onRemoveDishIngredient(product.id);
                         }}
-                        className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
+                        className="!border-danger/20 bg-danger/10 text-danger"
                         title="Удалить"
                       >
                         <Trash2 className="w-3 h-3" />

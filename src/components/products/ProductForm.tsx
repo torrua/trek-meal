@@ -113,7 +113,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Information Section */}
-      <div className="p-6 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 border border-border rounded-xl">
+      <div className="p-6 gradient-basic-info rounded-xl">
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
@@ -184,7 +184,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
       </div>
 
       {/* Nutritional Information Section */}
-      <div className="p-6 bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 border border-border rounded-xl">
+      <div className="p-6 bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 rounded-xl">
         <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <Flame className="w-4 h-4 text-primary" />
@@ -241,7 +241,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
       </div>
 
       {/* Portions Section */}
-      <div className="p-6 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-blue-500/5 border border-border rounded-xl">
+      <div className="p-6 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-blue-500/5 rounded-xl">
         <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <PieChart className="w-4 h-4 text-primary" />

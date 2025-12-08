@@ -4,22 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  Utensils,
-  Info,
-  Search,
-  Hash,
-  Component,
-  Soup,
-  Flame,
-  Beef,
-  Droplet,
-  Wheat,
-  Weight,
-  Tag,
-  Save,
-  ChevronDown,
-} from 'lucide-react';
+import { Utensils, Info, Search, Hash, Component, Soup, Tag, Save } from 'lucide-react';
+import NutritionButton from '../../ui/NutritionButton';
 import {
   DndContext,
   closestCenter,
@@ -87,17 +73,21 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   actionButton,
   summaryContent,
   headerContent,
-  gradientFrom = 'from-blue-500/5',
-  gradientVia = 'via-purple-500/5',
-  gradientTo = 'to-pink-500/5',
+  gradientFrom = 'gradient-basic-info',
+  gradientVia = '',
+  gradientTo = '',
   className = '',
 }) => {
   return (
     <div
-      className={`bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} border border-border rounded-xl overflow-visible ${className}`}
+      className={`${
+        gradientFrom.includes('gradient-')
+          ? gradientFrom
+          : `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo}`
+      } rounded-xl overflow-visible ${className}`}
     >
       <div
-        className="flex items-center justify-between gap-3 p-6 cursor-pointer hover:bg-muted/50 transition-colors"
+        className="flex items-center justify-between gap-3 p-6 cursor-pointer"
         onClick={() => onToggle(id)}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -158,7 +148,6 @@ const MealForm: React.FC<MealFormProps> = ({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
-  const [showHeaderNutrition, setShowHeaderNutrition] = useState(false);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
   const searchInputRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -515,9 +504,7 @@ const MealForm: React.FC<MealFormProps> = ({
             </Button>
           </div>
         }
-        gradientFrom="from-blue-500/5"
-        gradientVia="via-purple-500/5"
-        gradientTo="to-pink-500/5"
+        gradientFrom="gradient-basic-info"
       >
         <div className="space-y-4 pt-4">
           <Controller
@@ -592,63 +579,17 @@ const MealForm: React.FC<MealFormProps> = ({
         }
         headerContent={
           watchItems.length > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowHeaderNutrition(!showHeaderNutrition);
-              }}
-              className="flex items-center gap-1.5 px-3 h-9 bg-muted/50 rounded-md border border-border hover:bg-muted transition-all"
-            >
-              {showHeaderNutrition ? (
-                <>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground -rotate-90 transition-transform" />
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Flame className="w-4 h-4 text-orange-600" />
-                      <span className="font-semibold text-orange-600">
-                        {totalNutrition.calories}
-                      </span>
-                    </div>
-                    <div className="w-px h-4 bg-border" />
-                    <div className="flex items-center gap-1">
-                      <Beef className="w-4 h-4 text-blue-600" />
-                      <span className="font-semibold text-blue-600">{totalNutrition.proteins}</span>
-                    </div>
-                    <div className="w-px h-4 bg-border" />
-                    <div className="flex items-center gap-1">
-                      <Droplet className="w-4 h-4 text-yellow-600" />
-                      <span className="font-semibold text-yellow-600">{totalNutrition.fats}</span>
-                    </div>
-                    <div className="w-px h-4 bg-border" />
-                    <div className="flex items-center gap-1">
-                      <Wheat className="w-4 h-4 text-green-600" />
-                      <span className="font-semibold text-green-600">{totalNutrition.carbs}</span>
-                    </div>
-                  </div>
-                  <div className="w-px h-4 bg-border" />
-                  <div className="flex items-center gap-1">
-                    <Weight className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-semibold text-muted-foreground text-sm">
-                      {totalWeight}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90 transition-transform" />
-                  <div className="flex items-center gap-1">
-                    <Weight className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-semibold text-muted-foreground text-sm">
-                      {totalWeight}
-                    </span>
-                  </div>
-                </>
-              )}
-            </button>
+            <NutritionButton
+              calories={totalNutrition.calories}
+              proteins={totalNutrition.proteins}
+              fats={totalNutrition.fats}
+              carbs={totalNutrition.carbs}
+              weight={totalWeight}
+            />
           )
         }
         gradientFrom="gradient-meal"
-        className="border border-border"
+        className=""
       >
         <div className="relative mb-4" ref={searchInputRef}>
           <div className="relative">
@@ -670,7 +611,7 @@ const MealForm: React.FC<MealFormProps> = ({
           {showAddMenu && searchInputRef.current && (
             <div
               ref={dropdownRef}
-              className="fixed-dropdown-container bg-card border border-border rounded-lg shadow-2xl overflow-hidden"
+              className="fixed-dropdown-container bg-card rounded-lg shadow-2xl overflow-hidden"
               style={{
                 top: `${dropdownPosition.top}px`,
                 left: `${dropdownPosition.left}px`,
@@ -769,7 +710,7 @@ const MealForm: React.FC<MealFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-3 pt-4">
+        <div className="space-y-4 pt-4">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -795,10 +736,10 @@ const MealForm: React.FC<MealFormProps> = ({
             <DragOverlay>
               {activeId && activeItem ? (
                 <div
-                  className={`rounded-xl p-3 shadow-2xl z-50 border ${
+                  className={`rounded-xl p-3 z-50 ${
                     (activeItem as MealPlanItem).type === 'product'
-                      ? 'gradient-product border border-[#3b82f6] shadow-[0_4px_8px_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.15)]'
-                      : 'gradient-dish border border-[#f59e0b] shadow-[0_4px_8px_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.15)]'
+                      ? 'gradient-product'
+                      : 'gradient-dish'
                   }`}
                 >
                   <ItemContent

@@ -192,34 +192,21 @@
 
 /* Unified text field styling for consistency between edit and view modes */
 .unified-single-line-field {
-  @apply h-10 px-4 py-2 rounded-lg border border-border bg-card text-sm text-foreground flex items-center;
+  @apply h-10 px-4 py-2 rounded-lg bg-card text-sm text-foreground flex items-center;
 }
 
 .unified-multi-line-field {
-  @apply min-h-[84px] px-4 py-2.5 rounded-lg border border-border bg-card text-sm text-foreground whitespace-pre-wrap box-border;
+  @apply min-h-[84px] px-4 py-2.5 rounded-lg bg-card text-sm text-foreground whitespace-pre-wrap box-border;
 }
 
 /* Hover and focus states for editable fields - matching EntityCard styling */
 .unified-field-hover:focus,
 .unified-field-hover:hover {
   background-color: rgb(var(--card-hover));
-  border-color: rgb(var(--border-hover));
-  @apply notion-shadow-xs;
-  transition:
-    background-color 0.3s ease-out,
-    border-color 0.3s ease-out,
-    box-shadow 0.3s ease-out;
-}
-
-.unified-field-hover:focus {
-  @apply notion-shadow-sm;
 }
 
 .unified-field-focus:focus {
-  @apply shadow-md ring-2 ring-primary/20 outline-none;
-  transition:
-    box-shadow 0.3s ease-out,
-    ring 0.3s ease-out;
+  @apply outline-none;
 }
 
 /* Refined Notion-style shadows */
@@ -281,12 +268,12 @@
 
 /* Search menu item styles */
 .search-menu-item {
-  @apply w-full px-4 py-2.5 text-left text-sm transition-all duration-150 flex items-center gap-3 hover:bg-primary/10 text-foreground hover:text-foreground;
+  @apply w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 bg-primary/10 text-foreground;
 }
 
 /* View mode field styles */
 .view-mode-field {
-  @apply bg-card border border-border rounded-lg text-sm text-foreground;
+  @apply bg-card rounded-lg text-sm text-foreground;
 }
 
 .view-mode-single-line {
@@ -294,7 +281,7 @@
 }
 
 .view-mode-multi-line {
-  @apply flex w-full min-h-[84px] px-4 py-2.5 whitespace-pre-wrap box-border;
+  @apply flex w-full min-h-[80px] px-4 py-2.5 whitespace-pre-wrap box-border;
 }
 
 /* Card gradient styles */
@@ -303,20 +290,20 @@
 }
 
 .gradient-basic-info {
-  @apply bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5;
+  background: linear-gradient(135deg, #dbeafe 0%, #e9d5ff 100%);
 }
 
 /* CollapsibleSection общие стили */
 .collapsible-section {
-  @apply shadow-md rounded-xl relative transform overflow-visible;
+  @apply rounded-xl relative transform overflow-visible;
 }
 
 .collapsible-section-gradient {
   @apply rounded-xl absolute inset-px;
 }
 
-.gradient-nutrition {
-  @apply bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5;
+.gradient-warning {
+  @apply bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-yellow-500/5;
 }
 
 .gradient-composition {
@@ -385,19 +372,6 @@ input,
 textarea,
 select {
   font-family: inherit;
-}
-
-/* Unified field styles for view mode */
-.view-mode-field {
-  @apply bg-card border border-border rounded-lg text-sm text-foreground;
-}
-
-.view-mode-single-line {
-  @apply h-10 px-4 py-2 flex items-center;
-}
-
-.view-mode-multi-line {
-  @apply min-h-[84px] px-4 py-2.5 whitespace-pre-wrap box-border;
 }
 
 /* Fixed dropdown scrollbar */
@@ -534,6 +508,14 @@ body:not(.dropdown-open) .max-w-screen-2xl {
 .nutrition-icon--calories,
 .nutrition-value--calories {
   color: var(--nutrition-calories);
+}
+
+.nutrition-text--calories {
+  color: var(--nutrition-calories);
+}
+
+.nutrition-text--weight {
+  color: var(--nutrition-weight);
 }
 
 .nutrition-icon--proteins,

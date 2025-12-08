@@ -41,13 +41,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
 
   return (
     <div ref={setNodeRef} className="touch-none" style={style}>
-      <div
-        className={`${
-          isDish
-            ? 'gradient-dish border border-[#f97316]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
-            : 'gradient-product border border-[#3b82f6]/30 shadow-[0_1px_2px_rgba(0,0,0,0.05)]'
-        } rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]`}
-      >
+      <div className={`${isDish ? 'gradient-dish' : 'gradient-product'} rounded-xl p-3`}>
         <ItemContent
           item={item}
           products={products}

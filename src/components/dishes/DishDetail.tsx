@@ -295,7 +295,7 @@ const SortableProductItem: React.FC<SortableProductItemProps> = ({
 
   return (
     <div ref={setNodeRef} className="touch-none" style={style}>
-      <div className="gradient-product border border-[#3b82f6]/30 rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
+      <div className="gradient-product rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Component
@@ -852,7 +852,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
               {showAddMenu && (
                 <div
                   ref={dropdownRef}
-                  className="absolute top-full left-0 right-0 mt-2 rounded-lg border border-border bg-card shadow-2xl overflow-hidden z-50"
+                  className="absolute top-full left-0 right-0 mt-2 rounded-lg bg-card overflow-hidden z-50"
                   style={{ maxHeight: '300px' }}
                   onWheel={(e) => {
                     e.stopPropagation();
@@ -925,7 +925,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
 
           {/* Empty State for creation */}
           {isEditing && formProducts.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg border border-dashed border-border">
+            <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg">
               <Soup className="w-10 h-10 mx-auto mb-3 opacity-20" />
               <p className="text-sm">Список продуктов пуст.</p>
               <p className="text-xs mt-1 opacity-70">
@@ -995,10 +995,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                   const product = allProducts.find((p) => p.id === dishProduct.productId);
                   if (!product) return null;
                   return (
-                    <div
-                      key={index}
-                      className="gradient-product border border-[#3b82f6]/30 rounded-xl transition-all duration-200 p-3 hover:bg-card-hover hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
-                    >
+                    <div key={index} className="gradient-product rounded-xl p-3">
                       <ProductContentReadOnly
                         dishProduct={dishProduct}
                         product={product}

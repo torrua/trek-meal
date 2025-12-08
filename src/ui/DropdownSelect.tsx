@@ -119,7 +119,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
         }, 0);
       }
     },
-    [options, onChange, isMulti, selectedValues, value]
+    [options, onChange, isMulti, selectedValues]
   );
 
   useEffect(() => {
@@ -169,15 +169,12 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             'flex w-full text-sm transition-colors duration-200 border-transition',
             'placeholder:text-muted-foreground text-foreground',
             'disabled:cursor-not-allowed disabled:opacity-50',
-            'h-10 rounded-lg border border-border bg-card px-4 py-2',
-            'hover:bg-card-hover hover:border-border-hover hover:notion-shadow-sm',
+            'h-10 rounded-lg bg-card px-4 py-2',
             'focus:shadow-md focus:ring-2 focus:ring-primary/20 focus:outline-none',
             'min-w-[220px]',
 
             // Active/inactive states
-            isActive
-              ? 'bg-primary/5 border-primary/30 text-primary'
-              : 'bg-background border-border hover:border-border-hover text-foreground',
+            isActive ? 'bg-primary/5 text-primary' : 'bg-background text-foreground',
 
             // Disabled state
             disabled && 'bg-muted/50 text-muted-foreground cursor-not-allowed opacity-60',
@@ -185,7 +182,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             // Open state (no additional styles when menu is open)
             isOpen && ''
           )}
-          aria-expanded={isOpen}
+          aria-expanded={isOpen ? 'true' : 'false'}
           aria-haspopup="listbox"
           aria-label={`${label}: ${
             isMulti
@@ -241,13 +238,13 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
         {/* Dropdown Menu */}
         {isOpen && (
           <div
-            style={{ minWidth: `${minMenuWidth}px` }}
             className={cn(
               'absolute z-[9999] top-full left-0 mt-2 w-max max-w-xs',
-              'bg-card border border-border/20 rounded-xl notion-shadow-lg',
+              'bg-card rounded-xl notion-shadow-lg',
               'shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)]',
               'overflow-hidden notion-scale-in'
             )}
+            style={{ minWidth: `${minMenuWidth}px` }}
           >
             {/* Search Input */}
             {searchable && (
@@ -260,7 +257,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Поиск..."
-                    className="w-full pl-10 pr-4 py-2 text-sm rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/60"
+                    className="w-full pl-10 pr-4 py-2 text-sm rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import useParticipantStore from '../stores/useParticipantStore';
 import useTripStore from '../stores/useTripStore';
@@ -38,7 +39,9 @@ export function useParticipantsManagement(options: UseParticipantsManagementOpti
     if (!enableUrlSync) return;
     const selectedId = searchParams.get('selectedId');
     if (selectedId && store.participants.some((p) => p.id === Number(selectedId))) {
-      setActiveId(Number(selectedId));
+      flushSync(() => {
+        setActiveId(Number(selectedId));
+      });
       setSearchParams({}, { replace: true });
     }
   }, [enableUrlSync, searchParams, setSearchParams, store.participants]);

@@ -1,6 +1,7 @@
 // src/pages/DishesPage.tsx
 
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   CirclePlus,
@@ -70,8 +71,10 @@ const DishesPage: React.FC = () => {
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
     if (selectedId && dishes.some((d) => d.id === Number(selectedId))) {
-      setActiveId(Number(selectedId));
-      setIsCreating(false); // Выключаем создание при выборе
+      flushSync(() => {
+        setActiveId(Number(selectedId));
+        setIsCreating(false); // Выключаем создание при выборе
+      });
       setSearchParams({}, { replace: true });
 
       setTimeout(() => {

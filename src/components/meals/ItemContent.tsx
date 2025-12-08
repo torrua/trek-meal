@@ -46,6 +46,8 @@ const ItemContent: React.FC<ItemContentProps> = ({
   onRemoveDishIngredient,
   dragHandleProps,
 }) => {
+  const [isDragging, setIsDragging] = useState(false);
+
   const svgCompatibleListeners = dragHandleProps?.listeners
     ? {
         onPointerDown: (e: React.PointerEvent<SVGSVGElement>) => {
@@ -280,8 +282,6 @@ const ItemContent: React.FC<ItemContentProps> = ({
   const canExpand =
     (isDish && dishDetails && dishDetails.length > 0) ||
     (isProduct && portions && portions.length > 0);
-
-  const [isDragging, setIsDragging] = useState(false);
 
   // Общий обработчик клика по строке заголовка
   const handleHeaderClick = (_e: React.MouseEvent) => {

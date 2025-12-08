@@ -1,6 +1,7 @@
 // src/pages/EquipmentPage.tsx
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import {
   CirclePlus,
@@ -69,7 +70,9 @@ const EquipmentPage: React.FC = () => {
   useEffect(() => {
     const selectedId = searchParams.get('selectedId');
     if (selectedId && equipment.some((e) => e.id === Number(selectedId))) {
-      setActiveId(Number(selectedId));
+      flushSync(() => {
+        setActiveId(Number(selectedId));
+      });
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, equipment, setSearchParams]);

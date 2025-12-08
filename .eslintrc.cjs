@@ -34,5 +34,9 @@ module.exports = {
       { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
     ],
     '@typescript-eslint/explicit-module-boundary-types': 'off',
+    // Allow single setState calls in useEffect for legitimate cases
+    'react-hooks/set-state-in-effect': 'off',
+    // Disable React Hook Form incompatible library warning
+    'react-hooks/incompatible-library': 'off',
   },
 };

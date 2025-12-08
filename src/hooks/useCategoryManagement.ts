@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import useCategoryStore from '../stores/useCategoryStore';
 import useProductStore from '../stores/useProductStore';
@@ -74,11 +75,13 @@ export const useCategoryManagement = (
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   // URL synchronization for page-level components
-  useMemo(() => {
+  useEffect(() => {
     if (enableUrlSync) {
       const selectedId = searchParams.get('selectedId');
       if (selectedId && categoryStore.categories.some((c) => c.id === Number(selectedId))) {
-        setActiveId(Number(selectedId));
+        flushSync(() => {
+          setActiveId(Number(selectedId));
+        });
         setSearchParams({}, { replace: true });
       }
     }

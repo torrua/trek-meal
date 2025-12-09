@@ -12,26 +12,31 @@ import {
   PieChart,
   Circle,
 } from 'lucide-react';
-import type { Meal, Product, Dish, MealPlanItem } from '../../types';
+import type { Meal, Product, Dish, MealPlanItem, MealData } from '../../types';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
 import useMealTypesStore from '../../stores/useMealTypesStore';
 import Button from '../../ui/Button';
 import MealForm from './MealForm';
+import CollapsibleSection from '../shared/CollapsibleSection';
 import { useMealStore } from '../../stores/useMealStore';
 import { calculateNutrition } from './mealFormUtils';
 import NutritionButton from '../../ui/NutritionButton';
 
 interface MealDetailProps {
   meal: Meal | null;
+  isCreating?: boolean;
   onEdit: () => void;
   editTrigger?: number;
   openSections: string[];
   onToggleSection: (sectionId: string) => void;
   onStartEdit?: () => void;
   onFinishEdit?: () => void;
+  onSaveNew?: (data: MealData) => Promise<void>;
+  onCancelCreation?: () => void;
   editSubmitTrigger?: number;
   editCancelTrigger?: number;
+  onTest?: () => void;
 }
 
 interface CollapsibleSectionProps {
@@ -49,53 +54,6 @@ interface CollapsibleSectionProps {
   gradientTo?: string;
   className?: string;
 }
-
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
-  id,
-  title,
-  icon,
-  children,
-  isOpen,
-  onToggle,
-  actionButton,
-  summaryContent,
-  headerContent,
-  gradientFrom = 'gradient-basic-info',
-  gradientVia = '',
-  gradientTo = '',
-  className,
-}) => {
-  return (
-    <div className={`${className || ''} collapsible-section`}>
-      <div
-        className={`${
-          gradientFrom.includes('gradient-')
-            ? gradientFrom
-            : `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo}`
-        } collapsible-section-gradient`}
-      ></div>
-      <div className="relative">
-        <div
-          className="flex items-center justify-between gap-3 p-6 cursor-pointer"
-          onClick={() => onToggle(id)}
-        >
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
-              {icon}
-            </div>
-            <h2 className="text-lg font-semibold truncate">{title}</h2>
-            {summaryContent && <div className="ml-2 flex-shrink-0">{summaryContent}</div>}
-          </div>
-          <div className="flex items-center gap-2 min-w-[200px] justify-end">
-            {actionButton}
-            {headerContent}
-          </div>
-        </div>
-        {isOpen && <div className="p-6 pt-0">{children}</div>}
-      </div>
-    </div>
-  );
-};
 
 const ItemContentReadOnly: React.FC<{
   item: MealPlanItem;
@@ -287,12 +245,15 @@ const ItemContentReadOnly: React.FC<{
 
 const MealDetail: React.FC<MealDetailProps> = ({
   meal,
+  isCreating = false,
   onEdit: _onEdit,
   editTrigger,
   openSections,
   onToggleSection,
   onStartEdit,
   onFinishEdit,
+  onSaveNew,
+  onCancelCreation,
   editSubmitTrigger: _editSubmitTrigger,
   editCancelTrigger: _editCancelTrigger,
 }) => {
@@ -359,7 +320,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
     }, 0);
   }, [watchItems, products, dishes]);
 
-  if (!meal) return null;
+  if (!meal && !isCreating) return null;
 
   // Use the passed openSections prop for both view and edit modes to preserve state
   const isBasicInfoOpen = openSections.includes('basic-info');
@@ -383,6 +344,14 @@ const MealDetail: React.FC<MealDetailProps> = ({
     onFinishEdit?.();
   };
 
+  const handleSaveNew = (data: MealData) => {
+    onSaveNew?.(data);
+  };
+
+  const handleCancelCreation = () => {
+    onCancelCreation?.();
+  };
+
   return (
     <div className="space-y-6" ref={containerRef}>
       {isEditing && meal ? (
@@ -391,6 +360,17 @@ const MealDetail: React.FC<MealDetailProps> = ({
             meal={meal}
             onSubmit={handleSave}
             onCancel={handleCancelEdit}
+            focusName={true}
+            openSections={openSections}
+            onToggleSection={onToggleSection}
+          />
+        </div>
+      ) : isCreating ? (
+        <div>
+          <MealForm
+            meal={null}
+            onSubmit={handleSaveNew}
+            onCancel={handleCancelCreation}
             focusName={true}
             openSections={openSections}
             onToggleSection={onToggleSection}
@@ -427,19 +407,18 @@ const MealDetail: React.FC<MealDetailProps> = ({
                 <label className="block text-sm font-medium text-foreground mb-2">Название *</label>
                 <div className="view-mode-field view-mode-single-line">{meal.name}</div>
               </div>
-
-              {meal.description && (
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-                  <div className="view-mode-field view-mode-multi-line">{meal.description}</div>
-                </div>
-              )}
               {meal.mealTypeId && (
                 <div className="space-y-1">
                   <label className="block text-sm font-medium text-foreground mb-2">Тип</label>
                   <div className="view-mode-field view-mode-single-line">
                     {mealTypes.find((mt) => mt.id === meal.mealTypeId)?.name || 'Неизвестный тип'}
                   </div>
+                </div>
+              )}
+              {meal.description && (
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
+                  <div className="view-mode-field view-mode-multi-line">{meal.description}</div>
                 </div>
               )}
             </div>

@@ -3,7 +3,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Product, Dish, MealPlanItem } from '../../types';
-import ItemContent from './ItemContent';
+import MealItemContent from './MealItemContent';
 
 interface SortableItemProps {
   id: string;
@@ -42,7 +42,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
   return (
     <div ref={setNodeRef} className="touch-none" style={style}>
       <div className={`${isDish ? 'gradient-dish' : 'gradient-product'} rounded-xl p-3`}>
-        <ItemContent
+        <MealItemContent
           item={item}
           products={products}
           dishes={dishes}

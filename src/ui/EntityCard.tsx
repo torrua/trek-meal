@@ -72,6 +72,8 @@ interface EntityCardProps {
     portionCount?: number;
   };
   viewMode?: 'default' | 'compact';
+  id?: number; // Добавляем id для универсального multi-select
+  onToggleMultiSelect?: () => void; // Добавляем callback для включения multi-select режима
 }
 
 let globalShowBjuCard = true;
@@ -110,6 +112,8 @@ const EntityCard: React.FC<EntityCardProps> = ({
   showMultiSelect = false,
   variant = 'neutral',
   nutrition,
+  id, // Добавляем id в props
+  onToggleMultiSelect, // Добавляем callback
 }) => {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const nutritionRef = useRef<HTMLDivElement | null>(null);
@@ -177,7 +181,14 @@ const EntityCard: React.FC<EntityCardProps> = ({
     onDoubleClick: (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      onRequestMultiSelectMode?.();
+      // Если передан onRequestMultiSelectMode, используем его
+      if (onRequestMultiSelectMode) {
+        onRequestMultiSelectMode();
+      } else if (id && onMultiSelect && !showMultiSelect && onToggleMultiSelect) {
+        // Универсальная логика: включаем multi-select и выделяем текущий элемент
+        onToggleMultiSelect();
+        onMultiSelect(true);
+      }
     },
     role: 'button',
     tabIndex: onSelect ? 0 : -1,
@@ -199,27 +210,9 @@ const EntityCard: React.FC<EntityCardProps> = ({
     trip: 'gradient-trip',
   };
 
-  const ringColorByVariant: Record<NonNullable<EntityCardProps['variant']>, string> = {
-    neutral: 'ring-blue-500/35',
-    info: 'ring-indigo-500/35',
-    composition: 'ring-green-500/35',
-    meal: 'ring-green-500/35',
-    'meal-type': 'ring-yellow-500/35',
-    dish: 'ring-orange-500/35',
-    product: 'ring-sky-500/35',
-    category: 'ring-yellow-500/35',
-    equipment: 'ring-indigo-500/35',
-    participant: 'ring-orange-500/35',
-    trip: 'ring-purple-500/35',
-  };
-
   const cardClasses = cn(
     'group relative flex flex-col rounded-xl p-4 cursor-pointer bg-card shadow-sm',
     gradientByVariant[variant],
-    {
-      'border border-border': !isSelected,
-      [`shadow-md ring-2 ${ringColorByVariant[variant]}`]: isSelected,
-    },
     className
   );
 

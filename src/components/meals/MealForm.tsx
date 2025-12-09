@@ -30,7 +30,7 @@ import SortableItemComponent from './SortableItem';
 import DropdownSelect from '../../ui/DropdownSelect';
 import { calculateNutrition } from './mealFormUtils';
 import { useMealStore } from '../../stores/useMealStore';
-import ItemContent from './ItemContent';
+import MealItemContent from './MealItemContent';
 
 interface MealFormProps {
   meal?: Meal | null;
@@ -199,7 +199,11 @@ const MealForm: React.FC<MealFormProps> = ({
   const { fields, append, remove, move, update } = useFieldArray({ control, name: 'items' });
   const watchItems = watch('items');
 
-  const [validationErrors, setValidationErrors] = useState<{ name?: string; items?: string }>({});
+  const [validationErrors, setValidationErrors] = useState<{
+    name?: string;
+    mealTypeId?: string;
+    items?: string;
+  }>({});
 
   useEffect(() => {
     if (validationErrors.items && (watchItems?.length || 0) > 0) {
@@ -432,14 +436,14 @@ const MealForm: React.FC<MealFormProps> = ({
       return;
     }
 
-    // Validate meal type
-    if (!mealTypeIdNumber) {
-      setValidationErrors((prev) => ({
-        ...prev,
-        mealTypeId: 'Тип приёма пищи обязателен',
-      }));
-      return;
-    }
+    // Validate meal type (optional)
+    // if (!mealTypeIdNumber) {
+    //   setValidationErrors((prev) => ({
+    //     ...prev,
+    //     mealTypeId: 'Тип приёма пищи обязателен',
+    //   }));
+    //   return;
+    // }
 
     // Validate items
     if (!watchItems || watchItems.length === 0) {
@@ -531,22 +535,27 @@ const MealForm: React.FC<MealFormProps> = ({
             name="mealTypeId"
             control={control}
             render={({ field }) => (
-              <DropdownSelect
-                label="Тип"
-                icon={Tag}
-                options={[
-                  { value: '', label: 'Не указан' },
-                  ...mealTypes.map((type) => ({
-                    value: String(type.id),
-                    label: type.name,
-                  })),
-                ]}
-                value={String(field.value || '')}
-                onChange={(val) => {
-                  field.onChange(val);
-                }}
-                placeholder="Выберите тип приёма пищи"
-              />
+              <div>
+                <DropdownSelect
+                  label="Тип"
+                  icon={Tag}
+                  options={[
+                    { value: '', label: 'Не указан' },
+                    ...mealTypes.map((type) => ({
+                      value: String(type.id),
+                      label: type.name,
+                    })),
+                  ]}
+                  value={String(field.value || '')}
+                  onChange={(val) => {
+                    field.onChange(val);
+                  }}
+                  placeholder="Выберите тип приёма пищи"
+                />
+                {validationErrors.mealTypeId && (
+                  <p className="text-xs text-danger mt-1">{validationErrors.mealTypeId}</p>
+                )}
+              </div>
             )}
           />
           <Controller
@@ -743,7 +752,7 @@ const MealForm: React.FC<MealFormProps> = ({
                       : 'gradient-dish'
                   }`}
                 >
-                  <ItemContent
+                  <MealItemContent
                     item={activeItem as MealPlanItem}
                     products={products}
                     dishes={dishes}
@@ -759,6 +768,9 @@ const MealForm: React.FC<MealFormProps> = ({
                   <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p className="text-sm">Добавьте продукты или блюда</p>
                   <p className="text-xs mt-1">Перетаскивайте элементы для изменения порядка</p>
+                  {validationErrors.items && (
+                    <p className="text-xs mt-2 text-danger">{validationErrors.items}</p>
+                  )}
                 </div>
               )}
             </>

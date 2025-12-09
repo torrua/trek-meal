@@ -1,22 +1,20 @@
 // src/components/dishes/DishDetail.tsx
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { toast } from 'react-hot-toast';
 import {
   Soup,
   Info,
-  Weight,
   MapPin,
   Component,
   Hash,
-  Trash2,
   Search,
-  PieChart,
-  Circle,
   AlertTriangle,
   Save,
   Copy,
   Plus,
-  ExternalLink,
+  PieChart,
+  Circle,
 } from 'lucide-react';
 import {
   DndContext,
@@ -33,8 +31,6 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { useNavigate } from 'react-router-dom';
 import type { Dish, DishProduct, Product, DishData } from '../../types';
 import useProductStore from '../../stores/useProductStore';
@@ -46,11 +42,13 @@ import Button from '../../ui/Button';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import FormField from '../../ui/FormField';
-import DropdownSelect from '../../ui/DropdownSelect';
-import { toast } from 'react-hot-toast';
+import _DropdownSelect from '../../ui/DropdownSelect';
+import SortableDishItem from './SortableDishItem';
+import ProductContentReadOnly from './ProductContentReadOnly';
+import _EditableProductNutrition from './EditableProductNutrition';
 import Modal from '../../ui/Modal';
-import { tripEntityConfig } from '../../config/entityConfig';
 import NutritionButton from '../../ui/NutritionButton';
+import CollapsibleSection from '../shared/CollapsibleSection';
 
 interface DishDetailProps {
   dish: Dish | null;
@@ -65,307 +63,8 @@ interface DishDetailProps {
   onCancelCreation?: () => void; // Коллбэк для отмены создания
   editSubmitTrigger?: number;
   editCancelTrigger?: number;
+  onProductAdd?: (product: Product) => void; // New prop
 }
-
-// --- CollapsibleSection ---
-interface CollapsibleSectionProps {
-  id: string;
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  isOpen: boolean;
-  onToggle: (id: string) => void;
-  actionButton?: React.ReactNode;
-  summaryContent?: React.ReactNode;
-  headerContent?: React.ReactNode;
-  gradientFrom?: string;
-  gradientVia?: string;
-  gradientTo?: string;
-  className?: string;
-}
-
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
-  id,
-  title,
-  icon,
-  children,
-  isOpen,
-  onToggle,
-  actionButton,
-  summaryContent,
-  headerContent,
-  gradientFrom = 'from-blue-500/5',
-  gradientVia = 'via-purple-500/5',
-  gradientTo = 'to-pink-500/5',
-  className,
-}) => {
-  return (
-    <div
-      className={
-        className ||
-        `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo} collapsible-section`
-      }
-    >
-      <div
-        className="flex items-center justify-between gap-3 p-6 cursor-pointer"
-        onClick={() => onToggle(id)}
-      >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
-            {typeof icon === 'function'
-              ? React.createElement(icon, { className: 'h-4 w-4' })
-              : icon}
-          </div>
-          <h2 className="text-lg font-semibold truncate">{title}</h2>
-          {summaryContent && <div className="ml-2 flex-shrink-0">{summaryContent}</div>}
-        </div>
-        <div className="flex items-center gap-2 min-w-[200px] justify-end">
-          {actionButton}
-          {headerContent}
-        </div>
-      </div>
-      {isOpen && <div className="p-6 pt-0">{children}</div>}
-    </div>
-  );
-};
-
-// --- Read Only Product View ---
-const ProductContentReadOnly: React.FC<{
-  dishProduct: DishProduct;
-  product: Product;
-  onRemove: () => void;
-  canRemove: boolean;
-}> = ({ dishProduct, product, onRemove, canRemove }) => {
-  const [showPortionDetails, setShowPortionDetails] = useState(false);
-
-  const nutrition = useMemo(() => {
-    if (!product || !dishProduct.weight) return null;
-    const multiplier = dishProduct.weight / 100;
-    return {
-      calories: Math.round((product.calories || 0) * multiplier),
-      proteins: Math.round((product.proteins || 0) * multiplier * 10) / 10,
-      fats: Math.round((product.fats || 0) * multiplier * 10) / 10,
-      carbs: Math.round((product.carbs || 0) * multiplier * 10) / 10,
-    };
-  }, [product, dishProduct.weight]);
-
-  const portion = useMemo(() => {
-    if (!product || !dishProduct.weight) return null;
-    return product.portions?.find((p) => p.weight === dishProduct.weight);
-  }, [product, dishProduct.weight]);
-
-  const PortionIcon = portion?.isIndivisible ? Circle : PieChart;
-
-  return (
-    <div className="space-y-1">
-      <div
-        className={`flex items-center gap-2 ${
-          product.portions && product.portions.length > 0 ? 'cursor-pointer' : ''
-        }`}
-        onClick={() => {
-          if (product.portions && product.portions.length > 0) {
-            setShowPortionDetails(!showPortionDetails);
-          }
-        }}
-      >
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
-          <h4 className="font-medium text-foreground truncate">{product.name}</h4>
-        </div>
-        <div className="flex items-center gap-2">
-          {nutrition && dishProduct.weight && (
-            <NutritionButton
-              calories={nutrition.calories}
-              proteins={nutrition.proteins}
-              fats={nutrition.fats}
-              carbs={nutrition.carbs}
-              weight={dishProduct.weight}
-            />
-          )}
-          {canRemove && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
-              className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
-              title="Удалить продукт"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {dishProduct.weight &&
-        product.portions &&
-        product.portions.length > 0 &&
-        showPortionDetails && (
-          <div className="pt-2">
-            <div className="view-mode-field flex items-center justify-between px-3 h-8 rounded-md">
-              <span className="flex items-center gap-1.5">
-                <PortionIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-muted-foreground font-medium text-sm">
-                  {portion ? portion.name : 'Другой'}
-                </span>
-              </span>
-              <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-                {dishProduct.weight}
-                <Weight className="w-3.5 h-3.5" />
-              </span>
-            </div>
-          </div>
-        )}
-    </div>
-  );
-};
-
-// --- Editable nutrition block (matches read-only UI) ---
-const EditableProductNutrition: React.FC<{ product: Product | null; weight: number }> = ({
-  product,
-  weight,
-}) => {
-  if (!product || !weight) return null;
-
-  const multiplier = weight / 100;
-  const nutrition = {
-    calories: Math.round((product.calories || 0) * multiplier),
-    proteins: Math.round((product.proteins || 0) * multiplier * 10) / 10,
-    fats: Math.round((product.fats || 0) * multiplier * 10) / 10,
-    carbs: Math.round((product.carbs || 0) * multiplier * 10) / 10,
-  };
-
-  return (
-    <NutritionButton
-      calories={nutrition.calories}
-      proteins={nutrition.proteins}
-      fats={nutrition.fats}
-      carbs={nutrition.carbs}
-      weight={weight}
-      title={`${nutrition.calories} ккал`}
-    />
-  );
-};
-
-// --- Sortable Product Item ---
-interface SortableProductItemProps {
-  product: DishProduct;
-  selectedProduct: Product | undefined;
-  portionOptions: Array<{
-    value: string;
-    label: string;
-    menuLabel: string;
-    icon: React.ComponentType<{ className?: string }>;
-  }>;
-  currentPortion: {
-    value: string;
-    label: string;
-    menuLabel: string;
-    icon: React.ComponentType<{ className?: string }>;
-  } | null;
-  index: number;
-  onPortionChange: (index: number, value: string) => void;
-  onWeightChange: (index: number, value: string) => void;
-  onDelete: (index: number) => void;
-  onViewProduct?: (productId: number) => void;
-}
-
-const SortableProductItem: React.FC<SortableProductItemProps> = ({
-  product,
-  selectedProduct,
-  portionOptions,
-  currentPortion,
-  index,
-  onPortionChange,
-  onWeightChange,
-  onDelete,
-  onViewProduct,
-}) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: product.productId,
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition: isDragging ? 'none' : transition,
-  };
-
-  return (
-    <div ref={setNodeRef} className="touch-none" style={style}>
-      <div className="gradient-product rounded-xl p-3">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Component
-              className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
-              aria-label="Перетащить продукт"
-              {...attributes}
-              {...listeners}
-            />
-            <span className="font-medium flex items-center gap-2">
-              {selectedProduct?.name || 'Product not found'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <EditableProductNutrition product={selectedProduct || null} weight={product.weight} />
-            {selectedProduct && onViewProduct && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => onViewProduct(selectedProduct.id)}
-                className="!border-blue-500/20 bg-blue-500/10 hover:bg-blue-500/15 text-blue-600"
-                title="Перейти к продукту"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </Button>
-            )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => onDelete(index)}
-              className="!border-danger/20 bg-danger/10 hover:bg-danger/15 text-danger"
-              title="Удалить продукт"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        <div className="pt-2">
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Порция</label>
-              <DropdownSelect
-                value={currentPortion?.value || ''}
-                onChange={(value) => typeof value === 'string' && onPortionChange(index, value)}
-                options={portionOptions}
-                placeholder="Выберите порцию..."
-                icon={currentPortion?.icon || PieChart}
-              />
-            </div>
-            <div className="w-24">
-              <label className="block text-xs font-medium text-muted-foreground mb-1">
-                Вес (г)
-              </label>
-              <Input
-                type="number"
-                value={product.weight || ''}
-                onChange={(e) => onWeightChange(index, e.target.value)}
-                placeholder="Вес"
-                className="text-center"
-                min="1"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const CUSTOM_WEIGHT_VALUE = '-1';
 
@@ -960,7 +659,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                     );
                     if (hasCustomWeight) {
                       portionOptions.push({
-                        value: CUSTOM_WEIGHT_VALUE,
+                        value: '-1',
                         label: 'Свой вес...',
                         menuLabel: 'Свой вес...',
                         icon: PieChart,
@@ -972,7 +671,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                       portionOptions[portionOptions.length - 1];
 
                     return (
-                      <SortableProductItem
+                      <SortableDishItem
                         key={p.productId}
                         product={p}
                         selectedProduct={selectedProduct}
@@ -995,12 +694,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                   if (!product) return null;
                   return (
                     <div key={index} className="gradient-product rounded-xl p-3">
-                      <ProductContentReadOnly
-                        dishProduct={dishProduct}
-                        product={product}
-                        onRemove={() => handleDeleteProduct(index)}
-                        canRemove={isEditing ? currentProducts.length > 1 : false}
-                      />
+                      <ProductContentReadOnly dishProduct={dishProduct} product={product} />
                     </div>
                   );
                 })}
@@ -1028,9 +722,7 @@ const DishDetail: React.FC<DishDetailProps> = ({
                 onClick={() => handleViewTrip(t.id)}
               >
                 <MapPin className="w-4 h-4 text-purple-500" />
-                <span className="font-medium text-sm">
-                  {tripEntityConfig.views.listItem.title(t)}
-                </span>
+                <span className="font-medium text-sm">{t.name}</span>
               </div>
             ))}
           </div>

@@ -401,6 +401,13 @@ const EquipmentCategoriesPage: React.FC = () => {
                   isMultiSelected={selectedCategoryIds.includes(category.id)}
                   onSelect={() => setActiveId(activeId === category.id ? null : category.id)}
                   onMultiSelect={() => toggleCategorySelection(category.id)}
+                  id={category.id}
+                  onToggleMultiSelect={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedCategoryIds([category.id]);
+                    }
+                  }}
                   menuItems={entityListActions}
                   showMultiSelect={showMultiSelect}
                   variant="category"
@@ -424,6 +431,13 @@ const EquipmentCategoriesPage: React.FC = () => {
                   isMultiSelected={selectedCategoryIds.includes(category.id)}
                   onSelect={() => setActiveId(activeId === category.id ? null : category.id)}
                   onMultiSelect={() => toggleCategorySelection(category.id)}
+                  id={category.id}
+                  onToggleMultiSelect={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedCategoryIds([category.id]);
+                    }
+                  }}
                   menuItems={entityActions}
                   showMultiSelect={showMultiSelect}
                 />

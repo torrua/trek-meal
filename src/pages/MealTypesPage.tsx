@@ -460,7 +460,8 @@ const MealTypesPage: React.FC = () => {
                   isMultiSelected={selectedMealTypeIds.includes(mealType.id)}
                   onSelect={() => setActiveId(activeId === mealType.id ? null : mealType.id)}
                   onMultiSelect={() => toggleMealTypeSelection(mealType.id)}
-                  onRequestMultiSelectMode={() => {
+                  id={mealType.id}
+                  onToggleMultiSelect={() => {
                     if (!showMultiSelect) {
                       setShowMultiSelect(true);
                       setSelectedMealTypeIds([mealType.id]);

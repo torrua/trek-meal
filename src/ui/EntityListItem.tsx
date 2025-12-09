@@ -36,6 +36,8 @@ interface EntityListItemProps {
     | 'participant'
     | 'trip';
   onRequestMultiSelectMode?: () => void;
+  id?: number; // Добавляем id для универсального multi-select
+  onToggleMultiSelect?: () => void; // Добавляем callback для включения multi-select режима
 }
 
 const EntityListItem: React.FC<EntityListItemProps> = ({
@@ -50,6 +52,8 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
   'data-testid': testId,
   variant = 'neutral',
   onRequestMultiSelectMode,
+  id, // Добавляем id в props
+  onToggleMultiSelect, // Добавляем callback
 }) => {
   const gradientByVariant: Record<NonNullable<EntityListItemProps['variant']>, string> = {
     neutral: 'gradient-neutral',
@@ -65,27 +69,9 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
     trip: 'gradient-trip',
   };
 
-  const ringColorByVariant: Record<NonNullable<EntityListItemProps['variant']>, string> = {
-    neutral: 'ring-blue-500/35',
-    info: 'ring-indigo-500/35',
-    composition: 'ring-green-500/35',
-    meal: 'ring-green-500/35',
-    'meal-type': 'ring-yellow-500/35',
-    dish: 'ring-orange-500/35',
-    product: 'ring-sky-500/35',
-    category: 'ring-yellow-500/35',
-    equipment: 'ring-indigo-500/35',
-    participant: 'ring-orange-500/35',
-    trip: 'ring-purple-500/35',
-  };
-
   const itemClasses = cn(
     'group flex w-full items-center justify-between gap-3 rounded-lg px-4 py-3 text-left cursor-pointer shadow-sm',
-    gradientByVariant[variant],
-    {
-      'border border-border': !isSelected,
-      [`shadow-md ring-2 ${ringColorByVariant[variant]}`]: isSelected,
-    }
+    gradientByVariant[variant]
   );
 
   const interactiveProps = onSelect
@@ -108,7 +94,14 @@ const EntityListItem: React.FC<EntityListItemProps> = ({
         onDoubleClick: (e: React.MouseEvent) => {
           e.preventDefault();
           e.stopPropagation();
-          onRequestMultiSelectMode?.();
+          // Если передан onRequestMultiSelectMode, используем его
+          if (onRequestMultiSelectMode) {
+            onRequestMultiSelectMode();
+          } else if (id && onMultiSelect && !showMultiSelect && onToggleMultiSelect) {
+            // Универсальная логика: включаем multi-select и выделяем текущий элемент
+            onToggleMultiSelect();
+            onMultiSelect(true);
+          }
         },
         role: 'button',
         tabIndex: 0,

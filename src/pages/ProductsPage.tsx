@@ -413,17 +413,18 @@ const ProductsPage: React.FC = () => {
                   key={product.id}
                   title={cardConfig.title(product)}
                   meta={metaItems}
+                  menuItems={entityListActions}
                   isSelected={activeId === product.id}
                   isMultiSelected={selectedProductIds.includes(product.id)}
                   onSelect={() => setActiveId(activeId === product.id ? null : product.id)}
                   onMultiSelect={() => toggleProductSelection(product.id)}
-                  onRequestMultiSelectMode={() => {
+                  id={product.id}
+                  onToggleMultiSelect={() => {
                     if (!showMultiSelect) {
                       setShowMultiSelect(true);
                       setSelectedProductIds([product.id]);
                     }
                   }}
-                  menuItems={entityListActions}
                   showMultiSelect={showMultiSelect}
                   variant="product"
                 />
@@ -446,7 +447,8 @@ const ProductsPage: React.FC = () => {
                   isMultiSelected={selectedProductIds.includes(product.id)}
                   onSelect={() => setActiveId(activeId === product.id ? null : product.id)}
                   onMultiSelect={() => toggleProductSelection(product.id)}
-                  onRequestMultiSelectMode={() => {
+                  id={product.id}
+                  onToggleMultiSelect={() => {
                     if (!showMultiSelect) {
                       setShowMultiSelect(true);
                       setSelectedProductIds([product.id]);

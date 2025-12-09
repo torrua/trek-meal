@@ -114,8 +114,8 @@ const DishesPage: React.FC = () => {
     setActiveId(null);
     setIsCreating(true);
     setIsDetailEditing(true);
-    // Открываем нужные секции сразу
-    setOpenSections(['basic-info', 'products']);
+    // При создании открываем только basic-info
+    setOpenSections(['basic-info']);
   }, []);
 
   // Callback для сохранения нового блюда из DishDetail
@@ -143,6 +143,7 @@ const DishesPage: React.FC = () => {
     setActiveId(dish.id);
     setIsCreating(false);
     setIsDetailEditing(true);
+    // Не сбрасываем секции, только открываем basic-info если закрыта
     setOpenSections((prev) => (prev.includes('basic-info') ? prev : [...prev, 'basic-info']));
     setDetailEditTrigger((t) => t + 1);
   }, []);
@@ -493,8 +494,9 @@ const DishesPage: React.FC = () => {
                       }
                     }}
                     onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
-                    onRequestMultiSelectMode={() => {
-                      if (!showMultiSelect) {
+                    id={dish.id}
+                    onToggleMultiSelect={() => {
+                      if (!showMultiSelect && !isCardDisabled) {
                         setShowMultiSelect(true);
                         setSelectedDishIds([dish.id]);
                       }
@@ -542,6 +544,13 @@ const DishesPage: React.FC = () => {
                       }
                     }}
                     onMultiSelect={isCardDisabled ? undefined : () => toggleDishSelection(dish.id)}
+                    id={dish.id}
+                    onToggleMultiSelect={() => {
+                      if (!showMultiSelect && !isCardDisabled) {
+                        setShowMultiSelect(true);
+                        setSelectedDishIds([dish.id]);
+                      }
+                    }}
                     menuItems={actions}
                     showMultiSelect={showMultiSelect}
                   />

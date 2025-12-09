@@ -400,6 +400,20 @@ const EquipmentPage: React.FC = () => {
                   title={cardConfig.title(equipmentItem)}
                   meta={metaItems}
                   menuItems={entityListActions}
+                  isSelected={activeId === equipmentItem.id}
+                  isMultiSelected={selectedEquipmentIds.includes(equipmentItem.id)}
+                  onSelect={() =>
+                    setActiveId(activeId === equipmentItem.id ? null : equipmentItem.id)
+                  }
+                  onMultiSelect={() => toggleEquipmentSelection(equipmentItem.id)}
+                  id={equipmentItem.id}
+                  onToggleMultiSelect={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedEquipmentIds([equipmentItem.id]);
+                    }
+                  }}
+                  showMultiSelect={showMultiSelect}
                   variant="equipment"
                 />
               ) : (
@@ -421,6 +435,13 @@ const EquipmentPage: React.FC = () => {
                     setActiveId(activeId === equipmentItem.id ? null : equipmentItem.id)
                   }
                   onMultiSelect={() => toggleEquipmentSelection(equipmentItem.id)}
+                  id={equipmentItem.id}
+                  onToggleMultiSelect={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedEquipmentIds([equipmentItem.id]);
+                    }
+                  }}
                   data-testid={`equipment-card-${equipmentItem.id}`}
                   showMultiSelect={showMultiSelect}
                 />

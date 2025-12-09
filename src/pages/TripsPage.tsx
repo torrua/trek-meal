@@ -420,7 +420,8 @@ const TripsPage: React.FC = () => {
                   isMultiSelected={selectedTripIds.includes(trip.id)}
                   onSelect={() => onSelectTrip(trip.id)}
                   onMultiSelect={() => toggleTripSelection(trip.id)}
-                  onRequestMultiSelectMode={() => {
+                  id={trip.id}
+                  onToggleMultiSelect={() => {
                     if (!showMultiSelect) {
                       setShowMultiSelect(true);
                       setSelectedTripIds([trip.id]);

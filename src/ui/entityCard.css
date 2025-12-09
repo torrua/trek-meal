@@ -15,20 +15,32 @@
 .cq-nutrition {
   display: flex;
   width: 100%;
-  gap: 0.5rem;
-  justify-content: space-between; /* Растягиваем на всю ширину */
+  gap: 8px; /* Фиксированное значение вместо 0.5rem */
+  justify-content: flex-start; /* Фиксированное выравнивание по левому краю */
   align-items: center;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   transition: opacity 0.2s ease;
+  /* Фиксируем размеры, чтобы они не менялись при выделении карточки */
+  flex-shrink: 0;
+  box-sizing: border-box;
+  /* Предотвращаем влияние внешних теней и рамок */
+  position: relative;
+  z-index: 1;
+  /* Изолируем от изменений родительского контейнера */
+  contain: layout style;
 }
 
 /* Каждый элемент - не сжимается */
 .cq-nutrition > div {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 4px; /* Фиксированное значение вместо 0.25rem */
   flex-shrink: 0; /* Не сжимаем элементы */
+  /* Фиксируем размеры каждого элемента */
+  min-width: -webkit-fill-available; /* Поддержка Samsung Internet */
+  min-width: fit-content;
+  width: auto;
 }
 
 /* Иконки не сжимаются */
@@ -52,10 +64,10 @@
 /* Для очень узких карточек - уменьшаем gap между элементами */
 @container (max-width: 280px) {
   .cq-nutrition {
-    gap: 0.25rem;
+    gap: 4px; /* Фиксированное значение вместо 0.25rem */
   }
   .cq-nutrition > div {
-    gap: 0.15rem;
+    gap: 2px; /* Фиксированное значение вместо 0.15rem */
   }
 }
 

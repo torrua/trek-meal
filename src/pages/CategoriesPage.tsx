@@ -418,7 +418,8 @@ const CategoriesPage: React.FC = () => {
                     )
                   }
                   onMultiSelect={() => toggleCategorySelection(category.id)}
-                  onRequestMultiSelectMode={() => {
+                  id={category.id}
+                  onToggleMultiSelect={() => {
                     if (!showMultiSelect) {
                       setShowMultiSelect(true);
                       setSelectedCategoryIds([category.id]);
@@ -442,7 +443,8 @@ const CategoriesPage: React.FC = () => {
                     )
                   }
                   onMultiSelect={() => toggleCategorySelection(category.id)}
-                  onRequestMultiSelectMode={() => {
+                  id={category.id}
+                  onToggleMultiSelect={() => {
                     if (!showMultiSelect) {
                       setShowMultiSelect(true);
                       setSelectedCategoryIds([category.id]);

@@ -372,6 +372,13 @@ const ParticipantsPage: React.FC = () => {
                   isMultiSelected={selectedParticipantIds.includes(p.id)}
                   onSelect={() => onSelectParticipant(p.id)}
                   onMultiSelect={() => toggleParticipantSelection(p.id)}
+                  id={p.id}
+                  onToggleMultiSelect={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedParticipantIds([p.id]);
+                    }
+                  }}
                   showMultiSelect={showMultiSelect}
                   variant="participant"
                 />
@@ -392,6 +399,13 @@ const ParticipantsPage: React.FC = () => {
                   isMultiSelected={selectedParticipantIds.includes(p.id)}
                   onSelect={() => onSelectParticipant(p.id)}
                   onMultiSelect={() => toggleParticipantSelection(p.id)}
+                  id={p.id}
+                  onToggleMultiSelect={() => {
+                    if (!showMultiSelect) {
+                      setShowMultiSelect(true);
+                      setSelectedParticipantIds([p.id]);
+                    }
+                  }}
                   menuItems={entityCardActions}
                   showMultiSelect={showMultiSelect}
                   variant="participant"

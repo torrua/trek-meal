@@ -3,18 +3,22 @@ const path = require('path');
 
 // Папки и файлы, которые нужно ИСКЛЮЧИТЬ
 const ignoreList = [
-  'node_modules', 
-  '.git', 
-  'dist', 
-  'build', 
-  'package-lock.json', 
+  'node_modules',
+  '.git',
+  '.github',
+  'dist',
+  'build',
+  'package-lock.json',
   'yarn.lock',
+  '.windsurf',
+  '.vscode',
+  '.husky',
   'merge-project.js', // чтобы скрипт не копировал сам себя
-  '.DS_Store'
+  '.DS_Store',
 ];
 
 // Расширения файлов, которые ищем
-const extensions = ['.ts', '.tsx', '.js', '.jsx', '.css', '.scss', '.json'];
+const extensions = ['.ts', '.tsx', '.js', '.jsx', '.css', '.scss', '.json', 'html'];
 
 const outputFile = 'project_context.txt';
 
@@ -25,7 +29,7 @@ function walk(dir, fileList = []) {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
 
-    if (ignoreList.some(ignored => filePath.includes(ignored))) {
+    if (ignoreList.some((ignored) => filePath.includes(ignored))) {
       return;
     }
 
@@ -50,9 +54,9 @@ function mergeFiles() {
   allFiles.forEach((filePath) => {
     // Получаем относительный путь для удобства чтения
     const relativePath = path.relative(__dirname, filePath);
-    
+
     const fileContent = fs.readFileSync(filePath, 'utf8');
-    
+
     // Добавляем разделители, чтобы я понимал, где какой файл
     content += `\n\n================ FILE START: ${relativePath} ================\n`;
     content += fileContent;

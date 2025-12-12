@@ -26,8 +26,8 @@ const InfoField: React.FC<InfoFieldProps> = ({
 }) => (
   <div
     className={cn(
-      'rounded-xl border notion-border-subtle notion-bg-hover bg-card',
-      'hover:border-border hover:notion-shadow-sm',
+      'rounded-xl border border-border bg-card hover:bg-muted/50',
+      'hover:border-border hover:shadow-sm',
       variant === 'default' ? 'p-4' : 'p-3',
       className
     )}
@@ -37,7 +37,7 @@ const InfoField: React.FC<InfoFieldProps> = ({
       {/* Icon container with Notion-style background */}
       <div
         className={cn(
-          'flex-shrink-0 rounded-lg flex items-center justify-center border notion-border-subtle',
+          'flex-shrink-0 rounded-lg flex items-center justify-center border border-border',
           variant === 'default' ? 'w-8 h-8 bg-muted/50' : 'w-6 h-6 bg-muted/30',
           iconClassName || 'text-muted-foreground'
         )}

@@ -62,15 +62,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             placeholder={placeholder}
             disabled={disabled}
             className={cn(
-              // Base styles - Notion-inspired
-              'flex w-full text-sm transition-colors duration-200 border-transition',
+              // Base input styles
+              'flex w-full text-sm transition-colors duration-200',
               'placeholder:text-muted-foreground text-foreground',
               'disabled:cursor-not-allowed disabled:opacity-50',
 
               // Variant styles
               variant === 'default' && [
                 'h-10 rounded-lg bg-card px-4 py-2',
-                'focus:shadow-md focus:ring-2 focus:ring-primary/20 focus:outline-none',
+                // Focus styles
+                'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-transparent',
                 error && 'ring-2 ring-danger',
               ],
 

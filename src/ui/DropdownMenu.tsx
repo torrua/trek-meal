@@ -147,7 +147,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   const menu = isOpen ? (
     <div
       ref={menuRef}
-      className="fixed z-50 bg-card text-foreground rounded-lg shadow-lg border notion-border-subtle p-1 min-w-[180px] animate-in fade-in-0 zoom-in-95"
+      className="fixed z-50 bg-card text-foreground rounded-lg shadow-lg border border-border p-1 min-w-[180px] animate-in fade-in-0 zoom-in-95"
       style={{ top: position.top, left: position.left }}
       role="menu"
       aria-orientation="vertical"

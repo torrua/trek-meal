@@ -337,7 +337,7 @@ const ProductsPage: React.FC = () => {
       </div>
 
       {showFilters && (
-        <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border notion-shadow-xs p-4 sm:p-5">
+        <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border shadow-sm p-4 sm:p-5">
           <ProductFiltersComponent filters={filters} onFiltersChange={setFilters} />
         </div>
       )}

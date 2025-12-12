@@ -129,38 +129,38 @@ export default {
       },
 
       boxShadow: {
-        'notion-sm': '0 1px 2px rgba(0, 0, 0, 0.04)',
-        'notion-md': '0 2px 4px rgba(0, 0, 0, 0.06)',
-        'notion-lg': '0 8px 16px rgba(0, 0, 0, 0.08)',
-        'notion-xl': '0 12px 24px rgba(0, 0, 0, 0.09)',
+        sm: '0 1px 2px rgba(0, 0, 0, 0.04)',
+        md: '0 2px 4px rgba(0, 0, 0, 0.06)',
+        lg: '0 8px 16px rgba(0, 0, 0, 0.08)',
+        xl: '0 12px 24px rgba(0, 0, 0, 0.09)',
       },
 
       borderRadius: {
-        'notion-sm': '3px',
-        'notion-md': '6px',
-        'notion-lg': '8px',
+        sm: '3px',
+        md: '6px',
+        lg: '8px',
       },
 
       spacing: {
-        'notion-xs': '4px',
-        'notion-sm': '8px',
-        'notion-md': '16px',
-        'notion-lg': '24px',
-        'notion-xl': '32px',
-        'notion-2xl': '48px',
+        xs: '4px',
+        sm: '8px',
+        md: '16px',
+        lg: '24px',
+        xl: '32px',
+        '2xl': '48px',
       },
 
       animation: {
-        'notion-fade': 'notionFade 0.2s ease-out',
-        'notion-slide': 'notionSlide 0.15s ease-out',
+        fade: 'fadeIn 0.2s ease-out',
+        slide: 'slideIn 0.15s ease-out',
       },
 
       keyframes: {
-        notionFade: {
+        fadeIn: {
           '0%': { opacity: '0', transform: 'translateY(4px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
-        notionSlide: {
+        slideIn: {
           '0%': { transform: 'translateX(-2px)', opacity: '0' },
           '100%': { transform: 'translateX(0)', opacity: '1' },
         },

@@ -43,7 +43,7 @@ const Popover: React.FC<PopoverProps> = ({ trigger, children, contentClassName }
       {isOpen && (
         <div
           className={cn(
-            'absolute right-0 mt-2 origin-top-right rounded-notion-md bg-card shadow-notion-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-20',
+            'absolute right-0 mt-2 origin-top-right rounded-lg bg-card shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-20',
             'animate-fade-in p-4',
             contentClassName
           )}

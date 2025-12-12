@@ -165,8 +165,8 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
             }
           }}
           className={cn(
-            // Base styles - Notion-inspired to match Input component
-            'flex w-full text-sm transition-colors duration-200 border-transition',
+            // Base styles to match Input component
+            'flex w-full text-sm transition-colors duration-200',
             'placeholder:text-muted-foreground text-foreground',
             'disabled:cursor-not-allowed disabled:opacity-50',
             'h-10 rounded-lg bg-card px-4 py-2',
@@ -240,9 +240,9 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
           <div
             className={cn(
               'absolute z-[9999] top-full left-0 mt-2 w-max max-w-xs',
-              'bg-card rounded-xl notion-shadow-lg',
+              'bg-card rounded-xl shadow-lg border border-border',
               'shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-2px_rgba(0,0,0,0.1)]',
-              'overflow-hidden notion-scale-in'
+              'overflow-hidden animate-in zoom-in-95'
             )}
             style={{ minWidth: `${minMenuWidth}px` }}
           >
@@ -284,7 +284,7 @@ const DropdownSelect: React.FC<DropdownSelectProps> = ({
                       disabled={option.disabled}
                       className={cn(
                         'w-full px-4 py-2.5 text-left text-sm transition-all duration-150 flex items-center gap-3',
-                        'notion-bg-hover',
+                        'hover:bg-muted/50',
                         checked && 'bg-primary/10 text-primary font-semibold',
                         option.disabled && 'text-muted-foreground/50 cursor-not-allowed',
                         !option.disabled && 'text-foreground hover:text-foreground',

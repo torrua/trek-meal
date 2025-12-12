@@ -317,7 +317,7 @@ const EquipmentCategoriesPage: React.FC = () => {
 
       {/* Filters */}
       {showFilters && (
-        <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border notion-shadow-xs p-4 sm:p-5">
+        <div className="mb-6 sm:mb-8 bg-card rounded-xl border border-border shadow-sm p-4 sm:p-5">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">

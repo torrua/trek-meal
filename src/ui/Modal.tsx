@@ -10,16 +10,17 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   showCloseButton?: boolean;
 }
 
+// Modal size variants
 const sizeClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-xl',
-  '2xl': 'max-w-2xl',
+  sm: 'max-w-md',
+  md: 'max-w-2xl',
+  lg: 'max-w-4xl',
+  xl: 'max-w-6xl',
+  full: 'max-w-[95vw] w-[95vw]',
 };
 
 const Modal: React.FC<ModalProps> = ({
@@ -50,7 +51,7 @@ const Modal: React.FC<ModalProps> = ({
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-      {/* Enhanced Notion-style backdrop */}
+      {/* Enhanced backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-200"
         onClick={onClose}
@@ -60,9 +61,9 @@ const Modal: React.FC<ModalProps> = ({
       {/* Modal content with refined styling */}
       <div
         className={cn(
-          'relative bg-card rounded-2xl border border-border notion-shadow-xl',
+          'relative bg-card rounded-2xl border border-border shadow-xl',
           'w-full max-h-[90vh] flex flex-col overflow-hidden',
-          'notion-scale-in',
+          'animate-in zoom-in-95',
           sizeClasses[size]
         )}
         onClick={(e) => e.stopPropagation()}
@@ -86,7 +87,7 @@ const Modal: React.FC<ModalProps> = ({
                 className={cn(
                   'p-2 rounded-lg text-muted-foreground hover:text-foreground',
                   'hover:bg-muted/60',
-                  'notion-focus-ring flex-shrink-0'
+                  'focus:ring focus:ring-offset-2 focus:ring-primary-foreground'
                 )}
                 aria-label="Закрыть"
               >
@@ -97,7 +98,7 @@ const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Content with refined padding */}
-        <div className="flex-1 overflow-y-auto notion-scrollbar">
+        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
           <div className="p-6">{children}</div>
         </div>
       </div>

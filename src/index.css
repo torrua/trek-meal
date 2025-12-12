@@ -77,7 +77,7 @@
     padding: 0;
   }
 
-  /* Notion-style headings */
+  /* headings */
   h1 {
     @apply text-2xl font-semibold text-foreground leading-tight;
     letter-spacing: -0.01em;
@@ -98,8 +98,8 @@
   }
 }
 
-/* Notion-style scrollbar */
-.notion-scrollbar {
+/* Custom scrollbar */
+.custom-scrollbar {
   /* Modern browsers - place scrollbar on left */
   direction: rtl;
   scrollbar-width: thin;
@@ -109,40 +109,40 @@
 
 /* Safari/iOS fallback - reserve space using border */
 @supports not (scrollbar-gutter: stable) {
-  .notion-scrollbar {
+  .custom-scrollbar {
     border-left: 8px solid transparent;
   }
 }
 
-.notion-scrollbar::-webkit-scrollbar {
+.custom-scrollbar::-webkit-scrollbar {
   width: 8px;
   height: 8px;
   scrollbar-gutter: stable;
 }
 
 /* Fix content direction back to LTR */
-.notion-scrollbar > * {
+.custom-scrollbar > * {
   direction: ltr;
 }
 
-.notion-scrollbar::-webkit-scrollbar-track {
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.notion-scrollbar::-webkit-scrollbar-thumb {
+.custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgb(var(--muted-foreground) / 0.3);
   border-radius: 4px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
-.notion-scrollbar::-webkit-scrollbar-thumb:hover {
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--muted-foreground) / 0.5);
   background-clip: padding-box;
 }
 
-/* Notion-style animations */
-@keyframes notion-fade-in {
+/* Animation keyframes */
+@keyframes fade-in {
   from {
     opacity: 0;
     transform: translateY(-4px);
@@ -153,11 +153,11 @@
   }
 }
 
-.notion-fade-in {
-  animation: notion-fade-in 0.2s ease-out;
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
 }
 
-@keyframes notion-scale-in {
+@keyframes scale-in {
   from {
     opacity: 0;
     transform: scale(0.95);
@@ -168,12 +168,12 @@
   }
 }
 
-.notion-scale-in {
-  animation: notion-scale-in 0.2s ease-out;
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
 }
 
-/* Notion-style focus rings */
-.notion-focus-ring {
+/* Focus rings */
+.focus-ring {
   @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
 
@@ -196,47 +196,47 @@
   @apply outline-none;
 }
 
-/* Refined Notion-style shadows */
-.notion-shadow-xs {
+/* Shadow utilities */
+.shadow-xs {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.notion-shadow-sm {
+.shadow-sm {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-.notion-shadow {
+.shadow {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.notion-shadow-md {
+.shadow-md {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.notion-shadow-lg {
+.shadow-lg {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
-.notion-shadow-xl {
+.shadow-xl {
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.16);
 }
 
-/* Notion-style hover effects */
-.notion-hover {
+/* Hover effects */
+.hover-lift {
   transition: all 0.2s ease-out;
 }
 
-.notion-hover:hover {
+.hover-lift:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
 }
 
-/* Custom utility classes for Notion-style design */
-.notion-text-primary {
+/* Text utilities */
+.text-primary {
   color: rgb(var(--foreground));
 }
 
-.notion-text-secondary {
+.text-secondary {
   color: rgb(var(--muted-foreground));
 }
 
@@ -245,11 +245,11 @@
   transition: border-color 0.3s ease-out;
 }
 
-.notion-bg-hover {
+.bg-hover {
   transition: background-color 0.15s ease-out;
 }
 
-.notion-bg-hover:hover {
+.bg-hover:hover {
   background-color: rgb(var(--muted) / 0.6);
 }
 
@@ -349,9 +349,23 @@ button {
   color: rgb(var(--foreground));
 }
 
-/* Override the existing custom-scrollbar with notion-scrollbar */
+/* Custom scrollbar styles */
 .custom-scrollbar {
-  @apply notion-scrollbar;
+  direction: rtl;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--muted-foreground) / 0.3) transparent;
+  scrollbar-gutter: stable;
+}
+
+/* Safari/iOS fallback - reserve space using border */
+@supports not (scrollbar-gutter: stable) {
+  .custom-scrollbar {
+    border-left: 8px solid transparent;
+  }
+}
+
+.custom-scrollbar > * {
+  direction: ltr;
 }
 
 /* Notion-style form elements */

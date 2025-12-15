@@ -1,4 +1,3 @@
-// src/components/meals/SortableItem.tsx
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -28,20 +27,25 @@ const SortableItem: React.FC<SortableItemProps> = ({
 }) => {
   const { setNodeRef, transform, transition, isDragging, attributes, listeners } = useSortable({
     id,
+    data: { id, index },
   });
 
-  // Inline styles необходимы для dnd-kit drag and drop функциональности
   const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition: isDragging ? 'none' : transition,
+    // Translate.toString работает стабильнее, чем Transform.toString в сложных лэйаутах
+    transform: CSS.Translate.toString(transform),
+    // Отключаем transition во время драга, чтобы элемент не "плавал" за курсором с задержкой
+    transition: isDragging ? undefined : transition,
+    // Полностью скрываем элемент на месте (он заменяется Порталом)
+    opacity: isDragging ? 0 : 1,
+    zIndex: isDragging ? 1 : 'auto',
+    touchAction: 'none',
   };
 
-  // Используем ItemContent для всех элементов (и блюд, и продуктов)
-  const isDish = item.type === 'dish';
+  const gradientClass = item.type === 'product' ? 'gradient-product' : 'gradient-dish';
 
   return (
-    <div ref={setNodeRef} className="touch-none" style={style}>
-      <div className={`${isDish ? 'gradient-dish' : 'gradient-product'} rounded-xl p-3`}>
+    <div ref={setNodeRef} style={style}>
+      <div className={`rounded-xl p-3 shadow-sm ${gradientClass}`}>
         <MealItemContent
           item={item}
           products={products}
@@ -52,10 +56,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
           }
           onEditItem={() => onEditItem(item)}
           showActions={true}
-          dragHandleProps={{
-            attributes,
-            listeners: listeners || {},
-          }}
+          dragHandleProps={{ attributes, listeners }}
         />
       </div>
     </div>

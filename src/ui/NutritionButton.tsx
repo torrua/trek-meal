@@ -25,10 +25,11 @@ const NutritionButton: React.FC<NutritionButtonProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const buttonClasses = cn(
-    'flex items-center gap-1.5 px-3 py-2 rounded-lg',
+    // ДОБАВЛЕНО: shadow-sm
+    'flex items-center gap-1.5 px-3 rounded-lg h-[32px] shadow-sm transition-all duration-200',
     {
       'bg-muted': isExpanded,
-      'bg-muted/50': !isExpanded,
+      'bg-muted/50 hover:bg-muted/80': !isExpanded,
     },
     className
   );
@@ -59,16 +60,16 @@ const NutritionButton: React.FC<NutritionButtonProps> = ({
       ) : (
         <>
           <ChevronDown className="w-3.5 h-3.5 text-muted-foreground rotate-90" />
-          <div className="flex items-center gap-1">
+          <div className="nutrition-item">
             <span
-              className={`text-sm font-semibold ${weight ? 'nutrition-text--weight' : 'nutrition-text--calories'}`}
+              className={`nutrition-value ${weight ? 'nutrition-value--weight' : 'nutrition-value--calories'}`}
             >
               {weight ? weight : calories}
             </span>
             {weight ? (
-              <Weight className="w-4 h-4 text-muted-foreground" />
+              <Weight className="nutrition-icon nutrition-icon--weight" />
             ) : (
-              <Flame className="w-4 h-4 nutrition-text--calories" />
+              <Flame className="nutrition-icon nutrition-icon--calories" />
             )}
           </div>
         </>

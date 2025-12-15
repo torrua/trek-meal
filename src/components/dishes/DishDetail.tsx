@@ -15,6 +15,7 @@ import {
   Plus,
   PieChart,
   Circle,
+  Edit,
 } from 'lucide-react';
 import {
   DndContext,
@@ -442,13 +443,14 @@ const DishDetail: React.FC<DishDetailProps> = ({
             <Button
               type="button"
               variant="primary"
-              onClick={(e: React.MouseEvent) => {
+              onClick={(e) => {
                 e.stopPropagation();
                 handleStartEdit();
               }}
-              icon={Soup}
+              icon={Edit}
+              size="icon"
             >
-              Редактировать
+              {/* Empty - only icon */}
             </Button>
           )
         }

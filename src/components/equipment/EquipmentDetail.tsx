@@ -1,31 +1,38 @@
 // src/components/equipment/EquipmentDetail.tsx
 
 import React, { useState } from 'react';
-import { Info, Scale, User, Users, Tag, ExternalLink } from 'lucide-react';
+import { Info, Scale, User, Users, Tag, ExternalLink, Edit, Save } from 'lucide-react';
 import type { Equipment } from '../../types';
+import useEquipmentStore from '../../stores/useEquipmentStore';
 import useEquipmentCategoryStore from '../../stores/useEquipmentCategoryStore';
 import useParticipantStore from '../../stores/useParticipantStore';
 import Button from '../../ui/Button';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import FormField from '../../ui/FormField';
+import CollapsibleSection from '../../ui/CollapsibleSection';
+import { toast } from 'react-hot-toast';
 
 interface EquipmentDetailProps {
   equipment: Equipment | null;
-  isEditing?: boolean;
-  onSave?: (data: Partial<Equipment>) => void;
-  onCancel?: () => void;
+  openSections?: string[];
+  onToggleSection?: (sectionId: string) => void;
+  onStartEdit?: () => void;
+  onFinishEdit?: () => void;
 }
 
 const EquipmentDetail: React.FC<EquipmentDetailProps> = ({
   equipment,
-  isEditing = false,
-  onSave,
-  onCancel,
+  openSections = ['basic-info'],
+  onToggleSection,
+  onStartEdit,
+  onFinishEdit,
 }) => {
   const { categories } = useEquipmentCategoryStore();
   const { participants } = useParticipantStore();
+  const { updateEquipment } = useEquipmentStore();
 
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: equipment?.name || '',
     description: equipment?.description || '',
@@ -57,7 +64,40 @@ const EquipmentDetail: React.FC<EquipmentDetailProps> = ({
   };
 
   const handleSave = () => {
-    onSave?.(formData);
+    if (equipment && formData.name.trim()) {
+      updateEquipment(equipment.id, formData);
+      toast.success('Снаряжение обновлено');
+      setIsEditing(false);
+      onFinishEdit?.();
+    }
+  };
+
+  const handleCancel = () => {
+    if (equipment) {
+      const { id: _id, ...data } = equipment;
+      setFormData({
+        name: data.name,
+        description: data.description,
+        weight: data.weight,
+        type: data.type,
+        categoryId: data.categoryId,
+        ownerId: data.ownerId,
+        link: data.link || '',
+      });
+      setIsEditing(false);
+      onFinishEdit?.();
+    }
+  };
+
+  const handleStartEdit = () => {
+    if (equipment) {
+      setIsEditing(true);
+      onStartEdit?.();
+    }
+  };
+
+  const handleToggleSection = (sectionId: string) => {
+    onToggleSection?.(sectionId);
   };
 
   const formatWeight = (weight: number) => {
@@ -77,14 +117,57 @@ const EquipmentDetail: React.FC<EquipmentDetailProps> = ({
   return (
     <>
       {/* Basic Info Section */}
-      <div className="gradient-basic-info rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-            <Info className="w-4 h-4 text-primary" />
-          </div>
-          <h2 className="text-lg font-semibold">Основная информация</h2>
-        </div>
-
+      <CollapsibleSection
+        id="basic-info"
+        title="Основная информация"
+        icon={<Info className="w-4 h-4 text-primary" />}
+        isOpen={openSections.includes('basic-info')}
+        onToggle={handleToggleSection}
+        actionButton={
+          isEditing ? (
+            <div className="flex items-center gap-2 min-w-[280px] justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCancel();
+                }}
+              >
+                Отмена
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSave();
+                }}
+                icon={Save}
+                size="icon"
+              >
+                {/* Empty - only icon */}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleStartEdit();
+              }}
+              icon={Edit}
+              size="icon"
+            >
+              {/* Empty - only icon */}
+            </Button>
+          )
+        }
+        gradientFrom="gradient-basic-info"
+        gradientVia=""
+        gradientTo=""
+      >
         <div className="space-y-4">
           {/* Name */}
           <div>
@@ -268,19 +351,7 @@ const EquipmentDetail: React.FC<EquipmentDetailProps> = ({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Edit Actions */}
-      {isEditing && (
-        <div className="flex items-center gap-3 justify-end">
-          <Button variant="ghost" onClick={onCancel}>
-            Отмена
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
-            Сохранить изменения
-          </Button>
-        </div>
-      )}
+      </CollapsibleSection>
     </>
   );
 };

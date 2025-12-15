@@ -54,6 +54,7 @@ const EquipmentPage: React.FC = () => {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [equipmentToDelete, setEquipmentToDelete] = useState<Equipment | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [openSections, setOpenSections] = useState<string[]>(['basic-info']);
 
   const [filters, setFilters] = useState<EquipmentFilters>({
     categoryId: 'all',
@@ -101,8 +102,21 @@ const EquipmentPage: React.FC = () => {
     window.location.href = '/equipment/new';
   }, []);
 
-  const handleEdit = useCallback((equipment: Equipment) => {
-    window.location.href = `/equipment/${equipment.id}`;
+  const handleEdit = useCallback(
+    (equipment: Equipment) => {
+      // Ensure the basic-info section is open when starting edit
+      if (!openSections.includes('basic-info')) {
+        setOpenSections(['basic-info']);
+      }
+      setActiveId(equipment.id);
+    },
+    [openSections]
+  );
+
+  const handleToggleSection = useCallback((sectionId: string) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
   }, []);
 
   const handleRequestDelete = useCallback((equipment: Equipment) => {
@@ -449,9 +463,18 @@ const EquipmentPage: React.FC = () => {
             })}
           </div>
 
-          <div className="lg:col-span-2 hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7.5rem)] overflow-y-auto">
+          <div
+            className="lg:col-span-2 hidden lg:block max-h-[calc(100vh-12rem)] overflow-y-auto pr-2 custom-scrollbar pt-2"
+            id="equipment-detail-pane"
+          >
             {selectedEquipment ? (
-              <EquipmentDetail equipment={selectedEquipment} />
+              <div className="pl-1">
+                <EquipmentDetail
+                  equipment={selectedEquipment}
+                  openSections={openSections}
+                  onToggleSection={handleToggleSection}
+                />
+              </div>
             ) : (
               <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">

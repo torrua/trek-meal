@@ -263,15 +263,16 @@ const TripDetail: React.FC<TripDetailProps> = ({ trip, onAddParticipant }) => {
             </div>
           ) : (
             <Button
-              size="sm"
-              variant="secondary"
+              type="button"
+              variant="primary"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsEditing(true);
               }}
+              icon={Edit}
+              size="icon"
             >
-              <Edit className="w-4 h-4 mr-2" />
-              Изменить
+              {/* Empty - only icon */}
             </Button>
           )
         }

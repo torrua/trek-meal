@@ -1,23 +1,14 @@
 // src/components/categories/CategoryDetail.tsx
 
 import React, { useState } from 'react';
-import {
-  Info,
-  Edit,
-  Save,
-  Hash,
-  SquareArrowOutUpRight,
-  Trash2,
-  Component as ProductComponent,
-} from 'lucide-react';
+import { Info, Edit, Save, Hash, Trash2, SquareArrowOutUpRight, Package } from 'lucide-react';
 import type { Category, Product } from '../../types';
-import Button from '../../ui/Button';
-import NutritionButton from '../../ui/NutritionButton';
-import CategoryForm from './CategoryForm';
-import Input from '../../ui/Input';
-import Textarea from '../../ui/Textarea';
 import useCategoryStore from '../../stores/useCategoryStore';
 import useProductStore from '../../stores/useProductStore';
+import Button from '../../ui/Button';
+import Input from '../../ui/Input';
+import Textarea from '../../ui/Textarea';
+import NutritionButton from '../../ui/NutritionButton';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -130,7 +121,6 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
   onEditProduct: _onEditProduct,
   onDeleteProduct: _onDeleteProduct,
 }) => {
-  const [isEditing, setIsEditing] = React.useState(false);
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -153,7 +143,6 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
 
   React.useEffect(() => {
     if (editTrigger > 0) {
-      setIsEditing(true);
       setIsInlineEditing(true);
       setEditName('');
       setEditDescription('');
@@ -164,14 +153,14 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
 
   React.useEffect(() => {
     if (editSubmitTrigger > 0) {
-      setIsEditing(false);
+      setIsInlineEditing(false);
       onFinishEdit?.();
     }
   }, [editSubmitTrigger, onFinishEdit]);
 
   React.useEffect(() => {
     if (editCancelTrigger > 0) {
-      setIsEditing(false);
+      setIsInlineEditing(false);
       onFinishEdit?.();
     }
   }, [editCancelTrigger, onFinishEdit]);
@@ -232,7 +221,6 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
 
       // Если это создание новой категории, сбрасываем состояние создания
       if (!category) {
-        setIsEditing(false);
         onFinishEdit?.();
       }
     } catch (error) {
@@ -245,11 +233,11 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
 
   const handleInlineCancel = () => {
     setIsInlineEditing(false);
+
     // Clear deleted products set when cancelling edit
     setDeletedProducts(new Set());
     // Если это создание новой категории, сбрасываем и состояние создания
     if (!category) {
-      setIsEditing(false);
       onFinishEdit?.();
     }
   };
@@ -339,24 +327,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
     );
   }
 
-  if (isEditing && category) {
-    return (
-      <div className="h-full">
-        <CategoryForm
-          category={category}
-          onSubmit={(_data) => {
-            // Здесь будет логика сохранения
-            setIsEditing(false);
-            onFinishEdit?.();
-          }}
-          onCancel={() => {
-            setIsEditing(false);
-            onFinishEdit?.();
-          }}
-        />
-      </div>
-    );
-  }
+  // Remove the form-based editing fallback - use inline editing only
 
   // Calculate usage count and products for the category
   const categoryProducts = category
@@ -483,7 +454,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
         <CollapsibleSection
           id="usage"
           title="Продукты"
-          icon={<ProductComponent className="w-4 h-4 text-blue-600" />}
+          icon={<Package className="w-4 h-4 text-blue-600" />}
           isOpen={openSections.includes('usage')}
           onToggle={onToggleSection}
           gradientFrom="gradient-category"
@@ -513,7 +484,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
                           {/* Header Row */}
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <ProductComponent className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                              <Package className="w-4 h-4 text-blue-500 flex-shrink-0" />
                               <h4 className="font-medium text-foreground truncate">
                                 {product.name}
                               </h4>
@@ -527,7 +498,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
                                 proteins={product.proteins}
                                 fats={product.fats}
                                 carbs={product.carbs}
-                                weight={product.weight}
+                                weight={100}
                               />
 
                               <Button
@@ -576,7 +547,7 @@ const CategoryDetail: React.FC<CategoryDetailProps> = ({
                   })
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  <ProductComponent className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p className="text-sm">Нет продуктов в этой категории</p>
                 </div>
               )}

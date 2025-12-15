@@ -1,5 +1,3 @@
-// src/ui/Textarea.tsx
-
 import React, { useId } from 'react';
 import cn from 'classnames';
 import { AlertCircle } from 'lucide-react';
@@ -7,48 +5,74 @@ import { AlertCircle } from 'lucide-react';
 export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
+  description?: string;
   containerClassName?: string;
+  inputSize?: 'sm' | 'md' | 'lg';
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, label, error, containerClassName, ...props }, ref) => {
+  (
+    { className, label, error, description, containerClassName, inputSize = 'md', ...props },
+    ref
+  ) => {
     const generatedId = useId();
     const textareaId = props.id || props.name || `textarea-${generatedId}`;
 
+    const sizeClasses = {
+      sm: 'min-h-[60px] text-xs px-3 py-2',
+      md: 'min-h-[80px] text-sm px-4 py-2.5',
+      lg: 'min-h-[100px] text-base px-4 py-3',
+    };
+
     return (
-      <div className={cn('w-full', containerClassName)}>
+      <div className={cn('w-full space-y-1.5', containerClassName)}>
         {label && (
-          <label
-            htmlFor={textareaId}
-            className="block text-sm font-medium text-foreground tracking-tight mb-2"
-          >
+          <label htmlFor={textareaId} className="block text-sm font-medium text-foreground">
             {label}
-            {props.required && <span className="text-danger ml-1">*</span>}
+            {props.required && <span className="text-danger ml-0.5">*</span>}
           </label>
         )}
-        <textarea
-          id={textareaId}
-          className={cn(
-            'flex min-h-[80px] w-full rounded-lg bg-card px-4 py-2.5 text-sm',
-            'placeholder:text-muted-foreground text-foreground transition-colors duration-200 border-transition',
-            'focus:shadow-md focus:ring-2 focus:ring-primary/20 focus:outline-none',
-            'disabled:cursor-not-allowed disabled:opacity-50 resize-vertical',
-            error && 'ring-2 ring-danger',
-            className
+
+        {description && <p className="text-xs text-muted-foreground mb-1.5">{description}</p>}
+
+        <div className="relative">
+          <textarea
+            id={textareaId}
+            className={cn(
+              // ИЗМЕНЕНО: transition-colors
+              'w-full transition-colors duration-200 ease-in-out',
+              'placeholder:text-muted-foreground text-foreground',
+              'disabled:cursor-not-allowed disabled:opacity-50',
+              'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:ring-offset-0',
+              'border border-border rounded-lg bg-card',
+              sizeClasses[inputSize],
+              'resize-vertical',
+              {
+                'ring-2 ring-danger border-transparent': error,
+              },
+              className
+            )}
+            ref={ref}
+            {...props}
+          />
+
+          {error && (
+            <div className="absolute right-3 top-3">
+              <AlertCircle className="w-4 h-4 text-danger flex-shrink-0" />
+            </div>
           )}
-          ref={ref}
-          {...props}
-        />
+        </div>
+
         {error && (
-          <div className="mt-2 flex items-center gap-2 text-sm text-danger">
-            <AlertCircle className="h-4 w-4" />
+          <p className="text-sm text-danger mt-1 flex items-center gap-1.5">
             <span>{error}</span>
-          </div>
+          </p>
         )}
       </div>
     );
   }
 );
+
 Textarea.displayName = 'Textarea';
 
 export default Textarea;

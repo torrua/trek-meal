@@ -143,6 +143,7 @@ export type EquipmentType = 'personal' | 'common';
 export interface EquipmentCategory {
   id: number;
   name: string;
+  description?: string;
 }
 export type EquipmentCategoryData = Omit<EquipmentCategory, 'id'>;
 

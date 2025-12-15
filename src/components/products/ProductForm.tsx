@@ -9,6 +9,7 @@ import DropdownSelect from '../../ui/DropdownSelect';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import FormField from '../../ui/FormField';
+import CollapsibleSection from '../../ui/CollapsibleSection';
 import { toast } from 'react-hot-toast';
 import type { Product, ProductData, ProductPortion, Category } from '../../types';
 
@@ -113,24 +114,38 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Information Section */}
-      <div className="p-6 gradient-basic-info rounded-xl">
-        <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <Info className="w-4 h-4 text-primary" />
-            </div>
-            <h2 className="text-lg font-semibold">Основная информация</h2>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Button type="button" variant="ghost" onClick={onCancel}>
+      <CollapsibleSection
+        id="basic-info"
+        title="Основная информация"
+        icon={<Info className="w-4 h-4 text-primary" />}
+        isOpen={true}
+        actionButton={
+          <div className="flex items-center gap-2 min-w-[280px] justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancel();
+              }}
+            >
               Отмена
             </Button>
-            <Button type="submit" variant="primary" icon={Component}>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSubmit(e);
+              }}
+              icon={Component}
+            >
               {product ? 'Сохранить изменения' : 'Создать продукт'}
             </Button>
           </div>
-        </div>
-
+        }
+        gradientFrom="gradient-basic-info"
+      >
         <div className="space-y-4 pt-4">
           <FormField label="Название продукта" required>
             <Input
@@ -163,25 +178,27 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
 
           <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border">
             <div className="flex items-center gap-3">
-              <input
-                id="isPerishable"
-                name="isPerishable"
-                type="checkbox"
-                checked={formData.isPerishable}
-                onChange={handleChange}
-                className="w-4 h-4 rounded border border-border text-primary focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
-              />
-              <label
-                htmlFor="isPerishable"
-                className="text-sm font-medium text-foreground cursor-pointer"
-              >
-                Скоропортящийся продукт
-              </label>
+              <div className="flex items-center">
+                <Input
+                  id="isPerishable"
+                  name="isPerishable"
+                  type="checkbox"
+                  checked={formData.isPerishable}
+                  onChange={handleChange}
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                />
+                <label
+                  htmlFor="isPerishable"
+                  className="text-sm font-medium text-foreground cursor-pointer ml-2"
+                >
+                  Скоропортящийся продукт
+                </label>
+              </div>
             </div>
             <div className="text-xs text-muted-foreground">Требует особых условий хранения</div>
           </div>
         </div>
-      </div>
+      </CollapsibleSection>
 
       {/* Nutritional Information Section */}
       <div className="p-6 bg-gradient-to-br from-orange-500/5 via-yellow-500/5 to-green-500/5 rounded-xl">
@@ -279,20 +296,24 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, onCancel }
 
                 {/* Чекбокс Неделимая */}
                 <div className="flex items-center gap-2 pt-1">
-                  <input
-                    type="checkbox"
-                    id={`indivisible-${index}`}
-                    checked={portion.isIndivisible || false}
-                    onChange={(e) => handlePortionChange(index, 'isIndivisible', e.target.checked)}
-                    className="w-3.5 h-3.5 rounded border border-border text-primary focus:ring-primary"
-                  />
-                  <label
-                    htmlFor={`indivisible-${index}`}
-                    className="text-xs text-muted-foreground cursor-pointer flex items-center gap-1 select-none"
-                  >
-                    <Circle className="w-3 h-3" />
-                    Неделимая порция
-                  </label>
+                  <div className="flex items-center">
+                    <Input
+                      type="checkbox"
+                      id={`indivisible-${index}`}
+                      checked={portion.isIndivisible || false}
+                      onChange={(e) =>
+                        handlePortionChange(index, 'isIndivisible', e.target.checked)
+                      }
+                      className="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
+                    />
+                    <label
+                      htmlFor={`indivisible-${index}`}
+                      className="text-xs text-muted-foreground cursor-pointer flex items-center gap-1 select-none ml-2"
+                    >
+                      <Circle className="w-3 h-3" />
+                      Неделимая порция
+                    </label>
+                  </div>
                 </div>
               </div>
 

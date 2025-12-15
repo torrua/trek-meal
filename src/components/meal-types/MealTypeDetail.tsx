@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import type { MealType, Meal, MealPlanItem } from '../../types';
 import Button from '../../ui/Button';
-import MealTypeForm from './MealTypeForm';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import useMealTypesStore from '../../stores/useMealTypesStore';
@@ -126,7 +125,6 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
   editSubmitTrigger = 0,
   editCancelTrigger = 0,
 }) => {
-  const [isEditing, setIsEditing] = React.useState(false);
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -139,24 +137,23 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
 
   React.useEffect(() => {
     if (editTrigger > 0) {
-      setIsEditing(true);
       setIsInlineEditing(true);
       setEditName('');
       setEditDescription('');
       onStartEdit?.();
     }
-  }, [editTrigger, onStartEdit]); // isEditing не нужен - это состояние которое мы устанавливаем
+  }, [editTrigger, onStartEdit]);
 
   React.useEffect(() => {
     if (editSubmitTrigger > 0) {
-      setIsEditing(false);
+      setIsInlineEditing(false);
       onFinishEdit?.();
     }
   }, [editSubmitTrigger, onFinishEdit]);
 
   React.useEffect(() => {
     if (editCancelTrigger > 0) {
-      setIsEditing(false);
+      setIsInlineEditing(false);
       onFinishEdit?.();
     }
   }, [editCancelTrigger, onFinishEdit]);
@@ -209,7 +206,6 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
 
       // Если это создание нового типа, сбрасываем состояние создания
       if (!mealType) {
-        setIsEditing(false);
         onFinishEdit?.();
       }
     } catch (error) {
@@ -226,7 +222,6 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
     setDeletedMeals(new Set());
     // Если это создание нового типа, сбрасываем и состояние создания
     if (!mealType) {
-      setIsEditing(false);
       onFinishEdit?.();
     }
   };
@@ -305,24 +300,7 @@ const MealTypeDetail: React.FC<MealTypeDetailProps> = ({
     );
   }
 
-  if (isEditing && mealType) {
-    return (
-      <div className="h-full">
-        <MealTypeForm
-          mealType={mealType}
-          onSubmit={(_data) => {
-            // Здесь будет логика сохранения
-            setIsEditing(false);
-            onFinishEdit?.();
-          }}
-          onCancel={() => {
-            setIsEditing(false);
-            onFinishEdit?.();
-          }}
-        />
-      </div>
-    );
-  }
+  // Remove the form-based editing fallback - use inline editing only
 
   // Calculate usage count and meals for the meal type
   const usageMeals = mealType

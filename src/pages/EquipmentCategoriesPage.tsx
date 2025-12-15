@@ -13,7 +13,6 @@ import {
   CheckSquare,
   LayoutList,
   Grid3X3,
-  Info,
   Download,
   Backpack,
 } from 'lucide-react';
@@ -25,7 +24,7 @@ import Button from '../ui/Button';
 import ConfirmModal from '../ui/ConfirmModal';
 import EntityCard from '../ui/EntityCard';
 import EntityListItem from '../ui/EntityListItem';
-import CollapsibleSection from '../ui/CollapsibleSection';
+import EquipmentCategoryDetail from '../components/equipment/EquipmentCategoryDetail';
 import { equipmentCategoryEntityConfig } from '../config/entityConfig';
 import { useViewMode } from '../hooks/useViewMode';
 import {
@@ -87,11 +86,6 @@ const EquipmentCategoriesPage: React.FC = () => {
   );
 
   // Handlers
-  const handleToggleSection = (sectionId: string) => {
-    setOpenSections((prev) =>
-      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
-    );
-  };
 
   const toggleMultiSelect = () => {
     setShowMultiSelect(!showMultiSelect);
@@ -149,6 +143,23 @@ const EquipmentCategoriesPage: React.FC = () => {
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const handleToggleSection = useCallback((sectionId: string) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]
+    );
+  }, []);
+
+  const handleEdit = useCallback(
+    (category: EquipmentCategory) => {
+      // Ensure the info section is open when starting edit
+      if (!openSections.includes('info')) {
+        setOpenSections(['info']);
+      }
+      setActiveId(category.id);
+    },
+    [openSections]
+  );
 
   const handleClone = useCallback(
     (category: EquipmentCategory) => {
@@ -361,8 +372,7 @@ const EquipmentCategoriesPage: React.FC = () => {
               ).length;
 
               const actions = equipmentCategoryEntityConfig.getActions({
-                onEdit: () =>
-                  alert('Форма редактирования категорий оборудования пока не реализована'),
+                onEdit: () => handleEdit(category),
                 onClone: () => handleClone(category),
                 onExport: () => handleExport(category),
                 onDelete: () => handleRequestDelete(category),
@@ -451,28 +461,13 @@ const EquipmentCategoriesPage: React.FC = () => {
             id="equipment-category-detail-pane"
           >
             {selectedCategory ? (
-              <CollapsibleSection
-                id="info"
-                title="Основная информация"
-                icon={<Info className="w-4 h-4 text-primary" />}
-                isOpen={openSections.includes('info')}
-                onToggle={handleToggleSection}
-                gradientFrom="gradient-basic-info"
-                gradientVia=""
-                gradientTo=""
-                className="gradient-basic-info"
-              >
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Название
-                    </label>
-                    <div className="view-mode-field view-mode-single-line">
-                      {selectedCategory.name}
-                    </div>
-                  </div>
-                </div>
-              </CollapsibleSection>
+              <div className="pl-1">
+                <EquipmentCategoryDetail
+                  category={selectedCategory}
+                  openSections={openSections}
+                  onToggleSection={handleToggleSection}
+                />
+              </div>
             ) : (
               <div className="h-full flex items-start justify-center pt-16">
                 <div className="text-center p-4">

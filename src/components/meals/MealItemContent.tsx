@@ -1,5 +1,3 @@
-// src/components/meals/MealItemContent.tsx
-
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
   Component,
@@ -14,8 +12,10 @@ import {
 import type { Product, Dish, MealPlanItem, ProductPortion } from '../../types';
 import Button from '../../ui/Button';
 import NutritionButton from '../../ui/NutritionButton';
+import { calculateItemNutrition, calculateItemWeight } from '../../utils/nutritionUtils';
+import { DraggableAttributes } from '@dnd-kit/core';
+import { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
 
-// ВНЕШНИЙ КЭШ: Сохраняет состояние открытости блоков
 const itemExpansionCache = new Map<string, boolean>();
 
 interface ItemContentProps {
@@ -25,83 +25,43 @@ interface ItemContentProps {
   onRemove?: () => void;
   onUpdateWeight?: (weight: number) => void;
   onEditItem?: () => void;
-  showActions?: boolean;
   onEditDishIngredient?: (productId: number) => void;
   onRemoveDishIngredient?: (productId: number) => void;
+  readOnly?: boolean;
+  showActions?: boolean;
   dragHandleProps?: {
-    attributes: React.HTMLAttributes<HTMLElement>;
-    listeners: React.HTMLAttributes<HTMLElement>;
+    attributes: DraggableAttributes;
+    listeners: SyntheticListenerMap | undefined;
   };
 }
 
-const ItemContent: React.FC<ItemContentProps> = ({
+const MealItemContent: React.FC<ItemContentProps> = ({
   item,
   products,
   dishes,
   onRemove,
   onUpdateWeight: _onUpdateWeight,
   onEditItem,
+  onEditDishIngredient: _onEditDishIngredient, // Unused
+  onRemoveDishIngredient: _onRemoveDishIngredient, // Unused
+  readOnly = false,
   showActions = true,
-  onEditDishIngredient,
-  onRemoveDishIngredient,
   dragHandleProps,
 }) => {
-  const [isDragging, setIsDragging] = useState(false);
-
-  const svgCompatibleListeners = dragHandleProps?.listeners
-    ? {
-        onPointerDown: (e: React.PointerEvent<SVGSVGElement>) => {
-          setIsDragging(true);
-          (
-            dragHandleProps.listeners.onPointerDown as unknown as (
-              e: React.PointerEvent<SVGSVGElement>
-            ) => void
-          )?.(e);
-        },
-        onTouchStart: (e: React.TouchEvent<SVGSVGElement>) => {
-          setIsDragging(true);
-          (
-            dragHandleProps.listeners.onTouchStart as unknown as (
-              e: React.TouchEvent<SVGSVGElement>
-            ) => void
-          )?.(e);
-        },
-        onTouchEnd: (e: React.TouchEvent<SVGSVGElement>) => {
-          setIsDragging(false);
-          (
-            dragHandleProps.listeners.onTouchEnd as unknown as (
-              e: React.TouchEvent<SVGSVGElement>
-            ) => void
-          )?.(e);
-        },
-      }
-    : {};
-
-  const svgCompatibleAttributes = dragHandleProps?.attributes
-    ? Object.fromEntries(
-        Object.entries(dragHandleProps.attributes).filter(
-          ([key]) =>
-            !key.startsWith('on') || ['onPointerDown', 'onTouchStart', 'onTouchEnd'].includes(key)
-        )
-      )
-    : {};
-
   const uniqueKey =
     (item as MealPlanItem & { instanceId?: string }).instanceId || `${item.type}-${item.itemId}`;
 
-  // --- СОСТОЯНИЯ ---
-  const [showProductPortion, setShowProductPortion] = useState(() => {
-    return itemExpansionCache.get(uniqueKey) || false;
-  });
-
+  const [showProductPortion, setShowProductPortion] = useState(
+    () => itemExpansionCache.get(uniqueKey) || false
+  );
   useEffect(() => {
     itemExpansionCache.set(uniqueKey, showProductPortion);
   }, [showProductPortion, uniqueKey]);
 
   const [showPortionDropdown, setShowPortionDropdown] = useState(false);
   const [showDishIngredients, setShowDishIngredients] = useState(false);
-
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+
   const portionDropdownRef = useRef<HTMLDivElement>(null);
   const portionButtonRef = useRef<HTMLDivElement>(null);
 
@@ -110,389 +70,234 @@ const ItemContent: React.FC<ItemContentProps> = ({
       ? products.find((p) => p.id === item.itemId)
       : dishes.find((d) => d.id === item.itemId);
 
-  const nutrition = useMemo(() => {
-    if (item.type === 'product') {
-      const product = products.find((p) => p.id === item.itemId);
-      if (!product) return null;
-      const weight = Number(item.weight || 100);
-      const multiplier = weight / 100;
-      return {
-        calories: Math.round(product.calories * multiplier),
-        proteins: Math.round(product.proteins * multiplier * 10) / 10,
-        fats: Math.round(product.fats * multiplier * 10) / 10,
-        carbs: Math.round(product.carbs * multiplier * 10) / 10,
-      };
-    }
-    if (item.type === 'dish') {
-      let totalCalories = 0;
-      let totalProteins = 0;
-      let totalFats = 0;
-      let totalCarbs = 0;
-      const dish = selectedItem as Dish;
-      dish.products.forEach((dishProduct) => {
-        const product = products.find((p) => p.id === dishProduct.productId);
-        if (product) {
-          const weightRatio = Number(dishProduct.weight) / 100;
-          totalCalories += (product.calories || 0) * weightRatio;
-          totalProteins += (product.proteins || 0) * weightRatio;
-          totalFats += (product.fats || 0) * weightRatio;
-          totalCarbs += (product.carbs || 0) * weightRatio;
-        }
-      });
-      return {
-        calories: Math.round(totalCalories),
-        proteins: Math.round(totalProteins * 10) / 10,
-        fats: Math.round(totalFats * 10) / 10,
-        carbs: Math.round(totalCarbs * 10) / 10,
-      };
-    }
-    return null;
-  }, [item, products, selectedItem]);
+  const nutrition = useMemo(
+    () => calculateItemNutrition(item, products, dishes),
+    [item, products, dishes]
+  );
+  const dishWeight = useMemo(
+    () => calculateItemWeight(item, products, dishes),
+    [item, products, dishes]
+  );
 
-  // Обновление позиции dropdown
+  const isProduct = item.type === 'product';
+  const isDish = item.type === 'dish';
+  const displayWeight = isProduct ? Number(item.weight || 0) : Number(dishWeight);
+
+  const dishDetails = useMemo(() => {
+    if (item.type !== 'dish' || !selectedItem) return null;
+    return (selectedItem as Dish).products
+      .map((dp) => {
+        const p = products.find((prod) => prod.id === dp.productId);
+        if (!p) return null;
+        const portion = p.portions?.find((port) => port.weight === dp.weight);
+        return {
+          name: p.name,
+          weight: dp.weight,
+          icon: portion?.isIndivisible ? Circle : PieChart,
+          originalProductId: p.id,
+        };
+      })
+      .filter(Boolean);
+  }, [item.type, selectedItem, products]);
+
+  const portions = useMemo(
+    () => (item.type === 'product' ? (selectedItem as Product)?.portions || [] : []),
+    [item, selectedItem]
+  );
+  const currentPortion = useMemo(
+    () => portions.find((p) => Number(p.weight) === Number(item.weight)),
+    [item.weight, portions]
+  );
+  const hasMultiplePortions = portions.length > 1;
+
   useEffect(() => {
     if (showPortionDropdown && portionButtonRef.current) {
-      const updatePosition = () => {
+      const update = () => {
         const rect = portionButtonRef.current?.getBoundingClientRect();
-        if (!rect) return;
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-
-        setDropdownPosition({
-          top: rect.bottom + scrollTop + 4,
-          left: rect.left + scrollLeft,
-          width: rect.width,
-        });
+        if (rect) setDropdownPosition({ top: rect.bottom + 4, left: rect.left, width: rect.width });
       };
-
-      updatePosition();
-      window.addEventListener('scroll', updatePosition, true);
-      window.addEventListener('resize', updatePosition);
-
+      update();
+      window.addEventListener('scroll', update, true);
+      window.addEventListener('resize', update);
       return () => {
-        window.removeEventListener('scroll', updatePosition, true);
-        window.removeEventListener('resize', updatePosition);
+        window.removeEventListener('scroll', update, true);
+        window.removeEventListener('resize', update);
       };
     }
   }, [showPortionDropdown]);
 
-  // Закрытие dropdown при клике вне
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const clickOut = (e: MouseEvent) => {
       if (
         portionDropdownRef.current &&
-        !portionDropdownRef.current.contains(event.target as Node) &&
-        portionButtonRef.current &&
-        !portionButtonRef.current.contains(event.target as Node)
+        !portionDropdownRef.current.contains(e.target as Node) &&
+        !portionButtonRef.current?.contains(e.target as Node)
       ) {
         setShowPortionDropdown(false);
       }
     };
-
-    // Сброс состояния перетаскивания при mouse up
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    if (showPortionDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    // Всегда слушаем mouseUp для сброса состояния перетаскивания
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('touchend', handleMouseUp);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchend', handleMouseUp);
-    };
+    if (showPortionDropdown) document.addEventListener('mousedown', clickOut);
+    return () => document.removeEventListener('mousedown', clickOut);
   }, [showPortionDropdown]);
 
-  const dishDetails = useMemo(() => {
-    if (item.type !== 'dish' || !selectedItem) return null;
-    const dish = selectedItem as Dish;
-    return dish.products
-      .map((dp) => {
-        const product = products.find((p) => p.id === dp.productId);
-        if (!product) return null;
-
-        const portion = product.portions?.find((p) => p.weight === dp.weight);
-        const PortionIcon = portion?.isIndivisible ? Circle : PieChart;
-
-        return {
-          name: product.name,
-          weight: dp.weight,
-          icon: PortionIcon,
-        };
-      })
-      .filter(
-        (
-          ingredient
-        ): ingredient is { name: string; weight: number; icon: typeof PieChart | typeof Circle } =>
-          ingredient !== null
-      );
-  }, [item.type, selectedItem, products]);
-
-  const isProduct = item.type === 'product';
-  const isDish = item.type === 'dish';
-
-  const calculateItemWeight = (item: MealPlanItem, products: Product[], dishes: Dish[]): number => {
-    if (item.type === 'product') {
-      return Number(item.weight || 0);
-    } else if (item.type === 'dish') {
-      const dish = dishes.find((d) => d.id === item.itemId);
-      if (dish) {
-        return Number(dish.products.reduce((sum, dp) => sum + Number(dp.weight), 0));
-      }
-    }
-    return 0;
+  const handleHeaderClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('[role="button"]')) return;
+    if (isDish && dishDetails?.length) setShowDishIngredients(!showDishIngredients);
+    if (isProduct && portions?.length) setShowProductPortion(!showProductPortion);
   };
 
-  const dishWeight = useMemo(() => {
-    return calculateItemWeight(item, products, dishes);
-  }, [item, products, dishes]);
-
-  const displayWeight = isProduct ? Number(item.weight || 100) : Number(dishWeight);
-
-  const portions = useMemo(() => {
-    if (item.type !== 'product' || !selectedItem) return [];
-    return (selectedItem as Product).portions || [];
-  }, [item, selectedItem]);
-
-  const hasMultiplePortions = portions.length > 1;
-
-  const currentPortion = useMemo(() => {
-    if (item.type !== 'product' || !item.weight) return null;
-    const weight = Number(item.weight);
-    const foundPortion = portions.find((p: ProductPortion) => Number(p.weight) === weight);
-    return foundPortion;
-  }, [item, portions]);
-
-  const handlePortionSelect = (portion: ProductPortion, event?: React.MouseEvent) => {
-    if (event) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
-    if (_onUpdateWeight) _onUpdateWeight(Number(portion.weight));
-    setShowPortionDropdown(false);
-  };
-
-  // Проверяем, можно ли вообще что-то развернуть в этом элементе
-  const canExpand =
-    (isDish && dishDetails && dishDetails.length > 0) ||
-    (isProduct && portions && portions.length > 0);
-
-  // Общий обработчик клика по строке заголовка
-  const handleHeaderClick = (_e: React.MouseEvent) => {
-    // Не обрабатываем клик во время перетаскивания
-    if (isDragging) return;
-
-    // Также не обрабатываем клик, если он был на drag handle
-    const target = _e.target as HTMLElement;
-    if (target.closest('[role="button"]')) {
-      return;
-    }
-
-    // ВАЖНО: Мы не вызываем stopPropagation здесь, чтобы событие могло всплыть,
-    // если это нужно для DND, но обычно DND работает через listeners на иконке.
-
-    // Переключаем видимость
-    if (isDish && dishDetails && dishDetails.length > 0) {
-      setShowDishIngredients(!showDishIngredients);
-    }
-    if (isProduct && portions && portions.length > 0) {
-      setShowProductPortion(!showProductPortion);
-    }
-  };
+  const buttonBaseClass =
+    'w-8 h-8 flex items-center justify-center rounded-lg bg-muted/50 hover:bg-muted/80 active:bg-background transition-all shadow-sm';
 
   return (
     <div className="space-y-1">
-      {/* Header Row: теперь кликабельный целиком */}
+      {/* Header Row */}
       <div
-        className={`flex items-center gap-2 ${canExpand ? 'cursor-pointer' : ''}`}
+        className={`flex items-center gap-2 ${(isDish && dishDetails?.length) || (isProduct && portions?.length) ? 'cursor-pointer' : ''}`}
         onClick={handleHeaderClick}
       >
-        {/* Иконка и Название (растягиваются, чтобы занять место) */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {isProduct ? (
-            <Component
-              className="w-4 h-4 text-blue-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
-              role="button"
-              tabIndex={0}
-              aria-label="Перетащить продукт"
-              {...svgCompatibleListeners}
-              {...svgCompatibleAttributes}
-              // Убираем onClick с иконки, так как клик теперь на родителе
-            />
-          ) : (
-            <Soup
-              className="w-4 h-4 text-orange-500 flex-shrink-0 cursor-grab active:cursor-grabbing outline-none focus:outline-none"
-              role="button"
-              tabIndex={0}
-              aria-label="Перетащить блюдо"
-              {...svgCompatibleListeners}
-              {...svgCompatibleAttributes}
-            />
-          )}
-          <h4 className="font-medium text-foreground truncate">{selectedItem?.name}</h4>
+          <div
+            {...(readOnly ? {} : dragHandleProps?.attributes)}
+            {...(readOnly ? {} : dragHandleProps?.listeners)}
+            className={`flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted/50 transition-colors ${!readOnly ? 'cursor-grab active:cursor-grabbing touch-none' : ''}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {isProduct ? (
+              <Component className="w-4 h-4 text-blue-600" />
+            ) : (
+              <Soup className="w-4 h-4 text-orange-600" />
+            )}
+          </div>
+
+          <h4 className="font-medium truncate text-base select-none text-foreground">
+            {selectedItem?.name}
+          </h4>
         </div>
 
-        {/* Nutrition block - отдельная кнопка, клик не должен всплывать */}
-        {(nutrition || (isProduct && selectedItem && displayWeight && displayWeight > 0)) && (
+        {(nutrition || displayWeight > 0) && (
           <div onClick={(e) => e.stopPropagation()}>
             <NutritionButton
-              calories={
-                nutrition
-                  ? nutrition.calories
-                  : isProduct && selectedItem
-                    ? Math.round((selectedItem as Product).calories * (displayWeight / 100))
-                    : 0
-              }
-              proteins={
-                nutrition
-                  ? nutrition.proteins
-                  : isProduct && selectedItem
-                    ? Math.round((selectedItem as Product).proteins * (displayWeight / 100) * 10) /
-                      10
-                    : 0
-              }
-              fats={
-                nutrition
-                  ? nutrition.fats
-                  : isProduct && selectedItem
-                    ? Math.round((selectedItem as Product).fats * (displayWeight / 100) * 10) / 10
-                    : 0
-              }
-              carbs={
-                nutrition
-                  ? nutrition.carbs
-                  : isProduct && selectedItem
-                    ? Math.round((selectedItem as Product).carbs * (displayWeight / 100) * 10) / 10
-                    : 0
-              }
+              calories={nutrition?.calories || 0}
+              proteins={nutrition?.proteins || 0}
+              fats={nutrition?.fats || 0}
+              carbs={nutrition?.carbs || 0}
               weight={displayWeight}
             />
           </div>
         )}
 
-        {/* Actions - кнопки редактирования/удаления */}
-        {showActions && (
-          <div className="flex items-center gap-2">
+        {!readOnly && showActions && (
+          <div className="flex items-center gap-1">
             {onEditItem && (
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                size="icon-sm"
                 onClick={(e) => {
-                  e.stopPropagation(); // Останавливаем всплытие
+                  e.stopPropagation();
                   onEditItem();
                 }}
-                className="!border-blue-500/20 bg-blue-500/10 text-blue-600"
-                title="Открыть блюдо"
+                className={`${buttonBaseClass} text-blue-600`}
+                title="Открыть"
               >
                 <SquareArrowOutUpRight className="w-4 h-4" />
-              </Button>
+              </button>
             )}
             {onRemove && (
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                size="icon-sm"
                 onClick={(e) => {
-                  e.stopPropagation(); // Останавливаем всплытие
+                  e.stopPropagation();
                   onRemove();
                 }}
-                className="!border-danger/20 bg-danger/10 text-danger"
+                className={`${buttonBaseClass} text-danger`}
                 title="Удалить"
               >
                 <Trash2 className="w-4 h-4" />
-              </Button>
+              </button>
             )}
           </div>
         )}
       </div>
 
-      {/* Portion selector block */}
+      {/* Portions Dropdown Selector (Продукт) */}
       {isProduct && portions && portions.length > 0 && item.weight && showProductPortion && (
         <div className="pt-2">
-          <div className="relative flex-1">
+          <div className="relative w-full">
             <div
               ref={portionButtonRef}
               onClick={(e) => {
-                if (hasMultiplePortions) {
+                if (hasMultiplePortions && !readOnly) {
                   e.stopPropagation();
                   setShowPortionDropdown(!showPortionDropdown);
                 }
               }}
-              className={`view-mode-field view-mode-single-line flex items-center ${
-                hasMultiplePortions ? 'cursor-pointer' : 'cursor-default opacity-90'
-              }`}
+              className={`group relative flex items-center justify-between h-8 px-3 rounded-lg bg-card shadow-sm transition-colors duration-200 ${hasMultiplePortions && !readOnly ? 'cursor-pointer' : ''}`}
             >
-              <span className="flex items-center gap-1.5 flex-1">
-                {currentPortion ? (
-                  currentPortion.isIndivisible ? (
-                    <Circle className="w-3.5 h-3.5 text-muted-foreground" />
-                  ) : (
-                    <PieChart className="w-3.5 h-3.5 text-muted-foreground" />
-                  )
+              <div className="flex items-center gap-2">
+                {currentPortion?.isIndivisible ? (
+                  <Circle className="w-4 h-4 text-purple-500" />
                 ) : (
-                  <PieChart className="w-3.5 h-3.5 text-muted-foreground" />
+                  <PieChart className="w-4 h-4 text-purple-500" />
                 )}
-                <span className="font-medium text-muted-foreground text-sm">
+                {/* ИЗМЕНЕНО: Возвращен text-muted-foreground с hover эффектом */}
+                <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                   {currentPortion ? currentPortion.name : 'Другой'}
                 </span>
-              </span>
+              </div>
 
-              {hasMultiplePortions && (
-                <ChevronDown
-                  className={`w-3 h-3 text-muted-foreground transition-transform mx-2 ${showPortionDropdown ? 'rotate-180' : ''}`}
-                />
+              {/* ЦЕНТРАЛЬНАЯ СТРЕЛКА */}
+              {hasMultiplePortions && !readOnly && (
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
+                </div>
               )}
 
-              <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-                {item.weight}
-                <Weight className="w-3.5 h-3.5" />
+              {/* Правая часть: Вес + Иконка */}
+              <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors flex items-center gap-1 font-medium">
+                {item.weight} <Weight className="w-4 h-4" />
               </span>
             </div>
 
-            {/* Dropdown Menu */}
-            {showPortionDropdown && (
+            {/* Выпадающее меню */}
+            {showPortionDropdown && !readOnly && (
               <div
                 ref={portionDropdownRef}
-                className="fixed z-50 bg-card border border-border rounded-lg shadow-2xl py-0 max-h-60 overflow-auto"
+                className="fixed z-[9999] bg-card border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto min-w-[200px] flex flex-col"
                 style={{
-                  top: `${dropdownPosition.top}px`,
-                  left: `${dropdownPosition.left}px`,
-                  width: `${dropdownPosition.width}px`,
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
+                  top: dropdownPosition.top,
+                  left: dropdownPosition.left,
+                  width: dropdownPosition.width,
                 }}
               >
-                {portions.map((portion: ProductPortion, idx: number) => {
-                  const OptionIcon = portion.isIndivisible ? Circle : PieChart;
+                {portions.map((portion, idx) => {
+                  const isActive = Number(portion.weight) === Number(item.weight);
                   return (
                     <button
                       key={idx}
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        e.preventDefault();
-                        handlePortionSelect(portion, e);
+                        if (_onUpdateWeight) _onUpdateWeight(Number(portion.weight));
+                        setShowPortionDropdown(false);
                       }}
-                      className={`view-mode-field view-mode-single-line w-full text-left flex items-center justify-between ${Number(portion.weight) === Number(item.weight) ? 'bg-primary/10 text-primary' : ''}`}
+                      className={`group w-full text-left flex items-center justify-between h-8 px-3 transition-colors ${
+                        isActive
+                          ? 'bg-primary/20 text-primary font-medium'
+                          : 'text-foreground hover:bg-gray-200/80 dark:hover:bg-gray-700'
+                      }`}
                     >
-                      <span className="flex items-center gap-2">
-                        <OptionIcon className="w-3.5 h-3.5 text-muted-foreground opacity-70" />
-                        <span className="font-medium text-muted-foreground text-sm">
-                          {portion.name}
-                        </span>
-                      </span>
-                      <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-                        {portion.weight}
-                        <Weight className="w-3.5 h-3.5" />
+                      <div className="flex items-center gap-2">
+                        {portion.isIndivisible ? (
+                          <Circle className="w-4 h-4 text-purple-500" />
+                        ) : (
+                          <PieChart className="w-4 h-4 text-purple-500" />
+                        )}
+                        <span className="text-sm font-medium">{portion.name}</span>
+                      </div>
+                      <span
+                        className={`text-sm font-medium flex items-center gap-1 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`}
+                      >
+                        {portion.weight} <Weight className="w-4 h-4" />
                       </span>
                     </button>
                   );
@@ -503,65 +308,25 @@ const ItemContent: React.FC<ItemContentProps> = ({
         </div>
       )}
 
-      {/* Dish Ingredients */}
-      {isDish && dishDetails && dishDetails.length > 0 && showDishIngredients && (
+      {/* Dish Ingredients (Блюдо) */}
+      {isDish && dishDetails && showDishIngredients && (
         <div className="pt-2 space-y-1">
-          {dishDetails.map((ingredient, idx: number) => {
-            const IconComponent = ingredient.icon;
-
+          {dishDetails.map((ing, idx) => {
+            const Icon = ing.icon;
             return (
               <div
                 key={idx}
-                className="view-mode-field view-mode-single-line flex items-center gap-2 group"
+                className="group flex items-center justify-between h-8 px-3 rounded-lg bg-card shadow-sm transition-colors duration-200 border border-transparent hover:border-border hover:bg-gray-50"
               >
-                <span className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <IconComponent className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground font-medium truncate">
-                    {ingredient.name}
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon className="w-4 h-4 text-purple-500 shrink-0" />
+                  <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors flex items-center gap-1 font-medium truncate">
+                    {ing.name}
                   </span>
+                </div>
+                <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap ml-2 flex items-center gap-1 font-medium">
+                  {ing.weight} <Weight className="w-4 h-4" />
                 </span>
-                <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-                  {ingredient.weight}
-                  <Weight className="w-3.5 h-3.5" />
-                </span>
-
-                {/* Action buttons */}
-                {(onEditDishIngredient || onRemoveDishIngredient) && (
-                  <div className="flex items-center gap-1 opacity-100">
-                    {onEditDishIngredient && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const product = products.find((p) => p.name === ingredient.name);
-                          if (product) onEditDishIngredient(product.id);
-                        }}
-                        className="!border-blue-500/20 bg-blue-500/10 text-blue-600"
-                        title="Открыть продукт"
-                      >
-                        <SquareArrowOutUpRight className="w-3 h-3" />
-                      </Button>
-                    )}
-                    {onRemoveDishIngredient && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const product = products.find((p) => p.name === ingredient.name);
-                          if (product) onRemoveDishIngredient(product.id);
-                        }}
-                        className="!border-danger/20 bg-danger/10 text-danger"
-                        title="Удалить"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    )}
-                  </div>
-                )}
               </div>
             );
           })}
@@ -571,4 +336,4 @@ const ItemContent: React.FC<ItemContentProps> = ({
   );
 };
 
-export default ItemContent;
+export default MealItemContent;

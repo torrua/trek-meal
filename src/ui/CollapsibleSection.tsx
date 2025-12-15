@@ -1,5 +1,3 @@
-// src/ui/CollapsibleSection.tsx
-
 import React from 'react';
 import cn from 'classnames';
 
@@ -18,7 +16,6 @@ interface CollapsibleSectionProps {
   gradientTo?: string;
   className?: string;
   showBorder?: boolean;
-  padding?: 'none' | 'sm' | 'md' | 'lg';
 }
 
 const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
@@ -36,30 +33,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   gradientTo = '',
   className,
   showBorder = true,
-  padding = 'lg',
 }) => {
-  const paddingClasses = {
-    none: '',
-    sm: 'p-4',
-    md: 'p-5',
-    lg: 'p-6',
-  };
-
-  const headerPaddingClasses = {
-    none: '',
-    sm: 'p-3',
-    md: 'p-4',
-    lg: 'p-6',
-  };
-
-  const contentPaddingClasses = {
-    none: '',
-    sm: 'pt-0',
-    md: 'pt-0',
-    lg: 'pt-0',
-  };
-
-  // Handle CSS gradient classes vs Tailwind gradients
   const gradientClass = gradientFrom.includes('gradient-')
     ? gradientFrom
     : `bg-gradient-to-br ${gradientFrom} ${gradientVia} ${gradientTo}`;
@@ -67,36 +41,32 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   return (
     <div
       className={cn(
-        'collapsible-section',
+        'rounded-xl shadow-sm',
         gradientClass,
         showBorder && 'border border-border',
         className
       )}
     >
       <div
-        className={cn(
-          'flex items-center justify-between gap-3 cursor-pointer',
-          headerPaddingClasses[padding]
-        )}
+        className="flex items-center justify-between gap-3 p-5 cursor-pointer select-none"
         onClick={() => onToggle?.(id)}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background/50 backdrop-blur-sm shadow-sm flex-shrink-0">
             {icon}
           </div>
-          <h2 className="text-lg font-semibold truncate">{title}</h2>
+          {/* ИЗМЕНЕНО: text-xl для заголовка блока (увеличено) */}
+          <h2 className="text-xl font-semibold truncate text-foreground/90">{title}</h2>
           {summaryContent && <div className="ml-2 flex-shrink-0">{summaryContent}</div>}
         </div>
-        <div className="flex items-center gap-2 min-w-[200px] justify-end">
+
+        <div className="flex items-center gap-2 min-w-[140px] justify-end">
           {actionButton}
           {headerContent}
         </div>
       </div>
-      {isOpen && (
-        <div className={cn(paddingClasses[padding], contentPaddingClasses[padding])}>
-          {children}
-        </div>
-      )}
+
+      {isOpen && <div className="p-5 pt-0">{children}</div>}
     </div>
   );
 };

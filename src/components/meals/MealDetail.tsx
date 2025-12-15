@@ -1,482 +1,401 @@
-// src/components/meals/MealDetail.tsx
-
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import {
-  Info,
-  Utensils,
-  Hash,
-  Component,
-  Soup,
-  Weight,
-  Edit,
-  PieChart,
-  Circle,
-} from 'lucide-react';
-import type { Meal, Product, Dish, MealPlanItem, MealData } from '../../types';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Info, Utensils, Hash, Edit, Save, Tag } from 'lucide-react';
+
+import type { Meal, MealData, MealPlanItem } from '../../types';
 import useProductStore from '../../stores/useProductStore';
 import useDishStore from '../../stores/useDishStore';
+import useMealStore from '../../stores/useMealStore';
 import useMealTypesStore from '../../stores/useMealTypesStore';
-import Button from '../../ui/Button';
-import MealForm from './MealForm';
-import CollapsibleSection from '../shared/CollapsibleSection';
-import { useMealStore } from '../../stores/useMealStore';
-import { calculateNutrition } from './mealFormUtils';
+import useCategoryStore from '../../stores/useCategoryStore';
+
 import NutritionButton from '../../ui/NutritionButton';
+import Button from '../../ui/Button';
+import CollapsibleSection from '../../ui/CollapsibleSection';
+import { calculateMealTotals } from '../../utils/nutritionUtils';
+
+import MealBasicInfo from './form/MealBasicInfo';
+import MealComposition from './form/MealComposition';
+import MealItemContent from './MealItemContent';
 
 interface MealDetailProps {
   meal: Meal | null;
-  isCreating?: boolean;
   onEdit: () => void;
   editTrigger?: number;
   openSections: string[];
   onToggleSection: (sectionId: string) => void;
   onStartEdit?: () => void;
   onFinishEdit?: () => void;
-  onSaveNew?: (data: MealData) => Promise<void>;
-  onCancelCreation?: () => void;
   editSubmitTrigger?: number;
   editCancelTrigger?: number;
-  onTest?: () => void;
+  isCreating?: boolean;
+  onSaveNew?: (data: MealData) => void;
+  onCancelCreation?: () => void;
 }
 
-interface CollapsibleSectionProps {
-  id: string;
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  isOpen: boolean;
-  onToggle: (id: string) => void;
-  actionButton?: React.ReactNode;
-  summaryContent?: React.ReactNode;
-  headerContent?: React.ReactNode;
-  gradientFrom?: string;
-  gradientVia?: string;
-  gradientTo?: string;
-  className?: string;
-}
+const validationSchema = z.object({
+  name: z.string().min(1, 'Название обязательно'),
+  description: z.string().optional(),
+  mealTypeId: z.string().optional(),
+  items: z.array(z.any()).min(1, 'Добавьте хотя бы один продукт'),
+});
 
-const ItemContentReadOnly: React.FC<{
-  item: MealPlanItem;
-  products: Product[];
-  dishes: Dish[];
-}> = ({ item, products, dishes }) => {
-  const [showDishIngredients, setShowDishIngredients] = useState(false);
-  const [showProductPortion, setShowProductPortion] = useState(false);
+type MealFormValues = z.infer<typeof validationSchema>;
 
-  const selectedItem =
-    item.type === 'product'
-      ? products.find((p) => p.id === item.itemId)
-      : dishes.find((d) => d.id === item.itemId);
-
-  const nutrition = useMemo(() => {
-    if (item.type === 'product') {
-      const product = products.find((p) => p.id === item.itemId);
-      if (!product) return null;
-      // Even if item.weight is not set, we can still show nutrition for 100g
-      const weight = Number(item.weight || 100);
-      const multiplier = weight / 100;
-      return {
-        calories: Math.round((product.calories || 0) * multiplier),
-        proteins: Math.round((product.proteins || 0) * multiplier * 10) / 10,
-        fats: Math.round((product.fats || 0) * multiplier * 10) / 10,
-        carbs: Math.round((product.carbs || 0) * multiplier * 10) / 10,
-      };
-    }
-    if (item.type === 'dish') {
-      const dish = dishes.find((d) => d.id === item.itemId);
-      if (!dish) return null;
-      let totalCalories = 0,
-        totalProteins = 0,
-        totalFats = 0,
-        totalCarbs = 0;
-      dish.products.forEach((dishProduct) => {
-        const product = products.find((p) => p.id === dishProduct.productId);
-        if (product) {
-          const weightRatio = Number(dishProduct.weight) / 100;
-          totalCalories += (product.calories || 0) * weightRatio;
-          totalProteins += (product.proteins || 0) * weightRatio;
-          totalFats += (product.fats || 0) * weightRatio;
-          totalCarbs += (product.carbs || 0) * weightRatio;
-        }
-      });
-      return {
-        calories: Math.round(totalCalories),
-        proteins: Math.round(totalProteins * 10) / 10,
-        fats: Math.round(totalFats * 10) / 10,
-        carbs: Math.round(totalCarbs * 10) / 10,
-      };
-    }
-    return null;
-  }, [item, products, dishes]);
-
-  const dishDetails = useMemo(() => {
-    if (item.type !== 'dish' || !selectedItem) return null;
-    const dish = selectedItem as Dish;
-    return dish.products
-      .map((dp) => {
-        const product = products.find((p) => p.id === dp.productId);
-        if (!product) return null;
-
-        // Находим соответствующую порцию
-        const portion = product.portions?.find((p) => Number(p.weight) === Number(dp.weight));
-        const PortionIcon = portion?.isIndivisible ? Circle : PieChart;
-
-        return {
-          name: product.name,
-          weight: dp.weight,
-          icon: PortionIcon,
-        };
-      })
-      .filter(
-        (
-          ingred
-        ): ingred is { name: string; weight: number; icon: typeof PieChart | typeof Circle } =>
-          ingred !== null
-      );
-  }, [item.type, selectedItem, products]);
-
-  const portion = useMemo(() => {
-    if (item.type !== 'product' || !('weight' in item) || !selectedItem) {
-      return null;
-    }
-    return (selectedItem as Product).portions?.find(
-      (p) => Number(p.weight) === Number(item.weight)
-    );
-  }, [item, selectedItem]);
-  const portions = useMemo(() => {
-    if (item.type !== 'product' || !selectedItem) return [];
-    return (selectedItem as Product).portions || [];
-  }, [item.type, selectedItem]);
-
-  const CurrentPortionIcon = portion?.isIndivisible ? Circle : PieChart;
-
-  const isProduct = item.type === 'product';
-  const isDish = item.type === 'dish';
-
-  // Calculate dish weight
-  const dishWeight = useMemo(() => {
-    if (item.type !== 'dish' || !selectedItem) return 0;
-    const dish = selectedItem as Dish;
-    return Number(dish.products.reduce((sum, dp) => sum + Number(dp.weight), 0));
-  }, [item.type, selectedItem]);
-
-  // Always calculate displayWeight, even if it's 0
-  const displayWeight = isProduct ? Number(item.weight || 0) : Number(dishWeight);
-
-  return (
-    <div
-      className={`space-y-1 ${(isDish && dishDetails && dishDetails.length > 0) || (isProduct && portions && portions.length > 0) ? 'cursor-pointer' : ''}`}
-      onClick={() => {
-        if (isDish && dishDetails && dishDetails.length > 0) {
-          setShowDishIngredients(!showDishIngredients);
-        }
-        if (isProduct && portions && portions.length > 0) {
-          setShowProductPortion(!showProductPortion);
-        }
-      }}
-    >
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {isProduct ? (
-            <Component className="w-4 h-4 text-blue-500 flex-shrink-0" />
-          ) : (
-            <Soup className="w-4 h-4 text-orange-500 flex-shrink-0" />
-          )}
-          <h4 className="font-medium text-foreground truncate">{selectedItem?.name}</h4>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Show nutrition button if we have a selected item and nutrition data */}
-          {selectedItem && (
-            <NutritionButton
-              calories={nutrition?.calories || 0}
-              proteins={nutrition?.proteins || 0}
-              fats={nutrition?.fats || 0}
-              carbs={nutrition?.carbs || 0}
-              weight={displayWeight}
-            />
-          )}
-        </div>
-      </div>
-
-      {isProduct && portions && portions.length > 0 && item.weight && showProductPortion && (
-        <div className="pt-2">
-          <div className="view-mode-field view-mode-single-line flex items-center justify-between">
-            <span className="flex items-center gap-1.5">
-              <CurrentPortionIcon className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-muted-foreground font-medium text-sm">
-                {portion ? portion.name : 'Другой'}
-              </span>
-            </span>
-            <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-              {item.weight}
-              <Weight className="w-3.5 h-3.5" />
-            </span>
-          </div>
-        </div>
-      )}
-
-      {isDish && dishDetails && dishDetails.length > 0 && showDishIngredients && (
-        <div className="pt-2 space-y-1">
-          {dishDetails.map((ingredient, idx: number) => {
-            const IconComponent = ingredient.icon;
-            return (
-              <div
-                key={idx}
-                className="view-mode-field view-mode-single-line flex items-center justify-between"
-              >
-                <span className="flex items-center gap-1.5">
-                  <IconComponent className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-muted-foreground font-medium text-sm">
-                    {ingredient.name}
-                  </span>
-                </span>
-                <span className="text-muted-foreground font-medium text-sm flex items-center gap-1">
-                  {ingredient.weight}
-                  <Weight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
+// Тип для элемента с instanceId для внутреннего использования формы
+type FormMealItem = MealPlanItem & { instanceId?: string };
 
 const MealDetail: React.FC<MealDetailProps> = ({
   meal,
-  isCreating = false,
   onEdit: _onEdit,
   editTrigger,
   openSections,
   onToggleSection,
   onStartEdit,
   onFinishEdit,
-  onSaveNew,
-  onCancelCreation,
   editSubmitTrigger: _editSubmitTrigger,
   editCancelTrigger: _editCancelTrigger,
+  isCreating = false,
+  onSaveNew,
+  onCancelCreation,
 }) => {
   const { products } = useProductStore();
   const { dishes } = useDishStore();
+  const { categories } = useCategoryStore();
   const { updateMeal } = useMealStore();
   const { mealTypes } = useMealTypesStore();
-  const [isEditing, setIsEditing] = useState(false);
+
+  const [isEditing, setIsEditing] = useState(isCreating);
   const editTriggerRef = useRef<number | undefined>(undefined);
 
+  // Инициализация формы
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<MealFormValues>({
+    resolver: zodResolver(validationSchema),
+    defaultValues: {
+      name: meal?.name || '',
+      description: meal?.description || '',
+      mealTypeId: meal?.mealTypeId ? String(meal.mealTypeId) : '',
+      items:
+        meal?.items?.map((i) => ({
+          ...i,
+          instanceId:
+            (i as FormMealItem).instanceId ||
+            `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
+        })) || [],
+    },
+  });
+
+  const { fields, append, remove, move, update } = useFieldArray({
+    control,
+    name: 'items',
+  });
+
+  const watchItems = watch('items') as FormMealItem[];
+
+  // Эффект для переключения в режим редактирования извне
   useEffect(() => {
+    if (isCreating) return;
     if (typeof editTrigger === 'number') {
       if (editTriggerRef.current !== undefined && editTriggerRef.current !== editTrigger) {
         setIsEditing(true);
         onStartEdit?.();
+        reset({
+          name: meal?.name || '',
+          description: meal?.description || '',
+          mealTypeId: meal?.mealTypeId ? String(meal.mealTypeId) : '',
+          items:
+            meal?.items?.map((i) => ({
+              ...i,
+              instanceId:
+                (i as FormMealItem).instanceId ||
+                `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
+            })) || [],
+        });
       }
       editTriggerRef.current = editTrigger;
     }
-  }, [editTrigger, onStartEdit]);
+  }, [editTrigger, onStartEdit, meal, reset, isCreating]);
 
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  const watchItems = useMemo(() => meal?.items || [], [meal?.items]);
-
-  const totalNutrition = useMemo(() => {
-    let calories = 0,
-      proteins = 0,
-      fats = 0,
-      carbs = 0;
-    watchItems.forEach((item) => {
-      const nutrition = calculateNutrition(item, products, dishes);
-      if (nutrition) {
-        calories += nutrition.calories;
-        proteins += nutrition.proteins;
-        fats += nutrition.fats;
-        carbs += nutrition.carbs;
-      }
-    });
-    return {
-      calories: Math.round(calories),
-      proteins: Math.round(proteins * 10) / 10,
-      fats: Math.round(fats * 10) / 10,
-      carbs: Math.round(carbs * 10) / 10,
-    };
-  }, [watchItems, products, dishes]);
-
-  // Helper function to calculate item weight consistently
-  const calculateItemWeight = (item: MealPlanItem, products: Product[], dishes: Dish[]): number => {
-    if (item.type === 'product') {
-      return Number(item.weight || 0);
-    } else if (item.type === 'dish') {
-      const dish = dishes.find((d) => d.id === item.itemId);
-      if (dish) {
-        return Number(dish.products.reduce((sum, dp) => sum + Number(dp.weight), 0));
-      }
+  // Сброс формы при выборе другого приема пищи
+  useEffect(() => {
+    if (!isCreating && meal && !isEditing) {
+      reset({
+        name: meal.name,
+        description: meal.description || '',
+        mealTypeId: meal.mealTypeId ? String(meal.mealTypeId) : '',
+        items: meal.items.map((i) => ({
+          ...i,
+          instanceId:
+            (i as FormMealItem).instanceId ||
+            `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
+        })),
+      });
     }
-    return 0;
-  };
+  }, [meal, isCreating, reset, isEditing]);
 
-  // Calculate total weight including dishes
-  const totalWeight = useMemo(() => {
-    return watchItems.reduce((total, item) => {
-      return total + calculateItemWeight(item, products, dishes);
-    }, 0);
-  }, [watchItems, products, dishes]);
+  const totals = useMemo(() => {
+    const itemsToCalculate = (isEditing ? watchItems : meal?.items || []).map(
+      (item) => item as MealPlanItem
+    );
+    return calculateMealTotals(itemsToCalculate, products, dishes);
+  }, [watchItems, meal?.items, products, dishes, isEditing]);
 
   if (!meal && !isCreating) return null;
 
-  // Use the passed openSections prop for both view and edit modes to preserve state
-  const isBasicInfoOpen = openSections.includes('basic-info');
-  const isCompositionOpen = openSections.includes('composition');
-
   const handleStartEdit = () => {
-    // No longer force opening basic-info section when editing
     setIsEditing(true);
     onStartEdit?.();
   };
 
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    onFinishEdit?.();
+  const handleCancel = () => {
+    if (isCreating) {
+      onCancelCreation?.();
+    } else {
+      setIsEditing(false);
+      reset({
+        name: meal?.name || '',
+        description: meal?.description || '',
+        mealTypeId: meal?.mealTypeId ? String(meal.mealTypeId) : '',
+        items:
+          meal?.items?.map((i) => ({
+            ...i,
+            instanceId:
+              (i as FormMealItem).instanceId ||
+              `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
+          })) || [],
+      });
+      onFinishEdit?.();
+    }
   };
 
-  const handleSave = (data: { name: string; description?: string; items: MealPlanItem[] }) => {
-    if (!meal) return;
-    updateMeal(meal.id, data);
-    setIsEditing(false);
-    onFinishEdit?.();
+  const processSubmit = (data: MealFormValues) => {
+    const mealTypeIdNumber =
+      data.mealTypeId && data.mealTypeId !== '' ? Number(data.mealTypeId) : undefined;
+
+    // Очищаем items от instanceId через деструктуризацию (используем _ чтобы линтер не ругался)
+    const cleanItems = data.items.map(
+      ({ instanceId: _instanceId, ...item }: any) => item
+    ) as MealPlanItem[];
+
+    const mealData: MealData = {
+      name: data.name,
+      description: data.description,
+      mealTypeId: mealTypeIdNumber,
+      items: cleanItems,
+    };
+
+    if (isCreating) {
+      onSaveNew?.(mealData);
+    } else if (meal) {
+      updateMeal(meal.id, { ...meal, ...mealData });
+      setIsEditing(false);
+      onFinishEdit?.();
+    }
   };
 
-  const handleSaveNew = (data: MealData) => {
-    onSaveNew?.(data);
+  const handleAddItem = (itemId: number, type: 'product' | 'dish') => {
+    let defaultWeight = 100;
+    if (type === 'product') {
+      const product = products.find((p) => p.id === itemId);
+      defaultWeight =
+        product && product.portions.length > 0 ? Number(product.portions[0].weight) : 100;
+    } else if (type === 'dish') {
+      const dish = dishes.find((d) => d.id === itemId);
+      if (dish) {
+        defaultWeight = Number(dish.products.reduce((sum, p) => sum + Number(p.weight), 0) || 100);
+      }
+    }
+    append({
+      instanceId: `${type}-${Date.now()}`,
+      type,
+      itemId,
+      weight: Number(defaultWeight),
+    });
   };
 
-  const handleCancelCreation = () => {
-    onCancelCreation?.();
+  const handleUpdateWeight = (index: number, weight: number) => {
+    if (watchItems[index]) {
+      update(index, { ...watchItems[index], weight: Number(weight) });
+    }
   };
+
+  const handleEditNestedItem = () => {
+    /* Placeholder for future edit functionality */
+  };
+
+  const isBasicInfoOpen = openSections.includes('basic-info');
+  const isCompositionOpen = openSections.includes('composition');
+
+  const singleLineFieldStyle =
+    'h-10 flex items-center px-4 rounded-lg border border-border bg-card text-foreground shadow-sm text-base sm:text-sm';
+  const multiLineFieldStyle =
+    'w-full px-4 py-2.5 min-h-[80px] rounded-lg border border-border bg-card text-foreground shadow-sm text-base sm:text-sm whitespace-pre-wrap';
 
   return (
-    <div className="space-y-6" ref={containerRef}>
-      {isEditing && meal ? (
-        <div>
-          <MealForm
-            meal={meal}
-            onSubmit={handleSave}
-            onCancel={handleCancelEdit}
-            focusName={true}
-            openSections={openSections}
-            onToggleSection={onToggleSection}
-          />
-        </div>
-      ) : isCreating ? (
-        <div>
-          <MealForm
-            meal={null}
-            onSubmit={handleSaveNew}
-            onCancel={handleCancelCreation}
-            focusName={true}
-            openSections={openSections}
-            onToggleSection={onToggleSection}
-          />
-        </div>
-      ) : (
-        <>
-          <CollapsibleSection
-            id="basic-info"
-            title="Основная информация"
-            icon={<Info className="w-4 h-4 text-primary" />}
-            isOpen={isBasicInfoOpen}
-            onToggle={onToggleSection}
-            actionButton={
+    <div className="space-y-6 relative isolate">
+      {/* --- Блок: Основная информация --- */}
+      <CollapsibleSection
+        id="basic-info"
+        title="Основная информация"
+        icon={<Info className="w-4 h-4 text-primary" />}
+        isOpen={isBasicInfoOpen}
+        onToggle={onToggleSection}
+        showBorder={false}
+        actionButton={
+          isEditing ? (
+            <div className="flex items-center gap-2 min-w-[280px] justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCancel();
+                }}
+              >
+                Отмена
+              </Button>
               <Button
                 type="button"
                 variant="primary"
                 onClick={(e) => {
-                  e.stopPropagation(); // Предотвращаем распространение клика на CollapsibleSection
-                  handleStartEdit();
+                  e.stopPropagation();
+                  handleSubmit(processSubmit)();
                 }}
-                icon={Edit}
+                icon={Save}
                 size="icon"
-              >
-                {/* Empty - only icon */}
-              </Button>
-            }
-            gradientFrom="gradient-basic-info"
-            gradientVia=""
-            gradientTo=""
-          >
-            <div className="space-y-3 pt-4">
-              <div className="space-y-1">
-                <label className="block text-sm font-medium text-foreground mb-2">Название *</label>
-                <div className="view-mode-field view-mode-single-line">{meal.name}</div>
+              />
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleStartEdit();
+              }}
+              icon={Edit}
+              size="icon"
+            />
+          )
+        }
+        gradientFrom="gradient-basic-info"
+      >
+        {isEditing ? (
+          <MealBasicInfo
+            control={control}
+            errors={errors}
+            mealTypes={mealTypes}
+            isNew={isCreating}
+          />
+        ) : (
+          <div className="space-y-4 pt-4">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-foreground">
+                Название <span className="text-danger">*</span>
+              </label>
+              <div className={singleLineFieldStyle}>{meal?.name}</div>
+            </div>
+
+            {meal?.mealTypeId && (
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-foreground">Тип</label>
+                <div className={singleLineFieldStyle}>
+                  <Tag className="w-4 h-4 text-muted-foreground mr-2.5 flex-shrink-0" />
+                  {mealTypes.find((mt) => mt.id === meal.mealTypeId)?.name}
+                </div>
               </div>
-              {meal.mealTypeId && (
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-foreground mb-2">Тип</label>
-                  <div className="view-mode-field view-mode-single-line">
-                    {mealTypes.find((mt) => mt.id === meal.mealTypeId)?.name || 'Неизвестный тип'}
+            )}
+
+            {meal?.description && (
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-foreground">Описание</label>
+                <div className="relative">
+                  <div className={multiLineFieldStyle}>{meal.description}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </CollapsibleSection>
+
+      {/* --- Блок: Состав --- */}
+      <CollapsibleSection
+        id="composition"
+        title="Состав"
+        icon={<Utensils className="w-4 h-4 text-primary" />}
+        isOpen={isCompositionOpen}
+        onToggle={onToggleSection}
+        showBorder={false}
+        summaryContent={
+          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Hash className="w-3.5 h-3.5" />
+            {isEditing ? fields.length : meal?.items.length || 0}
+          </span>
+        }
+        headerContent={
+          <NutritionButton
+            calories={totals.calories}
+            proteins={totals.proteins}
+            fats={totals.fats}
+            carbs={totals.carbs}
+            weight={totals.weight}
+          />
+        }
+        gradientFrom="gradient-meal"
+      >
+        {isEditing ? (
+          <div className="pt-4">
+            <MealComposition
+              fields={fields}
+              items={watchItems}
+              products={products}
+              dishes={dishes}
+              categories={categories}
+              onAdd={handleAddItem}
+              onRemove={remove}
+              onUpdateWeight={handleUpdateWeight}
+              onMove={move}
+              onEditItem={handleEditNestedItem}
+            />
+          </div>
+        ) : (
+          <div className="space-y-3 pt-4">
+            {(meal?.items.length || 0) > 0 ? (
+              meal?.items.map((item, index) => {
+                const isProduct = item.type === 'product';
+                const itemStyle = isProduct ? 'gradient-product' : 'gradient-dish';
+                return (
+                  <div
+                    key={`${item.type}-${item.itemId}-${index}`}
+                    className={`${itemStyle} rounded-xl p-3 shadow-sm`}
+                  >
+                    <MealItemContent
+                      item={item}
+                      products={products}
+                      dishes={dishes}
+                      readOnly={true}
+                      showActions={false}
+                    />
                   </div>
-                </div>
-              )}
-              {meal.description && (
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-foreground mb-2">Описание</label>
-                  <div className="view-mode-field view-mode-multi-line">{meal.description}</div>
-                </div>
-              )}
-            </div>
-          </CollapsibleSection>
-
-          <CollapsibleSection
-            id="composition"
-            title="Состав"
-            icon={<Utensils className="w-4 h-4 text-green-600" />}
-            isOpen={isCompositionOpen}
-            onToggle={onToggleSection}
-            summaryContent={
-              watchItems.length > 0 && (
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Hash className="w-3.5 h-3.5" />
-                  {watchItems.length}
-                </span>
-              )
-            }
-            headerContent={
-              watchItems.length > 0 && (
-                <NutritionButton
-                  calories={totalNutrition.calories}
-                  proteins={totalNutrition.proteins}
-                  fats={totalNutrition.fats}
-                  carbs={totalNutrition.carbs}
-                  weight={totalWeight}
-                />
-              )
-            }
-            gradientFrom="gradient-meal"
-          >
-            <div className="space-y-3 pt-4">
-              {watchItems.length > 0 ? (
-                watchItems.map((item, index) => {
-                  const isProduct = item.type === 'product';
-                  const itemStyle = isProduct ? 'gradient-product' : 'gradient-dish';
-
-                  return (
-                    <div
-                      key={item.instanceId || `${item.type}-${item.itemId}-${index}`}
-                      className={`${itemStyle} rounded-xl p-3`}
-                    >
-                      <ItemContentReadOnly item={item} products={products} dishes={dishes} />
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">Добавьте продукты или блюда</p>
-                  <p className="text-xs mt-1">Перетаскивайте элементы для изменения порядка</p>
-                </div>
-              )}
-            </div>
-          </CollapsibleSection>
-        </>
-      )}
+                );
+              })
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Utensils className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">Список пуст</p>
+              </div>
+            )}
+          </div>
+        )}
+      </CollapsibleSection>
     </div>
   );
 };

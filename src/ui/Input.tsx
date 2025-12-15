@@ -1,5 +1,3 @@
-// src/ui/Input.tsx
-
 import React, { useId } from 'react';
 import cn from 'classnames';
 import { AlertCircle } from 'lucide-react';
@@ -7,9 +5,11 @@ import { AlertCircle } from 'lucide-react';
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  description?: string;
   icon?: React.ComponentType<{ className?: string }>;
   containerClassName?: string;
-  variant?: 'default' | 'ghost';
+  variant?: 'default' | 'ghost' | 'search';
+  inputSize?: 'sm' | 'md' | 'lg';
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -23,11 +23,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       placeholder,
       required,
       error,
+      description,
       icon: Icon,
       disabled = false,
       containerClassName,
       className,
       variant = 'default',
+      inputSize = 'md',
       ...props
     },
     ref
@@ -35,17 +37,22 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const generatedId = useId();
     const inputId = name || `input-${generatedId}`;
 
+    const sizeClasses = {
+      sm: 'h-8 text-xs px-3',
+      md: 'h-10 text-sm px-4',
+      lg: 'h-12 text-base px-4',
+    };
+
     return (
-      <div className={cn('w-full space-y-2', containerClassName)}>
+      <div className={cn('w-full space-y-1.5', containerClassName)}>
         {label && (
-          <label
-            htmlFor={inputId}
-            className="block text-sm font-medium text-foreground tracking-tight"
-          >
+          <label htmlFor={inputId} className="block text-sm font-medium text-foreground">
             {label}
-            {required && <span className="text-danger ml-1">*</span>}
+            {required && <span className="text-danger ml-0.5">*</span>}
           </label>
         )}
+
+        {description && <p className="text-xs text-muted-foreground mb-1.5">{description}</p>}
 
         <div className="relative">
           {Icon && (
@@ -62,39 +69,41 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             placeholder={placeholder}
             disabled={disabled}
             className={cn(
-              // Base input styles
-              'flex w-full text-sm transition-colors duration-200',
+              // ИЗМЕНЕНО: transition-colors (вместо all) предотвращает пересчет геометрии,
+              // что делает анимацию рамки и тени идеально плавной без "дрожания".
+              'w-full transition-colors duration-200 ease-in-out',
               'placeholder:text-muted-foreground text-foreground',
               'disabled:cursor-not-allowed disabled:opacity-50',
-
-              // Variant styles
-              variant === 'default' && [
-                'h-10 rounded-lg bg-card px-4 py-2',
-                // Focus styles
-                'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-transparent',
-                error && 'ring-2 ring-danger',
-              ],
-
-              variant === 'ghost' && [
-                'h-9 rounded-md px-3 py-2 border-0 bg-muted/30',
-                'hover:bg-muted/50',
-                'focus:outline-none',
-              ],
-
-              // Icon padding
-              Icon ? 'pl-10' : '',
-
+              // focus:border-primary (вместо transparent) убирает моргание
+              'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:ring-offset-0',
+              'border border-border rounded-lg',
+              sizeClasses[inputSize],
+              'py-2',
+              {
+                'pl-10': Icon,
+                'pr-10': error,
+                'bg-white dark:bg-card': variant === 'default',
+                'bg-transparent border-0': variant === 'ghost',
+                'bg-muted/30 hover:bg-muted/50': variant === 'ghost',
+                'ring-2 ring-danger border-transparent': error,
+                'focus:ring-0 focus:border-primary': variant === 'ghost',
+              },
               className
             )}
             {...props}
           />
+
+          {error && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <AlertCircle className="w-4 h-4 text-danger flex-shrink-0" />
+            </div>
+          )}
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 text-sm text-danger">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <p className="text-sm text-danger mt-1 flex items-center gap-1.5">
             <span>{error}</span>
-          </div>
+          </p>
         )}
       </div>
     );

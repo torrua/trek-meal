@@ -310,7 +310,7 @@ const MealItemContent: React.FC<ItemContentProps> = ({
 
       {/* Dish Ingredients (Блюдо) */}
       {isDish && dishDetails && showDishIngredients && (
-        <div className="pt-2 space-y-1">
+        <div className="pt-2 space-y-1.5">
           {dishDetails.map((ing, idx) => {
             const Icon = ing.icon;
             return (

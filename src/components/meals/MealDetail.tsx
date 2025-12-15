@@ -44,9 +44,6 @@ const validationSchema = z.object({
 
 type MealFormValues = z.infer<typeof validationSchema>;
 
-// Тип для элемента с instanceId для внутреннего использования формы
-type FormMealItem = MealPlanItem & { instanceId?: string };
-
 const MealDetail: React.FC<MealDetailProps> = ({
   meal,
   onEdit: _onEdit,
@@ -70,7 +67,6 @@ const MealDetail: React.FC<MealDetailProps> = ({
   const [isEditing, setIsEditing] = useState(isCreating);
   const editTriggerRef = useRef<number | undefined>(undefined);
 
-  // Инициализация формы
   const {
     control,
     handleSubmit,
@@ -87,7 +83,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
         meal?.items?.map((i) => ({
           ...i,
           instanceId:
-            (i as FormMealItem).instanceId ||
+            (i as any).instanceId ||
             `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
         })) || [],
     },
@@ -98,9 +94,8 @@ const MealDetail: React.FC<MealDetailProps> = ({
     name: 'items',
   });
 
-  const watchItems = watch('items') as FormMealItem[];
+  const watchItems = watch('items');
 
-  // Эффект для переключения в режим редактирования извне
   useEffect(() => {
     if (isCreating) return;
     if (typeof editTrigger === 'number') {
@@ -115,7 +110,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
             meal?.items?.map((i) => ({
               ...i,
               instanceId:
-                (i as FormMealItem).instanceId ||
+                (i as any).instanceId ||
                 `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
             })) || [],
         });
@@ -124,7 +119,6 @@ const MealDetail: React.FC<MealDetailProps> = ({
     }
   }, [editTrigger, onStartEdit, meal, reset, isCreating]);
 
-  // Сброс формы при выборе другого приема пищи
   useEffect(() => {
     if (!isCreating && meal && !isEditing) {
       reset({
@@ -134,7 +128,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
         items: meal.items.map((i) => ({
           ...i,
           instanceId:
-            (i as FormMealItem).instanceId ||
+            (i as any).instanceId ||
             `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
         })),
       });
@@ -168,7 +162,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
           meal?.items?.map((i) => ({
             ...i,
             instanceId:
-              (i as FormMealItem).instanceId ||
+              (i as any).instanceId ||
               `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
           })) || [],
       });
@@ -179,11 +173,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
   const processSubmit = (data: MealFormValues) => {
     const mealTypeIdNumber =
       data.mealTypeId && data.mealTypeId !== '' ? Number(data.mealTypeId) : undefined;
-
-    // Очищаем items от instanceId через деструктуризацию (используем _ чтобы линтер не ругался)
-    const cleanItems = data.items.map(
-      ({ instanceId: _instanceId, ...item }: any) => item
-    ) as MealPlanItem[];
+    const cleanItems = data.items.map(({ instanceId, ...item }: any) => item) as MealPlanItem[];
 
     const mealData: MealData = {
       name: data.name,
@@ -222,13 +212,28 @@ const MealDetail: React.FC<MealDetailProps> = ({
   };
 
   const handleUpdateWeight = (index: number, weight: number) => {
-    if (watchItems[index]) {
-      update(index, { ...watchItems[index], weight: Number(weight) });
-    }
+    update(index, { ...watchItems[index], weight: Number(weight) });
   };
 
-  const handleEditNestedItem = () => {
-    /* Placeholder for future edit functionality */
+  // ИЗМЕНЕНО: Реализована логика открытия в новой вкладке
+  const handleEditNestedItem = (item: MealPlanItem) => {
+    let url = '';
+
+    if (item.type === 'product') {
+      const product = products.find((p) => p.id === item.itemId);
+      if (product) {
+        url = `/products?selectedId=${product.id}`;
+      }
+    } else if (item.type === 'dish') {
+      const dish = dishes.find((d) => d.id === item.itemId);
+      if (dish) {
+        url = `/dishes?selectedId=${dish.id}`;
+      }
+    }
+
+    if (url) {
+      window.open(url, '_blank');
+    }
   };
 
   const isBasicInfoOpen = openSections.includes('basic-info');
@@ -298,9 +303,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
         ) : (
           <div className="space-y-4 pt-4">
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-foreground">
-                Название <span className="text-danger">*</span>
-              </label>
+              <label className="block text-sm font-medium text-foreground">Название</label>
               <div className={singleLineFieldStyle}>{meal?.name}</div>
             </div>
 
@@ -355,7 +358,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
           <div className="pt-4">
             <MealComposition
               fields={fields}
-              items={watchItems}
+              items={watchItems as MealPlanItem[]}
               products={products}
               dishes={dishes}
               categories={categories}
@@ -363,7 +366,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
               onRemove={remove}
               onUpdateWeight={handleUpdateWeight}
               onMove={move}
-              onEditItem={handleEditNestedItem}
+              onEditItem={handleEditNestedItem} // Передаем обработчик
             />
           </div>
         ) : (

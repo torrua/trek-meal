@@ -57,12 +57,9 @@ const MealsPage: React.FC = () => {
   // --- STATE ---
   const [activeId, setActiveId] = useState<number | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // Подняли состояние isEditing сюда
+  const [isEditing, setIsEditing] = useState(false);
   const [mealToDelete, setMealToDelete] = useState<Meal | null>(null);
-
-  // Состояние открытых секций живет здесь, поэтому оно сохраняется при смене режимов
   const [openSections, setOpenSections] = useState<string[]>(['basic-info', 'composition']);
-
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -94,7 +91,6 @@ const MealsPage: React.FC = () => {
     [activeId, meals]
   );
 
-  // Выбор элемента из списка
   const handleSelectMeal = useCallback(
     (id: number) => {
       if (activeId === id) {
@@ -103,25 +99,24 @@ const MealsPage: React.FC = () => {
       } else {
         setActiveId(id);
         setIsCreating(false);
-        setIsEditing(false); // При выборе нового всегда открываем в режиме просмотра
+        setIsEditing(false);
       }
     },
     [activeId]
   );
 
-  // Запуск редактирования из списка или кнопки
   const handleEditMeal = useCallback((id: number) => {
     setActiveId(id);
     setIsCreating(false);
-    setIsEditing(true); // Сразу включаем режим редактирования
+    setIsEditing(true);
   }, []);
 
   const handleCreateNew = useCallback(() => {
     if (isEditing) return;
     setIsCreating(true);
     setActiveId(null);
-    setIsEditing(true); // При создании мы сразу в режиме редактирования
-    setOpenSections(['basic-info', 'composition']); // Для нового сбрасываем секции
+    setIsEditing(true);
+    setOpenSections(['basic-info', 'composition']);
   }, [isEditing]);
 
   const handleSaveNew = useCallback(
@@ -133,7 +128,7 @@ const MealsPage: React.FC = () => {
       const created = addMeal(dataWithName);
       setIsCreating(false);
       setActiveId(created.id);
-      setIsEditing(false); // После сохранения выходим из редактирования
+      setIsEditing(false);
     },
     [addMeal, meals]
   );
@@ -150,7 +145,6 @@ const MealsPage: React.FC = () => {
     setMealToDelete(null);
   }, [mealToDelete, activeId, removeMeal]);
 
-  // Bulk actions handlers...
   const handleBulkDelete = () => {
     if (selectedIds.length > 0) setShowBulkDeleteConfirm(true);
   };
@@ -169,7 +163,6 @@ const MealsPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* ... Header и Input File (без изменений) ... */}
       <input
         type="file"
         ref={fileInputRef}
@@ -186,7 +179,8 @@ const MealsPage: React.FC = () => {
         <h1 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight">
           Приёмы пищи
         </h1>
-        <div className="flex items-center gap-2 min-w-[320px] justify-end pr-6">
+        {/* ИСПРАВЛЕНО: pr-1 совпадает с px-1 блока деталей, игнорируя скроллбар (он слева) */}
+        <div className="flex items-center gap-2 min-w-[320px] justify-end pr-1">
           {!isMultiSelectMode ? (
             <>
               <Button variant="secondary" size="icon" title="Фильтры">
@@ -222,7 +216,6 @@ const MealsPage: React.FC = () => {
             </>
           ) : (
             <div className="flex items-center gap-2 h-9 min-w-[320px] justify-end">
-              {/* ... Multi select buttons (без изменений) ... */}
               <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium flex items-center">
                 <span>{`${selectedIds.length} из ${meals.length} выделено`}</span>
               </div>
@@ -298,7 +291,7 @@ const MealsPage: React.FC = () => {
                 key="new"
                 meal={null}
                 isCreating={true}
-                isEditing={true} // Создание = всегда редактирование
+                isEditing={true}
                 onSaveNew={handleSaveNew}
                 onCancelCreation={() => setIsCreating(false)}
                 openSections={openSections}
@@ -310,8 +303,8 @@ const MealsPage: React.FC = () => {
                 key={selectedMeal.id}
                 meal={selectedMeal}
                 isCreating={false}
-                isEditing={isEditing} // Передаем состояние из родителя
-                openSections={openSections} // Передаем состояние секций из родителя
+                isEditing={isEditing}
+                openSections={openSections}
                 onToggleSection={handleToggleSection}
                 setIsEditing={setIsEditing}
               />

@@ -116,7 +116,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
   if (!meal && !isCreating) return null;
 
   const handleCancel = (e?: React.MouseEvent) => {
-    e?.stopPropagation(); // Останавливаем всплытие
+    e?.stopPropagation();
     if (isCreating) {
       onCancelCreation?.();
     } else {
@@ -146,16 +146,15 @@ const MealDetail: React.FC<MealDetailProps> = ({
   };
 
   const handleSaveClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Останавливаем всплытие
+    e.stopPropagation();
     handleSubmit(processSubmit)();
   };
 
   const handleStartEdit = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Останавливаем всплытие, чтобы секция не переключалась
+    e.stopPropagation();
     setIsEditing(true);
   };
 
-  // ... (методы handleAddItem, handleUpdateWeight, handleEditNestedItem без изменений)
   const handleAddItem = (itemId: number, type: 'product' | 'dish') => {
     let defaultWeight = 100;
     if (type === 'product') {
@@ -212,7 +211,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
         showBorder={false}
         actionButton={
           isEditing ? (
-            <div className="flex items-center gap-2 min-w-[280px] justify-end">
+            <div className="flex items-center gap-2 justify-end">
               <Button type="button" variant="ghost" onClick={handleCancel}>
                 Отмена
               </Button>

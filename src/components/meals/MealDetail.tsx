@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,15 +22,12 @@ import MealItemContent from './MealItemContent';
 
 interface MealDetailProps {
   meal: Meal | null;
-  onEdit: () => void;
-  editTrigger?: number;
+  isCreating: boolean;
+  isEditing: boolean;
   openSections: string[];
+
+  setIsEditing: (value: boolean) => void;
   onToggleSection: (sectionId: string) => void;
-  onStartEdit?: () => void;
-  onFinishEdit?: () => void;
-  editSubmitTrigger?: number;
-  editCancelTrigger?: number;
-  isCreating?: boolean;
   onSaveNew?: (data: MealData) => void;
   onCancelCreation?: () => void;
 }
@@ -46,15 +43,11 @@ type MealFormValues = z.infer<typeof validationSchema>;
 
 const MealDetail: React.FC<MealDetailProps> = ({
   meal,
-  onEdit: _onEdit,
-  editTrigger,
+  isCreating,
+  isEditing,
   openSections,
+  setIsEditing,
   onToggleSection,
-  onStartEdit,
-  onFinishEdit,
-  editSubmitTrigger: _editSubmitTrigger,
-  editCancelTrigger: _editCancelTrigger,
-  isCreating = false,
   onSaveNew,
   onCancelCreation,
 }) => {
@@ -63,9 +56,6 @@ const MealDetail: React.FC<MealDetailProps> = ({
   const { categories } = useCategoryStore();
   const { updateMeal } = useMealStore();
   const { mealTypes } = useMealTypesStore();
-
-  const [isEditing, setIsEditing] = useState(isCreating);
-  const editTriggerRef = useRef<number | undefined>(undefined);
 
   const {
     control,
@@ -79,13 +69,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
       name: meal?.name || '',
       description: meal?.description || '',
       mealTypeId: meal?.mealTypeId ? String(meal.mealTypeId) : '',
-      items:
-        meal?.items?.map((i) => ({
-          ...i,
-          instanceId:
-            (i as any).instanceId ||
-            `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
-        })) || [],
+      items: meal?.items ? [...meal.items] : [],
     },
   });
 
@@ -97,43 +81,30 @@ const MealDetail: React.FC<MealDetailProps> = ({
   const watchItems = watch('items');
 
   useEffect(() => {
-    if (isCreating) return;
-    if (typeof editTrigger === 'number') {
-      if (editTriggerRef.current !== undefined && editTriggerRef.current !== editTrigger) {
-        setIsEditing(true);
-        onStartEdit?.();
-        reset({
-          name: meal?.name || '',
-          description: meal?.description || '',
-          mealTypeId: meal?.mealTypeId ? String(meal.mealTypeId) : '',
-          items:
-            meal?.items?.map((i) => ({
-              ...i,
-              instanceId:
-                (i as any).instanceId ||
-                `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
-            })) || [],
-        });
-      }
-      editTriggerRef.current = editTrigger;
-    }
-  }, [editTrigger, onStartEdit, meal, reset, isCreating]);
-
-  useEffect(() => {
-    if (!isCreating && meal && !isEditing) {
+    if (!isCreating && meal) {
       reset({
         name: meal.name,
         description: meal.description || '',
         mealTypeId: meal.mealTypeId ? String(meal.mealTypeId) : '',
-        items: meal.items.map((i) => ({
-          ...i,
-          instanceId:
-            (i as any).instanceId ||
-            `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
-        })),
+        items: meal.items ? [...meal.items] : [],
       });
     }
-  }, [meal, isCreating, reset, isEditing]);
+  }, [meal, isCreating, reset]);
+
+  // Авто-разворачивание только если есть ошибки ПРИ ПОПЫТКЕ СОХРАНЕНИЯ
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      if (
+        (errors.name || errors.mealTypeId || errors.description) &&
+        !openSections.includes('basic-info')
+      ) {
+        onToggleSection('basic-info');
+      }
+      if (errors.items && !openSections.includes('composition')) {
+        onToggleSection('composition');
+      }
+    }
+  }, [errors, openSections, onToggleSection]);
 
   const totals = useMemo(() => {
     const itemsToCalculate = (isEditing ? watchItems : meal?.items || []).map(
@@ -144,29 +115,13 @@ const MealDetail: React.FC<MealDetailProps> = ({
 
   if (!meal && !isCreating) return null;
 
-  const handleStartEdit = () => {
-    setIsEditing(true);
-    onStartEdit?.();
-  };
-
-  const handleCancel = () => {
+  const handleCancel = (e?: React.MouseEvent) => {
+    e?.stopPropagation(); // Останавливаем всплытие
     if (isCreating) {
       onCancelCreation?.();
     } else {
       setIsEditing(false);
-      reset({
-        name: meal?.name || '',
-        description: meal?.description || '',
-        mealTypeId: meal?.mealTypeId ? String(meal.mealTypeId) : '',
-        items:
-          meal?.items?.map((i) => ({
-            ...i,
-            instanceId:
-              (i as any).instanceId ||
-              `${i.type}-${i.itemId}-${Math.random().toString(36).substr(2, 9)}`,
-          })) || [],
-      });
-      onFinishEdit?.();
+      reset();
     }
   };
 
@@ -187,10 +142,20 @@ const MealDetail: React.FC<MealDetailProps> = ({
     } else if (meal) {
       updateMeal(meal.id, { ...meal, ...mealData });
       setIsEditing(false);
-      onFinishEdit?.();
     }
   };
 
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Останавливаем всплытие
+    handleSubmit(processSubmit)();
+  };
+
+  const handleStartEdit = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Останавливаем всплытие, чтобы секция не переключалась
+    setIsEditing(true);
+  };
+
+  // ... (методы handleAddItem, handleUpdateWeight, handleEditNestedItem без изменений)
   const handleAddItem = (itemId: number, type: 'product' | 'dish') => {
     let defaultWeight = 100;
     if (type === 'product') {
@@ -215,25 +180,16 @@ const MealDetail: React.FC<MealDetailProps> = ({
     update(index, { ...watchItems[index], weight: Number(weight) });
   };
 
-  // ИЗМЕНЕНО: Реализована логика открытия в новой вкладке
   const handleEditNestedItem = (item: MealPlanItem) => {
     let url = '';
-
     if (item.type === 'product') {
       const product = products.find((p) => p.id === item.itemId);
-      if (product) {
-        url = `/products?selectedId=${product.id}`;
-      }
+      if (product) url = `/products?selectedId=${product.id}`;
     } else if (item.type === 'dish') {
       const dish = dishes.find((d) => d.id === item.itemId);
-      if (dish) {
-        url = `/dishes?selectedId=${dish.id}`;
-      }
+      if (dish) url = `/dishes?selectedId=${dish.id}`;
     }
-
-    if (url) {
-      window.open(url, '_blank');
-    }
+    if (url) window.open(url, '_blank');
   };
 
   const isBasicInfoOpen = openSections.includes('basic-info');
@@ -246,7 +202,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
 
   return (
     <div className="space-y-6 relative isolate">
-      {/* --- Блок: Основная информация --- */}
+      {/* --- Основная информация --- */}
       <CollapsibleSection
         id="basic-info"
         title="Основная информация"
@@ -257,23 +213,13 @@ const MealDetail: React.FC<MealDetailProps> = ({
         actionButton={
           isEditing ? (
             <div className="flex items-center gap-2 min-w-[280px] justify-end">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCancel();
-                }}
-              >
+              <Button type="button" variant="ghost" onClick={handleCancel}>
                 Отмена
               </Button>
               <Button
                 type="button"
                 variant="primary"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSubmit(processSubmit)();
-                }}
+                onClick={handleSaveClick}
                 icon={Save}
                 size="icon"
               />
@@ -282,10 +228,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
             <Button
               type="button"
               variant="primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleStartEdit();
-              }}
+              onClick={handleStartEdit}
               icon={Edit}
               size="icon"
             />
@@ -329,7 +272,7 @@ const MealDetail: React.FC<MealDetailProps> = ({
         )}
       </CollapsibleSection>
 
-      {/* --- Блок: Состав --- */}
+      {/* --- Состав --- */}
       <CollapsibleSection
         id="composition"
         title="Состав"
@@ -366,7 +309,8 @@ const MealDetail: React.FC<MealDetailProps> = ({
               onRemove={remove}
               onUpdateWeight={handleUpdateWeight}
               onMove={move}
-              onEditItem={handleEditNestedItem} // Передаем обработчик
+              onEditItem={handleEditNestedItem}
+              error={errors.items?.message as string}
             />
           </div>
         ) : (
@@ -385,7 +329,8 @@ const MealDetail: React.FC<MealDetailProps> = ({
                       products={products}
                       dishes={dishes}
                       readOnly={true}
-                      showActions={false}
+                      showActions={true}
+                      onEditItem={() => handleEditNestedItem(item)}
                     />
                   </div>
                 );
